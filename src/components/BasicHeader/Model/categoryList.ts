@@ -1,32 +1,40 @@
 interface Category {
-  type: string,
+  type: CategoryType,
   title: string,
   isSelected: boolean
 }
 
+enum CategoryType {
+  all = 'all',
+  image = 'image',
+  audio = 'audio',
+  video = 'video',
+  document = 'document'
+}
+
 let categorys: Category[] = [
   {
-    type: 'all',
+    type: CategoryType.all,
     title: '所有',
     isSelected: true
   },
   {
-    type: 'image',
+    type: CategoryType.image,
     title: '图片',
     isSelected: false
   },
   {
-    type: 'video',
+    type: CategoryType.video,
     title: '视频',
     isSelected: false
   },
   {
-    type: 'audio',
+    type: CategoryType.audio,
     title: '音频',
     isSelected: false
   },
   {
-    type: 'document',
+    type: CategoryType.document,
     title: '文档',
     isSelected: false
   }
@@ -34,5 +42,6 @@ let categorys: Category[] = [
 
 export {
   categorys,
-  Category
+  Category,
+  CategoryType
 }

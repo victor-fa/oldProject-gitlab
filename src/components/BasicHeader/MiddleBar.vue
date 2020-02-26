@@ -14,6 +14,8 @@
 <script lang="ts">
 import Vue from 'vue'
 import { categorys, Category } from './Model/categoryList'
+import { EventBus } from '../../utils/eventBus'
+import { CATEGORY_CHANGE_ACTION } from '../../common/constants'
 
 export default Vue.extend({
   name: 'middle-bar',
@@ -26,10 +28,11 @@ export default Vue.extend({
   methods: {
     onSelectAction: function (item: Category): void {
       if (item.isSelected) { return }
+      // TODO: 现将所有置为未选中，调试状态总是出问题
       this.currentCategory.isSelected = false
       item.isSelected = true
       this.currentCategory = item
-      console.log(this.categorys)
+      EventBus.$emit(CATEGORY_CHANGE_ACTION, item.type)
     }
   }
 })

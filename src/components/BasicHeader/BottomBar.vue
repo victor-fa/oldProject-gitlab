@@ -53,7 +53,6 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { mapGetters } from 'vuex'
 import CustomButton from '../../components/CustomButton/index.vue'
 import SortPopoverList from './SortPopoverList.vue'
 import { SortWay } from './Model/sortList'
@@ -82,6 +81,10 @@ export default Vue.extend({
       console.log('123')
     },
     backAction () {
+      // TODO: 一级目录不能返回，应该是置灰button
+      if (this.$store.state.directory === '网盘') {
+        return
+      }
       EventBus.$emit(BACK_ACTION)
     }
   }

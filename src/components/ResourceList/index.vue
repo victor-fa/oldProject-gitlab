@@ -33,33 +33,9 @@ import Vue from 'vue'
 import infiniteScroll from 'vue-infinite-scroll'
 import { ReadStream } from 'fs'
 import { EventBus } from '../../utils/eventBus'
-import { BACK_ACTION } from '../../common/constants'
-
-enum ArrangeWay {
-  horizontal = 0,
-  vertical
-}
-enum ResourceType {
-  folder,
-  html,
-  image,
-  audio,
-  video,
-  txt,
-  pdf
-}
-interface ResourceItem {
-  name: string,
-  type: ResourceType,
-  modifyTime: string,
-  memory: string,
-  subResources?: Array<ResourceItem>
-}
-
-export {
-  ResourceItem,
-  ResourceType
-}
+import { BACK_ACTION, CATEGORY_CHANGE_ACTION } from '../../common/constants'
+import { ArrangeWay, ResourceType, ResourceItem } from './resourceModel'
+import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
 
 export default Vue.extend({
   name: 'resource-list',
@@ -90,7 +66,8 @@ export default Vue.extend({
       loading: false,
       busy: false,
       scrollHeight: 450,
-      currentArray: this.dataSource
+      currentArray: this.dataSource,
+      directoryList: this.dataSource
     }
   },
   mounted () {
@@ -100,15 +77,60 @@ export default Vue.extend({
         this.scrollHeight = newHeight
       }
     }, false)
-    EventBus.$on(BACK_ACTION, () => {
-      this.currentArray = this.dataSource
-      this.$store.dispatch('popPath')
-    })
+    this.observerEventBus()
   },
   destroyed () {
     EventBus.$off(BACK_ACTION)
+    EventBus.$off(CATEGORY_CHANGE_ACTION)
   },
   methods: {
+    observerEventBus () {
+      EventBus.$on(BACK_ACTION, () => {
+        // TODO: 在有多级目录时，返回时应该找到上一级的目录列表赋给currentArray
+        this.currentArray = this.dataSource
+        this.$store.dispatch('popPath')
+      })
+      EventBus.$on(CATEGORY_CHANGE_ACTION, (type: CategoryType) => {
+        this.currentArray = this.filterCurrentArray(type)
+      })
+    },
+    filterCurrentArray (type: CategoryType) {
+      let newArray: Array<ResourceItem> = []
+      for (let index = 0; index < this.directoryList.length; index++) {
+        const element = this.directoryList[index] as ResourceItem
+        if (this.isInclude(type, element.type)) {
+          newArray.push(element)
+        }
+      }
+      return newArray
+    },
+    isInclude (ctype: CategoryType, rtype: ResourceType) {
+      switch (ctype) {
+        case CategoryType.all:
+          return true
+        case CategoryType.image:
+          if (rtype === ResourceType.image) {
+            return true
+          }
+          break
+        case CategoryType.video:
+          if (rtype === ResourceType.video) {
+            return true
+          }
+          break
+        case CategoryType.audio:
+          if (rtype === ResourceType.audio) {
+            return true
+          }
+          break
+        case CategoryType.document:
+          if (rtype !== ResourceType.image && rtype !== ResourceType.video && rtype !== ResourceType.audio && rtype !== ResourceType.folder) {
+            return true
+          }
+          break
+      }
+      return false
+    },
     handleInfiniteOnLoad () {
       console.log('load more data')
     },
@@ -143,6 +165,7 @@ export default Vue.extend({
     openFolder (item: ResourceItem) {
       // reload data
       this.currentArray = item.subResources !== undefined ? item.subResources : []
+      this.directoryList = this.currentArray
       // change path
       this.$store.dispatch('pushPath', item.name)
     }
@@ -158,7 +181,8 @@ export default Vue.extend({
   .horizontal-item {
     padding: 20px 0px;
     img {
-      width: 42px;
+      width: 35px;
+      height: 29px;
       margin-bottom: 20px;
     }
     span {
