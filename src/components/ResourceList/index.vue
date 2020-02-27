@@ -88,6 +88,7 @@ export default Vue.extend({
       EventBus.$on(BACK_ACTION, () => {
         // TODO: 在有多级目录时，返回时应该找到上一级的目录列表赋给currentArray
         this.currentArray = this.dataSource
+        this.directoryList = this.currentArray
         this.$store.dispatch('popPath')
       })
       EventBus.$on(CATEGORY_CHANGE_ACTION, (type: CategoryType) => {
