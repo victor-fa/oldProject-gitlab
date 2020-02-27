@@ -30,11 +30,11 @@ export default {
     window = new BrowserWindow(newOptions)
     newOptions.backgroundColor && (window.setBackgroundColor(newOptions.backgroundColor))
     if (process.env.WEBPACK_DEV_SERVER_URL) {
-      const url = (process.env.WEBPACK_DEV_SERVER_URL as string) + newOptions.path
+      const url = (process.env.WEBPACK_DEV_SERVER_URL as string) + '#/' + newOptions.path
       window.loadURL(url)
       if (!process.env.IS_TEST) window.webContents.openDevTools()
     } else {
-      window.loadURL('app://./index.html/' + newOptions.path)
+      window.loadURL('app://./index.html#/' + newOptions.path)
     }
     window.webContents.on('page-title-updated', () => {
       if (window !== null) {
