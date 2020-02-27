@@ -14,8 +14,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { categorys, Category } from './Model/categoryList'
-import { EventBus } from '../../utils/eventBus'
-import { CATEGORY_CHANGE_ACTION } from '../../common/constants'
+import { EventBus, EventType } from '../../utils/eventBus'
 
 export default Vue.extend({
   name: 'middle-bar',
@@ -32,7 +31,7 @@ export default Vue.extend({
       this.currentCategory.isSelected = false
       item.isSelected = true
       this.currentCategory = item
-      EventBus.$emit(CATEGORY_CHANGE_ACTION, item.type)
+      EventBus.$emit(EventType.categoryChangeAction, item.type)
     }
   }
 })

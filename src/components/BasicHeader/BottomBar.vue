@@ -46,19 +46,25 @@
         :selectedBackgroundImage="operateFuncList.selectedBg"
         iconWidth="14px"
         class="right-item"
+        ref="arrangeBtn"
+        @click.native="arrangeBtnClick"
       />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue, { Component } from 'vue'
 import CustomButton from '../../components/CustomButton/index.vue'
 import SortPopoverList from './SortPopoverList.vue'
 import { SortWay } from './Model/sortList'
 import { operateFuncList } from './Model/operateIconList'
-import { EventBus } from '../../utils/eventBus'
-import { BACK_ACTION } from '../../common/constants'
+import { EventBus, EventType } from '../../utils/eventBus'
+import { ArrangeWay } from '../ResourceList/resourceModel'
+
+interface ArrangeData {
+  isSelected: boolean
+}
 
 export default Vue.extend({
   name: 'bottom-bar',
@@ -85,7 +91,13 @@ export default Vue.extend({
       if (this.$store.state.directory === '网盘') {
         return
       }
-      EventBus.$emit(BACK_ACTION)
+      EventBus.$emit(EventType.backAction)
+    },
+    arrangeBtnClick () {
+      const arrangeBtn: any = this.$refs.arrangeBtn
+      const selected: boolean = arrangeBtn.isSelected
+      const arrangeWay = selected ? ArrangeWay.vertical : ArrangeWay.horizontal
+      EventBus.$emit(EventType.arrangeChangeAction, arrangeWay)
     }
   }
 })

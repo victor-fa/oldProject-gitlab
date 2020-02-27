@@ -28,6 +28,11 @@ import BasicHeader from '../components/BasicHeader/index.vue'
 import BasicFooter from '../components/BasicFooter/index.vue'
 import UserAPI, { SmsType } from '../api/UserAPI'
 
+interface Test {
+  a: string,
+  b: string
+}
+
 export default Vue.extend({
   name: 'base-layout',
   components: {
