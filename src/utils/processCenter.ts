@@ -9,17 +9,21 @@ enum ChannelName {
 }
 
 enum EventName {
-  login = 'login'
+  login = 'login',
+  showOperateListAlter = 'show_operate_list_alter'
 }
 
 export default {
   // on main process observing
   mainObserverChannel () {
-    ipcMain.on(ChannelName.async, (event, eventName: EventName, data?: any) => {
+    ipcMain.on(ChannelName.async, (event, eventName: EventName, data: any) => {
       event.reply(ChannelName.replay)
       switch (eventName) {
         case EventName.login:
           windowManager.presentLoginWindow()
+          break
+        case EventName.showOperateListAlter:
+          windowManager.presentOperateListWindow(data)
           break
         default:
           break

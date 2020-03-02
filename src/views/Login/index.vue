@@ -2,12 +2,12 @@
   <a-layout class="login-layout">
     <a-layout-header class="header">
       <custom-button
-        :image="icons.close"
+        :image="loginIcons.close"
         iconWidth="10px"
         class="header-item"
       />
       <custom-button
-        :image="icons.hide"
+        :image="loginIcons.hide"
         iconWidth="10px"
         class="header-item"
       />
@@ -17,28 +17,28 @@
         <li class="tip">账号密码登录</li>
         <li class="account-form">
           <basic-form
-            :icon="icons.account"
+            :icon="loginIcons.account"
             placeholder="用户名/手机号/邮箱"
             v-model="account"
           />
         </li>
         <li class="password-from">
           <basic-form
-            :icon="icons.password"
+            :icon="loginIcons.password"
             placeholder="输入您的密码"
             v-model="password"
             isSecure="ture"
           />
         </li>
         <li class="password-checkbox">
-          <a-checkbox :checked="rememberPassword">记住密码</a-checkbox>
+          <a-checkbox ref="password_checkbox" @change="onRememberChange">记住密码</a-checkbox>
           <a-button>忘记密码</a-button>
         </li>
         <li class="login-button">
           <a-button block>登录</a-button>
         </li>
         <li class="register-button">
-          <a-button>扫码登录</a-button>
+          <a-button @click="codeLoginBtnClick">扫码登录</a-button>
         </li>
       </ul>
     </a-layout-content>
@@ -47,9 +47,10 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { icons } from './iconList'
+import { loginIcons } from './iconList'
 import CustomButton from '../../components/CustomButton/index.vue'
 import BasicForm from '../../components/BasicForm/index.vue'
+import router from '../../router'
 
 export default Vue.extend({
   name: 'login',
@@ -59,13 +60,20 @@ export default Vue.extend({
   },
   data () {
     return {
-      icons,
+      loginIcons,
       account: '123',
       password: '1234',
       rememberPassword: false
     }
   },
   methods: {
+    onRememberChange () {
+      const element: any = this.$refs.password_checkbox
+      this.rememberPassword = element.checked
+    },
+    codeLoginBtnClick () {
+      router.push('qr-code-login')
+    }
   }
 })
 </script>
@@ -149,6 +157,8 @@ export default Vue.extend({
         padding-top: 13vh;
         .ant-btn {
           border: none;
+          box-shadow: none;
+          background-color: white;
           color: #06b650;
         }
       }

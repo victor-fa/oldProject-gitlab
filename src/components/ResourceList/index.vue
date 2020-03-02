@@ -17,6 +17,7 @@
           slot="renderItem"
           slot-scope="item, index"
           @dblclick="didSelectItem(item)"
+          @contextmenu.prevent="didOperatItem($event, item)"
         >
           <resource-item :model="item" :index="index" :arrangeWay="arrangeWay"/>
         </a-list-item>
@@ -25,6 +26,11 @@
         </div>
       </a-list>
     </div>
+    <operate-list-alter
+      ref="operateListAlter"
+      :style="alterStyle"
+      @blur="alterBlur"
+    />
   </div>
 </template>
 
@@ -32,17 +38,20 @@
 import Vue from 'vue'
 import infiniteScroll from 'vue-infinite-scroll'
 import { EventBus, EventType } from '../../utils/eventBus'
+import processCenter, { EventName } from '../../utils/processCenter'
 import { ArrangeWay, ResourceType, ResourceItem } from './resourceModel'
 import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
 import resourceItem from './resourceItem.vue'
 import resourceHeader from './resourceHeader.vue'
+import OperateListAlter from '../OperateListAlter/index.vue'
 
 export default Vue.extend({
   name: 'resource-list',
   directives: { infiniteScroll },
   components: {
     resourceItem,
-    resourceHeader
+    resourceHeader,
+    OperateListAlter
   },
   props: {
     dataSource: Array
@@ -59,6 +68,12 @@ export default Vue.extend({
         return true
       }
       return false
+    },
+    alterStyle: function (): object {
+      return {
+        left: this.alterPosition.left,
+        top: this.alterPosition.top
+      }
     }
   },
   data () {
@@ -68,7 +83,8 @@ export default Vue.extend({
       scrollHeight: 450,
       arrangeWay: ArrangeWay.horizontal,
       currentArray: this.dataSource,
-      directoryList: this.dataSource
+      directoryList: this.dataSource,
+      alterPosition: { left: '0px', top: '0px' }
     }
   },
   mounted () {
@@ -157,6 +173,26 @@ export default Vue.extend({
       this.directoryList = this.currentArray
       // change path
       this.$store.dispatch('pushPath', item.name)
+    },
+    didOperatItem (event: MouseEvent, item: ResourceItem) {
+      event.preventDefault()
+      const alter: any = this.$refs.operateListAlter
+      alter.showAlter()
+      this.alterPosition = this.calculateSafePosition(event.clientX, event.clientY)
+    },
+    calculateSafePosition (clientX: number, clientY: number) {
+      const width = document.body.clientWidth
+      const height = document.body.clientHeight
+      const paddingRight = 10; const paddingBottom = 17
+      const alterWidth = 100 + paddingRight
+      const alterHeight = 189 + paddingBottom
+      let left = clientX + alterWidth < width ? clientX : width - alterWidth
+      let top = clientY + alterHeight < height ? clientY : height - alterHeight
+      return { left: left + 'px', top: top + 'px' }
+    },
+    alterBlur (el: any) {
+      console.log('alter blur')
+      console.log(el)
     }
   }
 })

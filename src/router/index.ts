@@ -30,6 +30,11 @@ const routes = [
         path: '/register',
         name: 'register',
         component: () => import('../views/Register/index.vue')
+      },
+      {
+        path: '/qr-code-login',
+        name: 'qr-code-login',
+        component: () => import('../views/QRCodeLogin/index.vue')
       }
     ]
   }

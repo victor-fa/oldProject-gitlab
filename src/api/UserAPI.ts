@@ -5,7 +5,7 @@ import { ACCESS_TOKEN } from '../common/constants'
 const userModulePath = '/api/user/v1'
 
 enum SmsType {
-  login = 1,
+  login = 0,
   register,
   resetPassword,
   unbind,
@@ -64,20 +64,26 @@ export default {
     })
   },
   login (userName: string, password: string): Promise<AxiosResponse<LoginResponse>> {
-    const plateForm = process.platform
+    // const plateForm = process.platform
+    const plateForm = '1'
     return Vue.axios.get(userModulePath + '/login', {
       params: {
         userName,
-        password,
-        plateForm
-      },
-      transformResponse: [data => {
-        let newData: LoginResponse = data
-        newData.accessToken.accessToken = data.accessToken['access_token']
-        newData.accessToken.refreshToken = data.accessToken['refresh_token']
-        newData.accessToken.expiresTime = data.accessToken['expires_time']
-        return newData
-      }]
+        password
+      }
+      // transformResponse: [data => {
+      //   let newData: LoginResponse = data
+      //   newData.accessToken.accessToken = data.accessToken['access_token']
+      //   newData.accessToken.refreshToken = data.accessToken['refresh_token']
+      //   newData.accessToken.expiresTime = data.accessToken['expires_time']
+      //   return newData
+      // }]
+    })
+  },
+  loginBySmscode (phoneNo: string, vcode: string) {
+    return Vue.axios.post(userModulePath + '/login/byCode', {
+      phoneNo,
+      vcode
     })
   },
   logout () {

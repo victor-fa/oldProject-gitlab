@@ -48,12 +48,17 @@ export default Vue.extend({
     // }).catch(error => {
     //   console.log(error)
     // })
-    // UserAPI.register('13266522155', '123456', '0769').then(response => {
+    // UserAPI.register('13266522155', '123456', '4077').then(response => {
     //   console.log(response)
-    // }).then(error => {
+    // }).catch(error => {
     //   console.log(error)
     // })
-    // UserAPI.login('13266522155', '123456').then(response => {
+    UserAPI.login('13266522155', '123456').then(response => {
+      console.log(response)
+    }).catch(error => {
+      console.log(error)
+    })
+    // UserAPI.loginBySmscode('13266522155', '123456').then(response => {
     //   console.log(response)
     // }).catch(error => {
     //   console.log(error)
