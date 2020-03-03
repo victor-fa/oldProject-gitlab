@@ -19,7 +19,7 @@
           @dblclick="didSelectItem(item)"
           @contextmenu.prevent="didOperatItem($event, item)"
         >
-          <resource-item :model="item" :index="index" :arrangeWay="arrangeWay"/>
+          <resource-list-item :model="item" :index="index" :arrangeWay="arrangeWay"/>
         </a-list-item>
         <div v-if="loading && !busy" class="demo-loading-container">
           <a-spin />
@@ -39,18 +39,18 @@ import Vue from 'vue'
 import infiniteScroll from 'vue-infinite-scroll'
 import { EventBus, EventType } from '../../utils/eventBus'
 import processCenter, { EventName } from '../../utils/processCenter'
-import { ArrangeWay, ResourceType, ResourceItem } from './resourceModel'
+import { ArrangeWay, ResourceType, ResourceItem } from './ResourceModel'
 import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
-import resourceItem from './resourceItem.vue'
-import resourceHeader from './resourceHeader.vue'
+import ResourceListItem from './ResourceListItem.vue'
+import ResourceHeader from './ResourceHeader.vue'
 import OperateListAlter from '../OperateListAlter/index.vue'
 
 export default Vue.extend({
   name: 'resource-list',
   directives: { infiniteScroll },
   components: {
-    resourceItem,
-    resourceHeader,
+    ResourceListItem,
+    ResourceHeader,
     OperateListAlter
   },
   props: {
@@ -109,7 +109,7 @@ export default Vue.extend({
         // TODO: 在有多级目录时，这里应该设置一个数据栈
         this.currentArray = this.dataSource
         this.directoryList = this.currentArray
-        this.$store.dispatch('popPath')
+        this.$store.dispatch('Resource/popPath')
       })
       EventBus.$on(EventType.categoryChangeAction, (type: CategoryType) => {
         this.currentArray = this.filterCurrentArray(type)
@@ -172,7 +172,7 @@ export default Vue.extend({
       this.currentArray = item.subResources !== undefined ? item.subResources : []
       this.directoryList = this.currentArray
       // change path
-      this.$store.dispatch('pushPath', item.name)
+      this.$store.dispatch('Resource/pushPath', item.name)
     },
     didOperatItem (event: MouseEvent, item: ResourceItem) {
       event.preventDefault()

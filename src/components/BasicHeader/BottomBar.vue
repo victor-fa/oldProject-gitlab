@@ -7,7 +7,7 @@
         iconWidth="6px"
         @click.native="backAction"
       />
-      <span>{{ this.$store.state.directory }}</span>
+      <span>{{ directory }}</span>
     </div>
     <div class="right-bar">
       <custom-button
@@ -55,12 +55,13 @@
 
 <script lang="ts">
 import Vue, { Component } from 'vue'
+import { mapGetters } from 'vuex'
 import CustomButton from '../../components/CustomButton/index.vue'
 import SortPopoverList from './SortPopoverList.vue'
 import { SortWay } from './Model/sortList'
 import { operateFuncList } from './Model/operateIconList'
 import { EventBus, EventType } from '../../utils/eventBus'
-import { ArrangeWay } from '../ResourceList/resourceModel'
+import { ArrangeWay } from '../ResourceList/ResourceModel'
 
 interface ArrangeData {
   isSelected: boolean
@@ -78,6 +79,9 @@ export default Vue.extend({
       operateFuncList
     }
   },
+  computed: {
+    ...mapGetters('Resource', ['directory'])
+  },
   methods: {
     sortWayChange (sender: SortWay) {
       this.visible = false
@@ -88,7 +92,7 @@ export default Vue.extend({
     },
     backAction () {
       // TODO: 一级目录不能返回，应该是置灰button
-      if (this.$store.state.directory === '网盘') {
+      if (this.directory === '网盘') {
         return
       }
       EventBus.$emit(EventType.backAction)

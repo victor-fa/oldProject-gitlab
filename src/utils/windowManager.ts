@@ -1,5 +1,4 @@
 import { BrowserWindow, Menu } from 'electron'
-import { ResourceType } from '../components/ResourceList/resourceModel'
 
 interface WindowOptions extends Electron.BrowserWindowConstructorOptions {
   path: string

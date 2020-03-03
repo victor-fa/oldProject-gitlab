@@ -35,7 +35,7 @@
           <a-button>忘记密码</a-button>
         </li>
         <li class="login-button">
-          <a-button block>登录</a-button>
+          <a-button block @click="loginAction">登录</a-button>
         </li>
         <li class="register-button">
           <a-button @click="codeLoginBtnClick">扫码登录</a-button>
@@ -51,6 +51,9 @@ import { loginIcons } from './iconList'
 import CustomButton from '../../components/CustomButton/index.vue'
 import BasicForm from '../../components/BasicForm/index.vue'
 import router from '../../router'
+import UserAPI from '../../api/UserAPI'
+import { LoginResponse } from '../../api/UserModel'
+import { ACCESS_TOKEN, USER_MODEL } from '../../common/constants'
 
 export default Vue.extend({
   name: 'login',
@@ -61,8 +64,8 @@ export default Vue.extend({
   data () {
     return {
       loginIcons,
-      account: '123',
-      password: '1234',
+      account: '',
+      password: '',
       rememberPassword: false
     }
   },
@@ -73,6 +76,34 @@ export default Vue.extend({
     },
     codeLoginBtnClick () {
       router.push('qr-code-login')
+    },
+    loginAction () {
+      const myThis: any = this
+      const tip = this.checkInputFrom()
+      if (tip !== undefined) {
+        myThis.$message.warning(tip, 1.5)
+        return
+      }
+      UserAPI.login(this.account, this.password).then((response): void => {
+        if (response.data.code !== 200) {
+          myThis.$message.warning(response.data.msg)
+          return
+        }
+        const loginResponse = response.data.data as LoginResponse
+        this.$store.dispatch('User/updateUser', loginResponse.user)
+        this.$store.dispatch('User/updateAccessToken', loginResponse.accessToken)
+      }).catch((error): void => {
+        console.log(error)
+        myThis.$message.error('网络连接错误,请检测网络')
+      })
+      console.log('123')
+    },
+    checkInputFrom () {
+      if (this.account.length === 0) {
+        return '请输入账号'
+      } else if (this.password.length === 0) {
+        return '情输入密码'
+      }
     }
   }
 })

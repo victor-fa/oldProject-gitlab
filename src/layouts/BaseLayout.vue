@@ -26,12 +26,6 @@ import ILogo from '../components/Logo/index.vue'
 import SiderMenu from '../components/SiderMenu/index.vue'
 import BasicHeader from '../components/BasicHeader/index.vue'
 import BasicFooter from '../components/BasicFooter/index.vue'
-import UserAPI, { SmsType } from '../api/UserAPI'
-
-interface Test {
-  a: string,
-  b: string
-}
 
 export default Vue.extend({
   name: 'base-layout',
@@ -40,29 +34,6 @@ export default Vue.extend({
     SiderMenu,
     BasicHeader,
     BasicFooter
-  },
-  mounted () {
-    console.log('start request')
-    // UserAPI.smsCode('13266522155', SmsType.register).then(response => {
-    //   console.log(response)
-    // }).catch(error => {
-    //   console.log(error)
-    // })
-    // UserAPI.register('13266522155', '123456', '4077').then(response => {
-    //   console.log(response)
-    // }).catch(error => {
-    //   console.log(error)
-    // })
-    UserAPI.login('13266522155', '123456').then(response => {
-      console.log(response)
-    }).catch(error => {
-      console.log(error)
-    })
-    // UserAPI.loginBySmscode('13266522155', '123456').then(response => {
-    //   console.log(response)
-    // }).catch(error => {
-    //   console.log(error)
-    // })
   }
 })
 </script>

@@ -2,9 +2,9 @@
 
 // storage key值常量
 const ACCESS_TOKEN = 'access_token'
-const REFRESH_TOKEN = 'refresh_token'
+const USER_MODEL = 'user_model'
 
 export {
   ACCESS_TOKEN,
-  REFRESH_TOKEN
+  USER_MODEL
 }
