@@ -1,16 +1,7 @@
 <template>
   <a-layout class="login-layout">
     <a-layout-header class="header">
-      <custom-button
-        :image="loginIcons.close"
-        iconWidth="10px"
-        class="header-item"
-      />
-      <custom-button
-        :image="loginIcons.hide"
-        iconWidth="10px"
-        class="header-item"
-      />
+      <window-menu class="window-menu"/>
     </a-layout-header>
     <a-layout-content class="content">
       <ul class="content-wrapper">
@@ -48,7 +39,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { loginIcons } from './iconList'
-import CustomButton from '../../components/CustomButton/index.vue'
+import WindowMenu from '../../components/WindowMenu/index.vue'
 import BasicForm from '../../components/BasicForm/index.vue'
 import router from '../../router'
 import UserAPI from '../../api/UserAPI'
@@ -58,8 +49,8 @@ import { ACCESS_TOKEN, USER_MODEL } from '../../common/constants'
 export default Vue.extend({
   name: 'login',
   components: {
-    CustomButton,
-    BasicForm
+    BasicForm,
+    WindowMenu
   },
   data () {
     return {
@@ -92,11 +83,11 @@ export default Vue.extend({
         const loginResponse = response.data.data as LoginResponse
         this.$store.dispatch('User/updateUser', loginResponse.user)
         this.$store.dispatch('User/updateAccessToken', loginResponse.accessToken)
+        // TODO: 登录成功了怎么搞？
       }).catch((error): void => {
         console.log(error)
         myThis.$message.error('网络连接错误,请检测网络')
       })
-      console.log('123')
     },
     checkInputFrom () {
       if (this.account.length === 0) {
@@ -119,9 +110,7 @@ export default Vue.extend({
     flex-direction: row-reverse;
     align-items: center;
     background-color: #fdffff;
-    .header-item {
-      height: 20px;
-      width: 20px;
+    .window-menu {
       margin-right: 10px;
     }
   }

@@ -9,6 +9,7 @@ interface UserState {
 }
 
 export default {
+  namespaced: true,
   state: {
     user: {},
     accessToken: {}

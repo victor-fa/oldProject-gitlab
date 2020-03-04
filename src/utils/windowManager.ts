@@ -13,7 +13,6 @@ interface WindowSize {
 }
 
 let loginWindow: BrowserWindow | null = null
-let operateListWindow: BrowserWindow | null = null
 const packageInfo = require('../../package.json')
 
 export default {
@@ -22,12 +21,15 @@ export default {
     let defaultOptions = {
       width: 800,
       height: 600,
+      minWidth: 600,
+      minHeight: 450,
       title: packageInfo.name,
       useContentSize: false,
       transparent: false,
       minimizable: true,
       maximizable: true,
       resizable: true,
+      frame: false,
       backgroundColor: '#f6f8fb',
       webPreferences: {
         nodeIntegration: true,
@@ -66,6 +68,7 @@ export default {
       width: 800,
       height: 600,
       title: '登录',
+      resizable: false,
       webPreferences: {
         nodeIntegration: true
       }
@@ -73,40 +76,5 @@ export default {
     loginWindow.on('closed', () => {
       loginWindow = null
     })
-  },
-  presentOperateListWindow (data: any): void {
-    if (operateListWindow) {
-      this.activeWindow(operateListWindow)
-      return
-    }
-    const { resourceType, screenW, screenH, screenX, screenY } = data[0]
-    const safePoint = calculateSafePoint({ x: screenX, y: screenH }, { width: screenW, height: screenY })
-    operateListWindow = this.createWindow({
-      path: 'operate-list-alter',
-      x: safePoint.x,
-      y: safePoint.y,
-      width: 100,
-      height: 185,
-      frame: false,
-      resizable: false,
-      movable: false,
-      webPreferences: {
-        nodeIntegration: true
-      }
-    })
-    operateListWindow.on('closed', () => {
-      operateListWindow = null
-    })
   }
-}
-
-const calculateSafePoint = (point: WindowPoint, screen: WindowSize) => {
-  const padding = 5
-  const width = 100
-  const height = 185
-  const currentX = point.x + width + padding
-  const currentY = point.y + height + padding
-  const safeX = currentX < screen.width ? point.x : screen.width - width - padding
-  const safeY = currentY < screen.height ? point.y : screen.height - height - padding
-  return { x: point.x, y: point.y }
 }

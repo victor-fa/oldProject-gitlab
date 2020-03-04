@@ -90,6 +90,7 @@ export default Vue.extend({
   mounted () {
     window.addEventListener('resize', this.observerWindowResize)
     this.observerEventBus()
+    this.observerWindowResize()
   },
   destroyed () {
     window.removeEventListener('resize', this.observerWindowResize)

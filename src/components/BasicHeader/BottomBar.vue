@@ -33,6 +33,7 @@
         />
         <span>
           <custom-button
+            ref="sortButton"
             :image="operateFuncList.sort"
             @click="clicked"
             :selectedBackgroundImage="operateFuncList.selectedBg"
@@ -84,8 +85,11 @@ export default Vue.extend({
   },
   methods: {
     sortWayChange (sender: SortWay) {
+      // hide popover
       this.visible = false
-      console.log(sender)
+      // reset sort button state
+      const sortBtn: any = this.$refs.sortButton
+      sortBtn.isSelected = false
     },
     clicked (sender: any) {
       console.log('123')

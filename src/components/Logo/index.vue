@@ -1,5 +1,5 @@
 <template>
-  <div class="logo" @click="logoClicked">
+  <div class="logo" style="-webkit-app-region: drag">
     <img src="../../assets/logo.png"/>
     <div class="logo-detail">
       <label class="logo-name">绿联云</label>

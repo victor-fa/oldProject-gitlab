@@ -1,8 +1,6 @@
 <template>
-  <div class="header-bar">
-    <img class="close" src="../../assets/close_icon.png">
-    <img class="resize" src="../../assets/maximize_icon.png">
-    <img class="hide-img" src="../../assets/hide_icon.png">
+  <div class="header-bar" style="-webkit-app-region: drag">
+    <window-menu class="window-menu"/>
     <a-divider class="split-line" type="vertical"/>
     <a-popover
       trigger="click"
@@ -28,39 +26,44 @@
     </a-popover>
     <div class="profile">
       <a-avatar class="avatar" icon="user" size="small"/>
-      <label class="nick-name">123</label>
+      <label class="nick-name">{{ this.nickname }}</label>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
 import { Setting, settingList, SettingType } from './Model/settingList'
 import processCenter, { EventName } from '../../utils/processCenter'
+import { User } from '../../api/UserModel'
+import WindowMenu from '../WindowMenu/index.vue'
 
 export default Vue.extend({
   name: 'header-bar',
+  components: {
+    WindowMenu
+  },
   data () {
     return {
       visible: false,
       settingList
     }
   },
+  computed: {
+    nickname: function () {
+      // TODO: user的变化没有实时更新nickname
+      const myThis: any = this
+      return _.get(myThis.user, 'userName', '')
+    },
+    ...mapGetters('User', ['user'])
+  },
   methods: {
     didSettingItemClick (sender: Setting) {
       this.visible = false
       if (sender.type === SettingType.logout) {
-        // const { remote } = require('electron')
-        // const win = new remote.BrowserWindow({
-        //   width: 800,
-        //   height: 600,
-        //   webPreferences: {
-        //     nodeIntegration: true
-        //   }
-        // })
-        // win.loadURL('app://./index.html')
-        // win.webContents.openDevTools()
-        processCenter.renderSend(EventName.login, '测试参数')
+        processCenter.renderSend(EventName.login)
       }
     }
   }
@@ -74,17 +77,8 @@ export default Vue.extend({
   display: flex;
   align-items: center;
   flex-direction: row-reverse;
-  .close {
-    height: 11px;
-    margin-right: 20px;
-  }
-  .resize {
-    height: 13px;
+  .window-menu {
     margin-right: 15px;
-  }
-  .hide-img {
-    height: 2px;
-    margin-right: 18px;
   }
   .split-line {
     width: 1px;
@@ -95,6 +89,7 @@ export default Vue.extend({
     margin: 0px 10px;
     display: flex;
     align-items: center;
+    -webkit-app-region: no-drag;
     .setting-icon {
       width: 14px;
       height: 13px;
@@ -108,6 +103,7 @@ export default Vue.extend({
   .profile {
     display: flex;
     align-items: center;
+    -webkit-app-region: no-drag;
     .avatar {
       width: 20px;
       height: 20px;

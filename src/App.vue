@@ -24,4 +24,7 @@ export default {
   padding: 0px;
   margin: 0px;
 }
+img {
+  -webkit-user-drag: none;
+}
 </style>

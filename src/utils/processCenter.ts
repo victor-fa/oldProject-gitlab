@@ -9,8 +9,7 @@ enum ChannelName {
 }
 
 enum EventName {
-  login = 'login',
-  showOperateListAlter = 'show_operate_list_alter'
+  login = 'login'
 }
 
 export default {
@@ -21,9 +20,6 @@ export default {
       switch (eventName) {
         case EventName.login:
           windowManager.presentLoginWindow()
-          break
-        case EventName.showOperateListAlter:
-          windowManager.presentOperateListWindow(data)
           break
         default:
           break
