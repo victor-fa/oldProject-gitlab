@@ -82,6 +82,7 @@ export default {
     return loginWindow
   },
   presentHomeWindow (): BrowserWindow {
+    this.closeCurrentWindow()
     if (homeWindow !== null) {
       this.activeWindow(homeWindow)
     } else {

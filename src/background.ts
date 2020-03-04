@@ -24,18 +24,18 @@ function createWindow () {
     createProtocol('app')
   }
   // validator token.
-  // const userJson = localStorage.getItem(USER_MODEL)
-  // const tokenJson = localStorage.getItem(ACCESS_TOKEN)
-  // if (userJson === null || tokenJson === null) {
-  //   windowManager.presentLoginWindow()
-  //   return
-  // }
-  // const timestamp = new Date().getDate() / 1000
-  // const token = JSON.parse(tokenJson) as AccessToken
-  // if (timestamp > token.expiresTime) {
-  //   const win = windowManager.presentLoginWindow()
-  //   processCenter.mainSend(win, EventName.toast, 'token过期，请重新登录')
-  // }
+  const userJson = localStorage.getItem(USER_MODEL)
+  const tokenJson = localStorage.getItem(ACCESS_TOKEN)
+  if (userJson === null || tokenJson === null) {
+    windowManager.presentLoginWindow()
+    return
+  }
+  const timestamp = new Date().getDate() / 1000
+  const token = JSON.parse(tokenJson) as AccessToken
+  if (timestamp > token.expiresTime) {
+    const win = windowManager.presentLoginWindow()
+    processCenter.mainSend(win, EventName.toast, 'token过期，请重新登录')
+  }
   windowManager.presentHomeWindow()
 }
 
