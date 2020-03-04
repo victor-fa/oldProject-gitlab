@@ -1,5 +1,5 @@
 // 负责main process和render processes之间的通讯
-import { ipcRenderer, ipcMain } from 'electron'
+import { ipcRenderer, ipcMain, BrowserWindow } from 'electron'
 import windowManager from './windowManager'
 
 enum ChannelName {
@@ -9,7 +9,9 @@ enum ChannelName {
 }
 
 enum EventName {
-  login = 'login'
+  login = 'present_login',
+  toast = 'show_toast',
+  home = 'present_home'
 }
 
 export default {
@@ -21,6 +23,9 @@ export default {
         case EventName.login:
           windowManager.presentLoginWindow()
           break
+        case EventName.home:
+          windowManager.presentHomeWindow()
+          break
         default:
           break
       }
@@ -30,12 +35,18 @@ export default {
       console.log(eventName)
     })
   },
-  // on render process send message
+  // on render process send async message
   renderSend (evnetName: EventName, ...args: any[]): void {
-    ipcRenderer.send(ChannelName.async, evnetName, args)
+    ipcRenderer.send(ChannelName.async, evnetName, ...args)
   },
   renderSendSync (evnetName: EventName, ...args: any[]): any {
-    return ipcRenderer.sendSync(ChannelName.sync, evnetName, args)
+    return ipcRenderer.sendSync(ChannelName.sync, evnetName, ...args)
+  },
+  // on main process send async message
+  mainSend (win: BrowserWindow, eventName: EventName, ...args: any[]): void {
+    win.webContents.on('did-finish-load', () => {
+      win.webContents.send(eventName, ...args)
+    })
   }
 }
 

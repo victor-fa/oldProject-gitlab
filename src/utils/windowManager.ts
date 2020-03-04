@@ -3,16 +3,9 @@ import { BrowserWindow, Menu } from 'electron'
 interface WindowOptions extends Electron.BrowserWindowConstructorOptions {
   path: string
 }
-interface WindowPoint {
-  x: number,
-  y: number
-}
-interface WindowSize {
-  width: number,
-  height: number
-}
 
 let loginWindow: BrowserWindow | null = null
+let homeWindow: BrowserWindow | null = null
 const packageInfo = require('../../package.json')
 
 export default {
@@ -41,10 +34,12 @@ export default {
     window = new BrowserWindow(newOptions)
     newOptions.backgroundColor && (window.setBackgroundColor(newOptions.backgroundColor))
     if (process.env.WEBPACK_DEV_SERVER_URL) {
+      // Load the url of the dev server if in development mode
       const url = (process.env.WEBPACK_DEV_SERVER_URL as string) + '#/' + newOptions.path
       window.loadURL(url)
       if (!process.env.IS_TEST && newOptions.path !== 'operate-list-alter') window.webContents.openDevTools()
     } else {
+      // Load the index.html when not in development
       window.loadURL('app://./index.html#/' + newOptions.path)
     }
     window.webContents.on('page-title-updated', () => {
@@ -58,23 +53,51 @@ export default {
     win.show()
     win.focus()
   },
-  presentLoginWindow (): void {
+  closeCurrentWindow (): void {
+    const wins = BrowserWindow.getAllWindows()
+    for (let index = 0; index < wins.length; index++) {
+      const win = wins[index]
+      win.close()
+    }
+  },
+  presentLoginWindow (): BrowserWindow {
+    this.closeCurrentWindow()
     if (loginWindow !== null) {
       this.activeWindow(loginWindow)
-      return
+    } else {
+      loginWindow = this.createWindow({
+        path: 'login-layout',
+        width: 800,
+        height: 600,
+        title: '登录',
+        resizable: false,
+        webPreferences: {
+          nodeIntegration: true
+        }
+      })
     }
-    loginWindow = this.createWindow({
-      path: 'login-layout',
-      width: 800,
-      height: 600,
-      title: '登录',
-      resizable: false,
-      webPreferences: {
-        nodeIntegration: true
-      }
-    })
     loginWindow.on('closed', () => {
       loginWindow = null
     })
+    return loginWindow
+  },
+  presentHomeWindow (): BrowserWindow {
+    if (homeWindow !== null) {
+      this.activeWindow(homeWindow)
+    } else {
+      homeWindow = this.createWindow({
+        path: '',
+        width: 800,
+        height: 600,
+        title: 'nas_client',
+        webPreferences: {
+          nodeIntegration: true
+        }
+      })
+    }
+    homeWindow.on('closed', () => {
+      homeWindow = null
+    })
+    return homeWindow
   }
 }

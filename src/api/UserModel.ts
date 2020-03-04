@@ -34,7 +34,7 @@ interface User {
 interface AccessToken {
   accessToken: string,
   refreshToken: string,
-  expiresTime: string
+  expiresTime: number
 }
 
 interface LoginResponse {

@@ -45,6 +45,7 @@ import router from '../../router'
 import UserAPI from '../../api/UserAPI'
 import { LoginResponse } from '../../api/UserModel'
 import { ACCESS_TOKEN, USER_MODEL } from '../../common/constants'
+import { EventName } from '../../utils/processCenter'
 
 export default Vue.extend({
   name: 'login',
@@ -59,6 +60,13 @@ export default Vue.extend({
       password: '',
       rememberPassword: false
     }
+  },
+  mounted () {
+    const { ipcRenderer } = require('electron')
+    ipcRenderer.on(EventName.toast, (event, message) => {
+      const myThis = this as any
+      myThis.$message.info(message)
+    })
   },
   methods: {
     onRememberChange () {
@@ -110,6 +118,7 @@ export default Vue.extend({
     flex-direction: row-reverse;
     align-items: center;
     background-color: #fdffff;
+    -webkit-user-drag: drag;
     .window-menu {
       margin-right: 10px;
     }
