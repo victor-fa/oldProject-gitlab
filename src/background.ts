@@ -5,10 +5,8 @@ import {
   createProtocol,
   installVueDevtools
 } from 'vue-cli-plugin-electron-builder/lib'
-import processCenter, { EventName } from './utils/processCenter'
-import windowManager from './utils/windowManager'
-import { USER_MODEL, ACCESS_TOKEN } from './common/constants'
-import { AccessToken } from './api/UserModel'
+import processCenter from './utils/processCenter'
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -19,24 +17,27 @@ let win: BrowserWindow | null
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { secure: true, standard: true } }])
 
 function createWindow () {
-  // create app scheme
-  if (process.env.NODE_ENV === 'production') {
+  // Create the browser window.
+  win = new BrowserWindow({ width: 800,
+    height: 600,
+    frame: false,
+    webPreferences: {
+      nodeIntegration: true
+    } })
+
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    // Load the url of the dev server if in development mode
+    win.loadURL(process.env.WEBPACK_DEV_SERVER_URL as string)
+    if (!process.env.IS_TEST) win.webContents.openDevTools()
+  } else {
     createProtocol('app')
+    // Load the index.html when not in development
+    win.loadURL('app://./index.html')
   }
-  // validator token.
-  const userJson = localStorage.getItem(USER_MODEL)
-  const tokenJson = localStorage.getItem(ACCESS_TOKEN)
-  if (userJson === null || tokenJson === null) {
-    windowManager.presentLoginWindow()
-    return
-  }
-  const timestamp = new Date().getDate() / 1000
-  const token = JSON.parse(tokenJson) as AccessToken
-  if (timestamp > token.expiresTime) {
-    const win = windowManager.presentLoginWindow()
-    processCenter.mainSend(win, EventName.toast, 'token过期，请重新登录')
-  }
-  windowManager.presentHomeWindow()
+
+  win.on('closed', () => {
+    win = null
+  })
 }
 
 // Quit when all windows are closed.
