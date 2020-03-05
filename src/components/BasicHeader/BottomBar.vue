@@ -62,7 +62,7 @@ import SortPopoverList from './SortPopoverList.vue'
 import { SortWay } from './Model/sortList'
 import { operateFuncList } from './Model/operateIconList'
 import { EventBus, EventType } from '../../utils/eventBus'
-import { ArrangeWay } from '../ResourceList/ResourceModel'
+import { ArrangeWay } from '../ResourceList/resourceModel'
 
 interface ArrangeData {
   isSelected: boolean

@@ -1,6 +1,7 @@
 {
   "name": "nas_client",
   "version": "0.1.0",
+  "author": "stormfa",
   "private": true,
   "description": "electron+vue nas server client",
   "scripts": {

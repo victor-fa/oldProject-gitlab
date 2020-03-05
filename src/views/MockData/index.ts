@@ -1,4 +1,4 @@
-import { ResourceItem, ResourceType } from '../../components/ResourceList/ResourceModel'
+import { ResourceItem, ResourceType } from '../../components/ResourceList/resourceModel'
 
 const resourceList: Array<ResourceItem> = [
   {
