@@ -61,7 +61,6 @@ export default {
     }
   },
   presentLoginWindow (): BrowserWindow {
-    this.closeCurrentWindow()
     if (loginWindow !== null) {
       this.activeWindow(loginWindow)
     } else {
@@ -79,10 +78,12 @@ export default {
     loginWindow.on('closed', () => {
       loginWindow = null
     })
+    loginWindow.on('ready-to-show', () => {
+      this.closeCurrentWindow()
+    })
     return loginWindow
   },
   presentHomeWindow (): BrowserWindow {
-    this.closeCurrentWindow()
     if (homeWindow !== null) {
       this.activeWindow(homeWindow)
     } else {
@@ -98,6 +99,9 @@ export default {
     }
     homeWindow.on('closed', () => {
       homeWindow = null
+    })
+    homeWindow.on('ready-to-show', () => {
+      this.closeCurrentWindow()
     })
     return homeWindow
   }
