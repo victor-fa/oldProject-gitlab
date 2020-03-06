@@ -42,10 +42,16 @@ interface LoginResponse {
   user: User
 }
 
+interface Account {
+  account: string,
+  password: string
+}
+
 export {
   BasicResponse,
   SmsType,
   LoginResponse,
   AccessToken,
-  User
+  User,
+  Account
 }

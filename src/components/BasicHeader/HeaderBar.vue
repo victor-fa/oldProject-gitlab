@@ -53,7 +53,6 @@ export default Vue.extend({
   },
   computed: {
     nickname: function () {
-      // TODO: user的变化没有实时更新nickname
       const myThis: any = this
       return _.get(myThis.user, 'userName', '')
     },
@@ -64,6 +63,7 @@ export default Vue.extend({
       this.visible = false
       if (sender.type === SettingType.logout) {
         processCenter.renderSend(EventName.login)
+        this.$store.dispatch('clearCacheUserInfo')
       }
     }
   }

@@ -1,18 +1,20 @@
 import _ from 'lodash'
-import { AccessToken, User } from '../../api/UserModel'
+import { AccessToken, User, Account } from '../../api/UserModel'
 import { ActionContext } from 'vuex'
-import { USER_MODEL, ACCESS_TOKEN } from '../../common/constants'
+import { USER_MODEL, ACCESS_TOKEN, ACCOUNT } from '../../common/constants'
 
 interface UserState {
-  user: User,
-  accessToken: AccessToken
+  user?: User,
+  accessToken?: AccessToken,
+  cacheAccounts: Array<Account>
 }
 
 export default {
   namespaced: true,
   state: {
     user: {},
-    accessToken: {}
+    accessToken: {},
+    cacheAccounts: []
   },
   getters: {
     user: (state: UserState) => {
@@ -34,6 +36,16 @@ export default {
         return JSON.parse(tokenJson)
       }
       return {}
+    },
+    cacheAccounts: (state: UserState) => {
+      if (!_.isEmpty(state.cacheAccounts)) {
+        return state.cacheAccounts
+      }
+      const accountStr = localStorage.getItem(ACCOUNT)
+      if (accountStr !== null && accountStr.length > 0) {
+        return accountStr.split(',')
+      }
+      return []
     }
   },
   mutations: {
@@ -44,6 +56,28 @@ export default {
     UPDATE_ACCESS_TOKEN (state: UserState, token: AccessToken) {
       state.accessToken = token
       localStorage.setItem(ACCESS_TOKEN, JSON.stringify(token))
+    },
+    ADD_ACCOUNT (state: UserState, account: Account) {
+      state.cacheAccounts.push(account)
+      const accountStr = state.cacheAccounts.toString()
+      localStorage.setItem(ACCOUNT, accountStr)
+    },
+    REMOVE_ACCOUNT (state: UserState, account: string) {
+      for (let index = 0; index < state.cacheAccounts.length; index++) {
+        const element = state.cacheAccounts[index]
+        if (element.account === account) {
+          state.cacheAccounts.splice(index, 1)
+          const accountStr = state.cacheAccounts.toString()
+          localStorage.setItem(ACCOUNT, accountStr)
+          break
+        }
+      }
+    },
+    CLEAR_CACHE_USERINFO (state: UserState) {
+      state.user = undefined
+      localStorage.removeItem(USER_MODEL)
+      state.accessToken = undefined
+      localStorage.removeItem(ACCESS_TOKEN)
     }
   },
   actions: {
@@ -52,6 +86,15 @@ export default {
     },
     async updateAccessToken (context: ActionContext<UserState, UserState>, token: AccessToken) {
       context.commit('UPDATE_ACCESS_TOKEN', token)
+    },
+    async clearCacheUserInfo (context: ActionContext<UserState, UserState>) {
+      context.commit('CLEAR_CACHE_USERINFO')
+    },
+    async addAccount (context: ActionContext<UserState, UserState>, account: Account) {
+      context.commit('ADD_ACCOUNT', account)
+    },
+    async removeAccount (context: ActionContext<UserState, UserState>, account: string) {
+      context.commit('REMOVE_ACCOUNT', account)
     }
   }
 }
