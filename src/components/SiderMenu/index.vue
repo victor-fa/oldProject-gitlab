@@ -17,6 +17,7 @@
 import Vue from 'vue'
 import { funcListRouters, FuncListItem } from '../../router/modules/funclist'
 import router from '../../router'
+import { EventBus, EventType } from '../../utils/eventBus'
 
 export default Vue.extend({
   data () {
@@ -31,6 +32,7 @@ export default Vue.extend({
       item.isSelected = true
       this.selectedItem.isSelected = false
       this.selectedItem = item
+      EventBus.$emit(EventType.leftMenuChangeAction, path)
       router.replace(path)
     }
   }

@@ -1,7 +1,7 @@
 <template>
   <ul class="middle-bar">
     <li
-    v-for="(item, index) in categorys"
+    v-for="(item, index) in currentArr"
     :key="index"
     v-bind:class="{ itemSelected: item.isSelected }"
     @click="onSelectAction(item)">
@@ -13,25 +13,40 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { categorys, Category } from './Model/categoryList'
+import { categorys, taskCategorys, Category } from './Model/categoryList'
 import { EventBus, EventType } from '../../utils/eventBus'
 
 export default Vue.extend({
   name: 'middle-bar',
   data () {
     return {
-      categorys,
+      currentArr: categorys,
       currentCategory: categorys[0]
     }
   },
+  mounted () {
+    this.observerEventBus()
+  },
   methods: {
-    onSelectAction: function (item: Category): void {
+    onSelectAction: function (item: any): void {
       if (item.isSelected) { return }
       // TODO: 现将所有置为未选中，调试状态总是出问题
       this.currentCategory.isSelected = false
       item.isSelected = true
       this.currentCategory = item
       EventBus.$emit(EventType.categoryChangeAction, item.type)
+    },
+    observerEventBus () {
+      EventBus.$on(EventType.leftMenuChangeAction, (path: any) => {
+        console.log(path);
+        if (path === '/transport') {
+          this.currentArr = taskCategorys;
+          this.currentCategory = taskCategorys[0];
+        } else {
+          this.currentArr = categorys;
+          this.currentCategory = categorys[0];
+        }
+      })
     }
   }
 })
@@ -50,7 +65,8 @@ export default Vue.extend({
     color: #484848;
     font-weight: bold;
     font-size: 14px;
-    width: 60px;
+    width: 84px;
+    padding: 0 14px;
     line-height: 25px;
     margin-bottom: 10px;
   }

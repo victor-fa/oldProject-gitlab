@@ -13,6 +13,7 @@
           <li
             v-for="(subItem, index) in item.items"
             :key="index"
+            @click="menuClick(subItem.commend, subItem.title)"
             class="operate-item"
           >
             {{ subItem.title }}
@@ -27,7 +28,7 @@ import Vue from 'vue'
 import { operateList } from './operateList'
 
 export default Vue.extend({
-  name: 'operate-list-alert',
+  name: 'operate-list-alter',
   data () {
     return {
       operateList,
@@ -44,6 +45,10 @@ export default Vue.extend({
     windowClick (event: MouseEvent) {
       if (!this.isShow) { return }
       event.stopImmediatePropagation()
+      this.hideAlter()
+    },
+    menuClick (commend: String, title: String) {
+      this.$emit('callback', commend, title)
       this.hideAlter()
     },
     showAlter () {

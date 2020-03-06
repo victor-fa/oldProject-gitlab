@@ -81,7 +81,7 @@ let funcListRouters = [
     component: () => import('../../views/Transport/index.vue'),
     name: 'transport',
     meta: {
-      title: '传输',
+      title: '任务管理',
       icon: require('../../assets/transport_icon.png'),
       selectedIcon: require('../../assets/transport_icon_selected.png'),
       isSelected: false

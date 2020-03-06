@@ -1,6 +1,8 @@
 <template>
   <div>
     <resource-header v-if="isShowHeader"/>
+    <div class="cd-upload-tips" v-show="ShowUploadTips">松开鼠标开始上传文件</div>
+    <!-- v-show="ShowUploadTips && DiskData.Type === 'disk' && loadClassify === 'normal'" -->
     <div
       class="resource-list"
       v-bind:class="{ horizontalResourceList: !isShowHeader }"
@@ -8,6 +10,9 @@
       v-infinite-scroll="handleInfiniteOnLoad"
       :infinite-scroll-disabled="busy"
       :infinite-scroll-distance="10"
+      @dragover.prevent.stop="ShowUploadTips = true"
+      @dragleave.prevent.stop="ShowUploadTips = false"
+      @drop.prevent.stop="UploadDrop"
     >
       <a-list
         :dataSource="currentArray"
@@ -30,6 +35,7 @@
       ref="operateListAlter"
       :style="alterStyle"
       @blur="alterBlur"
+      @callback="DiskFeatureControl"
     />
   </div>
 </template>
@@ -44,6 +50,7 @@ import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
 import ResourceListItem from './ResourceListItem.vue'
 import ResourceHeader from './resourceHeader.vue'
 import OperateListAlter from '../OperateListAlter/index.vue'
+import upload from '../../utils/file/upload';
 
 export default Vue.extend({
   name: 'resource-list',
@@ -78,6 +85,30 @@ export default Vue.extend({
   },
   data () {
     return {
+			DiskData: {
+				ClipboardType: false, //剪切板是复制还是剪切
+				Clipboard: [], //剪切板的文件
+				SelectFiles: [], //选择的文件
+				NavData: [], //记录导航栏数据
+				KeyFlag: false, //全局键盘记录
+				NowSelect: {}, //记录一个选择的文件
+				DiskShowState: 'cd-disk-block-file', //文件显示类型，默认图标,
+				SelectTips: '0个项目', //选择文件提示
+				Type: 'disk', //头部分类标签,
+				ClassifyName: '网盘', //地址栏左侧分类显示文本,
+				DiskSize: {
+					/*网盘大小*/
+					total: 0,
+					use: 0,
+					Percent: '0%',
+					Background: '#2682fc',
+					text: '0B/0B'
+				}
+			},
+			// UserDiskData: [], //存放用户网盘数据
+			/*上传提示*/
+			ShowUploadTips: false,
+			loadClassify: 'normal', //网盘加载的分类
       loading: false,
       busy: false,
       scrollHeight: 450,
@@ -158,6 +189,7 @@ export default Vue.extend({
     },
     handleInfiniteOnLoad () {
       console.log('load more data')
+      // EventBus.$emit(EventType.categoryChangeAction, item.type)
     },
     didSelectItem (item: ResourceItem) {
       switch (item.type) {
@@ -191,15 +223,82 @@ export default Vue.extend({
       let top = clientY + alterHeight < height ? clientY : height - alterHeight
       return { left: left + 'px', top: top + 'px' }
     },
+    UploadDrop (e: any) { //拖拽上传
+			if (this.loadClassify === 'normal') {
+				this.PrepareUploadFile(e.dataTransfer);
+				this.ShowUploadTips = false;
+			}
+		},
+		PrepareUploadFile(data: any) {
+			upload.prepareFile(data, {
+				data: '123',
+				add: (file: any) => {
+          console.log(file);
+					// this.TransformData.push(file);
+					// this.$message.info((data.target ? data.target : data).files.length + '个文件已加入上传列队');
+				},
+				success: (file: any, rs: any) => {
+          console.log(file + rs);
+					// if (this.NowDiskID === rs.data.parent_id) {
+					// 	this.UserDiskData.push(rs.data);
+					// }
+					this.DiskFeatureControl('popup', file.name + '上传完成'); /*消息提醒*/
+				}
+			});
+		},
     alterBlur (el: any) {
       console.log('alter blur')
       console.log(el)
+    },
+    // 获取到菜单返回的结果
+    DiskFeatureControl (commend: any, data: any) {
+      if (commend === 'copy' || commend === 'cut') {
+        let tips = '';
+        console.log();
+        console.log(123123);
+        switch (commend) {
+          case 'copy':
+            tips = tips + '已复制到剪贴板'
+            break
+          case 'cut':
+            tips = tips + '已剪切到剪贴板'
+            break
+        }
+        // this.$message.info(tips)
+      }
+      switch (commend) {
+        case 'upload':
+          break
+        // case 'download': //下载文件
+          // this.$Message.info(tips + '已加入下载列队');
+          // break
+        default:
+          break
+      }
     }
   }
 })
 </script>
 
 <style lang="less" scoped>
+/*上传提示*/
+.cd-upload-tips {
+	width: 100%;
+	height: 35px;
+	line-height: 35px;
+	background: #01B74F;
+	position: relative;
+	text-indent: 20px;
+	top: -2px;
+	z-index: 3;
+	-webkit-animation-duration: 0.35s;
+	animation-duration: 0.35s;
+	-webkit-animation-fill-mode: both;
+	animation-fill-mode: both;
+	-webkit-animation-name: slideInDown;
+	animation-name: slideInDown;
+	color: #fff;
+}
 .resource-list {
   overflow: auto;
   .demo-loading-container {
