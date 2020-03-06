@@ -36,11 +36,10 @@ export default {
       vcode
     })
   },
-  logout () {
+  logout (): Promise<AxiosResponse<BasicResponse>> {
     const tokenJson = localStorage.getItem(ACCESS_TOKEN)
     if (tokenJson === null) {
-      console.log('not find access_token')
-      return
+      return Promise.reject(Error('not find access_token'))
     }
     const token = JSON.parse(tokenJson) as AccessToken
     return Vue.axios.get(userModulePath + '/logout', {

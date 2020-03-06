@@ -3,7 +3,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import BaseLayout from '../layouts/BaseLayout.vue'
 import { funcListRouters } from './modules/funclist'
-import processCenter, { EventName } from '../utils/processCenter'
+import processCenter, { MainEventName } from '../utils/processCenter'
 import { USER_MODEL, ACCESS_TOKEN } from '../common/constants'
 import { AccessToken } from '../api/UserModel'
 
@@ -77,7 +77,7 @@ const showToast = (toast: boolean | string) => {
   const { BrowserWindow } = require('electron').remote
   const win = BrowserWindow.getFocusedWindow()
   if (win !== null) {
-    processCenter.mainSend(win, EventName.toast, toast)
+    processCenter.mainSend(win, MainEventName.toast, toast)
   }
 }
 

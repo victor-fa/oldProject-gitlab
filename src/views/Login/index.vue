@@ -50,7 +50,7 @@ import BasicForm from '../../components/BasicForm/index.vue'
 import router from '../../router'
 import UserAPI from '../../api/UserAPI'
 import { LoginResponse, Account } from '../../api/UserModel'
-import processCenter, { EventName } from '../../utils/processCenter'
+import processCenter, { EventName, MainEventName } from '../../utils/processCenter'
 import { message } from 'ant-design-vue'
 
 export default Vue.extend({
@@ -75,10 +75,11 @@ export default Vue.extend({
   mounted () {
     this.observerToastNotify()
     this.dropdownItems = _.cloneDeep(this.cacheAccounts)
+    this.$store.dispatch('clearCacheUserInfo')
   },
   methods: {
     observerToastNotify () {
-      processCenter.renderObserver(EventName.toast, (event, message: string) => {
+      processCenter.renderObserver(MainEventName.toast, (event, message: string) => {
         const myThis = this as any
         myThis.$message.info(message)
       })

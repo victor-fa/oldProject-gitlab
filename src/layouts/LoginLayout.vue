@@ -18,7 +18,10 @@
 import Vue from 'vue'
 
 export default Vue.extend({
-  name: 'login-layout'
+  name: 'login-layout',
+  mounted () {
+    console.log(this.$route.params.msg)
+  }
 })
 </script>
 

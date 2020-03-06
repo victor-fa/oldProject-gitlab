@@ -39,6 +39,7 @@ import { Setting, settingList, SettingType } from './Model/settingList'
 import processCenter, { EventName } from '../../utils/processCenter'
 import { User } from '../../api/UserModel'
 import WindowMenu from '../WindowMenu/index.vue'
+import UserAPI from '../../api/UserAPI'
 
 export default Vue.extend({
   name: 'header-bar',
@@ -61,10 +62,26 @@ export default Vue.extend({
   methods: {
     didSettingItemClick (sender: Setting) {
       this.visible = false
-      if (sender.type === SettingType.logout) {
-        processCenter.renderSend(EventName.login)
-        this.$store.dispatch('clearCacheUserInfo')
+      switch (sender.type) {
+        case SettingType.logout:
+          this.switchUser()
+          break
+        default:
+          break
       }
+    },
+    switchUser () {
+      // const myThis
+      UserAPI.logout().then(response => {
+        if (response.data.code !== 200) {
+          this.$message.error(response.data.msg)
+          return
+        }
+        processCenter.renderSend(EventName.login)
+      }).catch(error => {
+        console.log(error)
+        this.$message.error('网络连接错误,请检测网络')
+      })
     }
   }
 })

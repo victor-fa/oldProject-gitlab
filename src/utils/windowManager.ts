@@ -1,3 +1,4 @@
+import processCenter, { MainEventName } from '@/utils/processCenter'
 import { BrowserWindow, Menu } from 'electron'
 
 interface WindowOptions extends Electron.BrowserWindowConstructorOptions {
@@ -60,7 +61,7 @@ export default {
       win.close()
     }
   },
-  presentLoginWindow (): BrowserWindow {
+  presentLoginWindow (msg: string): BrowserWindow {
     this.closeCurrentWindow()
     if (loginWindow !== null) {
       this.activeWindow(loginWindow)
@@ -78,6 +79,9 @@ export default {
     }
     loginWindow.on('closed', () => {
       loginWindow = null
+    })
+    loginWindow.on('show', () => {
+      processCenter.mainSend(loginWindow!, MainEventName.toast, msg)
     })
     return loginWindow
   },
