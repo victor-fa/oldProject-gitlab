@@ -39,10 +39,10 @@ import Vue from 'vue'
 import infiniteScroll from 'vue-infinite-scroll'
 import { EventBus, EventType } from '../../utils/eventBus'
 import processCenter, { EventName } from '../../utils/processCenter'
-import { ArrangeWay, ResourceType, ResourceItem } from './resourceModel'
+import { ArrangeWay, ResourceType, ResourceItem } from './ResourceModel'
 import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
 import ResourceListItem from './ResourceListItem.vue'
-import ResourceHeader from './resourceHeader.vue'
+import ResourceHeader from './ResourceHeader.vue'
 import OperateListAlter from '../OperateListAlter/index.vue'
 
 export default Vue.extend({
