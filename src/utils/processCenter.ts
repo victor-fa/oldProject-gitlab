@@ -8,10 +8,15 @@ enum ChannelName {
   replay = 'asynchronous-replay'
 }
 
+// use in render process
 enum EventName {
   login = 'present_login',
-  toast = 'show_toast',
   home = 'present_home'
+}
+
+// use in main process
+enum MainEventName {
+  toast = 'show_toast'
 }
 
 export default {
@@ -21,7 +26,8 @@ export default {
       event.reply(ChannelName.replay)
       switch (eventName) {
         case EventName.login:
-          windowManager.presentLoginWindow()
+          const msg = data as string
+          windowManager.presentLoginWindow(msg)
           break
         case EventName.home:
           windowManager.presentHomeWindow()
@@ -35,6 +41,11 @@ export default {
       console.log(eventName)
     })
   },
+  // on render process observing
+  renderObserver (eventName: MainEventName, listener: (event: Electron.IpcRendererEvent, ...args: any[]) => void) {
+    const { ipcRenderer } = require('electron')
+    ipcRenderer.on(eventName, listener)
+  },
   // on render process send async message
   renderSend (evnetName: EventName, ...args: any[]): void {
     ipcRenderer.send(ChannelName.async, evnetName, ...args)
@@ -43,7 +54,7 @@ export default {
     return ipcRenderer.sendSync(ChannelName.sync, evnetName, ...args)
   },
   // on main process send async message
-  mainSend (win: BrowserWindow, eventName: EventName, ...args: any[]): void {
+  mainSend (win: BrowserWindow, eventName: MainEventName, ...args: any[]): void {
     win.webContents.on('did-finish-load', () => {
       win.webContents.send(eventName, ...args)
     })
@@ -51,5 +62,6 @@ export default {
 }
 
 export {
-  EventName
+  EventName,
+  MainEventName
 }

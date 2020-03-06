@@ -26,7 +26,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { ArrangeWay, ResourceType, ResourceItem } from './resourceModel'
+import { ArrangeWay, ResourceType, ResourceItem } from './ResourceModel'
 
 export default Vue.extend({
   name: 'resource-item',

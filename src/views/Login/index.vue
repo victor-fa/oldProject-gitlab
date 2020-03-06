@@ -11,6 +11,10 @@
             :icon="loginIcons.account"
             placeholder="用户名/手机号/邮箱"
             v-model="account"
+            :selectItems="dropdownItems"
+            v-on:change="accountChangeAction"
+            v-on:select="accountSelectAction"
+            v-on:delete="accountDeleteAction"
           />
         </li>
         <li class="password-from">
@@ -37,15 +41,17 @@
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
 import { loginIcons } from './iconList'
 import WindowMenu from '../../components/WindowMenu/index.vue'
 import BasicForm from '../../components/BasicForm/index.vue'
 import router from '../../router'
 import UserAPI from '../../api/UserAPI'
-import { LoginResponse } from '../../api/UserModel'
-import { ACCESS_TOKEN, USER_MODEL } from '../../common/constants'
-import { EventName } from '../../utils/processCenter'
+import { LoginResponse, Account } from '../../api/UserModel'
+import processCenter, { EventName, MainEventName } from '../../utils/processCenter'
+import { message } from 'ant-design-vue'
 
 export default Vue.extend({
   name: 'login',
@@ -54,21 +60,30 @@ export default Vue.extend({
     WindowMenu
   },
   data () {
+    let items: Account[] = []
     return {
       loginIcons,
       account: '',
       password: '',
-      rememberPassword: false
+      rememberPassword: false,
+      dropdownItems: items
     }
   },
+  computed: {
+    ...mapGetters('User', ['cacheAccounts'])
+  },
   mounted () {
-    const { ipcRenderer } = require('electron')
-    ipcRenderer.on(EventName.toast, (event, message) => {
-      const myThis = this as any
-      myThis.$message.info(message)
-    })
+    this.observerToastNotify()
+    this.dropdownItems = _.cloneDeep(this.cacheAccounts)
+    this.$store.dispatch('User/clearCacheUserInfo')
   },
   methods: {
+    observerToastNotify () {
+      processCenter.renderObserver(MainEventName.toast, (event, message: string) => {
+        const myThis = this as any
+        myThis.$message.info(message)
+      })
+    },
     onRememberChange () {
       const element: any = this.$refs.password_checkbox
       this.rememberPassword = element.checked
@@ -77,32 +92,61 @@ export default Vue.extend({
       router.push('qr-code-login')
     },
     loginAction () {
+      if (!this.checkInputFrom()) return
       const myThis: any = this
-      const tip = this.checkInputFrom()
-      if (tip !== undefined) {
-        myThis.$message.warning(tip, 1.5)
-        return
-      }
       UserAPI.login(this.account, this.password).then((response): void => {
         if (response.data.code !== 200) {
           myThis.$message.warning(response.data.msg)
           return
         }
         const loginResponse = response.data.data as LoginResponse
-        this.$store.dispatch('User/updateUser', loginResponse.user)
-        this.$store.dispatch('User/updateAccessToken', loginResponse.accessToken)
-        // TODO: 登录成功了怎么搞？
+        this.cacheUserInfo(loginResponse)
+        processCenter.renderSend(EventName.home)
       }).catch((error): void => {
         console.log(error)
         myThis.$message.error('网络连接错误,请检测网络')
       })
     },
+    cacheUserInfo (response: LoginResponse) {
+      this.$store.dispatch('User/updateUser', response.user)
+      this.$store.dispatch('User/updateAccessToken', response.accessToken)
+      if (!this.rememberPassword) return
+      const account: Account = { account: this.account, password: this.password }
+      this.$store.dispatch('User/addAccount', account)
+    },
     checkInputFrom () {
       if (this.account.length === 0) {
-        return '请输入账号'
+        this.$message.warning('请输入账号', 1.5)
+        return false
       } else if (this.password.length === 0) {
-        return '情输入密码'
+        this.$message.warning('请输入密码', 1.5)
+        return false
       }
+      return true
+    },
+    accountChangeAction (value: string) {
+      this.dropdownItems = this.cacheAccounts.filter((element: Account) => {
+        const account = element.account.toLowerCase()
+        const keyword = value.toLowerCase()
+        if (account === keyword) {
+          return false
+        }
+        return account.indexOf(keyword) >= 0
+      })
+    },
+    accountSelectAction (item: Account) {
+      this.account = item.account
+      this.dropdownItems = []
+    },
+    accountDeleteAction (item: Account) {
+      for (let index = 0; index < this.dropdownItems.length; index++) {
+        const element = this.dropdownItems[index]
+        if (element.account === item.account) {
+          this.dropdownItems.splice(index, 1)
+          break
+        }
+      }
+      this.$store.dispatch('User/removeAccount', item.account)
     }
   }
 })

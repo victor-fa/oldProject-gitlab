@@ -1,19 +1,52 @@
 <template>
   <div class="basic-form">
     <img :src="icon">
-    <a-input
-      :type="inputType"
-      :placeholder="placeholder"
-      :value="text"
-      @change="changeValue($event.target.value)"
-    />
+    <div class="dropdown">
+      <a-input
+        ref="basicFormInput"
+        :type="inputType"
+        :placeholder="placeholder"
+        :value="text"
+        :allowClear="true"
+        @change="handleChange($event.target.value)"
+        @focus="handleFocus"
+        @blur="handleBlur"
+      />
+      <ul
+        v-if="isLoadSelect"
+        class="dropdown-content"
+      >
+        <li
+          v-for="(item, index) in selectItems"
+          :key="index"
+          class="dropdown-item"
+          @click="handleSelect(item)"
+        >
+          <label>{{ item.account }}</label>
+          <custom-button
+            :image="CloseIcon"
+            iconWidth="8px"
+            class="delete-button"
+            @click.stop.native="handleDelete(item)"
+          />
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
+// TODO: 当前dropdown动画不生效
+
 <script lang="ts">
 import Vue from 'vue'
+import CustomButton from '../../components/CustomButton/index.vue'
+import CloseIcon from '../../assets/close_icon.png'
+
 export default Vue.extend({
   name: 'basic-form',
+  components: {
+    CustomButton
+  },
   model: {
     prop: 'text',
     event: 'change'
@@ -26,16 +59,50 @@ export default Vue.extend({
     },
     isSecure: {
       default: false
+    },
+    selectItems: Array
+  },
+  data () {
+    return {
+      CloseIcon,
+      showDropdown: false,
+      autoFocus: false
     }
   },
   computed: {
     inputType: function () {
       return this.isSecure ? 'password' : 'text'
+    },
+    isLoadSelect: function (): boolean {
+      if (this.selectItems !== undefined && this.selectItems.length > 0) {
+        return true && this.showDropdown
+      }
+      return false && this.showDropdown
     }
   },
   methods: {
-    changeValue (value: string) {
+    handleChange (value: string) {
       this.$emit('change', value)
+    },
+    handleFocus () {
+      this.showDropdown = true
+    },
+    handleBlur () {
+      setTimeout(() => {
+        if (this.autoFocus) return
+        this.autoFocus = false
+        this.showDropdown = false
+      }, 100)
+    },
+    handleSelect (item: any) {
+      this.$emit('select', item)
+    },
+    handleDelete (item: any) {
+      this.$emit('delete', item)
+      // 删除按钮点击，输入框不能失去焦点
+      this.autoFocus = true
+      const input = this.$refs.basicFormInput as any
+      input.focus()
     }
   }
 })
@@ -51,23 +118,54 @@ export default Vue.extend({
     height: 20px;
     margin-left: 13px;
   }
-  input {
-    font-size: 14px;
-    line-height: 20px;
+  .dropdown {
+    position: relative;
+    flex: 1;
     margin-left: 8px;
     margin-right: 13px;
-    border: none;
-    padding-left: 8px;
+    input {
+      font-size: 14px;
+      line-height: 20px;
+      padding-left: 8px;
+      display: inline-block;
+      position: relative;
+    }
+    .dropdown-content {
+      z-index: 100;
+      position: absolute;
+      background-color: white;
+      width: 232px;
+      max-height: 130px;
+      overflow: auto;
+      margin-top: 4px;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      border-radius: 3px;
+      .dropdown-item {
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        label {
+          color: #7d7e7e;
+          font-size: 13px;
+          font-weight: bold;
+          margin-left: 13px;
+        }
+        .delete-button {
+          width: 8px;
+          margin-right: 17px;
+        }
+      }
+      .dropdown-item:hover {
+        background-color: lightgray;
+      }
+    }
   }
 }
 </style>
 
 <style>
-/* .basic-form .ant-input {
-  font-size: 14px;
-  line-height: 20px;
-  margin-left: 5px;
-  margin-right: 13px;
+.basic-form .ant-input {
   border: none;
-} */
+}
 </style>
