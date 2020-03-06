@@ -57,6 +57,12 @@ export default {
       state.accessToken = token
       localStorage.setItem(ACCESS_TOKEN, JSON.stringify(token))
     },
+    CLEAR_CACHE_USERINFO (state: UserState) {
+      state.user = undefined
+      localStorage.removeItem(USER_MODEL)
+      state.accessToken = undefined
+      localStorage.removeItem(ACCESS_TOKEN)
+    },
     ADD_ACCOUNT (state: UserState, account: Account) {
       state.cacheAccounts.push(account)
       const accountStr = state.cacheAccounts.toString()
@@ -72,12 +78,6 @@ export default {
           break
         }
       }
-    },
-    CLEAR_CACHE_USERINFO (state: UserState) {
-      state.user = undefined
-      localStorage.removeItem(USER_MODEL)
-      state.accessToken = undefined
-      localStorage.removeItem(ACCESS_TOKEN)
     }
   },
   actions: {

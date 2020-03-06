@@ -75,7 +75,7 @@ export default Vue.extend({
   mounted () {
     this.observerToastNotify()
     this.dropdownItems = _.cloneDeep(this.cacheAccounts)
-    this.$store.dispatch('clearCacheUserInfo')
+    this.$store.dispatch('User/clearCacheUserInfo')
   },
   methods: {
     observerToastNotify () {
