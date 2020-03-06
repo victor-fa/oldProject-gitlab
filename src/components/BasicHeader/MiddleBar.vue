@@ -44,6 +44,7 @@ export default Vue.extend({
   list-style: none;
   display: flex;
   justify-content: flex-start;
+  cursor: pointer;
   li {
     display: inline-block;
     color: #484848;
@@ -56,7 +57,7 @@ export default Vue.extend({
   .split-line {
     height: 4px;
     width: 60px;
-    background-color: #007934;
+    background-color: #01B74F;
     border-radius: 2px;
     margin: 0px;
   }

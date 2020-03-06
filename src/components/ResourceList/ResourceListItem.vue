@@ -76,6 +76,8 @@ export default Vue.extend({
 <style lang="less" scoped>
 .horizontal-item {
   padding: 20px 0px;
+  border-radius: 4px;
+  cursor: pointer;
   img {
     width: 35px;
     height: 29px;
@@ -88,17 +90,27 @@ export default Vue.extend({
     color: #484848;
   }
 }
+.horizontal-item:hover {
+  background-color: #ECECEC;
+}
 .vertical-item {
   color: #484848;
   font-size: 12px;
   text-align: left;
   background-color: white;
+  cursor: pointer;
   img {
     width: 19px;
     height: 16px;
     margin: 10px 10px 10px 20px;
     vertical-align: middle;
   }
+}
+.vertical-item:hover {
+  background-color: #F4F5F7;
+}
+.vertical-item:active {
+  background-color: #ECECEC;
 }
 .oddVerticalItem {
   background-color: #f6f8fb;

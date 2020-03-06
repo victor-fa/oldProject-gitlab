@@ -44,9 +44,12 @@ export default Vue.extend({
   justify-content: center;
   align-items: center;
   margin: 0px 11px 0px 7px;
+  cursor: pointer;
+  border-radius: 4px;
   img {
     width: 16px;
     margin-right: 18px;
+    cursor: pointer;
   }
   label {
     display: inline-block;
@@ -55,10 +58,11 @@ export default Vue.extend({
     color: #484848;
     width: 100px;
     text-align: left;
+    cursor: pointer;
   }
 }
 .itemSelected {
-  background-color: #06b65066;
+  background-color: #DEF1EA;
   label {
     color: #007934;
   }

@@ -83,13 +83,14 @@ export default Vue.extend({
   .split-line {
     width: 1px;
     height: 20px;
-    background-color: #b1b1b1;
+    background-color: #01B74F;
   }
   .setting {
     margin: 0px 10px;
     display: flex;
     align-items: center;
     -webkit-app-region: no-drag;
+    cursor: pointer;
     .setting-icon {
       width: 14px;
       height: 13px;
@@ -121,6 +122,8 @@ export default Vue.extend({
 <style>
 .settingPopover .ant-popover-inner-content {
   padding: 8px 0px;
+  font-family: "Microsoft YaHei";
+  cursor: pointer;
 }
 .settingPopover .setting-item {
   padding: 0px 16px;
