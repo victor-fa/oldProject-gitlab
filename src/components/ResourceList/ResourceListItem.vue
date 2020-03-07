@@ -43,9 +43,9 @@ export default Vue.extend({
   },
   filters: {
     formatDate (value) {
-      let date = new Date(value);
-      let y = date.getFullYear();
-      let MM = date.getMonth() + 1;
+      let date: any = new Date(value);
+      let y: any = date.getFullYear();
+      let MM: any = date.getMonth() + 1;
       MM = MM < 10 ? ('0' + MM) : MM;
       let d = date.getDate();
       d = d < 10 ? ('0' + d) : d;
@@ -131,8 +131,8 @@ export default Vue.extend({
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
     -webkit-box-orient: vertical;
   }
 }

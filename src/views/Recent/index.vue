@@ -19,13 +19,14 @@ export default {
   data () {
     return {
       // 0: apk 1: mp4, 2: mp3, 3:jpg, 4:txt, 5:pdf, 6:file
-      dataArray: realResourceList    }
+      dataArray: realResourceList
+    }
   },
   computed: {
 
   },
   mounted () {
-    this.getStoragesInfo();
+    this.getStoragesInfo()
   },
   methods: {
     getStoragesInfo () {  // 获取磁盘信息

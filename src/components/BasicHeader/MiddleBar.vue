@@ -72,7 +72,7 @@ export default Vue.extend({
   }
   .split-line {
     height: 4px;
-    width: 60px;
+    width: 55px;
     background-color: #01B74F;
     border-radius: 2px;
     margin: 0px;
