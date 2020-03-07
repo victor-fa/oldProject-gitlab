@@ -7,6 +7,7 @@
       </div>
     </div>
     <div class="right">
+      <window-menu class="window-menu"/>
       <keep-alive>
         <router-view></router-view>
       </keep-alive>
@@ -16,9 +17,14 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import UserAPI from '../api/UserAPI'
+import WindowMenu from '../components/WindowMenu/index.vue'
 
 export default Vue.extend({
-  name: 'login-layout'
+  name: 'login-layout',
+  components: {
+    WindowMenu
+  }
 })
 </script>
 
@@ -52,6 +58,12 @@ export default Vue.extend({
     height: 100vh;
     width: 45vw;
     background-color: #fdffff;
+    .window-menu {
+      -webkit-user-drag: drag;
+      height: 40px;
+      margin-right: 30px;
+      background-color: #fdffff;
+    }
   }
 }
 </style>

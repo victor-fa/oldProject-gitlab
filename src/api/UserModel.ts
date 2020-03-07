@@ -28,13 +28,17 @@ interface User {
   versionNo: string,
   email: string,
   ctime: Date,
-  utime: Date
+  utime: Date,
+  ugreenNo: number
 }
 
 interface AccessToken {
-  accessToken: string,
-  refreshToken: string,
-  expiresTime: number
+  // eslint-disable-next-line camelcase
+  access_token: string,
+  // eslint-disable-next-line camelcase
+  refresh_token: string,
+  // eslint-disable-next-line camelcase
+  expires_time: number
 }
 
 interface LoginResponse {
@@ -47,11 +51,41 @@ interface Account {
   password: string
 }
 
+enum DeviceRole {
+  user = '0',
+  admin = '1'
+}
+
+enum DeviceStatus {
+  offline = 0,
+  online = 1,
+  scrapped = -1
+}
+
+interface DeviceInfo {
+  uno: number,
+  role: DeviceRole,
+  sn: string,
+  mac: string,
+  firmware: string,
+  hareware: string,
+  status: DeviceStatus,
+  image: string,
+  remark: string,
+  privateKey: string,
+  publicKey: string,
+  secretKey: string,
+  ctime: number
+}
+
 export {
   BasicResponse,
   SmsType,
   LoginResponse,
   AccessToken,
   User,
-  Account
+  Account,
+  DeviceRole,
+  DeviceStatus,
+  DeviceInfo
 }

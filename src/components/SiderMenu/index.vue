@@ -1,7 +1,7 @@
 <template>
   <ul>
     <li
-      v-for="(item, index) in funcListRouters"
+      v-for="(item, index) in HomeRouters"
       :key="index"
       class="item"
       v-bind:class="{ itemSelected: item.meta.isSelected }"
@@ -15,15 +15,15 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { funcListRouters, FuncListItem } from '../../router/modules/funclist'
+import { HomeRouters, FuncListItem } from '../../router/modules/HomeList'
 import router from '../../router'
 import { EventBus, EventType } from '../../utils/eventBus'
 
 export default Vue.extend({
   data () {
     return {
-      funcListRouters,
-      selectedItem: funcListRouters[0].meta
+      HomeRouters,
+      selectedItem: HomeRouters[0].meta
     }
   },
   methods: {

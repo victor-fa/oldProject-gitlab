@@ -1,4 +1,4 @@
-let funcListRouters = [
+const HomeRouters = [
   {
     path: '/recent',
     component: () => import('../../views/Recent/index.vue'),
@@ -97,6 +97,6 @@ interface FuncListItem {
 }
 
 export {
-  funcListRouters,
+  HomeRouters,
   FuncListItem
 }

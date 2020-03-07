@@ -1,43 +1,44 @@
 <template>
-  <a-layout class="login-layout">
-    <a-layout-header class="header">
-      <window-menu class="window-menu"/>
-    </a-layout-header>
-    <a-layout-content class="content">
-      <ul class="content-wrapper">
-        <li class="tip">账号密码登录</li>
-        <li class="account-form">
-          <basic-form
-            :icon="loginIcons.account"
-            placeholder="用户名/手机号/邮箱"
-            v-model="account"
-            :selectItems="dropdownItems"
-            v-on:change="accountChangeAction"
-            v-on:select="accountSelectAction"
-            v-on:delete="accountDeleteAction"
-          />
-        </li>
-        <li class="password-from">
-          <basic-form
-            :icon="loginIcons.password"
-            placeholder="输入您的密码"
-            v-model="password"
-            isSecure="ture"
-          />
-        </li>
-        <li class="password-checkbox">
-          <a-checkbox ref="password_checkbox" @change="onRememberChange">记住密码</a-checkbox>
-          <a-button>忘记密码</a-button>
-        </li>
-        <li class="login-button">
-          <a-button block @click="loginAction">登录</a-button>
-        </li>
-        <li class="register-button">
-          <a-button @click="codeLoginBtnClick">扫码登录</a-button>
-        </li>
-      </ul>
-    </a-layout-content>
-  </a-layout>
+  <div class="login">
+    <ul class="content-wrapper">
+      <li class="tip">账号密码登录</li>
+      <li class="account-form">
+        <basic-form
+          :icon="loginIcons.account"
+          placeholder="用户名/手机号/邮箱"
+          v-model="account"
+          :selectItems="dropdownItems"
+          v-on:change="accountChangeAction"
+          v-on:select="accountSelectAction"
+          v-on:delete="accountDeleteAction"
+        />
+      </li>
+      <li class="password-from">
+        <basic-form
+          :icon="loginIcons.password"
+          placeholder="输入您的密码"
+          v-model="password"
+          isSecure="ture"
+        />
+      </li>
+      <li class="password-checkbox">
+        <a-checkbox ref="password_checkbox" @change="onRememberChange">记住密码</a-checkbox>
+        <a-button>忘记密码</a-button>
+      </li>
+      <li class="login-button">
+        <a-button
+          block
+          @click="loginAction"
+          :loading="loading"
+        >
+          登录
+        </a-button>
+      </li>
+      <li class="register-button">
+        <a-button @click="codeLoginBtnClick">扫码登录</a-button>
+      </li>
+    </ul>
+  </div>
 </template>
 
 <script lang="ts">
@@ -45,19 +46,20 @@ import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import { loginIcons } from './iconList'
-import WindowMenu from '../../components/WindowMenu/index.vue'
 import BasicForm from '../../components/BasicForm/index.vue'
 import router from '../../router'
 import UserAPI from '../../api/UserAPI'
-import { LoginResponse, Account } from '../../api/UserModel'
+import ClientAPI from '../../api/ClientAPI'
+import { LoginResponse, Account, DeviceInfo, User } from '../../api/UserModel'
+import { NasLoginResponse } from '../../api/ClientModel'
 import processCenter, { EventName, MainEventName } from '../../utils/processCenter'
 import { message } from 'ant-design-vue'
+import { ACCESS_TOKEN } from '../../common/constants'
 
 export default Vue.extend({
   name: 'login',
   components: {
-    BasicForm,
-    WindowMenu
+    BasicForm
   },
   data () {
     let items: Account[] = []
@@ -66,11 +68,12 @@ export default Vue.extend({
       account: '',
       password: '',
       rememberPassword: false,
-      dropdownItems: items
+      dropdownItems: items,
+      loading: false
     }
   },
   computed: {
-    ...mapGetters('User', ['cacheAccounts'])
+    ...mapGetters('User', ['cacheAccounts', 'user'])
   },
   mounted () {
     this.observerToastNotify()
@@ -93,26 +96,21 @@ export default Vue.extend({
     },
     loginAction () {
       if (!this.checkInputFrom()) return
-      const myThis: any = this
-      UserAPI.login(this.account, this.password).then((response): void => {
+      this.loading = true
+      const myThis = this
+      UserAPI.login(this.account, this.password).then(response => {
         if (response.data.code !== 200) {
-          myThis.$message.warning(response.data.msg)
+          myThis.$message.error(response.data.msg)
           return
         }
         const loginResponse = response.data.data as LoginResponse
         this.cacheUserInfo(loginResponse)
-        processCenter.renderSend(EventName.home)
-      }).catch((error): void => {
+        this.getBindDevices()
+      }).catch((error: any) => {
         console.log(error)
-        myThis.$message.error('网络连接错误,请检测网络')
+        this.loading = false
+        myThis.$message.error('网络连接错误，请检测网络')
       })
-    },
-    cacheUserInfo (response: LoginResponse) {
-      this.$store.dispatch('User/updateUser', response.user)
-      this.$store.dispatch('User/updateAccessToken', response.accessToken)
-      if (!this.rememberPassword) return
-      const account: Account = { account: this.account, password: this.password }
-      this.$store.dispatch('User/addAccount', account)
     },
     checkInputFrom () {
       if (this.account.length === 0) {
@@ -123,6 +121,56 @@ export default Vue.extend({
         return false
       }
       return true
+    },
+    getBindDevices () {
+      const myThis = this
+      UserAPI.getBindDevices().then(response => {
+        if (response.data.code !== 200) {
+          myThis.$message.error(response.data.msg)
+          return
+        }
+        const userDevices = _.get(response.data.data, 'userDevices') as DeviceInfo[]
+        console.log(userDevices)
+        if (_.isEmpty(userDevices)) {
+          router.push('scan-nas')
+        } else {
+          const sortDevices = userDevices.sort((a, b) => {
+            return a.ctime > b.ctime ? 1 : -1
+          })
+          this.connectDevice(sortDevices[0].secretKey)
+        }
+      }).catch((error: any) => {
+        console.log(error)
+        this.loading = false
+        myThis.$message.error('网络连接错误，请检测网络')
+      })
+    },
+    connectDevice (secretKey: string) {
+      const myThis = this
+      ClientAPI.login(this.user, secretKey).then(response => {
+        if (response.data.code !== 200) {
+          myThis.$message.error(response.data.msg)
+          return
+        }
+        const nasResponse = response.data.data as NasLoginResponse
+        this.cacheDeviceInfo(nasResponse)
+        this.loading = false
+        processCenter.renderSend(EventName.home)
+      }).catch(error => {
+        console.log(error)
+        this.loading = false
+        myThis.$message.error('网络连接错误，请检测网络')
+      })
+    },
+    cacheUserInfo (response: LoginResponse) {
+      this.$store.dispatch('User/updateUser', response.user)
+      this.$store.dispatch('User/updateAccessToken', response.accessToken)
+      if (!this.rememberPassword) return
+      const account: Account = { account: this.account, password: this.password }
+      this.$store.dispatch('User/addAccount', account)
+    },
+    cacheDeviceInfo (response: NasLoginResponse) {
+      this.$store.dispatch('NasServer/updateNasInfo', response)
     },
     accountChangeAction (value: string) {
       this.dropdownItems = this.cacheAccounts.filter((element: Account) => {
@@ -153,87 +201,73 @@ export default Vue.extend({
 </script>
 
 <style lang="less" scoped>
-.login-layout {
+.login {
   height: 100%;
-  .header {
-    height: 40px;
-    display: flex;
-    padding: 0px 10px;
-    flex-direction: row-reverse;
-    align-items: center;
-    background-color: #fdffff;
-    -webkit-user-drag: drag;
-    .window-menu {
-      margin-right: 10px;
+  padding: 0px 30px;
+  background-color: #fdffff;
+  display: flex;
+  justify-content: center;
+  .content-wrapper {
+    width: 285px;
+    li {
+      text-align: left;
     }
-  }
-  .content {
-    padding: 0px;
-    background-color: #fdffff;
-    display: flex;
-    justify-content: center;
-    .content-wrapper {
-      width: 285px;
-      li {
-        text-align: left;
-      }
-      .tip {
-        padding-top: 6.5vh;
-        font-size: 19px;
-        font-weight: bold;
+    .tip {
+      padding-top: 6.5vh;
+      font-size: 19px;
+      font-weight: bold;
+      color: #7d7e7e;
+    }
+    .account-form {
+      padding-top: 10vh;
+    }
+    .password-from {
+      padding-top: 1.5vh;
+    }
+    .password-checkbox {
+      height: 22px;
+      margin-top: 3.3vh;
+      display: flex;
+      justify-content: space-between;
+      .ant-checkbox-wrapper {
         color: #7d7e7e;
+        font-size: 14px;
+        font-weight: bold;
       }
-      .account-form {
-        padding-top: 10vh;
-      }
-      .password-from {
-        padding-top: 1.5vh;
-      }
-      .password-checkbox {
+      .ant-btn {
         height: 22px;
-        margin-top: 3.3vh;
-        display: flex;
-        justify-content: space-between;
-        .ant-checkbox-wrapper {
-          color: #7d7e7e;
-          font-size: 14px;
-          font-weight: bold;
-        }
-        .ant-btn {
-          height: 22px;
-          font-size: 14px;
-          color: #7d7e7e;
-          font-weight: bold;
-          border: none;
-          padding: 0px;
-          box-shadow: none;
-          border-bottom: 1px solid #c8cbc7;
-          border-radius: 0px;
-          margin-right: 10px;
-        }
+        font-size: 14px;
+        color: #7d7e7e;
+        font-weight: bold;
+        border: none;
+        padding: 0px;
+        box-shadow: none;
+        border-bottom: 1px solid #c8cbc7;
+        border-radius: 0px;
+        margin-right: 10px;
       }
-      .login-button {
-        padding: 6vh 20px 0px 10px;
-        .ant-btn {
-          height: 40px;
-          color: white;
-          font-size: 15px;
-          font-weight: bold;
-          border: none;
-          border-radius: 20px;
-          background-image: linear-gradient(to right, #29cb7a, #4de9b9);
-        }
+    }
+    .login-button {
+      padding: 6vh 20px 0px 10px;
+      .ant-btn {
+        height: 40px;
+        color: white;
+        font-size: 15px;
+        font-weight: bold;
+        border: none;
+        border-radius: 20px;
+        background-image: linear-gradient(to right, #29cb7a, #4de9b9);
       }
-      .register-button {
-        display: flex;
-        justify-content: center;
-        padding-top: 13vh;
-        .ant-btn {
-          border: none;
-          box-shadow: none;
-          background-color: white;
-          color: #06b650;
-        }
+    }
+    .register-button {
+      display: flex;
+      justify-content: center;
+      padding-top: 13vh;
+      .ant-btn {
+        border: none;
+        box-shadow: none;
+        background-color: white;
+        color: #06b650;
       }
     }
   }

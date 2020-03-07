@@ -4,9 +4,11 @@
 const ACCESS_TOKEN = 'access_token'
 const USER_MODEL = 'user_model'
 const ACCOUNT = 'account'
+const NAS_INFO = 'nas_info'
 
 export {
   ACCESS_TOKEN,
   USER_MODEL,
-  ACCOUNT
+  ACCOUNT,
+  NAS_INFO
 }

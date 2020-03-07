@@ -2,7 +2,8 @@ import _ from 'lodash'
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import BaseLayout from '../layouts/BaseLayout.vue'
-import { funcListRouters } from './modules/funclist'
+import { HomeRouters } from './modules/HomeList'
+import { LoginRouters } from './modules/LoginList'
 import processCenter, { MainEventName } from '../utils/processCenter'
 import { USER_MODEL, ACCESS_TOKEN } from '../common/constants'
 import { AccessToken } from '../api/UserModel'
@@ -24,7 +25,7 @@ const routes = [
     },
     component: BaseLayout,
     children: [
-      ...funcListRouters
+      ...HomeRouters
     ]
   },
   {
@@ -33,21 +34,7 @@ const routes = [
     name: 'login-layout',
     redirect: '/login',
     children: [
-      {
-        path: '/login',
-        name: 'login',
-        component: () => import('../views/Login/index.vue')
-      },
-      {
-        path: '/register',
-        name: 'register',
-        component: () => import('../views/Register/index.vue')
-      },
-      {
-        path: '/qr-code-login',
-        name: 'qr-code-login',
-        component: () => import('../views/QRCodeLogin/index.vue')
-      }
+      ...LoginRouters
     ]
   }
 ]
@@ -66,7 +53,7 @@ const validatorToken = () => {
   }
   const timestamp = new Date().getDate() / 1000
   const token = JSON.parse(tokenJson) as AccessToken
-  if (timestamp > token.expiresTime) {
+  if (timestamp > token.expires_time) {
     return 'token过期，请重新登录'
   }
   return true
