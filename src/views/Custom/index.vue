@@ -7,7 +7,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import ResourceList from '../../components/ResourceList/index.vue'
-import { resourceList } from '../MockData/index'
+import { realResourceList } from '../MockData/index'
 
 export default {
   name: 'custom',
@@ -16,7 +16,7 @@ export default {
   },
   data () {
     return {
-      dataArray: resourceList
+      dataArray: realResourceList
     }
   }
 }

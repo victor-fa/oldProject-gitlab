@@ -63,6 +63,11 @@ export default Vue.extend({
   props: {
     dataSource: Array
   },
+  watch: {
+    dataSource() {
+      this.currentArray = this.dataSource
+    }
+  },
   computed: {
     grid: function () {
       if (this.arrangeWay === ArrangeWay.horizontal) {

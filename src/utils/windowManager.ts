@@ -73,7 +73,8 @@ export default {
         title: '登录',
         resizable: false,
         webPreferences: {
-          nodeIntegration: true
+          nodeIntegration: true,
+          webSecurity: false
         }
       })
     }
@@ -96,7 +97,8 @@ export default {
         height: 600,
         title: 'nas_client',
         webPreferences: {
-          nodeIntegration: true
+          nodeIntegration: true,
+          webSecurity: false
         }
       })
     }

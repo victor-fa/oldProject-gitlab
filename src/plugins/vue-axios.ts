@@ -4,7 +4,8 @@ import VueAxios from 'vue-axios'
 import { BasicResponse } from '@/api/UserModel'
 import processCenter, { EventName } from '@/utils/processCenter'
 
-axios.defaults.baseURL = 'http://120.24.182.33'
+// axios.defaults.baseURL = 'http://120.24.182.33'
+axios.defaults.baseURL = 'http://192.168.10.91:9999'
 axios.defaults.timeout = 10000
 // axios.defaults.withCredentials = true
 axios.interceptors.request.use((config) => {

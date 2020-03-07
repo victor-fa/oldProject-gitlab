@@ -78,7 +78,10 @@
       "spaced-comment": 0,
       "indent": 0,
       "space-before-function-paren": 0,
-      "no-use-before-define": 2
+      "no-use-before-define": 2,
+      "comma-dangle": 0,
+      "quotes": 0,
+      "no-useless-escape": 0
     },
     "parserOptions": {
       "parser": "@typescript-eslint/parser"

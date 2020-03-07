@@ -19,10 +19,12 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { secure: tru
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({ width: 800,
+    icon: './src/assets/logo.png',
     height: 600,
     frame: false,
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      webSecurity: false
     } })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
