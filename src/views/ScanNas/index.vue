@@ -7,8 +7,14 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import ClientAPI from '../../api/ClientAPI'
+
 export default Vue.extend({
-  name: 'scan-nas'
+  name: 'scan-nas',
+  mounted () {
+    console.log('begin scan')
+    ClientAPI.scanNas()
+  }
 })
 </script>
 

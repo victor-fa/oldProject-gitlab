@@ -130,7 +130,6 @@ export default Vue.extend({
           return
         }
         const userDevices = _.get(response.data.data, 'userDevices') as DeviceInfo[]
-        console.log(userDevices)
         if (_.isEmpty(userDevices)) {
           router.push('scan-nas')
         } else {
@@ -148,6 +147,7 @@ export default Vue.extend({
     connectDevice (secretKey: string) {
       const myThis = this
       ClientAPI.login(this.user, secretKey).then(response => {
+        console.log(response)
         if (response.data.code !== 200) {
           myThis.$message.error(response.data.msg)
           return
