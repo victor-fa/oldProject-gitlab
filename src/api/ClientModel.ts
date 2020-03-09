@@ -9,6 +9,29 @@ interface NasLoginResponse {
   refresh_token: string
 }
 
+enum NasActive {
+  notBind = 0,
+  Bound = 1
+}
+
+interface NasInfo {
+  active: NasActive,
+  name: string,
+  model: string,
+  mac: string,
+  ip: string,
+  sn: string,
+  port: number,
+  softversion: string
+}
+
+interface BoardcastResponse<T> {
+  error: string,
+  data: T
+}
+
 export {
-  NasLoginResponse
+  NasLoginResponse,
+  NasInfo,
+  BoardcastResponse
 }

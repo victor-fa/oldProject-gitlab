@@ -4,6 +4,7 @@ import { nasServer } from '../utils/request'
 import { User, BasicResponse } from './UserModel'
 import deviceMgr from '../utils/deviceMgr'
 import JSEncrypt from 'jsencrypt'
+import { BoardcastResponse, NasInfo } from './ClientModel'
 
 const userModulePath = '/v1/user'
 const tmpSecretKey = `-----BEGIN PUBLIC KEY-----
@@ -41,26 +42,40 @@ export default {
   },
   // scan nas on LAN with UDP
   scanNas () {
-    const host = getBoardcastAddress()
-    if (host === null) return
-    const dgram = require('dgram')
-    const client = dgram.createSocket('udp4')
-    const msg = generateBoardcastPacket('1001', '00102030668d')
-    console.log(msg)
-    const port = 60000
-    client.bind(() => {
-      client.setBroadcast(true)
-    })
-    client.send(msg, 0, msg.length, port, host, function(err) {
-      if (err) console.log(err)
-      console.log('msg has been sent')
-    })
-    client.on('error', (error) => {
-      console.log('socket error: ' + error)
-    })
-    client.on('message', (msg, rinfo) => {
-      console.log(msg)
-      console.log(rinfo)
+    return new Promise((resolve, reject) => {
+      const host = getBoardcastAddress()
+      if (host === null) return reject(Error('not found IP address'))
+      const dgram = require('dgram')
+      const client = dgram.createSocket('udp4')
+      const msg = generateBoardcastPacket()
+      const port = 60000
+      client.bind(() => {
+        client.setBroadcast(true)
+        client.setTTL(128)
+        client.send(msg, 0, msg.length, port, host, function(err) {
+          if (err) {
+            console.log(err)
+            reject(Error('send message failed'))
+          }
+          console.log('message has been send')
+        })
+      })
+      client.on('error', (error) => {
+        console.log('socket error: ' + error)
+        reject(Error('socket error'))
+      })
+      client.on('close', () => {
+        console.log('close')
+      })
+      client.on('message', (msg, rinfo) => {
+        console.log(msg)
+        console.log(rinfo)
+        // parse reponse
+      })
+      setTimeout(() => {
+        client.close()
+        reject(Error('not found nas in the LAN'))
+      }, 5000)
     })
   }
 }
@@ -138,7 +153,6 @@ const replaceString = (str: string, char: string, replace: string) => {
 const conversionUtility = (num: string, aRadix: number, bRadix: number) => {
   return parseInt(num, aRadix).toString(bRadix)
 }
-
 
 const generateBoardcastPacket = (sn: string = '', mac: string = '') => {
   const code = Buffer.alloc(2)

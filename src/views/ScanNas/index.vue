@@ -13,7 +13,11 @@ export default Vue.extend({
   name: 'scan-nas',
   mounted () {
     console.log('begin scan')
-    ClientAPI.scanNas()
+    ClientAPI.scanNas().then(reponse => {
+      console.log(reponse)
+    }).catch(error => {
+      console.log(error)
+    })
   }
 })
 </script>
