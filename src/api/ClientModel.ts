@@ -6,7 +6,8 @@ interface NasLoginResponse {
   // eslint-disable-next-line camelcase
   api_token: string,
   // eslint-disable-next-line camelcase
-  refresh_token: string
+  refresh_token: string,
+  key: string
 }
 
 enum NasActive {
@@ -25,13 +26,7 @@ interface NasInfo {
   softversion: string
 }
 
-interface BoardcastResponse<T> {
-  error: string,
-  data: T
-}
-
 export {
   NasLoginResponse,
-  NasInfo,
-  BoardcastResponse
+  NasInfo
 }

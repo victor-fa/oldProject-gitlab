@@ -4,7 +4,7 @@ import { nasServer } from '../utils/request'
 import { User, BasicResponse } from './UserModel'
 import deviceMgr from '../utils/deviceMgr'
 import JSEncrypt from 'jsencrypt'
-import { BoardcastResponse, NasInfo } from './ClientModel'
+import { NasInfo } from './ClientModel'
 
 const userModulePath = '/v1/user'
 const tmpSecretKey = `-----BEGIN PUBLIC KEY-----
@@ -23,15 +23,7 @@ export default {
       birthday: '20101011',
       version: 29
     }
-    // const userBasic = {
-    //   ugreen_no: userInfo.ugreenNo,
-    //   phone_no: userInfo.phoneNo,
-    //   nic_name: userInfo.nickName,
-    //   email: userInfo.email,
-    //   sex: userInfo.sex,
-    //   birthday: userInfo.birthday,
-    //   version: userInfo.versionNo
-    // }
+    // const userBasic = convertNasUser(userInfo)
     const sign = encryptSign(userBasic)
     if (sign === null) return Promise.reject(Error('rsa encrypt error'))
     return nasServer.post(userModulePath + '/login', {
@@ -40,43 +32,72 @@ export default {
       sign
     })
   },
-  // scan nas on LAN with UDP
-  scanNas () {
-    return new Promise((resolve, reject) => {
-      const host = getBoardcastAddress()
-      if (host === null) return reject(Error('not found IP address'))
-      const dgram = require('dgram')
-      const client = dgram.createSocket('udp4')
-      const msg = generateBoardcastPacket()
-      const port = 60000
-      client.bind(() => {
-        client.setBroadcast(true)
-        client.setTTL(128)
-        client.send(msg, 0, msg.length, port, host, function(err) {
-          if (err) {
-            console.log(err)
-            reject(Error('send message failed'))
-          }
-          console.log('message has been send')
-        })
-      })
-      client.on('error', (error) => {
-        console.log('socket error: ' + error)
-        reject(Error('socket error'))
-      })
-      client.on('close', () => {
-        console.log('close')
-      })
-      client.on('message', (msg, rinfo) => {
-        console.log(msg)
-        console.log(rinfo)
-        // parse reponse
-      })
-      setTimeout(() => {
-        client.close()
-        reject(Error('not found nas in the LAN'))
-      }, 5000)
+  bindUser (user: User, authCode: string): Promise<AxiosResponse<BasicResponse>> {
+    const userBasic = convertNasUser(user)
+    return nasServer.post(userModulePath + '/attach', {
+      platform: deviceMgr.getPlatform,
+      user_basic: userBasic,
+      auth_code: authCode
     })
+  },
+  bindAdministrator () {
+    // return nasServer.post(userModulePath + '/offline/account/set', {
+      
+    // }, {
+    //   params: {
+    //     api_token:
+    //   }
+    // })
+  },
+  // scan nas on LAN with UDP
+  scanNas (success: (data: NasInfo) => void, failure: (error: string) => void) {
+    const host = getBoardcastAddress()
+    if (host === null) {
+      failure('not found IP address')
+      return
+    }
+    const dgram = require('dgram')
+    const client = dgram.createSocket('udp4')
+    const msg = generateBoardcastPacket()
+    const port = 60000
+    client.bind(() => {
+      client.setBroadcast(true)
+      client.setTTL(128)
+      client.send(msg, 0, msg.length, port, host, function(err) {
+        if (_.isEmpty(err)) return
+        console.log(err)
+        // TODO: 广播报文发送失败，是否考虑重新发送
+        failure('boardcast packet message failed')
+      })
+    })
+    client.on('error', (error) => {
+      console.log('socket error: ' + error)
+      client.close()
+      failure('socket error')
+    })
+    client.on('message', (msg: Buffer, rinfo) => {
+      // parse reponse
+      const dataJson = msg.toString('utf8')
+      console.log(dataJson)
+      const data = JSON.parse(dataJson) as NasInfo
+      success(data)
+    })
+    setTimeout(() => {
+      client.close()
+      failure('not found nas in the LAN')
+    }, 5000)
+  }
+}
+
+const convertNasUser = (user: User) => {
+  return {
+    ugreen_no: user.ugreenNo,
+    phone_no: user.phoneNo,
+    nic_name: user.nickName,
+    email: user.email,
+    sex: user.sex,
+    birthday: user.birthday,
+    version: user.versionNo
   }
 }
 

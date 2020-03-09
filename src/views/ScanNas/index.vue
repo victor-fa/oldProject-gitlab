@@ -13,9 +13,12 @@ export default Vue.extend({
   name: 'scan-nas',
   mounted () {
     console.log('begin scan')
-    ClientAPI.scanNas().then(reponse => {
-      console.log(reponse)
-    }).catch(error => {
+    ClientAPI.scanNas(data => {
+      console.log(data)
+      // 1. 授权码连接
+      // 2. 在线登录
+      // 3. 直接连接，管理员绑定
+    }, error => {
       console.log(error)
     })
   }
