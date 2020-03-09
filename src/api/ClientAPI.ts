@@ -4,16 +4,19 @@ import { nasServer } from '../utils/request'
 import { User, BasicResponse } from './UserModel'
 import deviceMgr from '../utils/deviceMgr'
 import JSEncrypt from 'jsencrypt'
-import { NasInfo } from './ClientModel'
+import { NasInfo, NasUser } from './ClientModel'
 
 const userModulePath = '/v1/user'
 const tmpSecretKey = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzblv4FL7IukDs1m8bvw7wsIU5R1rUmq7RUMHroroY80zOSJZRn1eh8oW6fcrIZhZH+R7vWxvnKBe/h3cEJcUIRIKmQ26la5mAUuedghv1G38n3jZAXZ9yzslEQBBaKOYsvZz2F4KLhi2DlDLr/QOLpppH6HL7CDWaSyieXOmOVt/wmgHMl2SF1ko+bb/svVHz/7xTwoYJiyikVfSw1R+MlID+FLB/UkAPzopkadAUErPLZPMbXQrMelaUYbRQUTauh1dTg9g4nP72zMbW/06slpnswyAxCvxon8/E6U7pcsoBvOHCKyCmK0KO6keHr8ddgMjtV/+ZKmmPDkES51lKQIDAQAB
 -----END PUBLIC KEY-----`
-const jse = new JSEncrypt()
 
 export default {
-  login (userInfo: User, secretKey: string): Promise<AxiosResponse<BasicResponse>> {
+  setBaseUrl (url: string) {
+    nasServer.defaults.baseURL = url
+  },
+  // refresh_token过期时调用
+  login (user: User, secretKey: string): Promise<AxiosResponse<BasicResponse>> {
     const userBasic = {
       ugreen_no: 1002,
       phone_no: '13512345679',
@@ -23,31 +26,45 @@ export default {
       birthday: '20101011',
       version: 29
     }
-    // const userBasic = convertNasUser(userInfo)
+    // const userBasic = convertNasUser(user)
     const sign = encryptSign(userBasic)
     if (sign === null) return Promise.reject(Error('rsa encrypt error'))
     return nasServer.post(userModulePath + '/login', {
-      platform: deviceMgr.getPlatform,
+      platform: deviceMgr.getPlatform(),
       user_basic: userBasic,
       sign
     })
   },
-  bindUser (user: User, authCode: string): Promise<AxiosResponse<BasicResponse>> {
-    const userBasic = convertNasUser(user)
-    return nasServer.post(userModulePath + '/attach', {
-      platform: deviceMgr.getPlatform,
-      user_basic: userBasic,
-      auth_code: authCode
+  offlineLogin (account: string, password: string, ugreenNo: string): Promise<AxiosResponse<BasicResponse>> {
+    const ciphertext = encryptPassword(account, password, ugreenNo)
+    return nasServer.post(userModulePath + '/offline/login', {
+      platform: deviceMgr.getPlatform(),
+      offline_username: account,
+      offline_password: ciphertext
     })
   },
-  bindAdministrator () {
-    // return nasServer.post(userModulePath + '/offline/account/set', {
-      
-    // }, {
-    //   params: {
-    //     api_token:
-    //   }
-    // })
+  bindUser (user: User, authCode: string): Promise<AxiosResponse<BasicResponse>> {
+    const userBasic = convertNasUser(user)
+    let params = authCode.length === 0 ? {
+      platform: deviceMgr.getPlatform(),
+      user_basic: userBasic
+    } : {
+      platform: deviceMgr.getPlatform(),
+      user_basic: userBasic,
+      auth_code: authCode
+    }
+    return nasServer.post(userModulePath + '/attach', params)
+  },
+  setOfflineAccount (account: string, password: string, apiToken: string, ugreenNo: string): Promise<AxiosResponse<BasicResponse>> {
+    const ciphertext = encryptPassword(account, password, ugreenNo)
+    return nasServer.post(userModulePath + '/offline/account/set', {
+      offline_username: account,
+      offline_password: ciphertext
+    }, {
+      params: {
+        api_token: apiToken
+      }
+    })
   },
   // scan nas on LAN with UDP
   scanNas (success: (data: NasInfo) => void, failure: (error: string) => void) {
@@ -78,9 +95,12 @@ export default {
     client.on('message', (msg: Buffer, rinfo) => {
       // parse reponse
       const dataJson = msg.toString('utf8')
-      console.log(dataJson)
-      const data = JSON.parse(dataJson) as NasInfo
-      success(data)
+      const data = JSON.parse(dataJson)
+      if (data.error_code === 0) {
+        success(data.data)
+      } else {
+        failure(data.msg)
+      }
     })
     setTimeout(() => {
       client.close()
@@ -89,7 +109,7 @@ export default {
   }
 }
 
-const convertNasUser = (user: User) => {
+const convertNasUser = (user: User): NasUser => {
   return {
     ugreen_no: user.ugreenNo,
     phone_no: user.phoneNo,
@@ -101,22 +121,31 @@ const convertNasUser = (user: User) => {
   }
 }
 
-const encryptSign = (user: any, secretKey: string = tmpSecretKey) => {
+const encryptSign = (nasUser: any, secretKey: string = tmpSecretKey) => {
   let queryUser = ''
-  for (const key in user) {
-    if (user.hasOwnProperty(key)) {
-      const element = user[key];
+  for (const key in nasUser) {
+    if (nasUser.hasOwnProperty(key)) {
+      const element = nasUser[key];
       if (element === null) continue
       queryUser = queryUser.concat(`${key}=${element}&`)
     }
   }
   if (!_.isElement(queryUser)) {
+    // 利用crypto模块实现RSA加密
+    const jse = new JSEncrypt()
     queryUser = queryUser.substring(0, queryUser.length - 1)
-    console.log('queryUser: ' + queryUser)
     jse.setPublicKey(secretKey)
     return jse.encrypt(queryUser) as string
   }
   return null
+}
+
+const encryptPassword = (account: string, password: string, ugreenNo: string) => {
+  // 账号 + 密码 + ugreen_no
+  const plaintext = account + password + ugreenNo
+  const crypto = require('crypto')
+  const md5 = crypto.createHash("md5")
+  return md5.update(plaintext).digest('hex')
 }
 
 const getBoardcastAddress = () => {

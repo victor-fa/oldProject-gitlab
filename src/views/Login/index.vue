@@ -51,7 +51,7 @@ import router from '../../router'
 import UserAPI from '../../api/UserAPI'
 import ClientAPI from '../../api/ClientAPI'
 import { LoginResponse, Account, DeviceInfo, User } from '../../api/UserModel'
-import { NasLoginResponse } from '../../api/ClientModel'
+import { NasAccessInfo } from '../../api/ClientModel'
 import processCenter, { EventName, MainEventName } from '../../utils/processCenter'
 import { message } from 'ant-design-vue'
 import { ACCESS_TOKEN } from '../../common/constants'
@@ -152,8 +152,8 @@ export default Vue.extend({
           myThis.$message.error(response.data.msg)
           return
         }
-        const nasResponse = response.data.data as NasLoginResponse
-        this.cacheDeviceInfo(nasResponse)
+        const nasResponse = response.data.data as NasAccessInfo
+        this.cacheNasAccessInfo(nasResponse)
         this.loading = false
         processCenter.renderSend(EventName.home)
       }).catch(error => {
@@ -169,7 +169,7 @@ export default Vue.extend({
       const account: Account = { account: this.account, password: this.password }
       this.$store.dispatch('User/addAccount', account)
     },
-    cacheDeviceInfo (response: NasLoginResponse) {
+    cacheNasAccessInfo (response: NasAccessInfo) {
       this.$store.dispatch('NasServer/updateNasInfo', response)
     },
     accountChangeAction (value: string) {

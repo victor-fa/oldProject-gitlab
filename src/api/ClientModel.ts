@@ -1,13 +1,14 @@
-import { DeviceRole, DeviceStatus } from './UserModel'
+import { DeviceRole, DeviceStatus, UserSex } from './UserModel'
 
-interface NasLoginResponse {
+interface NasAccessInfo {
   role: DeviceRole,
   status: DeviceStatus,
   // eslint-disable-next-line camelcase
   api_token: string,
   // eslint-disable-next-line camelcase
   refresh_token: string,
-  key: string
+  key: string,
+  data: NasUser
 }
 
 enum NasActive {
@@ -26,7 +27,22 @@ interface NasInfo {
   softversion: string
 }
 
+interface NasUser {
+  // eslint-disable-next-line camelcase
+  ugreen_no: number,
+  // eslint-disable-next-line camelcase
+  phone_no: string,
+  // eslint-disable-next-line camelcase
+  nic_name: string,
+  email: string,
+  sex: UserSex,
+  birthday: number,
+  version: number
+}
+
 export {
-  NasLoginResponse,
-  NasInfo
+  NasAccessInfo,
+  NasInfo,
+  NasActive,
+  NasUser
 }

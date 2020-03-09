@@ -1,11 +1,10 @@
 import _ from 'lodash'
-import { NasLoginResponse } from '../../api/ClientModel'
+import { NasAccessInfo } from '../../api/ClientModel'
 import { NAS_INFO } from '../../common/constants'
-import { nasServer } from '@/utils/request'
 import { ActionContext } from 'vuex'
 
 interface NasServerState {
-  nasInfo: NasLoginResponse
+  nasInfo: NasAccessInfo
 }
 
 export default {
@@ -26,13 +25,13 @@ export default {
     }
   },
   mutations: {
-    UPDATE_NAS_INFO (state: NasServerState, nasInfo: NasLoginResponse) {
+    UPDATE_NAS_INFO (state: NasServerState, nasInfo: NasAccessInfo) {
       state.nasInfo = nasInfo
       localStorage.setItem(NAS_INFO, JSON.stringify(nasInfo))
     }
   },
   actions: {
-    async updateNasInfo (context: ActionContext<NasServerState, NasServerState>, nasInfo: NasLoginResponse) {
+    async updateNasInfo (context: ActionContext<NasServerState, NasServerState>, nasInfo: NasAccessInfo) {
       context.commit('UPDATE_NAS_INFO', nasInfo)
     }
   }

@@ -18,6 +18,11 @@ const LoginRouters = [
     path: '/scan-nas',
     name: 'scan-nas',
     component: () => import('../../views/ScanNas/index.vue')
+  },
+  {
+    path: '/account',
+    name: 'account',
+    component: () => import('../../views/Account/index.vue')
   }
 ]
 
