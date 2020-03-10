@@ -17,7 +17,6 @@ const routes = [
     path: '/home',
     name: 'home',
     component: () => import('../layouts/BaseLayout.vue'),
-    redirect: '/recent',
     children: [
       ...HomeRouters
     ]

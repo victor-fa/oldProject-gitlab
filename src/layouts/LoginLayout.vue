@@ -18,7 +18,6 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import UserAPI from '../api/UserAPI'
 import WindowMenu from '../components/WindowMenu/index.vue'
 
 export default Vue.extend({

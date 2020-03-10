@@ -35,6 +35,9 @@ export default Vue.extend({
     SiderMenu,
     BasicHeader,
     BasicFooter
+  },
+  mounted () {
+    this.$router.replace('recent')
   }
 })
 </script>

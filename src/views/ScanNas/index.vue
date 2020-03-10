@@ -72,6 +72,7 @@ export default Vue.extend({
       this.loading = true
       ClientAPI.bindUser(this.user, authCode).then(response => {
         console.log(response)
+        if (response.data.code !== 200) return
         this.handleConnectSuccess(response.data)
       }).catch(error => {
         this.handleConnectFailure(error)

@@ -29,6 +29,7 @@ export default Vue.extend({
         this.loadLoginPage()
         break
       case ValidatorResult.couldTokenExpires:
+        this.$store.dispatch('User/clearCacheUserInfo')
         this.loadLoginPage().then(() => {
           this.$message.error('token过期，请重新登录')
         })
@@ -39,9 +40,6 @@ export default Vue.extend({
       case ValidatorResult.pass:
         // TODO: 展示连接中界面
         this.searchNasInLAN()
-        // 1. 广播找到设备
-        // 2. 先用联网登录设备
-        // 3. 联网登录设备失败，再离线登录
         break
     }
   },

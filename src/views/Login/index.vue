@@ -76,9 +76,15 @@ export default Vue.extend({
     ...mapGetters('User', ['cacheAccounts', 'user'])
   },
   mounted () {
+    this.observerToastNotify()
     this.dropdownItems = _.cloneDeep(this.cacheAccounts)
   },
   methods: {
+    observerToastNotify () {
+      processCenter.renderObserver(MainEventName.toast, (event, message: string) => {
+        this.$message.warning(message)
+      })
+    },
     onRememberChange () {
       const element: any = this.$refs.password_checkbox
       this.rememberPassword = element.checked
@@ -89,19 +95,16 @@ export default Vue.extend({
     loginAction () {
       if (!this.checkInputFrom()) return
       this.loading = true
-      const myThis = this
       UserAPI.login(this.account, this.password).then(response => {
-        if (response.data.code !== 200) {
-          myThis.$message.error(response.data.msg)
-          return
-        }
+        this.loading = false
+        if (response.data.code !== 200) return
         const loginResponse = response.data.data as LoginResponse
         this.cacheUserInfo(loginResponse)
         this.getBindDevices()
       }).catch((error: any) => {
         console.log(error)
         this.loading = false
-        myThis.$message.error('网络连接错误，请检测网络')
+        this.$message.error('网络连接错误，请检测网络')
       })
     },
     checkInputFrom () {
@@ -115,10 +118,9 @@ export default Vue.extend({
       return true
     },
     getBindDevices () {
-      const myThis = this
       UserAPI.getBindDevices().then(response => {
         if (response.data.code !== 200) {
-          myThis.$message.error(response.data.msg)
+          this.loading = false
           return
         }
         const userDevices = _.get(response.data.data, 'userDevices') as DeviceInfo[]
@@ -133,26 +135,21 @@ export default Vue.extend({
       }).catch((error: any) => {
         console.log(error)
         this.loading = false
-        myThis.$message.error('网络连接错误，请检测网络')
+        this.$message.error('网络连接错误，请检测网络')
       })
     },
     connectDevice (secretKey: string) {
-      // TODO: 广播到对应的设备
-      const myThis = this
       ClientAPI.login(this.user, secretKey).then(response => {
         console.log(response)
-        if (response.data.code !== 200) {
-          myThis.$message.error(response.data.msg)
-          return
-        }
+        this.loading = false
+        if (response.data.code !== 200) return
         const nasResponse = response.data.data as NasAccessInfo
         this.cacheNasAccessInfo(nasResponse)
-        this.loading = false
         processCenter.renderSend(EventName.home)
       }).catch(error => {
         console.log(error)
         this.loading = false
-        myThis.$message.error('网络连接错误，请检测网络')
+        this.$message.error('网络连接错误，请检测网络')
       })
     },
     cacheUserInfo (response: LoginResponse) {

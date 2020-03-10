@@ -6,10 +6,21 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'app'
-}
+<script lang="ts">
+import Vue from 'vue'
+import { EventBus, EventType } from './utils/eventBus'
+
+export default Vue.extend({
+  name: 'app',
+  mounted () {
+    EventBus.$on(EventType.showToast, (msg: string) => {
+      this.$message.error(msg)
+    })
+  },
+  destroyed () {
+    EventBus.$off(EventType.showToast)
+  }
+})
 </script>
 
 <style>
