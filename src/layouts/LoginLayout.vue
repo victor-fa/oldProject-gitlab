@@ -16,6 +16,7 @@
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
 import UserAPI from '../api/UserAPI'
 import WindowMenu from '../components/WindowMenu/index.vue'
@@ -24,6 +25,11 @@ export default Vue.extend({
   name: 'login-layout',
   components: {
     WindowMenu
+  },
+  mounted () {
+    const secondPath = this.$route.params.secondPath
+    const loadPath = _.isEmpty(secondPath) ? 'login' : secondPath 
+    this.$router.replace(loadPath)
   }
 })
 </script>

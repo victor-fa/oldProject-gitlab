@@ -26,6 +26,7 @@ import ILogo from '../components/Logo/index.vue'
 import SiderMenu from '../components/SiderMenu/index.vue'
 import BasicHeader from '../components/BasicHeader/index.vue'
 import BasicFooter from '../components/BasicFooter/index.vue'
+import processCenter, { EventName } from '../utils/processCenter'
 
 export default Vue.extend({
   name: 'base-layout',

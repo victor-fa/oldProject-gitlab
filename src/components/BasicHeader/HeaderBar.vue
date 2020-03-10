@@ -78,6 +78,9 @@ export default Vue.extend({
           return
         }
         processCenter.renderSend(EventName.login)
+        // 清除缓存的用户相关信息
+        this.$store.dispatch('User/clearCacheUserInfo')
+        this.$store.dispatch('NasServer/clearCacheNas')
       }).catch(error => {
         console.log(error)
         this.$message.error('网络连接错误,请检测网络')

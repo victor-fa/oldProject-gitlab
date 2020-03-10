@@ -76,17 +76,9 @@ export default Vue.extend({
     ...mapGetters('User', ['cacheAccounts', 'user'])
   },
   mounted () {
-    this.observerToastNotify()
     this.dropdownItems = _.cloneDeep(this.cacheAccounts)
-    this.$store.dispatch('User/clearCacheUserInfo')
   },
   methods: {
-    observerToastNotify () {
-      processCenter.renderObserver(MainEventName.toast, (event, message: string) => {
-        const myThis = this as any
-        myThis.$message.info(message)
-      })
-    },
     onRememberChange () {
       const element: any = this.$refs.password_checkbox
       this.rememberPassword = element.checked
@@ -145,6 +137,7 @@ export default Vue.extend({
       })
     },
     connectDevice (secretKey: string) {
+      // TODO: 广播到对应的设备
       const myThis = this
       ClientAPI.login(this.user, secretKey).then(response => {
         console.log(response)
@@ -170,7 +163,7 @@ export default Vue.extend({
       this.$store.dispatch('User/addAccount', account)
     },
     cacheNasAccessInfo (response: NasAccessInfo) {
-      this.$store.dispatch('NasServer/updateNasInfo', response)
+      this.$store.dispatch('NasServer/updateNasAccess', response)
     },
     accountChangeAction (value: string) {
       this.dropdownItems = this.cacheAccounts.filter((element: Account) => {

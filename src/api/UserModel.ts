@@ -43,7 +43,8 @@ interface AccessToken {
   // eslint-disable-next-line camelcase
   refresh_token: string,
   // eslint-disable-next-line camelcase
-  expires_time: number
+  expires_time: number,
+  localExpiresTime: number
 }
 
 interface LoginResponse {

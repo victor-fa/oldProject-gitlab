@@ -24,6 +24,7 @@ import processCenter, { EventName } from '../../utils/processCenter'
 import { User, BasicResponse, DeviceRole } from '../../api/UserModel'
 import router from '../../router'
 
+let selectItem: NasInfo | null = null
 export default Vue.extend({
   name: 'scan-nas',
   data () {
@@ -44,8 +45,13 @@ export default Vue.extend({
       console.log(error)
     })
   },
+  destroyed () {
+    ClientAPI.closeBoardcast()
+    selectItem = null
+  },
   methods: {
     didSelectItem (item: NasInfo) {
+      selectItem = item
       const basrUrl = `http://${item.ip}:${item.port}`
       this.bindConnect(basrUrl, item.active)
     },
@@ -60,6 +66,17 @@ export default Vue.extend({
         this.bindUserToNas(authCode)
       }
     },
+    bindUserToNas (authCode: string = '') {
+      if (!this.checkCacheUser()) return
+      console.log('begin bind user to nas')
+      this.loading = true
+      ClientAPI.bindUser(this.user, authCode).then(response => {
+        console.log(response)
+        this.handleConnectSuccess(response.data)
+      }).catch(error => {
+        this.handleConnectFailure(error)
+      })
+    },
     accountContent (url: string) {
       if (!this.checkCacheUser()) return
       console.log('begin online login to nas')
@@ -69,17 +86,6 @@ export default Vue.extend({
       const password = ''
       const ugreenNo = (this.user as User).ugreenNo.toString()
       ClientAPI.offlineLogin(account, password, ugreenNo).then(response => {
-        console.log(response)
-        this.handleConnectSuccess(response.data)
-      }).catch(error => {
-        this.handleConnectFailure(error)
-      })
-    },
-    bindUserToNas (authCode: string = '') {
-      if (!this.checkCacheUser()) return
-      console.log('begin bind user to nas')
-      this.loading = true
-      ClientAPI.bindUser(this.user, authCode).then(response => {
         console.log(response)
         this.handleConnectSuccess(response.data)
       }).catch(error => {
@@ -102,7 +108,9 @@ export default Vue.extend({
       }
       const data = response.data as NasAccessInfo
       // cache nas access info
-      this.$store.dispatch('NasServer/updateNasInfo', data)
+      this.$store.dispatch('NasServer/updateNasAccess', data)
+      // cache nas info 
+      this.$store.dispatch('NasServer/updateNasInfo', selectItem)
       if (data.role === DeviceRole.admin) {
         // push Account page
         router.push('account')

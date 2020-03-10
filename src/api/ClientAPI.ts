@@ -11,6 +11,7 @@ const tmpSecretKey = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzblv4FL7IukDs1m8bvw7wsIU5R1rUmq7RUMHroroY80zOSJZRn1eh8oW6fcrIZhZH+R7vWxvnKBe/h3cEJcUIRIKmQ26la5mAUuedghv1G38n3jZAXZ9yzslEQBBaKOYsvZz2F4KLhi2DlDLr/QOLpppH6HL7CDWaSyieXOmOVt/wmgHMl2SF1ko+bb/svVHz/7xTwoYJiyikVfSw1R+MlID+FLB/UkAPzopkadAUErPLZPMbXQrMelaUYbRQUTauh1dTg9g4nP72zMbW/06slpnswyAxCvxon8/E6U7pcsoBvOHCKyCmK0KO6keHr8ddgMjtV/+ZKmmPDkES51lKQIDAQAB
 -----END PUBLIC KEY-----`
 
+let client: any
 export default {
   setBaseUrl (url: string) {
     nasServer.defaults.baseURL = url
@@ -68,14 +69,18 @@ export default {
   },
   // scan nas on LAN with UDP
   scanNas (success: (data: NasInfo) => void, failure: (error: string) => void) {
+    this.searchNas('', '', success, failure)
+  },
+  // search nas on the LAN
+  searchNas (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
     const host = getBoardcastAddress()
     if (host === null) {
       failure('not found IP address')
       return
     }
     const dgram = require('dgram')
-    const client = dgram.createSocket('udp4')
-    const msg = generateBoardcastPacket()
+    client = dgram.createSocket('udp4')
+    const msg = generateBoardcastPacket(sn, mac)
     const port = 60000
     client.bind(() => {
       client.setBroadcast(true)
@@ -102,10 +107,12 @@ export default {
         failure(data.msg)
       }
     })
-    setTimeout(() => {
+  },
+  closeBoardcast () {
+    if (!_.isEmpty(client)) {
       client.close()
-      failure('not found nas in the LAN')
-    }, 5000)
+      client = null
+    }
   }
 }
 
@@ -204,7 +211,7 @@ const conversionUtility = (num: string, aRadix: number, bRadix: number) => {
   return parseInt(num, aRadix).toString(bRadix)
 }
 
-const generateBoardcastPacket = (sn: string = '', mac: string = '') => {
+const generateBoardcastPacket = (sn: string, mac: string) => {
   const code = Buffer.alloc(2)
   code.writeUIntBE(100, 0, 2)
   const msg = Buffer.from(`SN=${sn}&MAC=${mac}`)
