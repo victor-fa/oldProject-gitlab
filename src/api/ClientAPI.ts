@@ -18,16 +18,7 @@ export default {
   },
   // refresh_token过期时调用
   login (user: User, secretKey: string): Promise<AxiosResponse<BasicResponse>> {
-    const userBasic = {
-      ugreen_no: 1002,
-      phone_no: '13512345679',
-      nic_name: 'james2',
-      email: 'james2@ug.com',
-      sex: 1,
-      birthday: '20101011',
-      version: 29
-    }
-    // const userBasic = convertNasUser(user)
+    const userBasic = convertNasUser(user)
     const sign = encryptSign(userBasic)
     if (sign === null) return Promise.reject(Error('rsa encrypt error'))
     return nasServer.post(userModulePath + '/login', {

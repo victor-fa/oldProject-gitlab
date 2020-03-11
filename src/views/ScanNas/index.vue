@@ -11,6 +11,23 @@
         {{ item.name }}
       </li>
     </ul>
+    <a-modal
+      :visible="visible"
+      :mask="false"
+      :closable="false"
+      :maskClosable="false"
+      okText="连接"
+      cancelText="取消"
+      @ok="handleOk"
+      :confirmLoading="bindLoading"
+      @cancel="handleCancel"
+    >
+      邀请码:
+      <a-input
+        placeholder="请输入邀请码"
+        :value="authCode"
+      />
+    </a-modal>
   </div>
 </template>
 
@@ -23,15 +40,19 @@ import { NasInfo, NasActive, NasAccessInfo } from '../../api/ClientModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 import { User, BasicResponse, DeviceRole } from '../../api/UserModel'
 import router from '../../router'
+import { AxiosResponse } from 'axios'
 
-let selectItem: NasInfo | null = null
 export default Vue.extend({
   name: 'scan-nas',
   data () {
     let list: Array<NasInfo> = []
+    let item: any = null
     return {
       nasList: list,
-      loading: false
+      bindLoading: false,
+      visible: false,
+      authCode: 'UGREEN',
+      selectNas: item
     }
   },
   computed: {
@@ -47,48 +68,52 @@ export default Vue.extend({
   },
   destroyed () {
     ClientAPI.closeBoardcast()
-    selectItem = null
   },
   methods: {
     didSelectItem (item: NasInfo) {
-      selectItem = item
+      this.selectNas = item
       const basrUrl = `http://${item.ip}:${item.port}`
-      this.bindConnect(basrUrl, item.active)
+      this.bindConnect(basrUrl)
     },
-    bindConnect (url: string, active: NasActive) {
+    bindConnect (url: string) {
       ClientAPI.setBaseUrl(url)
+      const active = (this.selectNas as NasInfo).active
       if (active === NasActive.notBind) {
-        // adminstrator
+        // adminstrator bind
         this.bindUserToNas()
       } else {
-        // normal user
-        const authCode = '123'
-        this.bindUserToNas(authCode)
+        // normal user bind
+        this.visible = true
       }
+    },
+    handleOk () {
+      const authCode = this.authCode
+      this.bindUserToNas(authCode)
+    },
+    handleCancel () {
+      this.visible = false
+      this.bindLoading = false
     },
     bindUserToNas (authCode: string = '') {
       if (!this.checkCacheUser()) return
       console.log('begin bind user to nas')
-      this.loading = true
+      this.bindLoading = true
       ClientAPI.bindUser(this.user, authCode).then(response => {
-        console.log(response)
-        if (response.data.code !== 200) return
-        this.handleConnectSuccess(response.data)
+        this.handleConnectSuccess(response)
       }).catch(error => {
         this.handleConnectFailure(error)
       })
     },
     accountContent (url: string) {
       if (!this.checkCacheUser()) return
-      console.log('begin online login to nas')
+      console.log('begin offline login to nas')
       ClientAPI.setBaseUrl(url)
-      this.loading = true
+      this.bindLoading = true
       const account = ''
       const password = ''
       const ugreenNo = (this.user as User).ugreenNo.toString()
       ClientAPI.offlineLogin(account, password, ugreenNo).then(response => {
-        console.log(response)
-        this.handleConnectSuccess(response.data)
+        this.handleConnectSuccess(response)
       }).catch(error => {
         this.handleConnectFailure(error)
       })
@@ -101,17 +126,15 @@ export default Vue.extend({
       }
       return true
     },
-    handleConnectSuccess (response: BasicResponse) {
-      this.loading = false
-      if (response.code !== 200) {
-        this.$message.error(response.msg)
-        return
-      }
-      const data = response.data as NasAccessInfo
+    handleConnectSuccess (response: AxiosResponse<BasicResponse>) {
+      console.log(response)
+      this.bindLoading = false
+      if (response.data.code !== 200) return
+      const data = response.data.data as NasAccessInfo
       // cache nas access info
       this.$store.dispatch('NasServer/updateNasAccess', data)
       // cache nas info 
-      this.$store.dispatch('NasServer/updateNasInfo', selectItem)
+      this.$store.dispatch('NasServer/updateNasInfo', this.selectNas)
       if (data.role === DeviceRole.admin) {
         // push Account page
         router.push('account')
@@ -122,7 +145,7 @@ export default Vue.extend({
     },
     handleConnectFailure (error) {
       console.log(error)
-      this.loading = false
+      this.bindLoading = false
       this.$message.error('网络连接错误，请检测网络')
     }
   }

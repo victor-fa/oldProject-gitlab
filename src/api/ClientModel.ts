@@ -13,7 +13,7 @@ interface NasAccessInfo {
 
 enum NasActive {
   notBind = 0,
-  Bound = 1
+  Bind = 1
 }
 
 interface NasInfo {
