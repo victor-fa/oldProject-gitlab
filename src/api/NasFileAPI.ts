@@ -1,25 +1,35 @@
 import Vue from 'vue'
 import axios from 'axios/index';
+import { NAS_ACCESS } from '@/common/constants'
 axios.defaults.withCredentials = true;
 
 const nasFileModulePath = '/v1/file'
 const tempServerUrl = 'http://192.168.10.91:9999'
-const tempToken = 'YjkyMmZkZGQ1ZGE5Y2RmYTIyNGYxOTgzOWVlNDY0MTNjYjQ5YjdhMA=='
 
 export default {
   storages () {
+    const tokenJson = localStorage.getItem(NAS_ACCESS)
+    if (tokenJson === null) {
+      return Promise.reject(Error('not find access_token'))
+    }
+    const token = JSON.parse(tokenJson).api_token
     return Vue.axios.get(tempServerUrl + nasFileModulePath + '/storages', {
       params: {
-        'api_token': tempToken
+        'api_token': token
       }
     })
   },
   list (path: string, uuid: string) {
+    const tokenJson = localStorage.getItem(NAS_ACCESS)
+    if (tokenJson === null) {
+      return Promise.reject(Error('not find access_token'))
+    }
+    const token = JSON.parse(tokenJson).api_token
     return Vue.axios.get(tempServerUrl + nasFileModulePath + '/list', {
       params: {
         path,
         uuid,
-        'api_token': tempToken
+        'api_token': token
       }
     })
   },
