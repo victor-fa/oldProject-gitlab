@@ -51,7 +51,7 @@ import router from '../../router'
 import UserAPI from '../../api/UserAPI'
 import ClientAPI from '../../api/ClientAPI'
 import { LoginResponse, Account, DeviceInfo, User } from '../../api/UserModel'
-import { NasLoginResponse } from '../../api/ClientModel'
+import { NasAccessInfo } from '../../api/ClientModel'
 import processCenter, { EventName, MainEventName } from '../../utils/processCenter'
 import { message } from 'ant-design-vue'
 import { ACCESS_TOKEN } from '../../common/constants'
@@ -78,13 +78,11 @@ export default Vue.extend({
   mounted () {
     this.observerToastNotify()
     this.dropdownItems = _.cloneDeep(this.cacheAccounts)
-    this.$store.dispatch('User/clearCacheUserInfo')
   },
   methods: {
     observerToastNotify () {
       processCenter.renderObserver(MainEventName.toast, (event, message: string) => {
-        const myThis = this as any
-        myThis.$message.success(message)
+        myThis.$message.warnin(message)
       })
     },
     onRememberChange () {
@@ -97,19 +95,16 @@ export default Vue.extend({
     loginAction () {
       if (!this.checkInputFrom()) return
       this.loading = true
-      const myThis = this
       UserAPI.login(this.account, this.password).then(response => {
-        if (response.data.code !== 200) {
-          myThis.$message.error(response.data.msg)
-          return
-        }
+        this.loading = false
+        if (response.data.code !== 200) return
         const loginResponse = response.data.data as LoginResponse
         this.cacheUserInfo(loginResponse)
         this.getBindDevices()
       }).catch((error: any) => {
         console.log(error)
         this.loading = false
-        myThis.$message.error('网络连接错误，请检测网络')
+        this.$message.error('网络连接错误，请检测网络')
       })
     },
     checkInputFrom () {
@@ -123,10 +118,9 @@ export default Vue.extend({
       return true
     },
     getBindDevices () {
-      const myThis = this
       UserAPI.getBindDevices().then(response => {
         if (response.data.code !== 200) {
-          myThis.$message.error(response.data.msg)
+          this.loading = false
           return
         }
         const userDevices = _.get(response.data.data, 'userDevices') as DeviceInfo[]
@@ -141,25 +135,21 @@ export default Vue.extend({
       }).catch((error: any) => {
         console.log(error)
         this.loading = false
-        myThis.$message.error('网络连接错误，请检测网络')
+        this.$message.error('网络连接错误，请检测网络')
       })
     },
     connectDevice (secretKey: string) {
-      const myThis = this
       ClientAPI.login(this.user, secretKey).then(response => {
         console.log(response)
-        if (response.data.code !== 200) {
-          myThis.$message.error(response.data.msg)
-          return
-        }
-        const nasResponse = response.data.data as NasLoginResponse
-        this.cacheDeviceInfo(nasResponse)
         this.loading = false
+        if (response.data.code !== 200) return
+        const nasResponse = response.data.data as NasAccessInfo
+        this.cacheNasAccessInfo(nasResponse)
         processCenter.renderSend(EventName.home)
       }).catch(error => {
         console.log(error)
         this.loading = false
-        myThis.$message.error('网络连接错误，请检测网络')
+        this.$message.error('网络连接错误，请检测网络')
       })
     },
     cacheUserInfo (response: LoginResponse) {
@@ -169,8 +159,8 @@ export default Vue.extend({
       const account: Account = { account: this.account, password: this.password }
       this.$store.dispatch('User/addAccount', account)
     },
-    cacheDeviceInfo (response: NasLoginResponse) {
-      this.$store.dispatch('NasServer/updateNasInfo', response)
+    cacheNasAccessInfo (response: NasAccessInfo) {
+      this.$store.dispatch('NasServer/updateNasAccess', response)
     },
     accountChangeAction (value: string) {
       this.dropdownItems = this.cacheAccounts.filter((element: Account) => {

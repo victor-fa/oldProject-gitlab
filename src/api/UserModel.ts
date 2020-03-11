@@ -13,19 +13,24 @@ enum SmsType {
   changePhone
 }
 
+enum UserSex {
+  male = 0,
+  female = 1
+}
+
 interface User {
   uid: string,
   nasNo: string,
   userName: string,
   nickName: string,
   birthday: number,
-  sex: number,
+  sex: UserSex,
   areaNo: string,
   phoneNo: string,
   image: string,
   userSay: string,
   status: number,
-  versionNo: string,
+  versionNo: number,
   email: string,
   ctime: Date,
   utime: Date,
@@ -38,7 +43,8 @@ interface AccessToken {
   // eslint-disable-next-line camelcase
   refresh_token: string,
   // eslint-disable-next-line camelcase
-  expires_time: number
+  expires_time: number,
+  localExpiresTime: number
 }
 
 interface LoginResponse {
@@ -87,5 +93,6 @@ export {
   Account,
   DeviceRole,
   DeviceStatus,
-  DeviceInfo
+  DeviceInfo,
+  UserSex
 }

@@ -85,6 +85,7 @@ export default {
       context.commit('UPDATE_USER', user)
     },
     async updateAccessToken (context: ActionContext<UserState, UserState>, token: AccessToken) {
+      token.localExpiresTime = new Date().getDate() + token.expires_time * 1000
       context.commit('UPDATE_ACCESS_TOKEN', token)
     },
     async clearCacheUserInfo (context: ActionContext<UserState, UserState>) {
