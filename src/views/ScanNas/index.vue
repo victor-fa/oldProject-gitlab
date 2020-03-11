@@ -8,7 +8,7 @@
         :key="index"
         @click="didSelectItem(item)"
       >
-        {{ item.name }}
+        {{ item.name }}:{{ item.ip }}
       </li>
     </ul>
     <a-modal
