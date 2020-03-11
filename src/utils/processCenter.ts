@@ -41,10 +41,13 @@ export default {
       console.log(eventName)
     })
   },
-  // on render process observing
+  // add render process observer
   renderObserver (eventName: MainEventName, listener: (event: Electron.IpcRendererEvent, ...args: any[]) => void) {
-    const { ipcRenderer } = require('electron')
     ipcRenderer.on(eventName, listener)
+  },
+  //remove render process observer
+  removeRenderObserver (eventName: MainEventName) {
+    ipcRenderer.removeAllListeners(eventName)
   },
   // on render process send async message
   renderSend (evnetName: EventName, ...args: any[]): void {

@@ -79,11 +79,13 @@ export default Vue.extend({
     this.observerToastNotify()
     this.dropdownItems = _.cloneDeep(this.cacheAccounts)
   },
+  destroyed () {
+    processCenter.removeRenderObserver(MainEventName.toast)
+  },
   methods: {
     observerToastNotify () {
-      const myThis: any = this
       processCenter.renderObserver(MainEventName.toast, (event, message: string) => {
-        myThis.$message.warning(message)
+        this.$message.warning(message)
       })
     },
     onRememberChange () {
@@ -140,6 +142,7 @@ export default Vue.extend({
       })
     },
     connectDevice (secretKey: string) {
+      // TODO: 进入连接过程
       ClientAPI.login(this.user, secretKey).then(response => {
         console.log(response)
         this.loading = false

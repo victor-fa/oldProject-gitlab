@@ -35,8 +35,6 @@
   </div>
 </template>
 
-// TODO: 当前dropdown动画不生效
-
 <script lang="ts">
 import Vue from 'vue'
 import CustomButton from '../../components/CustomButton/index.vue'
