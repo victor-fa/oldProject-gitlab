@@ -79,7 +79,7 @@ export default Vue.extend({
       // TODO: 在连接中界面里，定时器应该在界面销毁时销毁
       const nasInfoJson = localStorage.getItem(NAS_INFO)
       const nasInfo = JSON.parse(nasInfoJson!) as NasInfo
-      const timeId = this.beginTimer()
+      const timeId:any = this.beginTimer()
       ClientAPI.searchNas(nasInfo.sn, nasInfo.mac, data => {
         if (data.sn === nasInfo.sn && data.mac === nasInfo!.mac) {
           window.clearTimeout(timeId)
