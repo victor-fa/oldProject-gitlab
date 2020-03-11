@@ -133,7 +133,7 @@ export default Vue.extend({
           const sortDevices = userDevices.sort((a, b) => {
             return a.ctime > b.ctime ? 1 : -1
           })
-          this.connectDevice(sortDevices[0].secretKey)
+          this.connectDevice(sortDevices[0].publicKey)
         }
       }).catch((error: any) => {
         console.log(error)
