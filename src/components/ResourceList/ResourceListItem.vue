@@ -26,7 +26,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { ArrangeWay, ResourceType, ResourceItem } from './ResourceModel'
+import { ArrangeWay, ResourceItem } from './ResourceModel'
 
 export default Vue.extend({
   name: 'resource-item',
@@ -85,26 +85,27 @@ export default Vue.extend({
       return this.arrangeWay === ArrangeWay.horizontal
     },
     isOddStyle: function () {
-      return this.index % 2
+      const myThis = this as any
+      return myThis.index % 2
     }
   },
   methods: {
-    searchResourceIcon (type: ResourceType) {
+    searchResourceIcon (type) {
       switch (type) {
-        case ResourceType.folder || 6:
-          return require('../../assets/resource/folder_icon.png')
-        case ResourceType.html || 0:
+        case 0:
           return require('../../assets/resource/html_icon.png')
-        case ResourceType.image || 3:
-          return require('../../assets/resource/image_icon.png')
-        case ResourceType.audio || 2:
-          return require('../../assets/resource/audio_icon.png')
-        case ResourceType.video || 1:
+        case 1:
           return require('../../assets/resource/video_icon.png')
-        case ResourceType.pdf || 5:
-          return require('../../assets/resource/pdf_icon.png')
-        case ResourceType.txt || 4:
+        case 2:
+          return require('../../assets/resource/audio_icon.png')
+        case 3:
+          return require('../../assets/resource/image_icon.png')
+        case 4:
           return require('../../assets/resource/txt_icon.png')
+        case 5:
+          return require('../../assets/resource/pdf_icon.png')
+        case 6:
+          return require('../../assets/resource/folder_icon.png')
       }
       return require('../../assets/resource/unkonw_icon.png')
     }
@@ -159,6 +160,6 @@ export default Vue.extend({
   background-color: #ECECEC;
 }
 .oddVerticalItem {
-  background-color: #f6f8fb;
+  background-color: #FCFBFE;
 }
 </style>

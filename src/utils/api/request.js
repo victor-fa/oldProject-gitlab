@@ -1,28 +1,22 @@
 import axios from 'axios/index';
 axios.defaults.withCredentials = true;
 function severAddress() {
-	return 'https://api.zjinh.cn';
-}
-function updateServer() {
-	return 'https://update.zjinh.cn/c-disk';
+	return 'http://192.168.10.91:9999';
 }
 function Ajax(options) {
 	let params = new URLSearchParams();
 	let method = options.method ? options.method : 'POST';
-	if (method === 'POST' && !options.upload) {
-		for (let item in options.data) {
-			params.append(item, options.data[item]);
-		}
-	} else {
-		params = options.data;
+	let body = null;
+	for (let item in options.data) {
+		params.append(item, options.data[item]);
 	}
+	body = new Blob([options.body]);
 	axios({
 		method: method,
-		data: params,
+		data: body,
 		emulateJSON: true,
 		withCredentials: true,
-		url: severAddress() + options.url,
-		headers: options.upload ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}
+		url: severAddress() + options.url + '?' + params
 	}).then(
 		response => {
 			options.success && typeof options.success === 'function' ? options.success(response.data) : '';
@@ -32,4 +26,4 @@ function Ajax(options) {
 		}
 	);
 }
-export { Ajax, severAddress, updateServer };
+export { Ajax, severAddress };

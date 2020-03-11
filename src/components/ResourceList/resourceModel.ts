@@ -2,25 +2,21 @@ enum ArrangeWay {
   horizontal = 0,
   vertical
 }
-enum ResourceType {
-  folder,
-  html,
-  image,
-  audio,
-  video,
-  txt,
-  pdf
-}
 interface ResourceItem {
-  name: string,
-  type: ResourceType,
-  modifyTime: string,
-  memory: string,
-  subResources?: Array<ResourceItem>
+  collected: number,
+  ctime: number,
+  duration: number,
+  mtime: number,
+  path: string,
+  shared: number,
+  size: number,
+  status: number,
+  thumbs: any,
+  type: number,
+  uuid: string
 }
 
 export {
   ArrangeWay,
-  ResourceType,
   ResourceItem
 }

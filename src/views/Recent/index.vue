@@ -23,13 +23,14 @@ export default {
     }
   },
   computed: {
-
+    
   },
   mounted () {
-    this.getStoragesInfo()
+    const myThis = this as any
+    myThis.getRecentInfo()
   },
   methods: {
-    getStoragesInfo () {  // 获取磁盘信息
+    getRecentInfo () {  // 获取磁盘信息
       const myThis: any = this
       NasFileAPI.storages().then((response): void => {
         if (response.data.code !== 200) {
@@ -45,7 +46,7 @@ export default {
     },
     getFileList(params) { // 获取文件列表
       const myThis: any = this
-      NasFileAPI.list('', params).then((response): void => {
+      NasFileAPI.list('/.ugreen_nas/6000', params).then((response): void => {
         if (response.data.code !== 200) {
           myThis.$message.warning(response.data.msg)
           return

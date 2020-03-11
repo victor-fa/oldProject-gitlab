@@ -1,18 +1,22 @@
 <template>
-  <resource-list
-    :dataSource="dataArray"
+  <transport-list
+    ref="realResourceList"
   />
+  
+  <!-- :style="alterStyle"
+    @blur="alterBlur"
+    @callback="DiskFeatureControl" -->
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import ResourceList from '../../components/ResourceList/index.vue'
+import TransportList from '../../components/TransportList/index.vue'
 import { realResourceList } from '../MockData/index'
 
 export default {
   name: 'transport',
   components: {
-    ResourceList
+    TransportList
   },
   data () {
     return {

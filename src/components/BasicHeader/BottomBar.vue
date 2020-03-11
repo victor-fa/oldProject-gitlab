@@ -1,56 +1,69 @@
 <template>
   <div class="bottom-bar">
-    <div class="left-bar">
-      <custom-button
-        :image="operateFuncList.back"
-        class="back-icon-style"
-        iconWidth="6px"
-        @click.native="backAction"
-      />
-      <span>{{ directory }}</span>
-    </div>
-    <div class="right-bar">
-      <custom-button
-        :image="operateFuncList.search"
-        :selectedBackgroundImage="operateFuncList.selectedBg"
-        iconWidth="13px"
-        class="right-item"
-      />
-      <custom-button
-        :image="operateFuncList.refresh"
-        :selectedBackgroundImage="operateFuncList.selectedBg"
-        iconWidth="12px"
-        class="right-item"
-      />
-      <a-popover
-        trigger="click"
-        v-model="visible"
-        overlayClassName="sortPopover"
-      >
-        <sort-popover-list
-          slot="content"
-          v-on:sortWayChange="sortWayChange"
+    <template v-if="!isTaskVisiable">
+      <div class="left-bar">
+        <custom-button
+          :image="operateFuncList.back"
+          class="back-icon-style"
+          iconWidth="6px"
+          @click.native="backAction"
         />
-        <span>
-          <custom-button
-            ref="sortButton"
-            :image="operateFuncList.sort"
-            @click="clicked"
-            :selectedBackgroundImage="operateFuncList.selectedBg"
-            iconWidth="14px"
-            class="right-item"
+        <span>{{ directory }}</span>
+      </div>
+      <div class="right-bar">
+        <custom-button
+          :image="operateFuncList.search"
+          :selectedBackgroundImage="operateFuncList.selectedBg"
+          iconWidth="13px"
+          class="right-item"
+        />
+        <custom-button
+          :image="operateFuncList.refresh"
+          :selectedBackgroundImage="operateFuncList.selectedBg"
+          iconWidth="12px"
+          class="right-item"
+        />
+        <a-popover
+          trigger="click"
+          v-model="visible"
+          overlayClassName="sortPopover"
+        >
+          <sort-popover-list
+            slot="content"
+            v-on:sortWayChange="sortWayChange"
           />
-        </span>
-      </a-popover>
-      <custom-button
-        :image="operateFuncList.arrange"
-        :selectedBackgroundImage="operateFuncList.selectedBg"
-        iconWidth="14px"
-        class="right-item"
-        ref="arrangeBtn"
-        @click.native="arrangeBtnClick"
-      />
-    </div>
+          <span>
+            <custom-button
+              ref="sortButton"
+              :image="operateFuncList.sort"
+              @click="clicked"
+              :selectedBackgroundImage="operateFuncList.selectedBg"
+              iconWidth="14px"
+              class="right-item"
+            />
+          </span>
+        </a-popover>
+        <custom-button
+          :image="operateFuncList.arrange"
+          :selectedBackgroundImage="operateFuncList.selectedBg"
+          iconWidth="14px"
+          class="right-item"
+          ref="arrangeBtn"
+          @click.native="arrangeBtnClick"
+        />
+      </div>
+    </template>
+    <template v-if="isTaskVisiable">
+      <div class="left-bar">
+        <span class="normal" v-bind:class="{ special: currentTask === 1 }" @click="changeTransport(1)">正在下载（3）</span>
+        <span class="normal">/ &nbsp;&nbsp;&nbsp;</span>
+        <span class="normal" v-bind:class="{ special: currentTask === 2 }" @click="changeTransport(2)">   下载完成（2）</span>
+      </div>
+      <div class="right-bar">
+        <a-button class="right-button">全部暂停</a-button>
+        <a-button class="right-button">全部取消</a-button>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -77,13 +90,30 @@ export default Vue.extend({
   data () {
     return {
       visible: false,
-      operateFuncList
+      operateFuncList,
+      isTaskVisiable: false,
+      currentTask: 1,
     }
   },
   computed: {
     ...mapGetters('Resource', ['directory'])
   },
+  watch: {
+    $route (to, from) {
+      if (to.name === 'transport') {  // 仅任务管理下有变化
+        this.isTaskVisiable = true;
+      } else {
+        this.isTaskVisiable = false;
+      }
+      console.log(this.isTaskVisiable);
+    }
+  },
   methods: {
+    changeTransport (type) {
+      this.currentTask = type
+      console.log(this.currentTask);
+      EventBus.$emit(EventType.transportChangeAction, type)
+    },
     sortWayChange (sender: SortWay) {
       // hide popover
       this.visible = false
@@ -130,10 +160,14 @@ export default Vue.extend({
       vertical-align: middle;
       margin-right: 3px;
     }
-    span {
+    .normal {
       font-size: 14px;
       line-height: 22px;
       color: #484848;
+      cursor: pointer;
+    }
+    .special {
+      color: #06B650;
     }
   }
   .right-bar {
@@ -143,6 +177,11 @@ export default Vue.extend({
       height: 22px;
       width: 22px;
       margin-right: 2px;
+    }
+    .right-button {
+      border: 1px solid #e5e5e5;
+      border-radius: 0px;
+      margin-right: 7px;
     }
   }
 }

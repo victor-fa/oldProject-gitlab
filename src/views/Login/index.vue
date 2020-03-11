@@ -84,7 +84,7 @@ export default Vue.extend({
     observerToastNotify () {
       processCenter.renderObserver(MainEventName.toast, (event, message: string) => {
         const myThis = this as any
-        myThis.$message.info(message)
+        myThis.$message.success(message)
       })
     },
     onRememberChange () {

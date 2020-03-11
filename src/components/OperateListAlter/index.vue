@@ -35,9 +35,6 @@ export default Vue.extend({
       isShow: false
     }
   },
-  mounted () {
-    window.addEventListener('click', this.windowClick)
-  },
   destroyed () {
     window.removeEventListener('click', this.windowClick)
   },
@@ -57,6 +54,9 @@ export default Vue.extend({
     hideAlter () {
       this.isShow = false
     }
+  },
+  mounted () {
+    window.addEventListener('click', this.windowClick)
   }
 })
 </script>

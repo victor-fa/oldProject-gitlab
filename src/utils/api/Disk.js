@@ -1,4 +1,5 @@
 import { Ajax, severAddress } from './request';
+import NasFileAPI from '../../api/NasFileAPI'
 let FileType = {
 	android: {
 		TypeArray: 'apk',
@@ -210,7 +211,7 @@ export default {
 	},
 	Download(data, callback, error) {
 		Ajax({
-			url: '/service/disk/Download',
+			url: '/v1/file/download',
 			data: data,
 			success: callback,
 			error: error
@@ -218,9 +219,13 @@ export default {
 	},
 	Upload(data, callback, error) {
 		Ajax({
-			url: '/service/disk/upload',
-			data: data,
+			url: `/v1/file/upload`,
+			data: data.data,
+			body: data.body,
 			upload: true,
+			headers: {'Accept': '*/*'},  
+			dataType: 'json',
+			contentType: false,
 			success: rs => {
 				rs.data ? this.DiskData(rs.data) : '';
 				callback(rs);
@@ -237,6 +242,7 @@ export default {
 		return (bytes / Math.pow(k, i)).toPrecision(3) + sizes[i];
 	},
 	DiskData(item) {
+		console.log(item);
 		item.active = false; //设置未选择
 		item.$size = this.FileSize(item.disk_size); //计算文件大小
 		item.disk_size = parseInt(item.disk_size);

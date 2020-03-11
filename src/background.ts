@@ -6,6 +6,7 @@ import {
   installVueDevtools
 } from 'vue-cli-plugin-electron-builder/lib'
 import processCenter from './utils/processCenter'
+import LocalFile from './utils/api/LocalFile';
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 

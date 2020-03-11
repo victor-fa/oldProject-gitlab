@@ -48,6 +48,9 @@ export default Vue.extend({
         }
       })
     }
+  },
+  destroyed () {
+    EventBus.$off(EventType.leftMenuChangeAction)
   }
 })
 </script>
