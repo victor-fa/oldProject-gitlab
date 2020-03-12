@@ -24,7 +24,7 @@ export default {
     // filter prefix
     let newSecretKey = secretKey.replace('-----BEGIN PUBLIC KEY-----', '')
     // filter suffix
-    newSecretKey = secretKey.replace('-----END PUBLIC KEY-----', '')
+    newSecretKey = newSecretKey.replace('-----END PUBLIC KEY-----', '')
     // filter enter
     return this.replaceString(newSecretKey, '/n', '')
   }
