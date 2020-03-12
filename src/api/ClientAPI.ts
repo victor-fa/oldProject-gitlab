@@ -36,9 +36,8 @@ export default {
     })
   },
   bindUser (user: User, authCode: string): Promise<AxiosResponse<BasicResponse>> {
-    let userBasic = convertNasUser(user)
-    userBasic = filterNasUser(userBasic)
-    let params = authCode.length === 0 ? {
+    const userBasic = convertNasUser(user)
+    const params = authCode.length === 0 ? {
       platform: parseInt(deviceMgr.getPlatform()),
       user_basic: userBasic
     } : {
@@ -118,15 +117,17 @@ const convertNasUser = (user: User): NasUser => {
     birthday: user.birthday,
     version: user.versionNo
   }
-  return nasUser
-}
-
-const filterNasUser = (nasUser: NasUser) => {
   // filter property with null value
   for (const key in nasUser) {
     if (nasUser.hasOwnProperty(key)) {
       const element = nasUser[key]
-      if (element === null) _.unset(nasUser, key)
+      if (element === null || element === undefined) {
+        if (key === 'sex') {
+          _.unset(nasUser, key)
+        } else {
+          nasUser[key] = ''
+        }
+      }
     }
   }
   return nasUser
