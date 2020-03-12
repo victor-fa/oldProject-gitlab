@@ -118,12 +118,12 @@ const convertNasUser = (user: User): NasUser => {
     version: user.versionNo
   }
   // filter property with null value
-  for (const key in nasUser) {
-    if (nasUser.hasOwnProperty(key)) {
-      const element = nasUser[key]
-      if (element === null) _.unset(nasUser, key)
-    }
-  }
+  // for (const key in nasUser) {
+  //   if (nasUser.hasOwnProperty(key)) {
+  //     const element = nasUser[key]
+  //     if (element === null) _.unset(nasUser, key)
+  //   }
+  // }
   return nasUser
 }
 
