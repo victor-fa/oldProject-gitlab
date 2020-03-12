@@ -36,7 +36,7 @@ interface NasUser {
   nic_name: string,
   email: string,
   sex: UserSex,
-  birthday: number,
+  birthday: string,
   version: number
 }
 

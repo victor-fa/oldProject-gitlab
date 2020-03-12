@@ -107,14 +107,11 @@ export default {
   }
 }
 
-const convertNasUser = (user: User): NasUser => {
+const convertNasUser = (user: User) => {
   let nasUser = {
     ugreen_no: user.ugreenNo,
     phone_no: user.phoneNo,
     nic_name: user.nickName,
-    email: user.email,
-    sex: user.sex,
-    birthday: user.birthday,
     version: user.versionNo
   }
   // filter property with null value
@@ -122,11 +119,7 @@ const convertNasUser = (user: User): NasUser => {
     if (nasUser.hasOwnProperty(key)) {
       const element = nasUser[key]
       if (element === null || element === undefined) {
-        if (key === 'sex') {
-          _.unset(nasUser, key)
-        } else {
-          nasUser[key] = ''
-        }
+        nasUser[key] = ''
       }
     }
   }
