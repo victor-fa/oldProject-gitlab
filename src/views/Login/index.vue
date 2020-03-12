@@ -22,7 +22,7 @@
         />
       </li>
       <li class="password-checkbox">
-        <a-checkbox :checked="rememberPassword">记住密码</a-checkbox>
+        <a-checkbox :checked="rememberPassword" @change="checkboxChange">记住密码</a-checkbox>
         <a-button>忘记密码</a-button>
       </li>
       <li class="login-button">
@@ -83,6 +83,9 @@ export default Vue.extend({
     processCenter.removeRenderObserver(MainEventName.toast)
   },
   methods: {
+    checkboxChange() {
+      this.rememberPassword = !this.rememberPassword
+    },
     observerToastNotify () {
       processCenter.renderObserver(MainEventName.toast, (event, message: string) => {
         this.$message.warning(message)
