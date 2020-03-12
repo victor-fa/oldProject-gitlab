@@ -22,12 +22,12 @@
         @drop.prevent.stop="UploadDrop"
       >
       
-          <DiskFile @SelectFiles="SelectFiles" @OpenFile="DiskFeatureControl" v-if="LoadCompany && NoTransType" :data="UserDiskData" :DiskData="DiskData" />
           <!-- <loading :loading="IsLoadCompany" :length="UserDiskData.length" :IsNoDiskData="IsNoDiskData" /> -->
           <div class="cd-mouse-select" v-show="MouseSelectData.width" :style="MouseSelectData" />
           <!-- <DiskTransList v-show="DiskData.Type === 'trans'" :data="TransformData" @ControlTrans="ControlTrans" /> -->
 
-          <a-list
+          <DiskFile @SelectFiles="SelectFiles" @OpenFile="DiskFeatureControl" v-if="LoadCompany && NoTransType" :data="UserDiskData" :DiskData="DiskData" />
+          <!-- <a-list
             :dataSource="UserDiskData"
             :grid="grid"
           >
@@ -42,7 +42,7 @@
             <div v-if="loading && !busy" class="demo-loading-container">
               <a-spin />
             </div>
-          </a-list>
+          </a-list> -->
           
       </div>
     </section>
@@ -59,7 +59,7 @@ import { ArrangeWay, ResourceItem } from '../../components/ResourceList/Resource
 import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
 import DiskFile from '../../components/Disk/DiskFile.vue'
 import MouseMenu from '../../components/Disk/MouseMenu.vue'
-import ResourceListItem from '../../components/ResourceList/ResourceListItem.vue'
+// import ResourceListItem from '../../components/ResourceList/ResourceListItem.vue'
 import ResourceHeader from '../../components/ResourceList/ResourceHeader.vue'
 import upload from '../../utils/file/upload';
 import NasFileAPI from '../../api/NasFileAPI'
@@ -69,7 +69,7 @@ export default {
   name: 'main',
   directives: { infiniteScroll },
   components: {
-    ResourceListItem,
+    // ResourceListItem,
     ResourceHeader,
     DiskFile,
     MouseMenu
@@ -81,7 +81,7 @@ export default {
 		// ctime: 1583739748
 		// duration: 0
 		// mtime: 1583739748
-		// path: "/.ugreen_nas/6004/.backup"
+		// path: "/.ugreen_nas/6001/.backup"
 		// shared: 0
 		// size: 0
 		// status: 0
@@ -158,7 +158,6 @@ export default {
 		UserDiskData: {
 			handler() {
         const myThis = this as any
-				console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
 				myThis.NeedHide = true;
 				myThis.DiskData.SelectFiles = [];
 				myThis.UserDiskData.forEach((item, index) => {
@@ -172,6 +171,8 @@ export default {
 				} else {
 					myThis.DiskData.SelectTips = myThis.UserDiskData.length + '个项目';
 				}
+				// console.log(JSON.parse(JSON.stringify(myThis.UserDiskData.SelectFiles)));
+				// console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
 			},
 			deep: true
 		},
@@ -261,51 +262,6 @@ export default {
 				},
 				false
 			);
-			// localStorage.server = this.$Api.Public.severAddress();
-			// this.$ipc.on('download', (e, file, completed) => {
-			// 	completed && this.DiskFeatureControl('popup', file.name + '下载完成'); /*消息提醒*/
-			// 	for (let i = 0; i < this.TransformData.length; i++) {
-			// 		if (file.name === this.TransformData[i].name) {
-			// 			this.$nextTick(() => {
-			// 				for (let name in this.TransformData[i]) {
-			// 					this.TransformData[i][name] = file[name];
-			// 				}
-			// 			});
-			// 			return;
-			// 		}
-			// 	}
-			// 	this.$nextTick(() => {
-			// 		this.TransformData.push(file);
-			// 	});
-			// });
-			// this.$ipc.on('win-data', (e, data) => {
-			// 	//接收用户配置文件
-			// 	localStorage.UserId = data.id;
-			// 	this.$Api.User.Login(
-			// 		data,
-			// 		() => {
-			// 			this.login = true;
-			// 			this.GetMainFile(null, this.loadClassify);
-			// 			this.$Api.LocalFile.read('transfer', data => {
-			// 				if (data.length) {
-			// 					this.TransformData = data;
-			// 					this.TransformData.forEach(item => {
-			// 						if (item.trans_type === 'download' && item.state !== 'completed') {
-			// 							this.$electron.remote.getCurrentWindow().webContents.downloadURL(item.disk_main + '?disk_name=' + item.disk_name);
-			// 						}
-			// 					});
-			// 				}
-			// 			});
-			// 			this.$Api.LocalFile.read('setting', data => {
-			// 				this.ConfigObject = data;
-			// 				this.$ipc.send('system', 'download-update', data.TransDownFolder);
-			// 			});
-			// 		},
-			// 		() => {
-			// 			this.$ipc.send('system', 'logoff');
-			// 		}
-			// 	);
-			// });
 		},
     observerWindowResize () {
       const myThis = this as any
@@ -434,7 +390,7 @@ export default {
 			let fileArea = data.files;
 			let params = {
 				uuid: 'A252FB4252FB19AD',
-				path: '/.ugreen_nas/6004/' + fileArea[0].name,	// 当前目录
+				path: '/.ugreen_nas/6001/' + fileArea[0].name,	// 当前目录
 				start: 0,
 				end: fileArea[0].size-1,
 				size: fileArea[0].size,
@@ -484,7 +440,7 @@ export default {
 						tips = tips + '已剪切到剪贴板';
 						break;
 				}
-				myThis.$Message.info(tips);
+				myThis.$message.info(tips);
 				return (myThis.DiskData.ClipboardType = commend);
 			}
 			commend = commend ? commend : 'newFolder';
@@ -514,7 +470,7 @@ export default {
 							}
 							myThis.$ipc.send('file-control', OpenType, data.length ? data : myThis.DiskData.NowSelect);
 						} else {
-							myThis.$Message.warning('暂不支持打开该类型文件');
+							myThis.$message.warning('暂不支持打开该类型文件');
 						}
 					}
 					break;
@@ -536,7 +492,7 @@ export default {
 						// myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(item.disk_main + '?disk_name=' + item.disk_name);
 					});
 					myThis.SelectDownLoadFiles = [];
-					myThis.$Message.info(tips + '已加入下载列队');
+					myThis.$message.info(tips + '已加入下载列队');
           break
 					// if (myThis.DiskData.SelectFiles.length) {
 					// 	myThis.DiskData.SelectFiles.forEach(item => {
@@ -554,7 +510,7 @@ export default {
 					// 	myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(item.disk_main + '?disk_name=' + item.disk_name);
 					// });
 					// myThis.SelectDownLoadFiles = [];
-					// myThis.$Message.info(tips + '已加入下载列队');
+					// myThis.$message.info(tips + '已加入下载列队');
 					// break;
 				case 'search': //搜索
 					if (flag) {
@@ -589,7 +545,7 @@ export default {
 						tips: '请输入文件夹名称',
 						callback: value => {
 							if (value.length === 0) {
-								return myThis.$Message.error('文件夹名称不能为空');
+								return myThis.$message.error('文件夹名称不能为空');
 							}
 							myThis.$Api.Disk.NewFolder(
 								{
@@ -600,9 +556,9 @@ export default {
 									rs = rs[0];
 									if (rs.disk_id) {
 										myThis.UserDiskData.push(rs);
-										myThis.$Message.success(value + ' 已创建');
+										myThis.$message.success(value + ' 已创建');
 									} else {
-										myThis.$Message.error(value + ' 已存在');
+										myThis.$message.error(value + ' 已存在');
 									}
 								}
 							);
@@ -631,18 +587,18 @@ export default {
 					});
 					if (myThis.DiskData.ClipboardType === 'Copy') {
 						if (CopySize > myThis.DiskData.DiskSize.total - myThis.DiskData.DiskSize.use) {
-							return myThis.$Message.error('空间不足！请清理一些文件后重试');
+							return myThis.$message.error('空间不足！请清理一些文件后重试');
 						}
 					} else if (myThis.DiskData.ClipboardType === 'Cut') {
 						if (myThis.DiskData.Clipboard[0].parent_id === myThis.NowDiskID) {
-							myThis.$Message.info('剪切和粘贴目录为同一个，已清空剪贴板');
+							myThis.$message.info('剪切和粘贴目录为同一个，已清空剪贴板');
 							return myThis.DiskFeatureControl('clear');
 						}
 						if (!CutFlag) {
-							return myThis.$Message.warning('剪贴板内包含粘贴目标，请重新选择');
+							return myThis.$message.warning('剪贴板内包含粘贴目标，请重新选择');
 						}
 					}
-					myThis.$Message.info('正在粘贴文件，请稍候');
+					myThis.$message.info('正在粘贴文件，请稍候');
 					data = myThis.DiskBatchData('post', myThis.DiskData.Clipboard);
 					myThis.$Api.Disk[myThis.DiskData.ClipboardType](
 						{
@@ -666,10 +622,10 @@ export default {
 								if (CopyFlag) {
 									myThis.NavigationControl('reload');
 								}
-								myThis.$Message.success('粘贴成功，共' + myThis.DiskData.Clipboard.length + '个项目');
+								myThis.$message.success('粘贴成功，共' + myThis.DiskData.Clipboard.length + '个项目');
 								myThis.DiskFeatureControl('clear');
 							} else {
-								myThis.$Message.error('粘贴失败');
+								myThis.$message.error('粘贴失败');
 							}
 						}
 					);
@@ -688,10 +644,10 @@ export default {
 								rs => {
 									rs = rs[0];
 									if (rs.state === 'success') {
-										myThis.$Message.success('移入回收站成功');
+										myThis.$message.success('移入回收站成功');
 										myThis.DiskBatchData('remove', trash_data);
 									} else {
-										myThis.$Message.error('移入回收站失败');
+										myThis.$message.error('移入回收站失败');
 									}
 								}
 							);
@@ -712,10 +668,10 @@ export default {
 								rs => {
 									rs = rs[0];
 									if (rs.state === 'success') {
-										myThis.$Message.success('删除成功');
+										myThis.$message.success('删除成功');
 										myThis.DiskBatchData('remove', delete_data);
 									} else {
-										myThis.$Message.success('删除失败');
+										myThis.$message.success('删除失败');
 									}
 								}
 							);
@@ -736,10 +692,10 @@ export default {
 								rs => {
 									rs = rs[0];
 									if (rs.state === 'success') {
-										myThis.$Message.success('还原成功');
+										myThis.$message.success('还原成功');
 										myThis.DiskBatchData('remove', restore_data);
 									} else {
-										myThis.$Message.success('还原失败');
+										myThis.$message.success('还原失败');
 									}
 								}
 							);
@@ -753,7 +709,7 @@ export default {
 						value: myThis.DiskData.NowSelect.disk_name,
 						callback: value => {
 							if (value.length === 0) {
-								return myThis.$Message.error('文件名不能为空');
+								return myThis.$message.error('文件名不能为空');
 							}
 							myThis.$Api.Disk.Rename(
 								{
@@ -764,9 +720,9 @@ export default {
 									rs = rs[0];
 									if (rs.state === 'success') {
 										myThis.UserDiskData[myThis.DiskData.NowIndex].disk_name = value;
-										myThis.$Message.success('重命名成功');
+										myThis.$message.success('重命名成功');
 									} else {
-										myThis.$Message.error('重命名失败');
+										myThis.$message.error('重命名失败');
 									}
 								}
 							);
@@ -785,7 +741,7 @@ export default {
 							type: 'info',
 							confirmButtonText: '复制',
 							callback: () => {
-								myThis.$Message.info('链接已复制');
+								myThis.$message.info('链接已复制');
 								myThis.$electron.clipboard.writeText(myThis.DiskData.NowSelect.shareAddress);
 							}
 						});
@@ -814,7 +770,7 @@ export default {
 								},
 								rs => {
 									if (rs[0].state === 'success') {
-										myThis.$Message.success('分享已取消');
+										myThis.$message.success('分享已取消');
 										myThis.$nextTick(() => {
 											if (myThis.loadClassify === 'share') {
 												let data:any = [];
@@ -827,7 +783,7 @@ export default {
 											}
 										});
 									} else {
-										myThis.$Message.error('操作失败');
+										myThis.$message.error('操作失败');
 									}
 								}
 							);
@@ -945,22 +901,23 @@ export default {
 				};
 				let selList:any = document.getElementsByClassName(myThis.DiskData.DiskShowState);
 				myThis.ClearSelect();
+				let tempArr = myThis.UserDiskData;
 				for (let i = 0; i < selList.length; i++) {
 					let sl = selList[i].offsetWidth + selList[i].offsetLeft,
 						st = selList[i].offsetHeight + selList[i].offsetTop;
 					let area_l = area_data.left + area_data.width;
 					let area_t = area_data.top + area_data.height;
 					if (sl > area_data.left && st > area_data.top && selList[i].offsetLeft < area_l && selList[i].offsetTop < area_t) {
-						if (myThis.UserDiskData[i].active === false) {
-							myThis.UserDiskData[i].active = true;
+						if (tempArr[i].active === false) {
+								tempArr[i].active = true;
 						}
 					} else {
-						if (myThis.UserDiskData[i].active) {
-							myThis.UserDiskData[i].active = false;
+						if (tempArr[i].active) {
+								tempArr[i].active = false;
 						}
 					}
 				}
-        console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
+				myThis.UserDiskData = myThis.deepCopy(tempArr);
 			};
     },
 		ClearSelect() {
@@ -986,7 +943,7 @@ export default {
     },
     getFileList(params) { // 获取文件列表
       const myThis: any = this
-      NasFileAPI.list('/.ugreen_nas/6004', params).then((response): void => {
+      NasFileAPI.list('/.ugreen_nas/6001', params).then((response): void => {
         if (response.data.code !== 200) {
           myThis.$message.warning(response.data.msg)
           return
@@ -1033,13 +990,11 @@ export default {
 						myThis.DiskLoadCount = 0;
 					}
 					myThis.LoadCompany = true;
-					data.forEach(item => {
-						myThis.UserDiskData.push(item);
-					});
+					myThis.UserDiskData = data
 					if (data.length) {
 						myThis.DiskData.DiskSize.total = data[0].max_size;
 						myThis.DiskData.DiskSize.use = data[0].use_size;
-						myThis.DiskData.DiskSize.text = '可用:' + myThis.$Api.Disk.FileSize(myThis.DiskData.DiskSize.total - myThis.DiskData.DiskSize.use);
+						// myThis.DiskData.DiskSize.text = '可用:' + myThis.$Api.Disk.FileSize(myThis.DiskData.DiskSize.total - myThis.DiskData.DiskSize.use);
 						myThis.DiskAllCount = data[0].all_count;
 						myThis.DiskLoadCount = myThis.DiskLoadCount + data.length;
 					}
@@ -1047,6 +1002,37 @@ export default {
 			}
 			return BatchData;
     },
+		/*获取用户文件*/
+		GetMainFile(id, type) {
+      const myThis: any = this
+			if (myThis.DiskData.Type === 'trans') {
+				return;
+			}
+			if (myThis.DiskPage === 1) {
+				myThis.UserDiskData = []; //清空数据
+				myThis.LoadCompany = false;
+			}
+			if (!id) {
+				id = 'null';
+			}
+			if (myThis.loadClassify !== type) {
+				myThis.DiskLoadCount = 0;
+				myThis.DiskPage = 1;
+				myThis.LoadCompany = false;
+			}
+			myThis.NowDiskID = id;
+			myThis.loadClassify = type;
+			// myThis.$Api.Disk.LoadMainFile(
+			// 	{
+			// 		id: id,
+			// 		page: myThis.DiskPage,
+			// 		loadtype: myThis.loadClassify
+			// 	},
+			// 	rs => {
+			// 		myThis.DiskBatchData('print', rs);
+			// 	}
+			// );
+		},
 		/*选择文件数据操作方法*/
 		SelectFiles(event, item, index) {
       const myThis: any = this
@@ -1088,6 +1074,18 @@ export default {
 				myThis.DiskData.NowSelect = item;
 			}
 		},
+		// 深拷贝
+		deepCopy (obj) {
+			let result = [];
+			for (let key in obj) {
+				if (typeof obj[key] === 'object') {
+					result[key] = this.deepCopy(obj[key])
+				} else {
+					result[key] = obj[key]
+				}
+			} 
+			return result
+    }
   }
 }
 </script>

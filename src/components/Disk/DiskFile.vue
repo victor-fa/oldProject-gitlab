@@ -3,17 +3,17 @@
 		<div
 			v-for="(item, index) in data"
 			:key="index"
-			:class="DiskData.DiskShowState + (item.active ? ' active' : '')"
+			:class="DiskData.DiskShowState + (item.active === true ? ' active' : '')"
 			ripple
 			@mousedown="select(item, index)"
 			@dblclick="OpenFile(item)"
 		>
 			<span class="icon">
-				<!-- <img :src="itemIcon(item)" draggable="false" alt="" /> -->
+				<img :src="itemIcon(item)" draggable="false" alt="" />
 			</span>
-			<p>{{ item.disk_name }}</p>
-			<div class="time">{{ item.create_time || item.modify_time }}</div>
-			<div class="time">{{ item.$size }}</div>
+			<p>{{ item.path | filterPath }}</p>
+			<div class="time">{{ item.ctime || item.mtime | formatDate }}</div>
+			<div class="time">{{ item.size | filterSize }}</div>
 		</div>
 	</div>
 </template>
@@ -21,7 +21,7 @@
 <script lang="ts">
 import Vue from 'vue'
 export default Vue.extend({
-  name: 'DiskFile',
+	name: 'DiskFile',
 	props: {
 		data: {
 			type: Array
@@ -30,17 +30,87 @@ export default Vue.extend({
 			type: Object
 		}
 	},
+  filters: {
+    formatDate (value) {
+      let date: any = new Date(value);
+      let y: any = date.getFullYear();
+      let MM: any = date.getMonth() + 1;
+      MM = MM < 10 ? ('0' + MM) : MM;
+      let d = date.getDate();
+      d = d < 10 ? ('0' + d) : d;
+      let h = date.getHours();
+      h = h < 10 ? ('0' + h) : h;
+      let m = date.getMinutes();
+      m = m < 10 ? ('0' + m) : m;
+      let s = date.getSeconds();
+      s = s < 10 ? ('0' + s) : s;
+      return y + '-' + MM + '-' + d + ' ' + h + ':' + m + ':' + s;
+    },
+    filterPath (value) {
+      return value.substr(1, value.length); ;
+    },
+    filterSize (limit) {
+      var size = "";
+      if (limit < 0.1 * 1024) { //如果小于0.1KB转化成B
+        size = limit.toFixed(2) + "B";
+      } else if (limit < 0.1 * 1024 * 1024) {  //如果小于0.1MB转化成KB
+        size = (limit / 1024).toFixed(2) + "KB";
+      } else if (limit < 0.1 * 1024 * 1024 * 1024) { //如果小于0.1GB转化成MB
+        size = (limit / (1024 * 1024)).toFixed(2) + "MB";
+      } else { //其他转化成GB
+        size = (limit / (1024 * 1024 * 1024)).toFixed(2) + "GB";
+      }
+      var sizestr = size + "";
+      var len = sizestr.indexOf(`/\.`);
+      var dec = sizestr.substr(len + 1, 2);
+      if (dec === "00") { //当小数点后为00时 去掉小数部分
+        return sizestr.substring(0, len) + sizestr.substr(len + 3, 2);
+      }
+      return sizestr;
+		}
+	},
 	methods: {
 		select(item, index) {
-			console.log(item);
-			this.$emit('SelectFiles', event, item, index);
+			console.log(JSON.parse(JSON.stringify(item)))
+			this.$emit('SelectFiles', event, item, index)
 		},
 		OpenFile(item) {
 			this.$emit('OpenFile', 'open', item);
 		},
-		// itemIcon(item) {
-		// 	return require('../../assets/img/disk/' + item.$icon);
-		// }
+		itemIcon(item) {
+			const myThis = this as any
+			let type = myThis.getTypeNam(item.type)
+			return require(`../../assets/resource/${type}_icon.png`);
+		},
+		getTypeNam(key) {
+			let typeName = 'unkonw'
+			switch (key) {
+				case 0:
+					typeName = 'unkonw'
+					break;
+				case 1:
+					typeName = 'video'
+					break;
+				case 2:
+					typeName = 'audio'
+					break;
+				case 3:
+					typeName = 'image'
+					break;
+				case 4:
+					typeName = 'txt'
+					break;
+				case 5:
+					typeName = 'pdf'
+					break;
+				case 6:
+					typeName = 'folder'
+					break;
+				default:
+					break;
+			}
+			return typeName
+		}
 	}
 })
 </script>
@@ -124,6 +194,6 @@ export default Vue.extend({
 }
 /*选中样式*/
 .active {
-	background: #ececec !important;
+	background-color: #ececec !important;
 }
 </style>
