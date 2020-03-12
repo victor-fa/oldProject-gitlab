@@ -11,10 +11,11 @@ interface NasServerState {
 export default {
   namespaced: true,
   state: {
-    nasInfo: {}
+    nasInfo: {},
+    accessInfo: {}
   },
   getters: {
-    nsaInfo: (state: NasServerState) => {
+    nasInfo: (state: NasServerState) => {
       if (!_.isEmpty(state.nasInfo)) {
         return state.nasInfo
       }

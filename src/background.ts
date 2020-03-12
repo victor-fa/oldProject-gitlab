@@ -23,6 +23,8 @@ function createWindow () {
     icon: './src/assets/logo.png',
     height: 600,
     frame: false,
+    resizable: false,
+    backgroundColor: '#f6f8fb',
     webPreferences: {
       nodeIntegration: true,
       webSecurity: false

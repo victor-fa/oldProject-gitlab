@@ -65,6 +65,8 @@ export default {
     },
     ADD_ACCOUNT (state: UserState, account: Account) {
       state.cacheAccounts.push(account)
+      // array deduplication
+      state.cacheAccounts = _.uniqBy(state.cacheAccounts, 'account')
       const accountStr = state.cacheAccounts.toString()
       localStorage.setItem(ACCOUNT, accountStr)
     },

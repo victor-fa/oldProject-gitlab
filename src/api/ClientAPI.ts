@@ -30,7 +30,7 @@ export default {
   offlineLogin (account: string, password: string, ugreenNo: string): Promise<AxiosResponse<BasicResponse>> {
     const ciphertext = encryptPassword(account, password, ugreenNo)
     return nasServer.post(userModulePath + '/offline/login', {
-      platform: deviceMgr.getPlatform(),
+      platform: parseInt(deviceMgr.getPlatform()),
       offline_username: account,
       offline_password: ciphertext
     })
@@ -38,10 +38,10 @@ export default {
   bindUser (user: User, authCode: string): Promise<AxiosResponse<BasicResponse>> {
     const userBasic = convertNasUser(user)
     let params = authCode.length === 0 ? {
-      platform: deviceMgr.getPlatform(),
+      platform: parseInt(deviceMgr.getPlatform()),
       user_basic: userBasic
     } : {
-      platform: deviceMgr.getPlatform(),
+      platform: parseInt(deviceMgr.getPlatform()),
       user_basic: userBasic,
       auth_code: authCode
     }
@@ -108,7 +108,7 @@ export default {
 }
 
 const convertNasUser = (user: User): NasUser => {
-  return {
+  let nasUser = {
     ugreen_no: user.ugreenNo,
     phone_no: user.phoneNo,
     nic_name: user.nickName,
@@ -117,9 +117,17 @@ const convertNasUser = (user: User): NasUser => {
     birthday: user.birthday,
     version: user.versionNo
   }
+  // filter property with null value
+  for (const key in nasUser) {
+    if (nasUser.hasOwnProperty(key)) {
+      const element = nasUser[key]
+      if (element === null) _.unset(nasUser, key)
+    }
+  }
+  return nasUser
 }
 
-const encryptSign = (nasUser: any, secretKey: string = tmpSecretKey) => {
+const encryptSign = (nasUser: any, secretKey: string) => {
   let queryUser = ''
   for (const key in nasUser) {
     if (nasUser.hasOwnProperty(key)) {
@@ -180,26 +188,6 @@ const getIPAddress = () => {
     }
   }
   return null
-}
-
-// TODO: 创建字串处理工具类
-// untility method for handle string
-const replaceString = (str: string, char: string, replace: string) => {
-  let tmpStr = ''
-  for (let index = 0; index < str.length; index++) {
-    const element = str.charAt(index)
-    if (element !== char) {
-      tmpStr = tmpStr.concat(element)
-    } else {
-      tmpStr = tmpStr.concat(replace)
-    }
-  }
-  return tmpStr.length === 0 ? str : tmpStr
-}
-
-// 将aRadix进制的num字串转换成bRadix进制的数字
-const conversionUtility = (num: string, aRadix: number, bRadix: number) => {
-  return parseInt(num, aRadix).toString(bRadix)
 }
 
 const generateBoardcastPacket = (sn: string, mac: string) => {

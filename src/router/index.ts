@@ -14,6 +14,11 @@ const routes = [
     component: Launch
   },
   {
+    path: '/connecting',
+    name: 'connecting',
+    component: () => import('../views/Connecting/index.vue')
+  },
+  {
     path: '/home',
     name: 'home',
     component: () => import('../layouts/BaseLayout.vue'),

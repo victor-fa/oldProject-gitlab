@@ -22,7 +22,7 @@
         />
       </li>
       <li class="password-checkbox">
-        <a-checkbox ref="password_checkbox" @change="onRememberChange">记住密码</a-checkbox>
+        <a-checkbox :checked="rememberPassword">记住密码</a-checkbox>
         <a-button>忘记密码</a-button>
       </li>
       <li class="login-button">
@@ -47,7 +47,6 @@ import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import { loginIcons } from './iconList'
 import BasicForm from '../../components/BasicForm/index.vue'
-import router from '../../router'
 import UserAPI from '../../api/UserAPI'
 import ClientAPI from '../../api/ClientAPI'
 import { LoginResponse, Account, DeviceInfo, User } from '../../api/UserModel'
@@ -55,6 +54,7 @@ import { NasAccessInfo } from '../../api/ClientModel'
 import processCenter, { EventName, MainEventName } from '../../utils/processCenter'
 import { message } from 'ant-design-vue'
 import { ACCESS_TOKEN } from '../../common/constants'
+import StringUtility from '../../utils/StringUtility'
 
 export default Vue.extend({
   name: 'login',
@@ -88,12 +88,8 @@ export default Vue.extend({
         this.$message.warning(message)
       })
     },
-    onRememberChange () {
-      const element: any = this.$refs.password_checkbox
-      this.rememberPassword = element.checked
-    },
     codeLoginBtnClick () {
-      router.push('qr-code-login')
+      this.$router.push('qr-code-login')
     },
     loginAction () {
       if (!this.checkInputFrom()) return
@@ -122,35 +118,26 @@ export default Vue.extend({
     },
     getBindDevices () {
       UserAPI.getBindDevices().then(response => {
-        if (response.data.code !== 200) {
           this.loading = false
-          return
-        }
+        if (response.data.code !== 200) return
         const userDevices = _.get(response.data.data, 'userDevices') as DeviceInfo[]
         if (_.isEmpty(userDevices)) {
-          router.push('scan-nas')
+          this.$router.push('scan-nas')
         } else {
           const sortDevices = userDevices.sort((a, b) => {
             return a.ctime > b.ctime ? 1 : -1
           })
-          this.connectDevice(sortDevices[0].publicKey)
+          const secretKey = StringUtility.filterPublicKey(sortDevices[0].publicKey)
+          this.$router.replace({
+            name: 'connecting',
+            params: {
+              sn: sortDevices[0].sn,
+              mac: sortDevices[0].mac,
+              secretKey: secretKey
+            }
+          })
         }
       }).catch((error: any) => {
-        console.log(error)
-        this.loading = false
-        this.$message.error('网络连接错误，请检测网络')
-      })
-    },
-    connectDevice (secretKey: string) {
-      // TODO: 进入连接过程
-      ClientAPI.login(this.user, secretKey).then(response => {
-        console.log(response)
-        this.loading = false
-        if (response.data.code !== 200) return
-        const nasResponse = response.data.data as NasAccessInfo
-        this.cacheNasAccessInfo(nasResponse)
-        processCenter.renderSend(EventName.home)
-      }).catch(error => {
         console.log(error)
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
@@ -162,9 +149,6 @@ export default Vue.extend({
       if (!this.rememberPassword) return
       const account: Account = { account: this.account, password: this.password }
       this.$store.dispatch('User/addAccount', account)
-    },
-    cacheNasAccessInfo (response: NasAccessInfo) {
-      this.$store.dispatch('NasServer/updateNasAccess', response)
     },
     accountChangeAction (value: string) {
       this.dropdownItems = this.cacheAccounts.filter((element: Account) => {

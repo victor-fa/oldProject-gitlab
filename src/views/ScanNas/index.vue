@@ -25,7 +25,7 @@
       邀请码:
       <a-input
         placeholder="请输入邀请码"
-        :value="authCode"
+        v-model="authCode"
       />
     </a-modal>
   </div>
@@ -41,6 +41,7 @@ import processCenter, { EventName } from '../../utils/processCenter'
 import { User, BasicResponse, DeviceRole } from '../../api/UserModel'
 import router from '../../router'
 import { AxiosResponse } from 'axios'
+import StringUtility from '../../utils/StringUtility'
 
 export default Vue.extend({
   name: 'scan-nas',
@@ -65,6 +66,20 @@ export default Vue.extend({
     }, error => {
       console.log(error)
     })
+    // temporary code
+    setTimeout(() => {
+      const nasInfo: NasInfo = {
+        name: '小明的设备',
+        model: 'NAS-D2P1',
+        mac: '00ce39ca56a1',
+        sn: '1000000002',
+        port: 1098,
+        ip: '113.116.247.166',
+        softversion: 'V1.0.0',
+        active: NasActive.Bind
+      }
+      this.nasList.push(nasInfo)
+    }, 2000);
   },
   destroyed () {
     ClientAPI.closeBoardcast()
@@ -113,6 +128,7 @@ export default Vue.extend({
       const password = ''
       const ugreenNo = (this.user as User).ugreenNo.toString()
       ClientAPI.offlineLogin(account, password, ugreenNo).then(response => {
+        // TODO: 离线登录应该返回公钥，如果用户在其它设备上进行了离线登录，此时是没法获取到设备公钥的
         this.handleConnectSuccess(response)
       }).catch(error => {
         this.handleConnectFailure(error)
@@ -132,6 +148,7 @@ export default Vue.extend({
       if (response.data.code !== 200) return
       const data = response.data.data as NasAccessInfo
       // cache nas access info
+      data.key = StringUtility.filterPublicKey(data.key)
       this.$store.dispatch('NasServer/updateNasAccess', data)
       // cache nas info 
       this.$store.dispatch('NasServer/updateNasInfo', this.selectNas)
