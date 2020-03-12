@@ -22,9 +22,9 @@ export default {
   // 过滤后台返回的公钥
   filterPublicKey (secretKey: string) {
     // filter prefix
-    let newSecretKey = _.trimStart('-----BEGIN PUBLIC KEY-----')
+    let newSecretKey = secretKey.replace('-----BEGIN PUBLIC KEY-----', '')
     // filter suffix
-    newSecretKey = _.trimEnd('-----END PUBLIC KEY-----')
+    newSecretKey = secretKey.replace('-----END PUBLIC KEY-----', '')
     // filter enter
     return this.replaceString(newSecretKey, '/n', '')
   }
