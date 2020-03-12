@@ -22,7 +22,7 @@ export default {
     const sign = encryptSign(userBasic, secretKey)
     if (sign === null) return Promise.reject(Error('rsa encrypt error'))
     return nasServer.post(userModulePath + '/login', {
-      platform: deviceMgr.getPlatform(),
+      platform: parseInt(deviceMgr.getPlatform()),
       user_basic: userBasic,
       sign
     })
@@ -36,7 +36,8 @@ export default {
     })
   },
   bindUser (user: User, authCode: string): Promise<AxiosResponse<BasicResponse>> {
-    const userBasic = convertNasUser(user)
+    let userBasic = convertNasUser(user)
+    userBasic = filterNasUser(userBasic)
     let params = authCode.length === 0 ? {
       platform: parseInt(deviceMgr.getPlatform()),
       user_basic: userBasic
@@ -117,13 +118,17 @@ const convertNasUser = (user: User): NasUser => {
     birthday: user.birthday,
     version: user.versionNo
   }
+  return nasUser
+}
+
+const filterNasUser = (nasUser: NasUser) => {
   // filter property with null value
-  // for (const key in nasUser) {
-  //   if (nasUser.hasOwnProperty(key)) {
-  //     const element = nasUser[key]
-  //     if (element === null) _.unset(nasUser, key)
-  //   }
-  // }
+  for (const key in nasUser) {
+    if (nasUser.hasOwnProperty(key)) {
+      const element = nasUser[key]
+      if (element === null) _.unset(nasUser, key)
+    }
+  }
   return nasUser
 }
 
@@ -132,14 +137,18 @@ const encryptSign = (nasUser: any, secretKey: string) => {
   for (const key in nasUser) {
     if (nasUser.hasOwnProperty(key)) {
       const element = nasUser[key];
-      if (element === null) continue
-      queryUser = queryUser.concat(`${key}=${element}&`)
+      if (element === null || element === undefined) {
+        queryUser = queryUser.concat(`${key}=&`)
+      } else {
+        queryUser = queryUser.concat(`${key}=${element}&`)
+      }
     }
   }
   if (!_.isElement(queryUser)) {
     // 利用crypto模块实现RSA加密
     const jse = new JSEncrypt()
-    queryUser = queryUser.substring(0, queryUser.length - 1)
+    queryUser = _.trimEnd(queryUser, '&')
+    console.log(queryUser)
     jse.setPublicKey(secretKey)
     return jse.encrypt(queryUser) as string
   }
