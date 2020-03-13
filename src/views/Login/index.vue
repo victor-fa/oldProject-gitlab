@@ -73,7 +73,8 @@ export default Vue.extend({
     }
   },
   computed: {
-    ...mapGetters('User', ['cacheAccounts', 'user'])
+    ...mapGetters('User', ['cacheAccounts', 'user']),
+    ...mapGetters('NasServer', ['nasInfo'])
   },
   mounted () {
     this.observerToastNotify()
@@ -127,15 +128,13 @@ export default Vue.extend({
         if (_.isEmpty(userDevices)) {
           this.$router.push('scan-nas')
         } else {
-          const sortDevices = userDevices.sort((a, b) => {
-            return a.ctime > b.ctime ? 1 : -1
-          })
-          const secretKey = StringUtility.filterPublicKey(sortDevices[0].publicKey)
+          const recentNas = this.getRecentlyNas(userDevices)
+          const secretKey = StringUtility.filterPublicKey(recentNas.publicKey)
           this.$router.replace({
             name: 'connecting',
             params: {
-              sn: sortDevices[0].sn,
-              mac: sortDevices[0].mac,
+              sn: recentNas.sn,
+              mac: recentNas.mac,
               secretKey: secretKey
             }
           })
@@ -145,6 +144,17 @@ export default Vue.extend({
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
       })
+    },
+    getRecentlyNas (bindList: DeviceInfo[]) {
+      if (!_.isEmpty(this.nasInfo)) {
+        for (let index = 0; index < bindList.length; index++) {
+          const element = bindList[index]
+          if (element.sn === this.nasInfo.sn) {
+            return element
+          }
+        }
+      }
+      return bindList[0]
     },
     cacheUserInfo (response: LoginResponse) {
       this.$store.dispatch('User/updateUser', response.user)
