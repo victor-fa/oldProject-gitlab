@@ -84,6 +84,7 @@ export default Vue.extend({
         const accessInfo = response.data.data as NasAccessInfo
         accessInfo.key = this.secretKey
         this.$store.dispatch('NasServer/updateNasAccess', accessInfo)
+        this.$store.dispatch('NasServer/updateNasInfo', nasInfo)
         processCenter.renderSend(EventName.home)
       }).catch(error => {
         this.loading = false
