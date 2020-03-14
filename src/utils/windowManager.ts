@@ -109,14 +109,11 @@ export default {
       homeWindow = null
     })
     homeWindow.on('show', () => {
-      console.log('show')
     })
     homeWindow.on('focus', () => {
       this.closeOtherWindow(homeWindow)
-      console.log('focus')
     })
     homeWindow.on('ready-to-show', () => {
-      console.log('ready-to-show')
     })
     return homeWindow
   }

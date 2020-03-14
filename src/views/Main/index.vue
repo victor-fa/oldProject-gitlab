@@ -46,6 +46,7 @@
           
       </div>
     </section>
+		<input type="file" id="FileArea" @change="PrepareUploadFile" hidden ref="FileArea" multiple="multiple" />
     <MouseMenu :type="loadClassify" :node="$refs.CloudDiskMain" :DiskData="DiskData" @callback="DiskFeatureControl" ref="MouseMenu" />
 	</div>
 </template>
@@ -63,7 +64,6 @@ import MouseMenu from '../../components/Disk/MouseMenu.vue'
 import ResourceHeader from '../../components/ResourceList/ResourceHeader.vue'
 import upload from '../../utils/file/upload';
 import NasFileAPI from '../../api/NasFileAPI'
-import { NAS_ACCESS } from '@/common/constants'
 
 export default {
   name: 'main',
@@ -77,17 +77,6 @@ export default {
   props: {
     dataSource: Array
   },
-		// collected: 0
-		// ctime: 1583739748
-		// duration: 0
-		// mtime: 1583739748
-		// path: "/.ugreen_nas/6001/.backup"
-		// shared: 0
-		// size: 0
-		// status: 0
-		// type: 6
-		// utime: 0
-		// uuid: "A252FB4252FB19AD"
   data () {
     return {
 			DiskData: {
@@ -382,38 +371,32 @@ export default {
 			for (let k = 0; k < data.files.length; k++) {
 				selectUploadFiles.push(data.files[k]);
 			}
-      const tokenJson = localStorage.getItem(NAS_ACCESS)
-      if (tokenJson === null) {
-        return Promise.reject(Error('not find access_token'))
-      }
-      const token = JSON.parse(tokenJson).api_token
-			let fileArea = data.files;
 			let params = {
 				uuid: 'A252FB4252FB19AD',
-				path: '/.ugreen_nas/6001/' + fileArea[0].name,	// 当前目录
+				path: '/.ugreen_nas/6001/' + data.files[0].name,	// 当前目录
 				start: 0,
-				end: fileArea[0].size-1,
-				size: fileArea[0].size,
-				action: 'f',
-				api_token: token
+				end: data.files[0].size-1,
+				size: data.files[0].size,
+				action: 'f'
 			}
 			let body = selectUploadFiles[0];
-			let input = {
+			NasFileAPI.upload({
 				data: params,
-				body: body,
-				success: rs => {
-					if (rs.code !== 200) {
-						myThis.$message.warning((data.target ? data.target : data).files.length + '个文件已加入上传列队')
-						return
+				body: body
+			}).then(response => {
+				const rs = response.data;
+				if (rs.code !== 200) {
+					if (rs.code === '4050') {
+						myThis.$message.warning('文件已存在')
+					} else {
+						myThis.$message.warning(rs.msg)
 					}
-					myThis.UserDiskData.push(rs.data);
-					console.log(rs);
-				},
-				error: rs => {
-					myThis.$message.warning(rs.msg)
+					return
 				}
-			}
-			NasFileAPI.upload(input).then()
+				myThis.UserDiskData.push(rs.data);
+				myThis.getDeviceInfo()
+				myThis.$message.success('文件上传成功！')
+			})
 		},
     alterBlur (el: any) {
       console.log('alter blur')
@@ -431,7 +414,7 @@ export default {
 				} else if (myThis.DiskData.NowSelect.disk_id) {
 					myThis.DiskData.Clipboard.push(myThis.DiskData.NowSelect);
 				}
-				let tips = myThis.DiskData.Clipboard.length > 1 ? '所选' + myThis.DiskData.Clipboard.length + '个项目' : myThis.DiskData.NowSelect.disk_name;
+				let tips = myThis.DiskData.Clipboard.length > 1 ? '所选' + myThis.DiskData.Clipboard.length + '个项目' : myThis.DiskData.NowSelect.path;
 				switch (commend) {
 					case 'Copy':
 						tips = tips + '已复制到剪贴板';
@@ -482,36 +465,28 @@ export default {
 						myThis.ShowUploadTips = false;
 					}
 					break;
-        case 'download': //下载文件
-          console.log(JSON.parse(JSON.stringify(myThis.DiskData)));
-					console.log(myThis.SelectDownLoadFiles);
-					if (myThis.SelectDownLoadFiles.length === 0) return
-					let tips = myThis.SelectDownLoadFiles.length > 1 ? '所选' + myThis.SelectDownLoadFiles.length + '个项目' : myThis.SelectDownLoadFiles[0].disk_name;
+				case 'download': //下载文件
+					console.log(JSON.parse(JSON.stringify(myThis.DiskData)));
+					if (myThis.DiskData.SelectFiles.length) {
+						myThis.DiskData.SelectFiles.forEach(item => {
+							if (item.disk_main) {
+								myThis.SelectDownLoadFiles.push(item);
+							}
+						});
+					} else {
+						if (myThis.DiskData.NowSelect) {
+							myThis.SelectDownLoadFiles.push(myThis.DiskData.NowSelect);
+						}
+					}
+					console.log(JSON.parse(JSON.stringify(myThis.SelectDownLoadFiles)));
+					let tips = myThis.SelectDownLoadFiles.length > 1 ? '所选' + myThis.SelectDownLoadFiles.length + '个项目' : myThis.SelectDownLoadFiles[0].path;
+					const { BrowserWindow } = require('electron').remote
 					myThis.SelectDownLoadFiles.forEach(item => {
-						console.log(item);
-						// myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(item.disk_main + '?disk_name=' + item.disk_name);
+						BrowserWindow.getAllWindows()[0].webContents.downloadURL(NasFileAPI.download(item));	// 下载
 					});
 					myThis.SelectDownLoadFiles = [];
 					myThis.$message.info(tips + '已加入下载列队');
           break
-					// if (myThis.DiskData.SelectFiles.length) {
-					// 	myThis.DiskData.SelectFiles.forEach(item => {
-					// 		if (item.disk_main) {
-					// 			myThis.SelectDownLoadFiles.push(item);
-					// 		}
-					// 	});
-					// } else {
-					// 	if (myThis.DiskData.NowSelect.disk_main) {
-					// 		myThis.SelectDownLoadFiles.push(myThis.DiskData.NowSelect);
-					// 	}
-					// }
-					// let tips = myThis.SelectDownLoadFiles.length > 1 ? '所选' + myThis.SelectDownLoadFiles.length + '个项目' : myThis.SelectDownLoadFiles[0].disk_name;
-					// myThis.SelectDownLoadFiles.forEach(item => {
-					// 	myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(item.disk_main + '?disk_name=' + item.disk_name);
-					// });
-					// myThis.SelectDownLoadFiles = [];
-					// myThis.$message.info(tips + '已加入下载列队');
-					// break;
 				case 'search': //搜索
 					if (flag) {
 						myThis.DiskPage = 1;
@@ -540,30 +515,31 @@ export default {
 					myThis.DiskData.DiskShowState = datas;
 					break;
 				case 'newFolder':
-					myThis.InputConfrim({
-						title: '新建文件夹',
-						tips: '请输入文件夹名称',
-						callback: value => {
-							if (value.length === 0) {
-								return myThis.$message.error('文件夹名称不能为空');
-							}
-							myThis.$Api.Disk.NewFolder(
-								{
-									name: value,
-									parent_id: myThis.NowDiskID
-								},
-								rs => {
-									rs = rs[0];
-									if (rs.disk_id) {
-										myThis.UserDiskData.push(rs);
-										myThis.$message.success(value + ' 已创建');
-									} else {
-										myThis.$message.error(value + ' 已存在');
-									}
-								}
-							);
-						}
-					});
+					console.log('新建文件夹未开始');
+					// myThis.InputConfrim({
+					// 	title: '新建文件夹',
+					// 	tips: '请输入文件夹名称',
+					// 	callback: value => {
+					// 		if (value.length === 0) {
+					// 			return myThis.$message.error('文件夹名称不能为空');
+					// 		}
+					// 		myThis.$Api.Disk.NewFolder(
+					// 			{
+					// 				name: value,
+					// 				parent_id: myThis.NowDiskID
+					// 			},
+					// 			rs => {
+					// 				rs = rs[0];
+					// 				if (rs.disk_id) {
+					// 					myThis.UserDiskData.push(rs);
+					// 					myThis.$message.success(value + ' 已创建');
+					// 				} else {
+					// 					myThis.$message.error(value + ' 已存在');
+					// 				}
+					// 			}
+					// 		);
+					// 	}
+					// });
 					break;
 				case 'clear':
 					myThis.DiskData.Clipboard = [];
@@ -611,7 +587,7 @@ export default {
 								let CopyFlag = false; //判断是否有复制和粘贴时同一个目录的
 								myThis.DiskData.Clipboard.forEach(item => {
 									if (myThis.DiskData.ClipboardType === 'Copy') {
-										item.disk_name = item.disk_name + '-复制';
+										item.path = item.path + '-复制';
 										if (item.parent_id === myThis.NowDiskID) {
 											CopyFlag = true;
 										}
@@ -633,34 +609,13 @@ export default {
 				case 'trash': //移入回收站:
 					let trash_data = myThis.DiskBatchData();
 					data = myThis.DiskBatchData('post', trash_data);
-					myThis.Confrim({
-						title: '移入回收站',
-						tips: '是否将所选' + trash_data.length + '个项目移入回收站',
-						callback: () => {
-							myThis.$Api.Disk.Trash(
-								{
-									id: data
-								},
-								rs => {
-									rs = rs[0];
-									if (rs.state === 'success') {
-										myThis.$message.success('移入回收站成功');
-										myThis.DiskBatchData('remove', trash_data);
-									} else {
-										myThis.$message.error('移入回收站失败');
-									}
-								}
-							);
-						}
-					});
-					break;
-				case 'delete': //文件删除
-					let delete_data = myThis.DiskBatchData();
-					data = myThis.DiskBatchData('post', delete_data);
-					myThis.Confrim({
+					myThis.$confirm({
 						title: '删除',
-						tips: '是否将所选' + delete_data.length + '个项目彻底删除',
-						callback: () => {
+						content: '是否将所选' + trash_data.length + '个项目彻底删除',
+						okText: '删除',
+						okType: 'danger',
+						cancelText: '取消',
+						onOk() {
 							myThis.$Api.Disk.Delete(
 								{
 									id: data
@@ -675,6 +630,23 @@ export default {
 									}
 								}
 							);
+						},
+						onCancel() {
+							console.log('Cancel');
+						},
+					});
+					break;
+				case 'delete': //文件删除
+					let delete_data = myThis.DiskBatchData();
+					data = myThis.DiskBatchData('post', delete_data);
+					myThis.$confirm({
+						title: '删除',
+						content: '是否将所选' + delete_data.length + '个项目彻底删除',
+						okText: '删除',
+						okType: 'danger',
+						cancelText: '取消',
+						onOk() {
+							console.log('文件删除操作');
 						}
 					});
 					break;
@@ -703,51 +675,38 @@ export default {
 					});
 					break;
 				case 'rename': //重命名
-					myThis.InputConfrim({
-						title: '重命名',
-						tips: '请输入新的文件/文件夹名称',
-						value: myThis.DiskData.NowSelect.disk_name,
-						callback: value => {
-							if (value.length === 0) {
-								return myThis.$message.error('文件名不能为空');
-							}
-							myThis.$Api.Disk.Rename(
-								{
-									name: value,
-									id: myThis.DiskData.NowSelect.disk_id
-								},
-								rs => {
-									rs = rs[0];
-									if (rs.state === 'success') {
-										myThis.UserDiskData[myThis.DiskData.NowIndex].disk_name = value;
-										myThis.$message.success('重命名成功');
-									} else {
-										myThis.$message.error('重命名失败');
-									}
-								}
-							);
-						}
-					});
+					console.log('重命名未开始');
+					// myThis.InputConfrim({
+					// 	title: '重命名',
+					// 	tips: '请输入新的文件/文件夹名称',
+					// 	value: myThis.DiskData.NowSelect.path,
+					// 	callback: value => {
+					// 		if (value.length === 0) {
+					// 			return myThis.$message.error('文件名不能为空');
+					// 		}
+					// 		myThis.$Api.Disk.Rename(
+					// 			{
+					// 				name: value,
+					// 				id: myThis.DiskData.NowSelect.disk_id
+					// 			},
+					// 			rs => {
+					// 				rs = rs[0];
+					// 				if (rs.state === 'success') {
+					// 					myThis.UserDiskData[myThis.DiskData.NowIndex].path = value;
+					// 					myThis.$message.success('重命名成功');
+					// 				} else {
+					// 					myThis.$message.error('重命名失败');
+					// 				}
+					// 			}
+					// 		);
+					// 	}
+					// });
 					break;
 				case 'info': //文件属性
-					myThis.$ipc.send('file-control', 'attributes', myThis.DiskData.NowSelect);
+					console.log('属性未开始');
 					break;
 				case 'share': //提交文件分享
-					if (myThis.DiskData.NowSelect.share) {
-						let message = '该文件分享地址为:' + myThis.DiskData.NowSelect.shareAddress;
-						myThis.Confrim({
-							title: '分享信息',
-							tips: message,
-							type: 'info',
-							confirmButtonText: '复制',
-							callback: () => {
-								myThis.$message.info('链接已复制');
-								myThis.$electron.clipboard.writeText(myThis.DiskData.NowSelect.shareAddress);
-							}
-						});
-					} else {
-						myThis.showShare = true;
-					}
+					console.log('分享未开始');
 					break;
 				case 'post-share': //查看分享
 					myThis.$refs.DiskShareModel.ShareFile(myThis.DiskData.NowSelect);
@@ -761,7 +720,7 @@ export default {
 				case 'cancel-share': //取消分享
 					myThis.Confrim({
 						title: '取消分享',
-						tips: '您确认取消分享' + myThis.DiskData.NowSelect.disk_name + '吗',
+						tips: '您确认取消分享' + myThis.DiskData.NowSelect.path + '吗',
 						callback: () => {
 							myThis.$Api.Disk.CancelShare(
 								{
@@ -791,7 +750,7 @@ export default {
 					});
 					break;
 				case 'reload':
-					myThis.NavigationControl(commend);
+					myThis.getDeviceInfo()
 					break;
 				case 'popup':
 					if (myThis.ConfigObject.NoticeFlag) {

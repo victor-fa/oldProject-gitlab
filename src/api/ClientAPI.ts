@@ -20,6 +20,7 @@ export default {
   login (user: User, secretKey: string): Promise<AxiosResponse<BasicResponse>> {
     const userBasic = convertNasUser(user)
     const sign = encryptSign(userBasic, secretKey)
+    console.log(sign);
     if (sign === null) return Promise.reject(Error('rsa encrypt error'))
     return nasServer.post(userModulePath + '/login', {
       platform: parseInt(deviceMgr.getPlatform()),
@@ -138,6 +139,8 @@ const encryptSign = (nasUser: any, secretKey: string) => {
       }
     }
   }
+  console.log(queryUser);
+  console.log(secretKey);
   if (!_.isElement(queryUser)) {
     // 利用crypto模块实现RSA加密
     const jse = new JSEncrypt()

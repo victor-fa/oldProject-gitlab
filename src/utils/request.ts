@@ -4,6 +4,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios'
 import { BasicResponse } from '@/api/UserModel'
 import router from '@/router'
 import processCenter, { EventName } from './processCenter';
+import { NAS_ACCESS } from '@/common/constants'
 
 const nasCloud = axios.create({
   baseURL: 'http://120.24.182.33',
@@ -87,7 +88,29 @@ const handleReloginSence = (data: BasicResponse) => {
   }
 }
 
+// json对象转url参数
+const jsonToParams = (options) => {
+  let params = new URLSearchParams();
+  if (options !== null) {
+    for (let item in options) {
+      params.append(item, options[item]);
+    }
+  }
+  params.append('api_token', getToken()); // 每个url都添加token
+  return params
+}
+
+// 获取token
+const getToken = () => {
+  const tokenJson = localStorage.getItem(NAS_ACCESS)
+  if (tokenJson === null) {
+    return Promise.reject(Error('not find access_token'))
+  }
+  return JSON.parse(tokenJson).api_token
+}
+
 export {
   nasCloud,
-  nasServer
+  nasServer,
+  jsonToParams
 }
