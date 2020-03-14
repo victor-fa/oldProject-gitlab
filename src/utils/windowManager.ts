@@ -1,5 +1,8 @@
 import processCenter, { MainEventName } from '@/utils/processCenter'
 import { BrowserWindow, Menu } from 'electron'
+import {
+  createProtocol
+} from 'vue-cli-plugin-electron-builder/lib'
 
 interface WindowOptions extends Electron.BrowserWindowConstructorOptions {
   path: string
@@ -40,6 +43,7 @@ export default {
       window.loadURL(url)
       if (!process.env.IS_TEST && newOptions.path !== 'operate-list-alter') window.webContents.openDevTools()
     } else {
+      createProtocol('app')
       // Load the index.html when not in development
       window.loadURL('app://./index.html#/' + newOptions.path)
     }
@@ -54,15 +58,14 @@ export default {
     win.show()
     win.focus()
   },
-  closeCurrentWindow (): void {
+  closeOtherWindow (window: BrowserWindow | null): void {
     const wins = BrowserWindow.getAllWindows()
     for (let index = 0; index < wins.length; index++) {
       const win = wins[index]
-      win.close()
+      if (win !== window) win.close()
     }
   },
   presentLoginWindow (msg: string): BrowserWindow {
-    this.closeCurrentWindow()
     if (loginWindow !== null) {
       this.activeWindow(loginWindow)
     } else {
@@ -82,12 +85,12 @@ export default {
       loginWindow = null
     })
     loginWindow.on('show', () => {
+      this.closeOtherWindow(loginWindow)
       processCenter.mainSend(loginWindow!, MainEventName.toast, msg)
     })
     return loginWindow
   },
   presentHomeWindow (): BrowserWindow {
-    this.closeCurrentWindow()
     if (homeWindow !== null) {
       this.activeWindow(homeWindow)
     } else {
@@ -104,6 +107,9 @@ export default {
     }
     homeWindow.on('closed', () => {
       homeWindow = null
+    })
+    homeWindow.on('show', () => {
+      this.closeOtherWindow(homeWindow)
     })
     return homeWindow
   }
