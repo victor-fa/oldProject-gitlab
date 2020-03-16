@@ -73,6 +73,7 @@ export default {
     const dgram = require('dgram')
     client = dgram.createSocket('udp4')
     const msg = generateBoardcastPacket(sn, mac)
+    console.log(msg);
     const port = 60000
     client.bind(() => {
       client.setBroadcast(true)
@@ -93,6 +94,7 @@ export default {
       // parse reponse
       const dataJson = msg.toString('utf8')
       const data = JSON.parse(dataJson)
+      console.log(data);
       if (data.error_code === 0) {
         success(data.data)
       } else {

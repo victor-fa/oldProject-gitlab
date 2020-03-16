@@ -143,6 +143,10 @@ export default Vue.extend({
 	word-break: break-all;
 	font-size: 11px;
 	width: 100%;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
 }
 .cd-disk-block-file > .time {
 	display: none;

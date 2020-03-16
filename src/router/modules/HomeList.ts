@@ -1,8 +1,8 @@
 const HomeRouters = [
   {
-    path: '/main',
-    component: () => import('../../views/Main/index.vue'),
-    name: 'main',
+    path: '/disk',
+    component: () => import('../../views/Disk/index.vue'),
+    name: 'disk',
     meta: {
       title: '最近使用',
       icon: require('../../assets/recent_icon.png'),

@@ -48,6 +48,22 @@
     </section>
 		<input type="file" id="FileArea" @change="PrepareUploadFile" hidden ref="FileArea" multiple="multiple" />
     <MouseMenu :type="loadClassify" :node="$refs.CloudDiskMain" :DiskData="DiskData" @callback="DiskFeatureControl" ref="MouseMenu" />
+    <a-modal
+      :visible="fileNameVisible"
+      :mask="false"
+      :closable="false"
+      :maskClosable="false"
+      okText="创建"
+      cancelText="取消"
+      @ok="handleCreateFile"
+      @cancel="cancleCreateFile"
+    >
+      文件夹名称：
+      <a-input
+        placeholder="请输入文件夹名称"
+        v-model="fileName"
+      />
+    </a-modal>
 	</div>
 </template>
 
@@ -99,6 +115,8 @@ export default {
 					text: '0B/0B'
 				}
 			},
+			fileName: '',	// 新建文件名
+			fileNameVisible: false,
 			/*上传提示*/
       loading: false,
 			DiskLoadCount: 0,
@@ -406,7 +424,6 @@ export default {
     DiskFeatureControl (commend: any, datas: any, flag) {
       const myThis = this as any
 			let data = null;
-			console.log(commend);
 			if (commend === 'Copy' || commend === 'Cut') {
 				myThis.DiskFeatureControl('clear');
 				if (myThis.DiskData.SelectFiles.length) {
@@ -514,30 +531,7 @@ export default {
 					break;
 				case 'newFolder':
 					console.log('新建文件夹未开始');
-					// myThis.InputConfrim({
-					// 	title: '新建文件夹',
-					// 	tips: '请输入文件夹名称',
-					// 	callback: value => {
-					// 		if (value.length === 0) {
-					// 			return myThis.$message.error('文件夹名称不能为空');
-					// 		}
-					// 		myThis.$Api.Disk.NewFolder(
-					// 			{
-					// 				name: value,
-					// 				parent_id: myThis.NowDiskID
-					// 			},
-					// 			rs => {
-					// 				rs = rs[0];
-					// 				if (rs.disk_id) {
-					// 					myThis.UserDiskData.push(rs);
-					// 					myThis.$message.success(value + ' 已创建');
-					// 				} else {
-					// 					myThis.$message.error(value + ' 已存在');
-					// 				}
-					// 			}
-					// 		);
-					// 	}
-					// });
+					myThis.fileNameVisible = true;
 					break;
 				case 'clear':
 					myThis.DiskData.Clipboard = [];
@@ -764,7 +758,33 @@ export default {
 					}
 					break;
 			}
-    },
+		},
+		handleCreateFile() {	// 创建文件
+			if (this.fileName.length === 0) {
+				return this.$message.error('文件夹名称不能为空');
+			}
+			const tempData:any = this.UserDiskData[0]
+			const body ={
+				"uuid": tempData.uuid,
+				"path": tempData.path.substring(0, tempData.path.lastIndexOf("/") + 1) + this.fileName,
+				"type": 2,
+				"alias": this.fileName
+			}
+      NasFileAPI.addFile(body).then((response): void => {
+        if (response.data.code !== 200) {
+          this.$message.warning(response.data.msg)
+          return
+				}
+				this.getDeviceInfo()
+				this.fileNameVisible = false
+      }).catch((error): void => {
+				console.log(error);
+        this.$message.error('网络连接错误,请检测网络')
+      })
+		},
+		cancleCreateFile() {	// 关闭创建文件弹框
+			this.fileNameVisible = false
+		},
 		/*导航栏函数*/
 		NavigationControl(commend) {
 			switch (commend) {
@@ -822,8 +842,8 @@ export default {
 			event.stopPropagation();
       let area = event.target;
 			let start = {
-				x: event.clientX - area.getBoundingClientRect().left + area.scrollLeft + 213,
-				y: event.clientY - area.getBoundingClientRect().top + area.scrollTop + 130,
+				x: event.clientX - area.getBoundingClientRect().left + area.scrollLeft + 203,
+				y: event.clientY - area.getBoundingClientRect().top + area.scrollTop + 112,
 				maxy: area.scrollHeight
 			};
 			myThis.MouseSelectData.left = start.x;
@@ -839,8 +859,8 @@ export default {
 			};
 			document.onmousemove = ev => {
 				let end = {
-					x: ev.clientX - area.getBoundingClientRect().left + area.scrollLeft + 213,
-					y: ev.clientY - area.getBoundingClientRect().top + area.scrollTop + 130,
+					x: ev.clientX - area.getBoundingClientRect().left + area.scrollLeft + 203,
+					y: ev.clientY - area.getBoundingClientRect().top + area.scrollTop + 112,
 					scrolldown: Math.min(ev.clientY - area.getBoundingClientRect().top, event.clientY - area.getBoundingClientRect().top) + 10 + area.offsetHeight,
 					scrollup: Math.min(ev.clientY - area.getBoundingClientRect().top, event.clientY - area.getBoundingClientRect().top)
 				};

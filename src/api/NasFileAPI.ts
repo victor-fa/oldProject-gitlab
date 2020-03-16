@@ -22,6 +22,9 @@ export default {
       headers: {'Accept': '*/*'}
     })
   },
+  addFile (body) {
+    return Vue.axios.post(tempServerUrl + nasFileModulePath + '/add?' + jsonToParams(null), body)
+  },
   download (option) {
     const input = { uuid: option.uuid, path: option.path }
     return tempServerUrl + nasFileModulePath + '/download?' + jsonToParams(input)

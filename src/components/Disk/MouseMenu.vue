@@ -83,7 +83,6 @@ export default {
 		},
 		UpdateMenuData(flag) {
 			this.MouseMenuShow = false;
-			console.log(flag);
 			if (flag) {
 				if (this.type !== 'trash') {
 					this.MenuData = this.DiskFileMenu;
@@ -102,7 +101,6 @@ export default {
 			this.MouseMenuShow = false;
 		},
 		MenuShow(flag) {
-			console.log(flag);
 			if (event.button !== 2) {
 				this.MouseMenuShow = false;
 				return;
