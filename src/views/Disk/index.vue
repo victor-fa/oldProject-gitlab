@@ -760,30 +760,32 @@ export default {
 			}
 		},
 		handleCreateFile() {	// 创建文件
-			if (this.fileName.length === 0) {
-				return this.$message.error('文件夹名称不能为空');
+      const myThis = this as any
+			if (myThis.fileName.length === 0) {
+				return myThis.$message.error('文件夹名称不能为空');
 			}
-			const tempData:any = this.UserDiskData[0]
+			const tempData:any = myThis.UserDiskData[0]
 			const body ={
 				"uuid": tempData.uuid,
-				"path": tempData.path.substring(0, tempData.path.lastIndexOf("/") + 1) + this.fileName,
+				"path": tempData.path.substring(0, tempData.path.lastIndexOf("/") + 1) + myThis.fileName,
 				"type": 2,
-				"alias": this.fileName
+				"alias": myThis.fileName
 			}
       NasFileAPI.addFile(body).then((response): void => {
         if (response.data.code !== 200) {
-          this.$message.warning(response.data.msg)
+          myThis.$message.warning(response.data.msg)
           return
 				}
-				this.getDeviceInfo()
-				this.fileNameVisible = false
+				myThis.getDeviceInfo()
+				myThis.fileNameVisible = false
       }).catch((error): void => {
 				console.log(error);
-        this.$message.error('网络连接错误,请检测网络')
+        myThis.$message.error('网络连接错误,请检测网络')
       })
 		},
 		cancleCreateFile() {	// 关闭创建文件弹框
-			this.fileNameVisible = false
+      const myThis = this as any
+			myThis.fileNameVisible = false
 		},
 		/*导航栏函数*/
 		NavigationControl(commend) {
