@@ -28,7 +28,6 @@ export default {
 	},
 	created() {
 		this.$ipc.on('win-data', (event, data) => {
-			console.log(data);
 			//接收打开pdf文件的数据
 			this.$nextTick(() => {
 				data.forEach((item, index) => {

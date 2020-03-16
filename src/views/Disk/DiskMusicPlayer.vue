@@ -56,6 +56,7 @@
 import Media from '../../utils/file/media';
 import MusicList from '../../components/Disk/MusicList.vue';
 import WindowsHeader from '../../components/Disk/WindowHeader.vue'
+import NasFileAPI from '../../api/NasFileAPI'
 export default {
 	name: 'DiskMusicPlayer',
 	components: { MusicList, WindowsHeader },
@@ -63,11 +64,9 @@ export default {
 		PlayList: {
 			handler() {
 				this.PlayList.forEach((item, index) => {
-					if (item.play) {
-						item.play = 'active';
-						this.playCallBack(item, index);
-						this.GetLyr();
-					}
+					item.play = 'active';
+					this.playCallBack(item, index);
+					this.GetLyr();
 				});
 			},
 			deep: true
@@ -151,7 +150,14 @@ export default {
 		playCallBack(item, index) {
 			this.NowPlay = item;
 			this.NowPlay.count = index;
-			this.NowPlay.PlayUrl = item.disk_main;
+			this.NowPlay.PlayUrl = NasFileAPI.httpDownload({
+				uuid: item.uuid,
+				path: item.path
+			});
+			console.log(NasFileAPI.httpDownload({
+				uuid: item.uuid,
+				path: item.path
+			}));
 		},
 		ChangeTime(state) {
 			let media = this.$refs.audio;

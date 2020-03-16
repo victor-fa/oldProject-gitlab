@@ -136,7 +136,6 @@ export default {
 		playCallBack(item, index) {
 			this.NowPlay = item;
 			this.NowPlay.count = index;
-			console.log(item);
 			console.log(NasFileAPI.download({
 				uuid: item.uuid,
 				path: item.path
@@ -281,7 +280,7 @@ export default {
 			}
 		},
 		VideoError(e) {
-			this.$message.error(e);
+			// this.$message.error(e);
 		}
 	}
 };

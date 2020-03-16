@@ -114,6 +114,10 @@ export default {
 		ShowPicture(item, index) {
 			this.NowShow = item;
 			this.NowShow.count = index;
+			console.log(NasFileAPI.download({
+				uuid: item.uuid,
+				path: item.path
+			}));
 			this.NowShow.URL = NasFileAPI.download({
 				uuid: item.uuid,
 				path: item.path

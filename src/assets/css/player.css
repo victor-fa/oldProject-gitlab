@@ -1,7 +1,7 @@
 /**进度条*/
 .cd-player-process-bar span,.cd-player-volumn-slider span,.cd-player-slider span {
     position:relative;
-    top:-2px;
+    top:-3px;
     right:-2px;
     z-index:1;
     float:right;
@@ -40,6 +40,7 @@
     overflow:initial;
     width:0;
     height:5px;
+    margin-top: 5px;
     background:#5b5bea;
     border-radius:3px;
     -webkit-border-radius: 3px;

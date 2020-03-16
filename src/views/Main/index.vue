@@ -449,6 +449,7 @@ export default {
 									data.push(file);
 								}
 							});
+							console.log(data);
 							myThis.$ipc.send('file-control', OpenType, data);
 						} else {
 							myThis.$message.warning('暂不支持打开该类型文件');

@@ -28,16 +28,14 @@ export default {
 		this.$ipc.on('win-data', (event, data) => {
 			//接收打开文本文件的数据
 			this.$nextTick(() => {
-				this.NowLoad = data;
-				this.header.title = data.path + ' 文件查看';
-				const path = require('path');
-				this.LoadUrl =
-					path.join(__static, 'plugins/syntaxhighlighter/index.html?id=') +
-					data.uuid +
-					'&type=' +
-					data.type +
-					'&server=' +
-					'http://192.168.10.91:9999';
+				data.forEach((item, index) => {
+					this.NowLoad = item;
+					this.header.title = item.path + ' 文件查看';
+					this.LoadUrl =
+						this.$path.join(__static, 'plugins/syntaxhighlighter/index.html?url=') +
+						'http://192.168.10.91:9999/v1/file/http_download?uuid=A252FB4252FB19AD&path=/.ugreen_nas/6001/path.txt&api_token=MzhjNDBhYzY5NzMyMDcwNTc3NzFlNzRhMWYzODE4M2Y5ZGMwMzhjZQ==';
+					console.log(this.LoadUrl);
+				});
 			});
 		});
 	}
