@@ -33,7 +33,32 @@ const routes = [
     children: [
       ...LoginRouters
     ]
-  }
+  },
+  {
+    path: '/picture-shower',
+    name: 'DiskPictureShower',
+    component: () => import('../views/Disk/DiskPictureShower.vue')
+  },
+  {
+    path: '/file-shower',
+    name: 'DiskFileContent',
+    component: () => import('../views/Disk/DiskFileContent.vue')
+  },
+  {
+    path: '/video-player',
+    name: 'DiskVideoPlayer',
+    component: () => import('../views/Disk/DiskVideoPlayer.vue')
+  },
+  {
+    path: '/pdf-viewer',
+    name: 'DiskPdfView',
+    component: () => import('../views/Disk/DiskPdfView.vue')
+  },
+  {
+    path: '/music-player',
+    name: 'DiskMusicPlayer',
+    component: () => import('../views/Disk/DiskMusicPlayer.vue')
+  },
 ]
 
 const router = new VueRouter({

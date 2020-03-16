@@ -39,3 +39,7 @@ img {
   -webkit-user-drag: none;
 }
 </style>
+
+<style>
+@import url('assets/font/icon.css');
+</style>

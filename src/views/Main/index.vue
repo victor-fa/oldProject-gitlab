@@ -55,7 +55,7 @@
 import Vue from 'vue'
 import infiniteScroll from 'vue-infinite-scroll'
 import { EventBus, EventType } from '../../utils/eventBus'
-import processCenter, { EventName } from '../../utils/processCenter'
+import processCenter from '../../utils/processCenter'
 import { ArrangeWay, ResourceItem } from '../../components/ResourceList/ResourceModel'
 import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
 import DiskFile from '../../components/Disk/DiskFile.vue'
@@ -433,25 +433,26 @@ export default {
 					if (!item) {
 						item = myThis.DiskData.NowSelect;
 					}
-					if (!item.disk_main) {
+					if (!item.path) {
 						myThis.DiskData.NavData.push(item);
 						myThis.ClearSelect();
 						myThis.GetMainFile(item.disk_id, 'normal');
 					} else {
-						let OpenType = myThis.DiskData.NowSelect.OpenType;
+						let OpenType = myThis.DiskData.NowSelect.type;
 						if (OpenType === 'zip') {
 							myThis.showTree = true;
 							myThis.ShowUnZip = true;
 						} else if (OpenType !== null) {
 							let data:any = [];
-							if (OpenType === 'image' || OpenType === 'video' || OpenType === 'audio') {
+							if (OpenType === 3 || OpenType === 1 || OpenType === 2) {
 								myThis.UserDiskData.forEach(file => {
-									if (file.type.Exist(item.TypeArray)) {
+									if (file.active) {
 										data.push(file);
 									}
 								});
 							}
-							myThis.$ipc.send('file-control', OpenType, data.length ? data : myThis.DiskData.NowSelect);
+							console.log(data);
+							myThis.$ipc.send('file-control', OpenType, data.length ? data : null);
 						} else {
 							myThis.$message.warning('暂不支持打开该类型文件');
 						}
@@ -466,7 +467,6 @@ export default {
 					}
 					break;
 				case 'download': //下载文件
-					console.log(JSON.parse(JSON.stringify(myThis.DiskData)));
 					if (myThis.DiskData.SelectFiles.length) {
 						myThis.DiskData.SelectFiles.forEach(item => {
 							if (item.disk_main) {

@@ -11,12 +11,14 @@ enum ChannelName {
 // use in render process
 enum EventName {
   login = 'present_login',
-  home = 'present_home'
+  home = 'present_home',
+  file = 'present_file'
 }
 
 // use in main process
 enum MainEventName {
-  toast = 'show_toast'
+  toast = 'show_toast',
+  file = 'present_file'
 }
 
 export default {

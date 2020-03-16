@@ -50,6 +50,8 @@ import {
   Comment,
   ConfigProvider
 } from 'ant-design-vue'
+import electron from 'electron';
+const ipcRenderer = electron.ipcRenderer;
 
 Vue.prototype.$message = message
 Vue.prototype.$notification = notification
@@ -58,6 +60,8 @@ Vue.prototype.$success = Modal.success
 Vue.prototype.$error = Modal.error
 Vue.prototype.$warning = Modal.warning
 Vue.prototype.$confirm = Modal.confirm
+Vue.electron = Vue.prototype.$electron = electron; //electron
+Vue.ipc = Vue.prototype.$ipc = ipcRenderer; //ipc接口
 
 /* v1.1.3+ registration methods */
 Vue.use(Affix)
