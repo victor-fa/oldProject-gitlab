@@ -9,13 +9,14 @@
 
 <script>
 import WindowsHeader from '../../components/Disk/WindowHeader.vue'
+import NasFileAPI from '../../api/NasFileAPI'
 export default {
 	name: 'DiskPdfView',
 	components: { WindowsHeader },
 	data() {
 		return {
 			NowPlay: {
-				disk_name: ''
+				path: ''
 			},
 			src: null,
 			header: {
@@ -27,12 +28,22 @@ export default {
 	},
 	created() {
 		this.$ipc.on('win-data', (event, data) => {
+			console.log(data);
 			//接收打开pdf文件的数据
 			this.$nextTick(() => {
-				this.NowPlay.disk_name = data.disk_name;
-				this.src = this.$path.join(__static, 'plugins/pdfjs/web/viewer.html?file=') + data.disk_main;
+				data.forEach((item, index) => {
+					this.NowPlay.path = item.path;
+					console.log(NasFileAPI.httpDownload({
+						uuid: item.uuid,
+						path: item.path
+					}));
+					this.src = this.$path.join(__static, 'plugins/pdfjs/web/viewer.html?file=') + encodeURIComponent(NasFileAPI.httpDownload({
+						uuid: item.uuid,
+						path: item.path
+					}))
+					this.header.title = item.path + '-PDF阅读器';
+				});
 			});
-			this.header.title = data.disk_name + '-PDF阅读器';
 		});
 	}
 };
@@ -40,6 +51,9 @@ export default {
 
 <style scoped>
 /*pdf窗口*/
+html,body,#app{
+	height: 100%;
+}
 .cd-pdf-window {
 	width: 100%;
 	height: 100%;
@@ -52,5 +66,6 @@ export default {
 .cd-pdf-show-container iframe {
 	width: 100%;
 	height: 100%;
+	border: none;
 }
 </style>

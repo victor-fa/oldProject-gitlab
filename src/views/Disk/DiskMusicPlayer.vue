@@ -9,7 +9,7 @@
 	>
 		<WindowsHeader :data="header" />
 		<div class="cd-music-player-container">
-			<div class="cd-music-player-title">{{ NowPlay.disk_name }}</div>
+			<div class="cd-music-player-title">{{ NowPlay.path }}</div>
 			<ul>
 				<li class="cd-music-player-H-btn" />
 				<li class="sf-icon-step-backward cd-music-player-S-btn" @click="PlayerCommend('prev')" />
@@ -77,7 +77,7 @@ export default {
 		return {
 			PlayList: [],
 			NowPlay: {
-				disk_name: '准备播放',
+				path: '准备播放',
 				count: 0
 			},
 			TimeText: '00:00/00:00',
@@ -197,7 +197,7 @@ export default {
 						this.PlayButtonState = 'sf-icon-play';
 						this.$ipc.send('player-control', 'audio', 'play');
 					}
-					this.header.title = this.NowPlay.disk_name;
+					this.header.title = this.NowPlay.path;
 					if (this.VisualState) {
 						this.Visual();
 					}
@@ -271,7 +271,7 @@ export default {
 		GetLyr() {
 			this.$Api.Disk.GetLyr(
 				{
-					name: this.NowPlay.disk_name
+					name: this.NowPlay.path
 				},
 				rs => {
 					rs = JSON.parse(rs);

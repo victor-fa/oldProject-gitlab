@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import axios from 'axios/index';
-import { jsonToParams } from '../utils/request'
+import { jsonToParams, jsonToParamsForPdf } from '../utils/request'
 axios.defaults.withCredentials = true;
 
 const nasFileModulePath = '/v1/file'
@@ -25,5 +25,9 @@ export default {
   download (option) {
     const input = { uuid: option.uuid, path: option.path }
     return tempServerUrl + nasFileModulePath + '/download?' + jsonToParams(input)
-  }
+  },
+  httpDownload (option) { // 针对pdf处理
+    const input = { uuid: option.uuid, path: option.path }
+    return tempServerUrl + nasFileModulePath + '/http_download?' + jsonToParamsForPdf(input)
+  },
 }

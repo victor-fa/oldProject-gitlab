@@ -62,8 +62,10 @@ function createWindow () {
     backgroundColor: '#f6f8fb',
     webPreferences: {
       nodeIntegration: true,
-      webSecurity: false
-    } })
+			webSecurity: false,
+			nodeIntegrationInSubFrames: true
+		}
+	})
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
@@ -201,7 +203,7 @@ let FileViewer = {
 	Image: data => {
 		if (PictureViewer) {
 			return windowControl.active(PictureViewer, data);
-    }
+		}
 		PictureViewer = windowControl.create({
 			url: 'picture-shower',
 			data: data,
@@ -275,20 +277,20 @@ function bindIpc() {
 	/*网盘文件操作事件*/
 	ipcMain.on('file-control', (event, type, data) => {
 		switch (type) {
-			case 2: //音频
-				FileViewer.Music(data);
-				break;
 			case 1: //视频
 				FileViewer.Video(data);
+				break;
+			case 2: //音频
+				FileViewer.Music(data);
 				break;
 			case 3: //图片
 				FileViewer.Image(data);
 				break;
-			case 5:
-				FileViewer.Pdf(data);
-				break;
 			case 4: //文本
 				FileViewer.Text(data);
+				break;
+			case 5: //PDF
+				FileViewer.Pdf(data);
 				break;
 			case 0: //属性
 				FileViewer.Attributes(data);

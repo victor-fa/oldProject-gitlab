@@ -15,7 +15,7 @@ export default {
 	data() {
 		return {
 			NowLoad: {
-				disk_name: '',
+				path: '',
 				content: ''
 			},
 			LoadUrl: '',
@@ -27,17 +27,17 @@ export default {
 	created() {
 		this.$ipc.on('win-data', (event, data) => {
 			//接收打开文本文件的数据
-			console.log(data);
 			this.$nextTick(() => {
 				this.NowLoad = data;
-				this.header.title = data.disk_name + ' 文件查看';
+				this.header.title = data.path + ' 文件查看';
+				const path = require('path');
 				this.LoadUrl =
-					this.$path.join(__static, 'plugins/syntaxhighlighter/index.html?id=') +
-					data.disk_id +
+					path.join(__static, 'plugins/syntaxhighlighter/index.html?id=') +
+					data.uuid +
 					'&type=' +
 					data.type +
 					'&server=' +
-					this.$Api.Public.severAddress();
+					'http://192.168.10.91:9999';
 			});
 		});
 	}

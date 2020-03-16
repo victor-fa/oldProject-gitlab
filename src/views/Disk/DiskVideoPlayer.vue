@@ -56,6 +56,7 @@
 <script>
 import Media from '../../utils/file/media';
 import WindowsHeader from '../../components/Disk/WindowHeader.vue'
+import NasFileAPI from '../../api/NasFileAPI'
 export default {
 	name: 'DiskVideoPlayer',
 	components: { WindowsHeader },
@@ -82,8 +83,9 @@ export default {
 		return {
 			PlayList: [],
 			NowPlay: {
-				disk_name: '准备播放',
-				count: 0
+				path: '准备播放',
+				count: 0,
+				PlayUrl: ''
 			},
 			TimeText: '00:00/00:00',
 			ProcessWidth: 0,
@@ -103,6 +105,7 @@ export default {
 	},
 	created() {
 		this.$ipc.on('win-data', (event, data) => {
+			console.log(data);
 			//接收打开视频文件的数据
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
@@ -133,7 +136,15 @@ export default {
 		playCallBack(item, index) {
 			this.NowPlay = item;
 			this.NowPlay.count = index;
-			this.NowPlay.PlayUrl = item.disk_main;
+			console.log(item);
+			console.log(NasFileAPI.download({
+				uuid: item.uuid,
+				path: item.path
+			}));
+			this.NowPlay.PlayUrl = NasFileAPI.download({
+				uuid: item.uuid,
+				path: item.path
+			});
 		},
 		ChangeTime(state) {
 			let media = this.$refs.video;
@@ -181,7 +192,7 @@ export default {
 						this.animation = 'animated zoomIn';
 						this.$ipc.send('player-control', 'video', 'play');
 					}
-					this.header.title = this.NowPlay.disk_name;
+					this.header.title = this.NowPlay.path;
 					this.$refs.VideoPlayer.focus();
 					break;
 			}
@@ -270,7 +281,7 @@ export default {
 			}
 		},
 		VideoError(e) {
-			this.$Message.error(e);
+			this.$message.error(e);
 		}
 	}
 };

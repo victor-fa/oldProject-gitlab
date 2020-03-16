@@ -52,6 +52,7 @@ import {
 } from 'ant-design-vue'
 import electron from 'electron';
 const ipcRenderer = electron.ipcRenderer;
+const path = require('path');
 
 Vue.prototype.$message = message
 Vue.prototype.$notification = notification
@@ -60,6 +61,7 @@ Vue.prototype.$success = Modal.success
 Vue.prototype.$error = Modal.error
 Vue.prototype.$warning = Modal.warning
 Vue.prototype.$confirm = Modal.confirm
+Vue.path = Vue.prototype.$path = path; //path接口
 Vue.electron = Vue.prototype.$electron = electron; //electron
 Vue.ipc = Vue.prototype.$ipc = ipcRenderer; //ipc接口
 

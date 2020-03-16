@@ -30,6 +30,7 @@ export default Vue.extend({
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #ffffff;
+  height: 100%;
 }
 * {
   padding: 0px;

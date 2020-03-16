@@ -22,7 +22,6 @@ export default {
 				webSecurity: false
 			}
 		};
-		console.log(options);
 		options = Object.assign(defaultOptions, options);
 		let win:any = new BrowserWindow(options);
 		options.backgroundColor && (win.backgroundColor = options.backgroundColor);

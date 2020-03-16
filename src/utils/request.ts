@@ -100,6 +100,19 @@ const jsonToParams = (options) => {
   return params
 }
 
+// json对象转url参数
+const jsonToParamsForPdf = (options) => {
+  let params = '';
+  params += 'api_token=' + getToken();
+  if (options !== null) {
+    for (let item in options) {
+      params += '&' + item + '=' + options[item];
+    }
+  }
+  console.log(params);
+  return params
+}
+
 // 获取token
 const getToken = () => {
   const tokenJson = localStorage.getItem(NAS_ACCESS)
@@ -112,5 +125,6 @@ const getToken = () => {
 export {
   nasCloud,
   nasServer,
-  jsonToParams
+  jsonToParams,
+  jsonToParamsForPdf
 }

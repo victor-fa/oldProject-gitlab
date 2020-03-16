@@ -23,6 +23,7 @@
 
 <script>
 import WindowsHeader from '../../components/Disk/WindowHeader.vue'
+import NasFileAPI from '../../api/NasFileAPI'
 export default {
 	name: 'DiskPictureShower',
 	components: { WindowsHeader },
@@ -31,7 +32,7 @@ export default {
 			loaded: false,
 			Control: false,
 			NowShow: {
-				disk_name: '',
+				path: '',
 				count: 0,
 				URL: ''
 			},
@@ -113,8 +114,11 @@ export default {
 		ShowPicture(item, index) {
 			this.NowShow = item;
 			this.NowShow.count = index;
-			this.NowShow.URL = item.disk_main;
-			this.header.title = item.disk_name + '-图片查看';
+			this.NowShow.URL = NasFileAPI.download({
+				uuid: item.uuid,
+				path: item.path
+			});
+			this.header.title = item.path + '-图片查看';
 		},
 		orginz() {
 			let img_show = this.$refs.imageShow;

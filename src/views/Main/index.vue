@@ -444,15 +444,12 @@ export default {
 							myThis.ShowUnZip = true;
 						} else if (OpenType !== null) {
 							let data:any = [];
-							if (OpenType === 3 || OpenType === 1 || OpenType === 2) {
-								myThis.UserDiskData.forEach(file => {
-									if (file.active) {
-										data.push(file);
-									}
-								});
-							}
-							console.log(data);
-							myThis.$ipc.send('file-control', OpenType, data.length ? data : null);
+							myThis.UserDiskData.forEach(file => {
+								if (file.active) {
+									data.push(file);
+								}
+							});
+							myThis.$ipc.send('file-control', OpenType, data);
 						} else {
 							myThis.$message.warning('暂不支持打开该类型文件');
 						}

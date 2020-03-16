@@ -1,7 +1,7 @@
 <template>
 	<ul class="sf-music-player-list">
 		<li v-for="(item, index) in PlayList" :key="index" :class="item.play" @click="ClickPlay(item, index)">
-			{{ 9 > index ? '0' : '' }}{{ index + 1 }} {{ item.disk_name }}
+			{{ 9 > index ? '0' : '' }}{{ index + 1 }} {{ item.path }}
 		</li>
 	</ul>
 </template>
