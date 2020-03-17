@@ -1,6 +1,6 @@
 <template>
   <div class="basic-footer">
-    <label>147个项目</label>
+    <label>{{ data }}</label>
   </div>
 </template>
 
@@ -10,7 +10,12 @@ export default Vue.extend({
   data () {
     return {
     }
-  }
+  },
+	props: {
+		data: {
+			type: String
+		}
+	}
 })
 </script>
 

@@ -1,11 +1,11 @@
-import encrypt from 'encrypt';
+import encrypt from '../api/encrypt';
 import electron from 'electron';
 const fs = require('fs');
-const productName = 'CloudDisk';
+const productName = 'NasClient';
 const path = require('path');
 const app = (electron.remote ? electron.remote : electron).app;
 export default {
-	address: path.join(app.getPath('appData')) + '/CloudSeries/',
+	address: path.join(app.getPath('appData')) + '/uGreenNas/',
 	user: '',
 	debug: process.env.NODE_ENV === 'development',
 	folders: {},
@@ -20,6 +20,7 @@ export default {
 		return str;
 	},
 	log(message) {
+		console.log(this.debug);
 		this.debug && console.info(message);
 	},
 	init(user, callback) {
@@ -72,8 +73,9 @@ export default {
 		fs.access(url, fs.constants.F_OK | fs.constants.W_OK, err => {
 			err
 				? fs.mkdir(url, err => {
+						console.log(err);
 						callback && callback();
-				  })
+					})
 				: callback && callback();
 		});
 	},

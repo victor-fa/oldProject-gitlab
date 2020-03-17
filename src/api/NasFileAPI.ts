@@ -14,6 +14,8 @@ export default {
     return Vue.axios.get(tempServerUrl + nasFileModulePath + '/list?' + jsonToParams({
       path: path,
       uuid: uuid,
+      page: 1,
+      size: 1000,
     }))
   },
   upload (options) {

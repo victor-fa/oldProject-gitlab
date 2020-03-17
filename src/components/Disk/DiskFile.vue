@@ -47,7 +47,7 @@ export default Vue.extend({
       return y + '-' + MM + '-' + d + ' ' + h + ':' + m + ':' + s;
     },
     filterPath (value) {
-      return value.substr(1, value.length); ;
+      return value.substr(value.lastIndexOf("/") + 1, value.length); ;
     },
     filterSize (limit) {
       var size = "";
@@ -131,7 +131,7 @@ export default Vue.extend({
 	width: 100%;
 	height: 40px;
 	line-height: 40px;
-	margin-top: 5px;
+	margin: 5px 0;
 	display: block;
 }
 .cd-disk-block-file .icon > img {

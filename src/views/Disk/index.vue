@@ -22,28 +22,10 @@
         @drop.prevent.stop="UploadDrop"
       >
       
-          <!-- <loading :loading="IsLoadCompany" :length="UserDiskData.length" :IsNoDiskData="IsNoDiskData" /> -->
-          <div class="cd-mouse-select" v-show="MouseSelectData.width" :style="MouseSelectData" />
-          <!-- <DiskTransList v-show="DiskData.Type === 'trans'" :data="TransformData" @ControlTrans="ControlTrans" /> -->
-
-          <DiskFile @SelectFiles="SelectFiles" @OpenFile="DiskFeatureControl" v-if="LoadCompany && NoTransType" :data="UserDiskData" :DiskData="DiskData" />
-          <!-- <a-list
-            :dataSource="UserDiskData"
-            :grid="grid"
-          >
-            <a-list-item
-              slot="renderItem"
-              slot-scope="item, index"
-              @dblclick="didSelectItem(item)"
-              @contextmenu.prevent="didOperatItem($event, item)"
-            >
-              <resource-list-item :model="item" :index="index" :arrangeWay="arrangeWay"/>
-            </a-list-item>
-            <div v-if="loading && !busy" class="demo-loading-container">
-              <a-spin />
-            </div>
-          </a-list> -->
-          
+				<!-- <loading :loading="IsLoadCompany" :length="UserDiskData.length" :IsNoDiskData="IsNoDiskData" /> -->
+				<div class="cd-mouse-select" v-show="MouseSelectData.width" :style="MouseSelectData" />
+				<DiskTransList v-show="DiskData.Type === 'trans'" :data="TransformData" @ControlTrans="ControlTrans" />
+				<DiskFile @SelectFiles="SelectFiles" @OpenFile="DiskFeatureControl" v-if="LoadCompany && NoTransType" :data="UserDiskData" :DiskData="DiskData" />
       </div>
     </section>
 		<input type="file" id="FileArea" @change="PrepareUploadFile" hidden ref="FileArea" multiple="multiple" />
@@ -64,6 +46,9 @@
         v-model="fileName"
       />
     </a-modal>
+		<a-layout-footer class="base-footer">
+			<basic-footer :data="DiskData.SelectTips"/>
+		</a-layout-footer>
 	</div>
 </template>
 
@@ -71,24 +56,25 @@
 import Vue from 'vue'
 import infiniteScroll from 'vue-infinite-scroll'
 import { EventBus, EventType } from '../../utils/eventBus'
-import processCenter from '../../utils/processCenter'
+// import LocalFile from '../../utils/api/LocalFile';
 import { ArrangeWay, ResourceItem } from '../../components/ResourceList/ResourceModel'
 import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
 import DiskFile from '../../components/Disk/DiskFile.vue'
 import MouseMenu from '../../components/Disk/MouseMenu.vue'
-// import ResourceListItem from '../../components/ResourceList/ResourceListItem.vue'
 import ResourceHeader from '../../components/ResourceList/ResourceHeader.vue'
-import upload from '../../utils/file/upload';
+import BasicFooter from '../../components/BasicFooter/index.vue'
+import DiskTransList from '../../components/Disk/DiskTransList.vue'; //下载列表
 import NasFileAPI from '../../api/NasFileAPI'
 
 export default {
   name: 'main',
   directives: { infiniteScroll },
   components: {
-    // ResourceListItem,
     ResourceHeader,
     DiskFile,
-    MouseMenu
+    MouseMenu,
+		BasicFooter,
+		DiskTransList
   },
   props: {
     dataSource: Array
@@ -106,20 +92,12 @@ export default {
 				SelectTips: '0个项目', //选择文件提示
 				Type: 'disk', //头部分类标签,
 				ClassifyName: '网盘', //地址栏左侧分类显示文本,
-				DiskSize: {
-					/*网盘大小*/
-					total: 0,
-					use: 0,
-					Percent: '0%',
-					Background: '#2682fc',
-					text: '0B/0B'
-				}
 			},
 			fileName: '',	// 新建文件名
 			fileNameVisible: false,
+			TransformData: [],
 			/*上传提示*/
       loading: false,
-			DiskLoadCount: 0,
       busy: false,
       scrollHeight: 450,
       arrangeWay: ArrangeWay.horizontal,
@@ -154,6 +132,7 @@ export default {
         const myThis = this as any
 				if (myThis.DiskData.Type === 'trans') {
 					myThis.$nextTick(() => {
+						console.log(myThis.TransformData);
 						myThis.TransformData.forEach(item => {
 							item.shows = myThis.loadClassify === item.state || (item.trans_type === myThis.loadClassify && item.state !== 'completed');
 						});
@@ -178,11 +157,40 @@ export default {
 				} else {
 					myThis.DiskData.SelectTips = myThis.UserDiskData.length + '个项目';
 				}
-				// console.log(JSON.parse(JSON.stringify(myThis.UserDiskData.SelectFiles)));
-				// console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
 			},
 			deep: true
 		},
+		TransformData: {
+			handler() {
+        const myThis = this as any
+				myThis.$nextTick(() => {
+					myThis.UploadCount = 0;
+					myThis.DownloadCount = 0;
+					myThis.FinishCount = 0;
+					myThis.TransformData.forEach((item, index) => {
+						if (item.state === 'cancelled') {
+							myThis.TransformData.splice(index, 1);
+						}
+						if (item.trans_type === 'upload' && item.state !== 'completed') {
+							myThis.UploadCount++;
+						}
+						if (item.trans_type === 'download' && item.state !== 'completed') {
+							myThis.DownloadCount++;
+						}
+						if (item.state === 'completed') {
+							myThis.FinishCount++;
+						}
+						item.shows = myThis.loadClassify === item.state || (item.trans_type === myThis.loadClassify && item.state !== 'completed');
+					});
+					myThis.$refs.DiskClassify.TransData[0].count = myThis.DownloadCount;
+					myThis.$refs.DiskClassify.TransData[1].count = myThis.UploadCount;
+					myThis.$refs.DiskClassify.TransData[2].count = myThis.FinishCount;
+				});
+				console.log(myThis.TransformData);
+				// LocalFile.write('transfer', myThis.TransformData);
+			},
+			deep: true
+		}
   },
   computed: {
     grid: function () {
@@ -241,6 +249,7 @@ export default {
   methods: {
 		/*初始化*/
 		Bind: function() {
+			const myThis = this as any
 			window.addEventListener(
 				'dragenter',
 				function(e) {
@@ -269,6 +278,24 @@ export default {
 				},
 				false
 			);
+			myThis.$ipc.on('download', (e, file, completed) => {
+				console.log('128937182937892137');
+				completed && myThis.DiskFeatureControl('popup', file.name + '下载完成'); /*消息提醒*/
+				for (let i = 0; i < myThis.TransformData.length; i++) {
+					if (file.name === myThis.TransformData[i].name) {
+						myThis.$nextTick(() => {
+							for (let name in myThis.TransformData[i]) {
+								myThis.TransformData[i][name] = file[name];
+							}
+						});
+						return;
+					}
+				}
+				myThis.$nextTick(() => {
+					myThis.TransformData.push(file);
+				});
+				console.log(myThis.TransformData);
+			});
 		},
     observerWindowResize () {
       const myThis = this as any
@@ -304,7 +331,6 @@ export default {
       return newArray
     },
     isInclude (ctype: CategoryType, rtype) {
-      console.log('isInclude');
       const myThis = this as any
       switch (ctype) {
         case CategoryType.all:
@@ -338,7 +364,6 @@ export default {
       // EventBus.$emit(EventType.categoryChangeAction, item.type)
     },
     didSelectItem (item: ResourceItem) {
-			console.log(JSON.parse(JSON.stringify(item)));
       const myThis = this as any
       switch (item.type) {
         case 6:
@@ -407,19 +432,16 @@ export default {
 					if (rs.code === '4050') {
 						myThis.$message.warning('文件已存在')
 					} else {
-						myThis.$message.warning(rs.msg)
+						myThis.TransformDat.$message.warning(rs.msg)
 					}
 					return
 				}
+				myThis.TransformData.push(rs.data);
 				myThis.UserDiskData.push(rs.data);
 				myThis.getDeviceInfo()
 				myThis.$message.success('文件上传成功！')
 			})
 		},
-    alterBlur (el: any) {
-      console.log('alter blur')
-      console.log(el)
-    },
     // 获取到菜单返回的结果
     DiskFeatureControl (commend: any, datas: any, flag) {
       const myThis = this as any
@@ -456,18 +478,21 @@ export default {
 						myThis.GetMainFile(item.disk_id, 'normal');
 					} else {
 						let OpenType = myThis.DiskData.NowSelect.type;
-						if (OpenType === 'zip') {
-							myThis.showTree = true;
-							myThis.ShowUnZip = true;
-						} else if (OpenType !== null) {
-							let data:any = [];
-							myThis.UserDiskData.forEach(file => {
-								if (file.active) {
-									data.push(file);
-								}
-							});
-							console.log(data);
+						// 0: Unknown 1: Video, 2: Audio, 3:Image, 4:Document, 5:Archive, 6:Folder
+						const filterArr = [1, 2, 3, 4];
+						if (filterArr.indexOf(OpenType) > -1) {
+							let data:any = myThis.UserDiskData.filter(item => item.active)
 							myThis.$ipc.send('file-control', OpenType, data);
+						} else if (OpenType === 5) {	// 包含zip
+							let data:any = myThis.UserDiskData.filter(item => item.active)
+							const filterCompress = ['.zip', '.rar', '.7z', '.ZIP', '.RAR', '.7Z']
+							const compressRes = filterCompress.filter(item => data[0].path.indexOf(item) > -1)
+							if (compressRes.length > 0) {	// 压缩类型
+								myThis.showTree = true;
+								myThis.ShowUnZip = true;
+							} else {	// pdf
+								myThis.$ipc.send('file-control', OpenType, data);
+							}
 						} else {
 							myThis.$message.warning('暂不支持打开该类型文件');
 						}
@@ -493,7 +518,6 @@ export default {
 							myThis.SelectDownLoadFiles.push(myThis.DiskData.NowSelect);
 						}
 					}
-					console.log(JSON.parse(JSON.stringify(myThis.SelectDownLoadFiles)));
 					let tips = myThis.SelectDownLoadFiles.length > 1 ? '所选' + myThis.SelectDownLoadFiles.length + '个项目' : myThis.SelectDownLoadFiles[0].path;
 					const { BrowserWindow } = require('electron').remote
 					myThis.SelectDownLoadFiles.forEach(item => {
@@ -509,15 +533,7 @@ export default {
 						myThis.DiskData.ClassifyName = '搜索';
 						myThis.NavigationControl('clear');
 					}
-					myThis.$Api.Disk.Search(
-						{
-							id: datas,
-							page: myThis.DiskPage
-						},
-						rs => {
-							myThis.DiskBatchData('print', rs);
-						}
-					);
+					// TODO: 请求接口
 					break;
 				case 'sort': //网盘排序方法
 					if (typeof datas === 'object') {
@@ -554,9 +570,7 @@ export default {
 						}
 					});
 					if (myThis.DiskData.ClipboardType === 'Copy') {
-						if (CopySize > myThis.DiskData.DiskSize.total - myThis.DiskData.DiskSize.use) {
-							return myThis.$message.error('空间不足！请清理一些文件后重试');
-						}
+						// TODO: 据说不需要前端判断磁盘空间问题，后台接口返回
 					} else if (myThis.DiskData.ClipboardType === 'Cut') {
 						if (myThis.DiskData.Clipboard[0].parent_id === myThis.NowDiskID) {
 							myThis.$message.info('剪切和粘贴目录为同一个，已清空剪贴板');
@@ -568,35 +582,7 @@ export default {
 					}
 					myThis.$message.info('正在粘贴文件，请稍候');
 					data = myThis.DiskBatchData('post', myThis.DiskData.Clipboard);
-					myThis.$Api.Disk[myThis.DiskData.ClipboardType](
-						{
-							id: data,
-							parent_id: myThis.NowDiskID
-						},
-						rs => {
-							rs = rs[0];
-							if (rs.state === 'success') {
-								let CopyFlag = false; //判断是否有复制和粘贴时同一个目录的
-								myThis.DiskData.Clipboard.forEach(item => {
-									if (myThis.DiskData.ClipboardType === 'Copy') {
-										item.path = item.path + '-复制';
-										if (item.parent_id === myThis.NowDiskID) {
-											CopyFlag = true;
-										}
-									}
-									item.parent_id = myThis.NowDiskID;
-									myThis.UserDiskData.push(item);
-								});
-								if (CopyFlag) {
-									myThis.NavigationControl('reload');
-								}
-								myThis.$message.success('粘贴成功，共' + myThis.DiskData.Clipboard.length + '个项目');
-								myThis.DiskFeatureControl('clear');
-							} else {
-								myThis.$message.error('粘贴失败');
-							}
-						}
-					);
+					// TODO: 请求接口
 					break;
 				case 'trash': //移入回收站:
 					let trash_data = myThis.DiskBatchData();
@@ -608,24 +594,8 @@ export default {
 						okType: 'danger',
 						cancelText: '取消',
 						onOk() {
-							myThis.$Api.Disk.Delete(
-								{
-									id: data
-								},
-								rs => {
-									rs = rs[0];
-									if (rs.state === 'success') {
-										myThis.$message.success('删除成功');
-										myThis.DiskBatchData('remove', delete_data);
-									} else {
-										myThis.$message.success('删除失败');
-									}
-								}
-							);
-						},
-						onCancel() {
-							console.log('Cancel');
-						},
+							// TODO: 请求接口
+						}
 					});
 					break;
 				case 'delete': //文件删除
@@ -649,50 +619,23 @@ export default {
 						title: '还原文件',
 						tips: '是否将所选' + restore_data.length + '个项目移出回收站',
 						callback: () => {
-							myThis.$Api.Disk.Restore(
-								{
-									id: data
-								},
-								rs => {
-									rs = rs[0];
-									if (rs.state === 'success') {
-										myThis.$message.success('还原成功');
-										myThis.DiskBatchData('remove', restore_data);
-									} else {
-										myThis.$message.success('还原失败');
-									}
-								}
-							);
+							// TODO: 请求接口
 						}
 					});
 					break;
 				case 'rename': //重命名
 					console.log('重命名未开始');
-					// myThis.InputConfrim({
-					// 	title: '重命名',
-					// 	tips: '请输入新的文件/文件夹名称',
-					// 	value: myThis.DiskData.NowSelect.path,
-					// 	callback: value => {
-					// 		if (value.length === 0) {
-					// 			return myThis.$message.error('文件名不能为空');
-					// 		}
-					// 		myThis.$Api.Disk.Rename(
-					// 			{
-					// 				name: value,
-					// 				id: myThis.DiskData.NowSelect.disk_id
-					// 			},
-					// 			rs => {
-					// 				rs = rs[0];
-					// 				if (rs.state === 'success') {
-					// 					myThis.UserDiskData[myThis.DiskData.NowIndex].path = value;
-					// 					myThis.$message.success('重命名成功');
-					// 				} else {
-					// 					myThis.$message.error('重命名失败');
-					// 				}
-					// 			}
-					// 		);
-					// 	}
-					// });
+					myThis.InputConfrim({
+						title: '重命名',
+						tips: '请输入新的文件/文件夹名称',
+						value: myThis.DiskData.NowSelect.path,
+						// callback: value => {
+						// 	if (value.length === 0) {
+						// 		return myThis.$message.error('文件名不能为空');
+						// 	}
+						// 	// TODO: 请求接口
+						// }
+					});
 					break;
 				case 'info': //文件属性
 					console.log('属性未开始');
@@ -714,30 +657,7 @@ export default {
 						title: '取消分享',
 						tips: '您确认取消分享' + myThis.DiskData.NowSelect.path + '吗',
 						callback: () => {
-							myThis.$Api.Disk.CancelShare(
-								{
-									id: myThis.DiskData.NowSelect.disk_id,
-									share_id: myThis.DiskData.NowSelect.share
-								},
-								rs => {
-									if (rs[0].state === 'success') {
-										myThis.$message.success('分享已取消');
-										myThis.$nextTick(() => {
-											if (myThis.loadClassify === 'share') {
-												let data:any = [];
-												data.push(myThis.DiskData.NowSelect);
-												myThis.DiskBatchData('remove', data);
-											} else {
-												myThis.FindInDisk(myThis.DiskData.NowSelect, item => {
-													item.share = '';
-												});
-											}
-										});
-									} else {
-										myThis.$message.error('操作失败');
-									}
-								}
-							);
+							// TODO: 请求接口
 						}
 					});
 					break;
@@ -901,11 +821,28 @@ export default {
     },
 		ClearSelect() {
       const myThis: any = this
-			myThis.UserDiskData.forEach(item => {
-				item.active = false;
-			});
+			myThis.UserDiskData.forEach(item => { item.active = false });
 			myThis.DiskData.SelectFiles = [];
 		},
+		ControlTrans(item, index, event) {
+      const myThis: any = this
+			if (event.target.className === 'sf-icon-times') {
+				if (item.trans_type === 'download') {
+					myThis.$ipc.send('download', 'cancel', item.id);
+				}
+				return myThis.TransformData.splice(index, 1);
+			}
+			if (item.state === 'completed') {
+				return myThis.TransformData.splice(index, 1);
+			}
+			if (item.trans_type === 'upload') {
+				item.state = item.state === 'interrupted' ? 'progressing' : 'interrupted';
+				myThis.PrepareUploadFile(item);
+			} else {
+				let commend = item.state === 'progressing' ? 'pause' : 'resume';
+				myThis.$ipc.send('download', commend, item.id);
+			}
+		}, //传输任务控制
     getDeviceInfo () {  // 获取磁盘信息
       const myThis: any = this
       NasFileAPI.storages().then((response): void => {
@@ -964,19 +901,9 @@ export default {
 					}
 					break;
 				case 'print':
-					if (myThis.DiskPage === 1) {
-						myThis.DiskAllCount = 0;
-						myThis.DiskLoadCount = 0;
-					}
 					myThis.LoadCompany = true;
 					myThis.UserDiskData = data
-					if (data.length) {
-						myThis.DiskData.DiskSize.total = data[0].max_size;
-						myThis.DiskData.DiskSize.use = data[0].use_size;
-						// myThis.DiskData.DiskSize.text = '可用:' + myThis.$Api.Disk.FileSize(myThis.DiskData.DiskSize.total - myThis.DiskData.DiskSize.use);
-						myThis.DiskAllCount = data[0].all_count;
-						myThis.DiskLoadCount = myThis.DiskLoadCount + data.length;
-					}
+					console.log(JSON.parse(JSON.stringify(data)));
 					break;
 			}
 			return BatchData;
@@ -995,27 +922,16 @@ export default {
 				id = 'null';
 			}
 			if (myThis.loadClassify !== type) {
-				myThis.DiskLoadCount = 0;
 				myThis.DiskPage = 1;
 				myThis.LoadCompany = false;
 			}
 			myThis.NowDiskID = id;
 			myThis.loadClassify = type;
-			// myThis.$Api.Disk.LoadMainFile(
-			// 	{
-			// 		id: id,
-			// 		page: myThis.DiskPage,
-			// 		loadtype: myThis.loadClassify
-			// 	},
-			// 	rs => {
-			// 		myThis.DiskBatchData('print', rs);
-			// 	}
-			// );
+			// TODO: 请求接口
 		},
 		/*选择文件数据操作方法*/
 		SelectFiles(event, item, index) {
       const myThis: any = this
-			console.log(event);
 			myThis.$refs.CloudDiskMain.focus();
 			myThis.$refs.MouseMenu.MenuShow('file');
 			if (event.button === 0) {
@@ -1126,5 +1042,10 @@ export default {
 }
 .resource-list .ant-list-item {
   margin: 0px;
+}
+.base-footer {
+  height: 17px;
+  background-color: #edf1f0;
+  padding: 0px;
 }
 </style>
