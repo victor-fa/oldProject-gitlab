@@ -11,6 +11,7 @@ import { AccessToken, User } from '../../api/UserModel'
 import { EventBus } from '../../utils/eventBus'
 import ClientAPI from '../../api/ClientAPI'
 import { NasInfo, NasAccessInfo } from '../../api/ClientModel'
+import NasFileAPI from '../../api/NasFileAPI'
 
 let timerId: NodeJS.Timeout | null = null
 export default Vue.extend({
@@ -31,19 +32,19 @@ export default Vue.extend({
     this.searchNasInLAN()
     console.log(`sn: ${this.sn}, mac: ${this.mac}, secretKey: ${this.secretKey}`)
     // temporary code
-    setTimeout(() => {
-      const nasInfo: NasInfo = {
-        name: '小明的设备',
-        model: 'NAS-D2P1',
-        mac: '00ce39ca56a1',
-        sn: '1000000002',
-        port: 1098,
-        ip: '113.116.247.166',
-        softversion: 'V1.0.0',
-        active: 1
-      }
-      this.onlineConnectNas(nasInfo)
-    }, 2000)
+    // setTimeout(() => {
+    //   const nasInfo: NasInfo = {
+    //     name: '小明的设备',
+    //     model: 'NAS-D2P1',
+    //     mac: '00ce39ca56a1',
+    //     sn: '1000000002',
+    //     port: 1098,
+    //     ip: '113.118.132.119',
+    //     softversion: 'V1.0.0',
+    //     active: 1
+    //   }
+    //   this.onlineConnectNas(nasInfo)
+    // }, 2000)
   },
   destroyed () {
     if (timerId !== null) window.clearTimeout(timerId as any)
@@ -83,6 +84,7 @@ export default Vue.extend({
         }
         const accessInfo = response.data.data as NasAccessInfo
         accessInfo.key = this.secretKey
+        // caceh nas info and token
         this.$store.dispatch('NasServer/updateNasAccess', accessInfo)
         this.$store.dispatch('NasServer/updateNasInfo', nasInfo)
         processCenter.renderSend(EventName.home)

@@ -3,42 +3,57 @@
     <div
       v-if="isHorizontalArrange"
       class="horizontal-item"
+      v-bind:class="{ horizontalSelectedItem: isSelected }"
     >
-      <img :src="searchResourceIcon(model.type)"/>
-      <span>{{ model.path | filterPath }}</span>
+      <img :src="searchResourceIcon(itemModel.type)"/>
+      <span>{{ itemModel.name }}</span>
     </div>
     <div
       v-else
       class="vertical-item"
-      v-bind:class="{ oddVerticalItem: isOddStyle }"
+      v-bind:class="{ oddVerticalItem: isOddStyle, verticalSelectedItem: isSelected }"
     >
       <a-row type="flex" justify="space-around" align="middle">
         <a-col :span="13">
-          <img :src="searchResourceIcon(model.type)">
-          {{ model.path | filterPath }}
+          <img :src="searchResourceIcon(itemModel.type)">
+          {{ itemModel.name }}
         </a-col>
-        <a-col :span="6">{{ model.mtime | formatDate }}</a-col>
-        <a-col :span="5">{{ model.size | filterSize }}</a-col>
+        <a-col :span="6">{{ itemModel.showMtime }}</a-col>
+        <a-col :span="5">{{ itemModel.showSize }}</a-col>
       </a-row>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
-import { ArrangeWay, ResourceItem } from './ResourceModel'
+import { ArrangeWay, ResourceItem, ResourceType } from '../../api/NasFileModel'
+import StringUtility from '../../utils/StringUtility'
 
 export default Vue.extend({
   name: 'resource-item',
   props: {
     model: Object,
     index: Number,
+    isSelected: {
+      default: false
+    },
     arrangeWay: {
       required: true,
       type: Number,
       validator: (value) => {
         return [ArrangeWay.horizontal, ArrangeWay.vertical].indexOf(value) !== -1
       }
+    }
+  },
+  data () {
+    let item = this.model as ResourceItem
+    item.name = StringUtility.formatName(item.path)
+    item.showMtime = StringUtility.formatShowMtime(item.mtime)
+    item.showSize = StringUtility.formatShowSize(item.size)
+    return {
+      itemModel: item
     }
   },
   filters: {
@@ -79,21 +94,19 @@ export default Vue.extend({
     }
   },
   methods: {
-    searchResourceIcon (type) {
+    searchResourceIcon (type: ResourceType) {
       switch (type) {
-        case 0:
-          return require('../../assets/resource/html_icon.png')
-        case 1:
+        case ResourceType.video:
           return require('../../assets/resource/video_icon.png')
-        case 2:
+        case ResourceType.audio:
           return require('../../assets/resource/audio_icon.png')
-        case 3:
+        case ResourceType.image:
           return require('../../assets/resource/image_icon.png')
-        case 4:
+        case ResourceType.document:
           return require('../../assets/resource/txt_icon.png')
-        case 5:
+        case ResourceType.archive:
           return require('../../assets/resource/pdf_icon.png')
-        case 6:
+        case ResourceType.floder:
           return require('../../assets/resource/folder_icon.png')
       }
       return require('../../assets/resource/unkonw_icon.png')
@@ -126,8 +139,8 @@ export default Vue.extend({
     -webkit-box-orient: vertical;
   }
 }
-.horizontal-item:hover {
-  background-color: #ECECEC;
+.horizontalSelectedItem {
+  background-color: #ececec;
 }
 .vertical-item {
   color: #484848;
@@ -142,11 +155,8 @@ export default Vue.extend({
     vertical-align: middle;
   }
 }
-.vertical-item:hover {
-  background-color: #F4F5F7;
-}
-.vertical-item:active {
-  background-color: #ECECEC;
+.verticalSelectedItem {
+  background-color: #ececec;
 }
 .oddVerticalItem {
   background-color: #FCFBFE;

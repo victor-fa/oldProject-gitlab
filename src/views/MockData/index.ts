@@ -1,4 +1,4 @@
-import { ResourceItem } from '../../components/ResourceList/ResourceModel'
+import { ResourceItem } from '../../api/NasFileModel'
 
 
 const realResourceList = [

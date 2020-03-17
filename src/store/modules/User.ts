@@ -23,7 +23,8 @@ export default {
       }
       const userJson = localStorage.getItem(USER_MODEL)
       if (userJson !== null) {
-        return JSON.parse(userJson)
+        state.user = JSON.parse(userJson)
+        return state.user
       }
       return {}
     },
@@ -33,7 +34,8 @@ export default {
       }
       const tokenJson = localStorage.getItem(ACCESS_TOKEN)
       if (tokenJson !== null) {
-        return JSON.parse(tokenJson)
+        state.accessToken = JSON.parse(tokenJson)
+        return state.accessToken
       }
       return {}
     },
@@ -43,7 +45,8 @@ export default {
       }
       const accountStr = localStorage.getItem(ACCOUNT)
       if (accountStr !== null && accountStr.length > 0) {
-        return accountStr.split(',')
+        state.cacheAccounts = JSON.parse(accountStr)
+        return state.cacheAccounts
       }
       return []
     }
@@ -67,7 +70,7 @@ export default {
       state.cacheAccounts.push(account)
       // array deduplication
       state.cacheAccounts = _.uniqBy(state.cacheAccounts, 'account')
-      const accountStr = state.cacheAccounts.toString()
+      const accountStr = JSON.stringify(state.cacheAccounts)
       localStorage.setItem(ACCOUNT, accountStr)
     },
     REMOVE_ACCOUNT (state: UserState, account: string) {

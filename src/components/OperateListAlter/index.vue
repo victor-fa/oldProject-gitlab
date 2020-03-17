@@ -53,6 +53,12 @@ export default Vue.extend({
     },
     hideAlter () {
       this.isShow = false
+    },
+    getWidth () {
+      return (this.$el.getBoundingClientRect() as DOMRect).width
+    },
+    getHeight () {
+      return (this.$el.getBoundingClientRect() as DOMRect).height
     }
   },
   mounted () {

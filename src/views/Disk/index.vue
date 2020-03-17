@@ -56,7 +56,8 @@ import Vue from 'vue'
 import infiniteScroll from 'vue-infinite-scroll'
 import { EventBus, EventType } from '../../utils/eventBus'
 // import LocalFile from '../../utils/api/LocalFile';
-import { ArrangeWay, ResourceItem } from '../../components/ResourceList/ResourceModel'
+import processCenter, { EventName } from '../../utils/processCenter'
+import { ArrangeWay, ResourceItem } from '../../api/NasFileModel'
 import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
 import DiskFile from '../../components/Disk/DiskFile.vue'
 import MouseMenu from '../../components/Disk/MouseMenu.vue'
@@ -308,7 +309,6 @@ export default {
         // TODO: 在有多级目录时，这里应该设置一个数据栈
         myThis.currentArray = myThis.dataSource
         myThis.directoryList = myThis.currentArray
-        myThis.$store.dispatch('Resource/popPath')
       })
       EventBus.$on(EventType.categoryChangeAction, (type: CategoryType) => {
         myThis.currentArray = myThis.filterCurrentArray(type)

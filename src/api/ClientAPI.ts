@@ -4,7 +4,7 @@ import { nasServer } from '../utils/request'
 import { User, BasicResponse } from './UserModel'
 import deviceMgr from '../utils/deviceMgr'
 import JSEncrypt from 'jsencrypt'
-import { NasInfo, NasUser } from './ClientModel'
+import { NasInfo } from './ClientModel'
 
 const userModulePath = '/v1/user'
 const tmpSecretKey = `-----BEGIN PUBLIC KEY-----

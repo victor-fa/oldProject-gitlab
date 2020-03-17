@@ -28,5 +28,45 @@ export default {
     console.log(newSecretKey);
     // filter enter
     return this.replaceString(newSecretKey, '/n', '')
+  },
+  // 格式化文件名
+  formatName (path: string) {
+    const name = _.last(path.split('/'))
+    return name === undefined ? '' : name
+  },
+  // 格式化文件修改时间
+  formatShowMtime (mtime: number) {
+    let date: any = new Date(mtime)
+    let y: any = date.getFullYear()
+    let MM: any = date.getMonth() + 1
+    MM = MM < 10 ? ('0' + MM) : MM
+    let d = date.getDate()
+    d = d < 10 ? ('0' + d) : d
+    let h = date.getHours()
+    h = h < 10 ? ('0' + h) : h
+    let m = date.getMinutes()
+    m = m < 10 ? ('0' + m) : m
+    let s = date.getSeconds()
+    s = s < 10 ? ('0' + s) : s
+    return y + '-' + MM + '-' + d + ' ' + h + ':' + m + ':' + s
+  },
+  // 格式化文件大小
+  formatShowSize (size: number) {
+    var sizestr = ""
+    if (size < 0.1 * 1024) { //如果小于0.1KB转化成B
+      sizestr = size.toFixed(2) + "B"
+    } else if (size < 0.1 * 1024 * 1024) {  //如果小于0.1MB转化成KB
+      sizestr = (size / 1024).toFixed(2) + "KB"
+    } else if (size < 0.1 * 1024 * 1024 * 1024) { //如果小于0.1GB转化成MB
+      sizestr = (size / (1024 * 1024)).toFixed(2) + "MB"
+    } else { //其他转化成GB
+      sizestr = (size / (1024 * 1024 * 1024)).toFixed(2) + "GB"
+    }
+    var len = sizestr.indexOf(`/\.`)
+    var dec = sizestr.substr(len + 1, 2)
+    if (dec === "00") { //当小数点后为00时 去掉小数部分
+      return sizestr.substring(0, len) + sizestr.substr(len + 3, 2)
+    }
+    return sizestr
   }
 }

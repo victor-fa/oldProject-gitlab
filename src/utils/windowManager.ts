@@ -1,8 +1,5 @@
 import processCenter, { MainEventName } from '@/utils/processCenter'
 import { BrowserWindow, Menu } from 'electron'
-import {
-  createProtocol
-} from 'vue-cli-plugin-electron-builder/lib'
 
 interface WindowOptions extends Electron.BrowserWindowConstructorOptions {
   path: string
@@ -43,7 +40,6 @@ export default {
       window.loadURL(url)
       if (!process.env.IS_TEST && newOptions.path !== 'operate-list-alter') window.webContents.openDevTools()
     } else {
-      createProtocol('app')
       // Load the index.html when not in development
       window.loadURL('app://./index.html#/' + newOptions.path)
     }
