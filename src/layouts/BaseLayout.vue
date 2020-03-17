@@ -37,7 +37,8 @@ export default Vue.extend({
     BasicFooter
   },
   mounted () {
-    this.$router.replace('disk')
+    // this.$router.replace('disk')
+    this.$router.replace('recent')
   }
 })
 </script>

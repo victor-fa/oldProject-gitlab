@@ -21,7 +21,8 @@ export default {
       }
       const nasJson = localStorage.getItem(NAS_INFO)
       if (nasJson !== null) {
-        return JSON.parse(nasJson)
+        state.nasInfo = JSON.parse(nasJson)
+        return state.nasInfo
       }
       return {}
     },

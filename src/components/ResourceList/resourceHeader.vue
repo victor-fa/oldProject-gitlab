@@ -1,6 +1,6 @@
 <template>
   <a-row class="resource-header">
-    <a-col :span="13">文件名</a-col>
+    <a-col :span="13" class="file-name">文件名</a-col>
     <a-col :span="6">修改日期</a-col>
     <a-col :span="5">大小</a-col>
   </a-row>
@@ -19,7 +19,10 @@ export default Vue.extend({
   font-size: 12px;
   line-height: 12px;
   color: #484848;
-  padding: 8px 15px 8px 20px;
+  padding: 8px 0px;
   background-color: #f6f8fb;
+  .file-name {
+    padding-left: 20px;
+  }
 }
 </style>

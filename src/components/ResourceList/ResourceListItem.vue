@@ -3,36 +3,42 @@
     <div
       v-if="isHorizontalArrange"
       class="horizontal-item"
+      v-bind:class="{ horizontalSelectedItem: isSelected }"
     >
-      <img :src="searchResourceIcon(model.type)"/>
-      <span>{{ model.path | filterPath }}</span>
+      <img :src="searchResourceIcon(itemModel.type)"/>
+      <span>{{ itemModel.name }}</span>
     </div>
     <div
       v-else
       class="vertical-item"
-      v-bind:class="{ oddVerticalItem: isOddStyle }"
+      v-bind:class="{ oddVerticalItem: isOddStyle, verticalSelectedItem: isSelected }"
     >
       <a-row type="flex" justify="space-around" align="middle">
         <a-col :span="13">
-          <img :src="searchResourceIcon(model.type)">
-          {{ model.path | filterPath }}
+          <img :src="searchResourceIcon(itemModel.type)">
+          {{ itemModel.name }}
         </a-col>
-        <a-col :span="6">{{ model.mtime | formatDate }}</a-col>
-        <a-col :span="5">{{ model.size | filterSize }}</a-col>
+        <a-col :span="6">{{ itemModel.showMtime }}</a-col>
+        <a-col :span="5">{{ itemModel.showSize }}</a-col>
       </a-row>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
-import { ArrangeWay, ResourceItem } from './ResourceModel'
+import { ArrangeWay, ResourceItem, ResourceType } from '../../api/NasFileModel'
+import StringUtility from '../../utils/StringUtility'
 
 export default Vue.extend({
   name: 'resource-item',
   props: {
     model: Object,
     index: Number,
+    isSelected: {
+      default: false
+    },
     arrangeWay: {
       required: true,
       type: Number,
@@ -41,43 +47,13 @@ export default Vue.extend({
       }
     }
   },
-  filters: {
-    formatDate (value) {
-      let date: any = new Date(value);
-      let y: any = date.getFullYear();
-      let MM: any = date.getMonth() + 1;
-      MM = MM < 10 ? ('0' + MM) : MM;
-      let d = date.getDate();
-      d = d < 10 ? ('0' + d) : d;
-      let h = date.getHours();
-      h = h < 10 ? ('0' + h) : h;
-      let m = date.getMinutes();
-      m = m < 10 ? ('0' + m) : m;
-      let s = date.getSeconds();
-      s = s < 10 ? ('0' + s) : s;
-      return y + '-' + MM + '-' + d + ' ' + h + ':' + m + ':' + s;
-    },
-    filterPath (value) {
-      return value.substr(1, value.length); ;
-    },
-    filterSize (limit) {
-      var size = "";
-      if (limit < 0.1 * 1024) { //如果小于0.1KB转化成B
-        size = limit.toFixed(2) + "B";
-      } else if (limit < 0.1 * 1024 * 1024) {  //如果小于0.1MB转化成KB
-        size = (limit / 1024).toFixed(2) + "KB";
-      } else if (limit < 0.1 * 1024 * 1024 * 1024) { //如果小于0.1GB转化成MB
-        size = (limit / (1024 * 1024)).toFixed(2) + "MB";
-      } else { //其他转化成GB
-        size = (limit / (1024 * 1024 * 1024)).toFixed(2) + "GB";
-      }
-      var sizestr = size + "";
-      var len = sizestr.indexOf(`/\.`);
-      var dec = sizestr.substr(len + 1, 2);
-      if (dec === "00") { //当小数点后为00时 去掉小数部分
-        return sizestr.substring(0, len) + sizestr.substr(len + 3, 2);
-      }
-      return sizestr;
+  data () {
+    let item = this.model as ResourceItem
+    item.name = StringUtility.formatName(item.path)
+    item.showMtime = StringUtility.formatShowMtime(item.mtime)
+    item.showSize = StringUtility.formatShowSize(item.size)
+    return {
+      itemModel: item
     }
   },
   computed: {
@@ -90,21 +66,19 @@ export default Vue.extend({
     }
   },
   methods: {
-    searchResourceIcon (type) {
+    searchResourceIcon (type: ResourceType) {
       switch (type) {
-        case 0:
-          return require('../../assets/resource/html_icon.png')
-        case 1:
+        case ResourceType.video:
           return require('../../assets/resource/video_icon.png')
-        case 2:
+        case ResourceType.audio:
           return require('../../assets/resource/audio_icon.png')
-        case 3:
+        case ResourceType.image:
           return require('../../assets/resource/image_icon.png')
-        case 4:
+        case ResourceType.document:
           return require('../../assets/resource/txt_icon.png')
-        case 5:
+        case ResourceType.archive:
           return require('../../assets/resource/pdf_icon.png')
-        case 6:
+        case ResourceType.floder:
           return require('../../assets/resource/folder_icon.png')
       }
       return require('../../assets/resource/unkonw_icon.png')
@@ -137,8 +111,8 @@ export default Vue.extend({
     -webkit-box-orient: vertical;
   }
 }
-.horizontal-item:hover {
-  background-color: #ECECEC;
+.horizontalSelectedItem {
+  background-color: #ececec;
 }
 .vertical-item {
   color: #484848;
@@ -153,11 +127,8 @@ export default Vue.extend({
     vertical-align: middle;
   }
 }
-.vertical-item:hover {
-  background-color: #F4F5F7;
-}
-.vertical-item:active {
-  background-color: #ECECEC;
+.verticalSelectedItem {
+  background-color: #ececec;
 }
 .oddVerticalItem {
   background-color: #FCFBFE;

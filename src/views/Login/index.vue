@@ -175,6 +175,7 @@ export default Vue.extend({
     },
     accountSelectAction (item: Account) {
       this.account = item.account
+      this.password = item.password
       this.dropdownItems = []
     },
     accountDeleteAction (item: Account) {

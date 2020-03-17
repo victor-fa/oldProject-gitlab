@@ -75,7 +75,7 @@ import SortPopoverList from './SortPopoverList.vue'
 import { SortWay } from './Model/sortList'
 import { operateFuncList } from './Model/operateIconList'
 import { EventBus, EventType } from '../../utils/eventBus'
-import { ArrangeWay } from '../ResourceList/ResourceModel'
+import { ArrangeWay } from '../../api/NasFileModel'
 
 interface ArrangeData {
   isSelected: boolean
@@ -154,6 +154,11 @@ export default Vue.extend({
     line-height: 32px;
     display: flex;
     align-items: center;
+    span {
+      color: #484848;
+      font-size: 12px;
+      line-height: 22px;
+    }
     .back-icon-style {
       height: 22px;
       width: 30px;
