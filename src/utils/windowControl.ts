@@ -53,7 +53,7 @@ export default {
 		}
 		return 'app://./index.html#/' + router;
 	},
-	active(win, data) {
+	active(win, data?) {
 		if (win) {
 			win.show();
 			win.focus();

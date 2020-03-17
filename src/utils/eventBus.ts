@@ -8,7 +8,8 @@ enum EventType {
   arrangeChangeAction = 'arrange_change_action',
   transportChangeAction = 'transport_change_action',
   leftMenuChangeAction = 'left_Menu_change_action',
-  showToast = 'show_toast'
+  showToast = 'show_toast',
+  downloadChangeAction = 'download_change_action'
 }
 
 export {

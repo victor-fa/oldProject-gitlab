@@ -55,9 +55,9 @@
     </template>
     <template v-if="isTaskVisiable">
       <div class="left-bar">
-        <span class="normal" v-bind:class="{ special: currentTask === 1 }" @click="changeTransport(1)">正在下载（3）</span>
-        <span class="normal">/ &nbsp;&nbsp;&nbsp;</span>
-        <span class="normal" v-bind:class="{ special: currentTask === 2 }" @click="changeTransport(2)">   下载完成（2）</span>
+        <span class="normal" v-bind:class="{ special: currentTask === 1 }" @click="changeTransport(1)">正在下载（{{downloadCount}}）</span>
+        <span class="normal" style="margin-right: 7px;">/</span>
+        <span class="normal" v-bind:class="{ special: currentTask === 2 }" @click="changeTransport(2)">下载完成（{{computedCount}}）</span>
       </div>
       <div class="right-bar">
         <a-button class="right-button">全部暂停</a-button>
@@ -93,6 +93,8 @@ export default Vue.extend({
       operateFuncList,
       isTaskVisiable: false,
       currentTask: 1,
+      downloadCount: 0,
+      computedCount: 0
     }
   },
   computed: {
@@ -113,6 +115,10 @@ export default Vue.extend({
       this.currentTask = type
       console.log(this.currentTask);
       EventBus.$emit(EventType.transportChangeAction, type)
+      EventBus.$on(EventType.downloadChangeAction, (data) => {
+        this.downloadCount = data.length
+        this.computedCount = data.length
+      })
     },
     sortWayChange (sender: SortWay) {
       // hide popover

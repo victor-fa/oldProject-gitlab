@@ -15,7 +15,7 @@
 				<Progress :percent="PercentCount(item)" :status="item.state === 'progressing' ? 'active' : 'normal'" :stroke-width="6" />
 			</div>
 			<div class="task-speed">
-				{{ $Api.Disk.FileSize(item.chunk) }}/{{ $Api.Disk.FileSize(item.size) }}
+				{{ item.chunk | filterSize }}/{{ item.size | filterSize }}
 				<span v-show="item.state === 'progressing'">{{ MathSpeend(item) }}</span>
 			</div>
 		</li>
@@ -28,6 +28,16 @@ export default {
 	props: {
 		data: {
 			Array
+		}
+	},
+	filters: {
+    filterSize (bytes) {
+      bytes = parseFloat(bytes);
+      if (bytes === 0) return '0B';
+      let k = 1024,
+        sizes = ['B', 'KB', 'MB', 'GB', 'TB'],
+        i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toPrecision(3) + sizes[i];
 		}
 	},
 	methods: {
@@ -87,7 +97,7 @@ export default {
 			let speed = parseFloat(item.chunk / time).toFixed(1);
 			let remaining_chunk = item.size - item.chunk;
 			let remaining_time = remaining_chunk / speed;
-			return this.$Api.Disk.FileSize(speed) + '/s  剩余时间:' + this.formatSeconds(remaining_time);
+			return this.filterSize(speed) + '/s  剩余时间:' + this.formatSeconds(remaining_time);
 		},
 		ControlButton(state) {
 			let btn = '';
@@ -103,6 +113,14 @@ export default {
 		CopyLink(item) {
 			this.$electron.clipboard.writeText(item.url[0]);
 			this.$Message.info('链接已复制');
+		},
+    filterSize (bytes) {
+      bytes = parseFloat(bytes);
+      if (bytes === 0) return '0B';
+      let k = 1024,
+        sizes = ['B', 'KB', 'MB', 'GB', 'TB'],
+        i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toPrecision(3) + sizes[i];
 		}
 	}
 };

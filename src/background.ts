@@ -1,11 +1,12 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain, nativeImage } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, nativeImage, Tray, Menu, session, screen } from 'electron'
 import {
   createProtocol,
 } from 'vue-cli-plugin-electron-builder/lib'
 import processCenter, { MainEventName } from './utils/processCenter'
 import windowControl from './utils/windowControl'
+import download from './utils/file/download'
 const path = require('path');
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -18,7 +19,14 @@ let win: BrowserWindow | null,
 	PictureViewer,
 	FileWindow,
   DiskInfo,
-	PdfWindow
+	PdfWindow,
+	LoginWindow,
+	MainWindow,
+	AboutWindow,
+	AccountWindow,
+	SettingWindow,
+	FeedBackWindow,
+	PopupWindow
 /*播放按钮*/
 let PlayerIcon = path.join(__filename, 'start_icon');
 let NextBtn = nativeImage.createFromPath(path.join(PlayerIcon, 'start_icon.png'));
@@ -74,7 +82,8 @@ function createWindow () {
   } else {
     createProtocol('app')
     // Load the index.html when not in development
-    win.loadURL('app://./index.html')
+		win.loadURL('app://./index.html')
+		win.webContents.openDevTools()
   }
 
   win.on('closed', () => {
@@ -122,8 +131,10 @@ app.on('ready', async () => {
 
   }
   bindIpc(); //初始化ipc
+	download.init();
   createWindow()
-  processCenter.mainObserverChannel()
+	processCenter.mainObserverChannel()
+	DiskSystem.MainWindow({})
 })
 
 // Quit when all windows are closed.
@@ -136,13 +147,6 @@ app.on('window-all-closed', () => {
 })
 
 let VideoButtons = [
-	/*{
-      tooltip: '上一个',
-      icon: PrevBtn,
-      click: () => {
-          VideoPlayer.webContents.send('video-Prev');
-      }
-  },*/
 	{
 		tooltip: '播放',
 		icon: PlayBtn,
@@ -150,14 +154,176 @@ let VideoButtons = [
 			VideoPlayer.webContents.send('video-Play');
 		}
 	}
-	/*{
-      tooltip: '下一个',
-      icon:NextBtn,
-      click: () => {
-          VideoPlayer.webContents.send('video-Next');
-      }
-  }*/
 ];
+let appTray:any = null; //托盘变量
+/*网盘函数*/
+let DiskSystem = {
+	LoginWindow: flag => {
+		if (LoginWindow) {
+			return windowControl.active(LoginWindow, flag);
+		}
+		LoginWindow = windowControl.create({
+			url: '/',
+			data: flag,
+			title: 'uGgreen-Nas-欢迎',
+			width: 850,
+			height: 550,
+			maximizable: false,
+			resizable: false,
+			onclose: () => {
+				LoginWindow = null;
+			}
+		});
+	},
+	MainWindow: data => {
+		if (MainWindow) {
+			return windowControl.active(MainWindow, data);
+		}
+		appTray = new Tray(path.join(__filename, '../../public/logo.ico'));
+		//图标的上下文菜单
+		let trayMenuTemplate = [
+			//托盘菜单
+			{
+				label: '我的网盘', //菜单显示文本项
+				click: function() {
+					MainWindow.show(); //显示
+					MainWindow.restore(); //窗口欢迎
+					MainWindow.focus(); //窗口聚焦
+				}
+			},
+			{
+				label: '系统设置', //菜单显示文本项
+				click: function() {
+					DiskSystem.SettingWindow();
+				}
+			},
+			{
+				label: '反馈', //菜单显示文本项
+				click: function() {
+					DiskSystem.FeedBackWindow();
+				}
+			},
+			{
+				label: '关于', //菜单显示文本项
+				click: function() {
+					DiskSystem.AboutWindow();
+				}
+			},
+			{
+				label: '退出',
+				click: function() {
+					MainWindow.show();
+					MainWindow.focus();
+					MainWindow.webContents.send('exit');
+				}
+			}
+		];
+		const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
+		//设置此托盘图标的悬停提示内容
+		appTray.setToolTip('uGgreen-Nas');
+		//设置此图标的上下文菜单
+		appTray.setContextMenu(contextMenu);
+		appTray.on('click', function() {
+			MainWindow.isVisible() ? MainWindow.hide() : MainWindow.show();
+		});
+	},
+	AboutWindow: () => {
+		if (AboutWindow) {
+			return windowControl.active(AboutWindow);
+		}
+		AboutWindow = windowControl.create({
+			url: 'about',
+			title: '关于uGgreen-Nas',
+			width: 600,
+			height: 330,
+			maximizable: false,
+			minimizable: false,
+			resizable: false,
+			onclose: () => {
+				AboutWindow = null;
+			}
+		});
+	},
+	AccountWindow: data => {
+		if (AccountWindow) {
+			return windowControl.active(AccountWindow, data);
+		}
+		AccountWindow = windowControl.create({
+			url: 'disk-account',
+			data: data,
+			title: '个人信息',
+			width: 670,
+			height: 420,
+			maximizable: false,
+			resizable: false,
+			onclose: () => {
+				AccountWindow = null;
+			}
+		});
+	},
+	SettingWindow: () => {
+		if (SettingWindow) {
+			return windowControl.active(SettingWindow);
+		}
+		SettingWindow = windowControl.create({
+			url: 'disk-setting',
+			title: '系统设置',
+			width: 600,
+			height: 400,
+			minHeight: 350,
+			minWidth: 500,
+			maximizable: false,
+			resizable: false,
+			onclose: () => {
+				SettingWindow = null;
+			}
+		});
+	},
+	FeedBackWindow: () => {
+		if (FeedBackWindow) {
+			return windowControl.active(FeedBackWindow);
+		}
+		FeedBackWindow = windowControl.create({
+			url: 'disk-feedback',
+			title: '问题反馈',
+			width: 450,
+			height: 320,
+			maximizable: false,
+			minimizable: false,
+			resizable: false,
+			onclose: () => {
+				FeedBackWindow = null;
+			}
+		});
+	},
+	PopupWindow: msg => {
+		if (PopupWindow) {
+			return windowControl.active(PopupWindow, msg);
+		}
+		PopupWindow = windowControl.create({
+			url: 'disk-msg',
+			data: msg,
+			width: 300,
+			height: 150,
+			useContentSize: true,
+			resizable: false,
+			maximizable: false,
+			transparent: true,
+			alwaysOnTop: true,
+			x: screen.getPrimaryDisplay().workAreaSize.width - 305,
+			y: screen.getPrimaryDisplay().workAreaSize.height - 155,
+			onclose: () => {
+				PopupWindow = null;
+			}
+		});
+	},
+	logoff: () => {
+		DiskSystem.LoginWindow(false);
+		MainWindow.webContents.send('exit');
+		MainWindow.close();
+	},
+	exit: () => {}
+};
 let FileViewer = {
 	Music: data => {
 		if (MusicPlayer) {
@@ -274,6 +440,53 @@ let FileViewer = {
 };
 /*初始化ipc*/
 function bindIpc() {
+	/*系统操作事件*/
+	ipcMain.on('system', (event, type, data) => {
+		switch (type) {
+			case 'login':
+				DiskSystem.MainWindow(data);
+				break;
+			case 'popup':
+				DiskSystem.PopupWindow(data);
+				break;
+			case 'account':
+				DiskSystem.AccountWindow(data);
+				break;
+			case 'about':
+				DiskSystem.AboutWindow();
+				break;
+			case 'feedback':
+				DiskSystem.FeedBackWindow();
+				break;
+			case 'setting':
+				DiskSystem.SettingWindow();
+				break;
+			case 'check-for-update' /*检查更新*/:
+				// autoUpdater.setFeedURL(data);
+				// DiskSystem.CheckUpdate(event);
+				// autoUpdater.checkForUpdates();
+				break;
+			case 'update' /*安装更新*/:
+				// autoUpdater.quitAndInstall();
+				break;
+			case 'user-update':
+				MainWindow.webContents.send('user-update', data);
+				break;
+			case 'download-update':
+				data && download.changeFolder(data);
+				break;
+			case 'logoff':
+				DiskSystem.logoff();
+				break;
+			case 'auto-launch':
+				app.setLoginItemSettings({
+					openAtLogin: data
+				});
+				break;
+			case 'exit':
+				break;
+		}
+	});
 	/*网盘文件操作事件*/
 	ipcMain.on('file-control', (event, type, data) => {
 		switch (type) {
@@ -294,6 +507,26 @@ function bindIpc() {
 				break;
 			case 0: //属性
 				FileViewer.Attributes(data);
+				break;
+		}
+	});
+	/*下载事件控制*/
+	ipcMain.on('download', (event, type, data) => {
+		let downloadItem = download.downloadList[data];
+		if (downloadItem === undefined) {
+			return;
+		}
+		switch (type) {
+			case 'pause':
+				downloadItem.pause();
+				break;
+			case 'cancel':
+				downloadItem.cancel();
+				break;
+			case 'resume':
+				if (downloadItem.canResume()) {
+					downloadItem.resume();
+				}
 				break;
 		}
 	});

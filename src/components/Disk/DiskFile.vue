@@ -49,29 +49,17 @@ export default Vue.extend({
     filterPath (value) {
       return value.substr(value.lastIndexOf("/") + 1, value.length); ;
     },
-    filterSize (limit) {
-      var size = "";
-      if (limit < 0.1 * 1024) { //如果小于0.1KB转化成B
-        size = limit.toFixed(2) + "B";
-      } else if (limit < 0.1 * 1024 * 1024) {  //如果小于0.1MB转化成KB
-        size = (limit / 1024).toFixed(2) + "KB";
-      } else if (limit < 0.1 * 1024 * 1024 * 1024) { //如果小于0.1GB转化成MB
-        size = (limit / (1024 * 1024)).toFixed(2) + "MB";
-      } else { //其他转化成GB
-        size = (limit / (1024 * 1024 * 1024)).toFixed(2) + "GB";
-      }
-      var sizestr = size + "";
-      var len = sizestr.indexOf(`/\.`);
-      var dec = sizestr.substr(len + 1, 2);
-      if (dec === "00") { //当小数点后为00时 去掉小数部分
-        return sizestr.substring(0, len) + sizestr.substr(len + 3, 2);
-      }
-      return sizestr;
+    filterSize (bytes) {
+      bytes = parseFloat(bytes);
+      if (bytes === 0) return '0B';
+      let k = 1024,
+        sizes = ['B', 'KB', 'MB', 'GB', 'TB'],
+        i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toPrecision(3) + sizes[i];
 		}
 	},
 	methods: {
 		select(item, index) {
-			console.log(JSON.parse(JSON.stringify(item)))
 			this.$emit('SelectFiles', event, item, index)
 		},
 		OpenFile(item) {

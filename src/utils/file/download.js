@@ -25,13 +25,8 @@ export default {
 	init() {
 		session.defaultSession.removeAllListeners('will-download');
 		session.defaultSession.on('will-download', (event, item, webContents) => {
-			let name =
-				decodeURI(
-					item
-						.getURLChain()
-						.toString()
-						.split('?disk_name=')[1]
-				) || item.getFilename();
+			console.log(item);
+			let name = decodeURI(item.getURLChain().toString().split('?disk_name=')[1]) || item.getFilename();
 			item.fileName = name;
 			item.path = this.transDownFolder + '/' + name;
 			item.setSavePath(this.transDownFolder + '/' + name); // 设置保存路径,使Electron不提示保存对话框。

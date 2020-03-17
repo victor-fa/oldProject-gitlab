@@ -12,7 +12,7 @@
         </div>
         <div class="right-panel">
           <div class="top">
-            <p class="title">{{item.title}}</p>
+            <p class="title">{{item.path | filterPath}}</p>
             <div class="img-cell">
               <!-- <img src="../../assets/pause_icon.png"> -->
               <img src="../../assets/start_icon.png">
@@ -38,16 +38,16 @@
         </div>
         <div class="right-panel">
           <div class="top">
-            <p class="title">{{item.title}}</p>
+            <p class="title">{{item.path | filterPath}}</p>
             <div class="img-cell">
               <!-- <img src="../../assets/pause_icon.png"> -->
               <img src="../../assets/text_icon.png">
-              <img src="../../assets/file_icon.png">
+              <img src="../../assets/file_icon.png" @click="OpenDownPath(item)">
               <img src="../../assets/delete_icon.png">
             </div>
           </div>
           <div class="buttom">
-            <p class="size text-left">{{item.size}}</p>
+            <p class="size text-left">{{item.size | filterSize}}</p>
           </div>
         </div>
       </template>
@@ -64,34 +64,38 @@ export default Vue.extend({
   data () {
     return {
       isDownOrFin: 'fin',
-      transportList: [
-        {
-          title: 'ps cc 2019',
-          size: '220MB'
-        }, 
-        {
-          title: 'ps cc 2019',
-          size: '220MB'
-        }, 
-        {
-          title: 'ps cc 2019',
-          size: '220MB'
-        }, 
-        {
-          title: 'ps cc 2019',
-          size: '220MB'
-        }
-      ]
+      transportList: []
+    }
+  },
+  filters: {
+    filterPath (value) {
+      return value.substr(value.lastIndexOf("/") + 1, value.length); ;
+    },
+    filterSize (bytes) {
+      bytes = parseFloat(bytes);
+      if (bytes === 0) return '0B';
+      let k = 1024,
+        sizes = ['B', 'KB', 'MB', 'GB', 'TB'],
+        i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toPrecision(3) + sizes[i];
     }
   },
   methods: {
     observerEventBus () {
       const myThis = this as any
       EventBus.$on(EventType.transportChangeAction, (type) => {
-        console.log(type);
         myThis.isDownOrFin = type === 1 ? 'down' : 'fin'
       })
-    }
+      EventBus.$on(EventType.downloadChangeAction, (data) => {
+        myThis.transportList = data
+        console.log(JSON.parse(JSON.stringify(data)));
+      })
+    },
+		OpenDownPath(item) {
+      console.log(item);
+      const myThis = this as any
+			myThis.$electron.shell.showItemInFolder(item.path);
+		},
   },
   mounted () {
     this.observerEventBus()
