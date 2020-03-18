@@ -83,6 +83,9 @@ export default Vue.extend({
   watch: {
     dataSource: function (newValue, oldValue) {
       this.currentShowList = newValue
+    },
+    currentShowList: function (newValue) {
+      this.$store.dispatch('Resource/updateShowItemCount', newValue.length)
     }
   },
   computed: {

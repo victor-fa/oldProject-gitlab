@@ -3,14 +3,16 @@ import { StorageInfo } from '@/api/NasFileModel'
 
 interface ResourceState {
   directory: string,
-  storages: Array<StorageInfo>
+  storages: Array<StorageInfo>,
+  showItemCount: number
 }
 
 export default {
   namespaced: true,
   state: {
     directory: '网盘',
-    storages: []
+    storages: [],
+    showItemCount: 0
   },
   getters: {
     directory: (state: ResourceState) => {
@@ -18,6 +20,9 @@ export default {
     },
     storages: (state: ResourceState) => {
       return state.storages
+    },
+    showItemCount: (state: ResourceState) => {
+      return state.showItemCount
     }
   },
   mutations: {
@@ -30,6 +35,9 @@ export default {
     },
     UPDATE_STORAGES (state: ResourceState, storages: Array<StorageInfo>) {
       state.storages = storages
+    },
+    UPDATE_SHOW_ITEM_COUNT (state: ResourceState, count: number) {
+      state.showItemCount = count
     }
   },
   actions: {
@@ -41,6 +49,9 @@ export default {
     },
     updateStorages (context: ActionContext<ResourceState, ResourceState>) {
       context.commit('UPDATE_STORAGES')
+    },
+    updateShowItemCount (context: ActionContext<ResourceState, ResourceState>, count: number) {
+      context.commit('UPDATE_SHOW_ITEM_COUNT', count)
     }
   }
 }
