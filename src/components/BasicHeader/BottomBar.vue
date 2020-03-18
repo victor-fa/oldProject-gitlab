@@ -19,9 +19,9 @@
         />
         <custom-button
           :image="operateFuncList.refresh"
-          :selectedBackgroundImage="operateFuncList.selectedBg"
           iconWidth="12px"
           class="right-item"
+          @click.native="refreshAction"
         />
         <a-popover
           trigger="click"
@@ -36,7 +36,6 @@
             <custom-button
               ref="sortButton"
               :image="operateFuncList.sort"
-              @click="clicked"
               :selectedBackgroundImage="operateFuncList.selectedBg"
               iconWidth="14px"
               class="right-item"
@@ -127,15 +126,15 @@ export default Vue.extend({
       const sortBtn: any = this.$refs.sortButton
       sortBtn.isSelected = false
     },
-    clicked (sender: any) {
-      console.log('123')
-    },
     backAction () {
       // TODO: 一级目录不能返回，应该是置灰button
       if (this.directory === '网盘') {
         return
       }
       EventBus.$emit(EventType.backAction)
+    },
+    refreshAction() {
+      EventBus.$emit(EventType.refreshAction)
     },
     arrangeBtnClick () {
       const arrangeBtn: any = this.$refs.arrangeBtn
