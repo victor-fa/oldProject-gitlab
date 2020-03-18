@@ -34,6 +34,12 @@ export default {
     const name = _.last(path.split('/'))
     return name === undefined ? '' : name
   },
+  renamePath (oldPath: string, newName: string) {
+    const components = oldPath.split('/')
+    components.pop()
+    components.push(newName)
+    return components.join('/')
+  },
   // 格式化文件修改时间
   formatShowMtime (mtime: number) {
     let date: any = new Date(mtime)

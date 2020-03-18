@@ -1,21 +1,18 @@
 <template>
   <div class="basic-footer">
-    <label>{{ data }}</label>
+    <label>{{ showItemCount }}个项目</label>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
+
 export default Vue.extend({
-  data () {
-    return {
-    }
-  },
-	props: {
-		data: {
-			type: String
-		}
-	}
+  name: 'basic-footer',
+  computed: {
+    ...mapGetters('Resource', ['showItemCount'])
+  }
 })
 </script>
 

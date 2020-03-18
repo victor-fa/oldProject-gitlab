@@ -16,6 +16,7 @@ import { ResourceItem, StorageInfo } from '../../api/NasFileModel'
 import ResourceList, { CallbackAction } from '../../components/ResourceList/index.vue'
 import NasFileAPI from '../../api/NasFileAPI'
 import { User } from '../../api/UserModel'
+import { EventBus, EventType } from '../../utils/eventBus'
 
 export default Vue.extend({
   name: 'recent',
@@ -41,6 +42,16 @@ export default Vue.extend({
   },
   created () {
     this.fetchStorage()
+  },
+  mounted () {
+    EventBus.$on(EventType.refreshAction, () => {
+      this.page = 1
+      this.busy = false
+      this.fetchRecentList()
+    })
+  },
+  destroyed () {
+    EventBus.$off(EventType.refreshAction)
   },
   methods: {
     fetchStorage () {

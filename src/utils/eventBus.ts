@@ -4,6 +4,7 @@ export const EventBus = new Vue()
 
 enum EventType {
   backAction = 'back_action',
+  refreshAction = 'refresh_action',
   categoryChangeAction = 'category_change_action',
   arrangeChangeAction = 'arrange_change_action',
   transportChangeAction = 'transport_change_action',
