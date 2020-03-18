@@ -2,7 +2,7 @@ interface OperateItem {
   title: string,
   icon?: any,
   subItems?: any,
-  commend?: string
+  command?: string
 }
 
 interface OperateGroup {
@@ -14,30 +14,30 @@ const operateList: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
-      { title: '打开', commend: 'open' },
-      { title: '打开方式', commend: 'openMode' }
+      { title: '打开', command: 'open' },
+      { title: '打开方式', command: 'openMode' }
     ]
   },
   {
     icon: require('../../assets/down_accessory.png'),
     items: [
-      { title: '下载', commend: 'download' },
-      { title: '分享', commend: 'share' }
+      { title: '下载', command: 'download' },
+      { title: '分享', command: 'share' }
     ]
   },
   {
     items: [
-      { title: '复制', commend: 'copy' },
-      { title: '剪切', commend: 'cut' },
-      { title: '移动到', commend: 'moveto' }
+      { title: '复制', command: 'copy' },
+      { title: '剪切', command: 'cut' },
+      { title: '移动到', command: 'moveto' }
     ]
   },
   {
     icon: require('../../assets/delet_accessory.png'),
     items: [
-      { title: '删除', commend: 'delete' },
-      { title: '重命名', commend: 'rename' },
-      { title: '属性', commend: 'info' }
+      { title: '删除', command: 'delete' },
+      { title: '重命名', command: 'rename' },
+      { title: '属性', command: 'info' }
     ]
   }
 ]

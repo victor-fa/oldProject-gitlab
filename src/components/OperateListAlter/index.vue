@@ -1,8 +1,5 @@
 <template>
-  <ul
-    v-show="isShow"
-    class="operate-list-alter"
-  >
+  <ul class="operate-list-alter">
       <li
         v-for="(item, index) in operateList"
         :key="index"
@@ -13,7 +10,7 @@
           <li
             v-for="(subItem, index) in item.items"
             :key="index"
-            @click="menuClick(subItem.commend, subItem.title)"
+            @click="menuClick(subItem.command)"
             class="operate-item"
           >
             {{ subItem.title }}
@@ -31,38 +28,23 @@ export default Vue.extend({
   name: 'operate-list-alter',
   data () {
     return {
-      operateList,
-      isShow: false
+      operateList
     }
   },
-  destroyed () {
-    window.removeEventListener('click', this.windowClick)
-  },
   methods: {
-    windowClick (event: MouseEvent) {
-      if (!this.isShow) { return }
-      event.stopImmediatePropagation()
-      this.hideAlter()
+    menuClick (command: String) {
+      this.$emit('didSelectItem', command)
     },
-    menuClick (commend: String, title: String) {
-      this.$emit('callback', commend, title)
-      this.hideAlter()
-    },
-    showAlter () {
-      this.isShow = true
-    },
-    hideAlter () {
-      this.isShow = false
-    },
-    getWidth () {
-      return (this.$el.getBoundingClientRect() as DOMRect).width
+    async getWidth () {
+      let width = 0
+      await this.$nextTick(() => {
+        width = (this.$el.getBoundingClientRect() as DOMRect).width
+      })
+      return width
     },
     getHeight () {
       return (this.$el.getBoundingClientRect() as DOMRect).height
     }
-  },
-  mounted () {
-    window.addEventListener('click', this.windowClick)
   }
 })
 </script>

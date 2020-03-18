@@ -13,9 +13,9 @@
             <router-view></router-view>
           </keep-alive>
         </a-layout-content>
-        <!-- <a-layout-footer class="base-footer">
+        <a-layout-footer class="base-footer">
           <basic-footer/>
-        </a-layout-footer> -->
+        </a-layout-footer>
       </a-layout>
     </a-layout>
 </template>
@@ -25,7 +25,7 @@ import Vue from 'vue'
 import ILogo from '../components/Logo/index.vue'
 import SiderMenu from '../components/SiderMenu/index.vue'
 import BasicHeader from '../components/BasicHeader/index.vue'
-// import BasicFooter from '../components/BasicFooter/index.vue'
+import BasicFooter from '../components/BasicFooter/index.vue'
 import processCenter, { EventName } from '../utils/processCenter'
 
 export default Vue.extend({
@@ -34,7 +34,7 @@ export default Vue.extend({
     ILogo,
     SiderMenu,
     BasicHeader,
-    // BasicFooter
+    BasicFooter
   },
   mounted () {
     // this.$router.replace('disk')

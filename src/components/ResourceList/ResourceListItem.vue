@@ -5,8 +5,21 @@
       class="horizontal-item"
       v-bind:class="{ horizontalSelectedItem: isSelected }"
     >
-      <img :src="searchResourceIcon(itemModel.type)"/>
-      <span>{{ itemModel.name }}</span>
+      <div class="icon-wrapper">
+        <img :src="searchResourceIcon(itemModel.type)"/>
+      </div>
+      <a-input
+        v-if="renaming"
+        v-focus
+        ref="nameInput"
+        type="text"
+        :disabled="loading"
+        v-model="inputName"
+        @blur="handleRename"
+        @focus="handleFocus($event)"
+        @pressEnter="handleRename"
+      />
+      <span v-else>{{ itemModel.name }}</span>
     </div>
     <div
       v-else
@@ -30,9 +43,17 @@ import _ from 'lodash'
 import Vue from 'vue'
 import { ArrangeWay, ResourceItem, ResourceType } from '../../api/NasFileModel'
 import StringUtility from '../../utils/StringUtility'
+import NasFileAPI from '../../api/NasFileAPI'
 
 export default Vue.extend({
   name: 'resource-item',
+  directives: {
+    focus: {
+      inserted: function (el) {
+        el.focus()
+      }
+    }
+  },
   props: {
     model: Object,
     index: Number,
@@ -53,35 +74,10 @@ export default Vue.extend({
     item.showMtime = StringUtility.formatShowMtime(item.mtime)
     item.showSize = StringUtility.formatShowSize(item.size)
     return {
-      itemModel: item
-    }
-  },
-  filters: {
-    formatDate (value) {
-      let date: any = new Date(value);
-      let y: any = date.getFullYear();
-      let MM: any = date.getMonth() + 1;
-      MM = MM < 10 ? ('0' + MM) : MM;
-      let d = date.getDate();
-      d = d < 10 ? ('0' + d) : d;
-      let h = date.getHours();
-      h = h < 10 ? ('0' + h) : h;
-      let m = date.getMinutes();
-      m = m < 10 ? ('0' + m) : m;
-      let s = date.getSeconds();
-      s = s < 10 ? ('0' + s) : s;
-      return y + '-' + MM + '-' + d + ' ' + h + ':' + m + ':' + s;
-    },
-    filterPath (value) {
-      return value.substr(1, value.length); ;
-    },
-    filterSize (bytes) {
-      bytes = parseFloat(bytes);
-      if (bytes === 0) return '0B';
-      let k = 1024,
-        sizes = ['B', 'KB', 'MB', 'GB', 'TB'],
-        i = Math.floor(Math.log(bytes) / Math.log(k));
-      return (bytes / Math.pow(k, i)).toPrecision(3) + sizes[i];
+      itemModel: item,
+      renaming: false,
+      inputName: item.name,
+      loading: false
     }
   },
   computed: {
@@ -110,6 +106,40 @@ export default Vue.extend({
           return require('../../assets/resource/folder_icon.png')
       }
       return require('../../assets/resource/unkonw_icon.png')
+    },
+    handleRename () {
+      // not change
+      if (this.itemModel.name === this.inputName) { 
+        this.renaming = false
+        return
+      }
+      this.loading = true
+      // TODO: 当前没有对文件名进行校验
+      const newPath = StringUtility.renamePath(this.itemModel.path, this.inputName)
+      NasFileAPI.renameResource(this.itemModel.path, newPath, this.itemModel.uuid).then(response => {
+        this.loading = false
+        console.log(response)
+        if (response.data.code !== 200) return
+        this.renaming = false
+      }).catch(error => {
+        this.loading = false
+        this.$message.error('网络连接错误，请检测网络')
+        console.log(error)
+      })
+    },
+    handleFocus (event: FocusEvent) {
+      // 输入框聚焦，选中名称字段
+      const target = event.currentTarget as any
+      if (this.itemModel.type === ResourceType.floder) {
+        target.select()
+      } else {
+        const offset = this.inputName.lastIndexOf('.')
+        target.selectionStart = 0
+        target.selectionEnd = offset
+      }
+    },
+    beginRenaming () {
+      this.renaming = true
     }
   }
 })
@@ -117,30 +147,46 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .horizontal-item {
-  padding: 20px 0px;
-  border-radius: 4px;
+  width: 80px;
+  height: 100px;
   cursor: pointer;
-  img {
-    width: 35px;
-    height: 29px;
-    margin-bottom: 20px;
+  .icon-wrapper {
+    height: 75px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    img {
+      max-width: 40px;
+      max-height: 80px;
+      margin: auto;
+    }
   }
   span {
-    display: block;
+    height: 25px;
     font-size: 12px;
-    line-height: 12px;
+    padding: 0px 3px;
+    border-radius: 2px;
     color: #484848;
-    text-overflow: -o-ellipsis-lastline;
     overflow: hidden;
     text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
-    -webkit-box-orient: vertical;
+    white-space: nowrap;
+  }
+  input {
+    margin: auto;
+    height: 20px;
+    font-size: 12px;
+    color: #484848;
+    text-align: center;
   }
 }
 .horizontalSelectedItem {
-  background-color: #ececec;
+  .icon-wrapper {
+    background-color: #ececec;
+  }
+  span {
+    background-color: #3888ff;
+  }
 }
 .vertical-item {
   color: #484848;

@@ -21,9 +21,10 @@
           @click.stop.native.exact="singleSelectItem(index)"
           @click.shift.native.stop="multipleSelectItem(index)"
           @dblclick="doubleClickItem(item)"
-          @contextmenu.prevent="didOperatItem($event, index)"
+          @contextmenu.prevent="handleContextMenu($event, index)"
         >
           <resource-list-item
+            :ref="item.name"
             :model="item"
             :index="index"
             :arrangeWay="arrangeWay"
@@ -33,8 +34,10 @@
       </a-list>
     </div>
     <operate-list-alter
+      v-if="showAlter"
       ref="operateListAlter"
       :style="alterStyle"
+      v-on:didSelectItem="handleAlterAction"
     />
   </div>
 </template>
@@ -50,6 +53,7 @@ import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
 import ResourceListItem from './ResourceListItem.vue'
 import ResourceHeader from './ResourceHeader.vue'
 import OperateListAlter from '../OperateListAlter/index.vue'
+import ResourceHandler from './ResourceHandler'
 
 export default Vue.extend({
   name: 'resource-list',
@@ -72,7 +76,8 @@ export default Vue.extend({
       scrollHeight: 450,
       arrangeWay: ArrangeWay.horizontal,
       currentShowList: list,
-      alterPosition: { left: '0px', top: '0px' }
+      alterPosition: { left: '0px', top: '0px' },
+      showAlter: false
     }
   },
   watch: {
@@ -112,6 +117,14 @@ export default Vue.extend({
     EventBus.$off(EventType.arrangeChangeAction)
   },
   methods: {
+    getSelectItems () {
+      let items: Array<ResourceItem> = []
+      for (let index = 0; index < this.currentShowList.length; index++) {
+        const element = this.currentShowList[index]
+        if (element.isSelected) items.push(element)
+      }
+      return items
+    },
     observerWindowResize () {
       const newHeight = document.body.clientHeight - 128
       if (newHeight !== this.scrollHeight) {
@@ -124,48 +137,11 @@ export default Vue.extend({
         this.$emit('callbackAction', CallbackAction.back)
       })
       EventBus.$on(EventType.categoryChangeAction, (type: CategoryType) => {
-        this.currentShowList = this.filterCurrentArray(type)
+        this.currentShowList = ResourceHandler.classifyArray((this.dataSource as Array<ResourceItem>), type)
       })
       EventBus.$on(EventType.arrangeChangeAction, (way: ArrangeWay) => {
         this.arrangeWay = way
       })
-    },
-    filterCurrentArray (type: CategoryType) {
-      let newArray: Array<ResourceItem> = []
-      for (let index = 0; index < this.dataSource.length; index++) {
-        const element = this.dataSource[index] as ResourceItem
-        if (this.isInclude(type, element.type)) {
-          newArray.push(element)
-        }
-      }
-      return newArray
-    },
-    isInclude (ctype: CategoryType, rtype: ResourceType) {
-      switch (ctype) {
-        case CategoryType.all:
-          return true
-        case CategoryType.image:
-          if (rtype === ResourceType.image) {
-            return true
-          }
-          break
-        case CategoryType.video:
-          if (rtype === ResourceType.video) {
-            return true
-          }
-          break
-        case CategoryType.audio:
-          if (rtype === ResourceType.audio) {
-            return true
-          }
-          break
-        case CategoryType.document:
-          if (rtype !== ResourceType.image && rtype !== ResourceType.video && rtype !== ResourceType.audio && rtype !== ResourceType.floder) {
-            return true
-          }
-          break
-      }
-      return false
     },
     handleInfiniteOnLoad () {
       if (_.isEmpty(this.dataSource)) return
@@ -179,9 +155,11 @@ export default Vue.extend({
         element.isSelected = false
         this.currentShowList.splice(index, 1, element)
       }
+      this.autoHideAlter()
     },
     singleSelectItem (aIndex: number) {
-      this.setSelectState(aIndex, true)
+      this.autoHideAlter()
+      ResourceHandler.setSelectState(this.currentShowList, aIndex, true)
     },
     multipleSelectItem (index: number) {
       this.autoHideAlter()
@@ -205,63 +183,36 @@ export default Vue.extend({
       // notify parent component
       this.$emit('callbackAction', CallbackAction.openFolder, item)
     },
-    // 设置aIndex对应item的选中状态
-    // isNot 标记是否取反,如果为true，就取反aIndex对应的item，否则将aIndex对应的item置为true
-    setSelectState (aIndex: number, isNot: boolean) {
-      for (let index = 0; index < this.currentShowList.length; index++) {
-        const element = this.currentShowList[index]
-        // set selecte state of the current item
-        if (index === aIndex) {
-          element.isSelected = isNot ? !element.isSelected : true
-          this.currentShowList.splice(index, 1, element)
-          continue
-        }
-        // reset selete state of the other item 
-        if (element.isSelected) {
-          element.isSelected = false
-          this.currentShowList.splice(index, 1, element)
-        }
-      }
-    },
-    didOperatItem (event: MouseEvent, aIndex: number) {
+    handleContextMenu (event: MouseEvent, aIndex: number) {
       event.preventDefault()
-      this.setSelectState(aIndex, false)
-      const alter: any = this.$refs.operateListAlter
-      alter.showAlter()
-      const point = this.getClickPoint(event)
-      this.alterPosition = this.calculateSafePosition(point.x, point.y)
-      // TODO: 不同type的item会展示不同的右键菜单
-    },
-    getClickPoint (event: MouseEvent) {
-      const listX = (this.$el.getBoundingClientRect() as DOMRect).x
-      const listY = (this.$el.getBoundingClientRect() as DOMRect).y
-      return { x: event.clientX - listX, y: event.clientY - listY }
-    },
-    // 计算在window内的安全点
-    calculateSafePositionOnWindow (clientX: number, clientY: number) {
-      const width = document.body.clientWidth
-      const height = document.body.clientHeight
-      const paddingRight = 10; const paddingBottom = 17
-      const alterWidth = 100 + paddingRight
-      const alterHeight = 189 + paddingBottom
-      let left = clientX + alterWidth < width ? clientX : width - alterWidth
-      let top = clientY + alterHeight < height ? clientY : height - alterHeight
-      return { left: left + 'px', top: top + 'px' }
-    },
-    // 计算在list内的安全点
-    calculateSafePosition (clientX: number, clientY: number) {
-      const width = this.$el.clientWidth
-      const height = this.$el.clientHeight
-      const padding = 3
-      const alterWidth = 100 + padding
-      const alterHeight = 189 + padding
-      let left = clientX + alterWidth < width ? clientX : width - alterWidth
-      let top = clientY + alterHeight < height ? clientY : height - alterHeight
-      return { left: left + 'px', top: top + 'px' }
+      ResourceHandler.setSelectState(this.currentShowList, aIndex, false)
+      this.showAlter = true
+      const alter = this.$refs.showAlter as Element
+      this.alterPosition = ResourceHandler.calculateSafePosition(event, this.$el, alter)
+      // TODO: 不同文件类型和不同场景会展示不同的右键菜单
     },
     autoHideAlter () {
-      const alter: any = this.$refs.operateListAlter
-      alter.hideAlter()
+      this.showAlter = false
+    },
+    handleAlterAction (command: string) {
+      this.autoHideAlter()
+      switch (command) {
+        case 'open':
+          console.log('123')
+          break;
+        case 'rename':
+          this.handleRenameAction()
+          break
+        default:
+          break;
+      }
+    },
+    handleRenameAction () {
+      // 只能对单个item命名
+      const item = _.head(this.getSelectItems())
+      if (item === undefined) return
+      const listItem: any = this.$refs[item.name]
+      listItem.beginRenaming()
     }
   }
 })

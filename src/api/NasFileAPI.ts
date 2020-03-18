@@ -82,5 +82,12 @@ export default {
   },
   fetchRecentResourceList (path: string, uuid: string, page: number): Promise<AxiosResponse<BasicResponse>> {
     return this.fetchResourceList(path, uuid, page, 20, OrderType.ByModifyDesc)
+  },
+  renameResource (oldPath: string, newPath: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasFileModulePath + '/rename', {
+      uuid: uuid,
+      old_path: oldPath,
+      new_path: newPath
+    })
   }
 }
