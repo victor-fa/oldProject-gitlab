@@ -8,7 +8,9 @@ export default {
 			id: Math.round(item.getStartTime()),
 			url: item.getURLChain(),
 			time: item.getStartTime(),
-			name: item.fileName,
+			uuid: item.uuid,
+			name: item.name,
+			filePath: item.filePath,
 			path: item.path,
 			chunk: item.getReceivedBytes(),
 			size: item.getTotalBytes(),
@@ -25,11 +27,19 @@ export default {
 	init() {
 		session.defaultSession.removeAllListeners('will-download');
 		session.defaultSession.on('will-download', (event, item, webContents) => {
-			console.log(item);
-			let name = decodeURI(item.getURLChain().toString().split('?disk_name=')[1]) || item.getFilename();
-			item.fileName = name;
-			item.path = this.transDownFolder + '/' + name;
-			item.setSavePath(this.transDownFolder + '/' + name); // 设置保存路径,使Electron不提示保存对话框。
+			const paramsStr = item.getURL();
+			const str = paramsStr.substring(paramsStr.indexOf('?')+1, paramsStr.indexOf('&api_token'))
+			let filePath = unescape(str.substring(str.indexOf('&path=') + 6))
+			let name = filePath.substr(filePath.lastIndexOf("/") + 1, filePath.length)
+			item.uuid = str.substring(str.indexOf('uuid='), str.indexOf('&'))
+			item.name = name
+			item.filePath = filePath
+			let replaceStr = name.replace("\/\/", "\\\\");
+			replaceStr = replaceStr.replace("\/", "\\");
+			replaceStr = replaceStr.replace("\/", "\\");
+			replaceStr = replaceStr.replace("\/", "\\");
+			item.path = this.transDownFolder + '\\' + name
+			item.setSavePath(this.transDownFolder + '\\' + name); // 设置保存路径,使Electron不提示保存对话框。
 			item.on('updated', () => {
 				this.downloadList[Math.round(item.getStartTime())] = item;
 				let file = this.fileObject(item, item.isPaused() ? 'interrupted' : false);

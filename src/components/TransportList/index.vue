@@ -1,23 +1,23 @@
 <template>
   <div class="transport-list">
     <div
-      v-for="(item, index) in transportList"
+      v-for="(item, index) in TransportList"
       :key="index"
       class="transport-group"
       v-bind:style="{ 'marginBottom': (isDownOrFin === 'down' ? '-5' : '0') + 'px' }"
     >
-      <template v-if="isDownOrFin === 'down'">
+      <template v-if="item.state === 'interrupted' && isDownOrFin === 'down'">
         <div class="left-icon">
-          <img src="../../assets/resource/folder_icon.png">
+          <img :src="itemIcon(item)">
         </div>
         <div class="right-panel">
           <div class="top">
-            <p class="title">{{item.path | filterPath}}</p>
+            <p class="title">{{item.name}}</p>
             <div class="img-cell">
               <!-- <img src="../../assets/pause_icon.png"> -->
               <img src="../../assets/start_icon.png">
               <img src="../../assets/cancle_icon.png">
-              <img src="../../assets/file_icon.png">
+              <img src="../../assets/file_icon.png" @click="OpenDownPath(item)">
             </div>
           </div>
           <div class="buttom">
@@ -32,18 +32,18 @@
           </div>
         </div>
       </template>
-      <template v-if="isDownOrFin === 'fin'">
+      <template v-if="item.state === 'completed' && isDownOrFin === 'fin'">
         <div class="left-icon">
-          <img src="../../assets/resource/folder_icon.png">
+          <img :src="itemIcon(item)">
         </div>
         <div class="right-panel">
           <div class="top">
-            <p class="title">{{item.path | filterPath}}</p>
+            <p class="title">{{item.name}}</p>
             <div class="img-cell">
               <!-- <img src="../../assets/pause_icon.png"> -->
               <img src="../../assets/text_icon.png">
               <img src="../../assets/file_icon.png" @click="OpenDownPath(item)">
-              <img src="../../assets/delete_icon.png">
+              <img src="../../assets/delete_icon.png" @click="Delete(index)">
             </div>
           </div>
           <div class="buttom">
@@ -58,46 +58,105 @@
 <script lang="ts">
 import Vue from 'vue'
 import { EventBus, EventType } from '../../utils/eventBus'
+import { TRANSFORM_INFO } from '../../common/constants'
 
 export default Vue.extend({
-  name: 'transport-list',
+  name: 'TransportList',
   data () {
     return {
-      isDownOrFin: 'fin',
-      transportList: []
+      isDownOrFin: 'down',
+      TransportList: []
     }
   },
+  props: {
+		data: {
+			type: Array
+		},
+  },
+  watch: {
+		data: {
+			handler() {
+        console.log('change');
+			},
+			deep: true
+		}
+  },
+  created() {
+    window.addEventListener('setItem', this.setData)
+  },
+  mounted () {
+    console.log(JSON.parse(JSON.stringify(this.TransportList)));
+    const temp:any = localStorage.getItem(TRANSFORM_INFO)
+    this.TransportList = JSON.parse(temp)
+  },
   filters: {
-    filterPath (value) {
-      return value.substr(value.lastIndexOf("/") + 1, value.length); ;
-    },
     filterSize (bytes) {
       bytes = parseFloat(bytes);
       if (bytes === 0) return '0B';
-      let k = 1024,
-        sizes = ['B', 'KB', 'MB', 'GB', 'TB'],
-        i = Math.floor(Math.log(bytes) / Math.log(k));
+      let k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k));
       return (bytes / Math.pow(k, i)).toPrecision(3) + sizes[i];
     }
   },
   methods: {
+    setData() {
+      const temp:any = localStorage.getItem(TRANSFORM_INFO)
+      this.TransportList = JSON.parse(temp)
+    },
     observerEventBus () {
       const myThis = this as any
       EventBus.$on(EventType.transportChangeAction, (type) => {
         myThis.isDownOrFin = type === 1 ? 'down' : 'fin'
       })
       EventBus.$on(EventType.downloadChangeAction, (data) => {
-        myThis.transportList = data
-        console.log(JSON.parse(JSON.stringify(data)));
+        // myThis.TransportList = data
+        // console.log(JSON.parse(JSON.stringify(data)));
       })
     },
 		OpenDownPath(item) {
-      console.log(item);
       const myThis = this as any
 			myThis.$electron.shell.showItemInFolder(item.path);
 		},
+		ControlTrans(item, index) {
+			this.$emit('ControlTrans', item, index);
+    },
+    Delete(index) {
+      const myThis = this as any
+      const temp:any = localStorage.getItem(TRANSFORM_INFO)
+      let arr = JSON.parse(temp)
+      arr.splice(index, 1); 
+      myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify(arr))
+      this.TransportList = arr;
+    },
+		itemIcon(item) {
+			const myThis = this as any
+			let type = myThis.getTypeNam(item)
+			return require(`../../assets/resource/${type}_icon.png`);
+		},
+		getTypeNam(data) {
+      let typeName = 'unkonw'
+      const name = data.name ? data.name.substring(data.name.lastIndexOf('.')+1, data.name.length) : 'unknow'
+			if (name === 'zip') {
+				typeName = 'unkonw';
+			} else if (name === 'pdf') {
+				typeName = 'pdf';
+			} else if (["apng", "png", "jpg", "jpeg", "bmp", "gif"].indexOf(name) > -1) {
+				typeName = 'image';
+			} else if (["mp4", "rmvb", "mkv"].indexOf(name) > -1) {
+				typeName = 'video';
+			} else if (["m4a", "mp3", "ogg", "flac", "f4a", "wav", "ape"].indexOf(name) > -1) {
+				typeName = 'audio';
+			} else if (["ini", "txt", "xml", "aspx", "php", "phtml", "js", "c", "htm", "html", "log", "cpp", "java"].indexOf(name) > -1) {
+				typeName = 'txt';
+			} else {
+        typeName = 'unkonw';
+      }
+			return typeName
+		}
   },
-  mounted () {
+  beforeDestroy() {
+    window.removeEventListener('setItem', this.setData)
+  },
+  beforeMount () {
     this.observerEventBus()
   },
   destroyed () {

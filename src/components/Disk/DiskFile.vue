@@ -67,12 +67,12 @@ export default Vue.extend({
 		},
 		itemIcon(item) {
 			const myThis = this as any
-			let type = myThis.getTypeNam(item.type)
+			let type = myThis.getTypeNam(item)
 			return require(`../../assets/resource/${type}_icon.png`);
 		},
-		getTypeNam(key) {
+		getTypeNam(data) {
 			let typeName = 'unkonw'
-			switch (key) {
+			switch (data.type) {
 				case 0:
 					typeName = 'unkonw'
 					break;
@@ -89,7 +89,7 @@ export default Vue.extend({
 					typeName = 'txt'
 					break;
 				case 5:
-					typeName = 'pdf'
+					typeName = (data.path.indexOf('.pdf') > -1 ? 'pdf' : 'unkonw')
 					break;
 				case 6:
 					typeName = 'folder'

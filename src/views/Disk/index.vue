@@ -1,70 +1,90 @@
 <template>
-	<div>
-    <resource-header v-if="isShowHeader"/>
-    <div class="cd-upload-tips" v-show="ShowUploadTips && DiskData.Type === 'disk' && loadClassify === 'normal'">松开鼠标开始上传文件</div>
-    <section
-      class="cd-bottom"
-      @mousedown="MainMouseFunc"
-      @dragover.prevent.stop="ShowUploadTips = true"
-      @dragleave.prevent.stop="ShowUploadTips = false"
-      ref="CloudDiskMain"
-			:style="{ height: AutoHeight }"
-    >
-      <div
-        class="resource-list"
-        v-bind:class="{ horizontalResourceList: !isShowHeader }"
-        :style="{ height: scrollHeight + 'px' }"
-        v-infinite-scroll="handleInfiniteOnLoad"
-        :infinite-scroll-disabled="busy"
-        :infinite-scroll-distance="10"
-        @dragover.prevent.stop="ShowUploadTips = true"
-        @dragleave.prevent.stop="ShowUploadTips = false"
-        @drop.prevent.stop="UploadDrop"
-      >
-				<!-- <loading :loading="IsLoadCompany" :length="UserDiskData.length" :IsNoDiskData="IsNoDiskData" /> -->
-				<div class="cd-mouse-select" v-show="MouseSelectData.width" :style="MouseSelectData" />
-				<DiskTransList v-show="DiskData.Type === 'transport'" :data="TransformData" @ControlTrans="ControlTrans" />
-				<DiskFile @SelectFiles="SelectFiles" @OpenFile="DiskFeatureControl" v-if="LoadCompany && NoTransType" :data="UserDiskData" :DiskData="DiskData" />
-      </div>
-    </section>
-		<input type="file" id="FileArea" @change="PrepareUploadFile" hidden ref="FileArea" multiple="multiple" />
-    <MouseMenu :type="loadClassify" :node="$refs.CloudDiskMain" :DiskData="DiskData" @callback="DiskFeatureControl" ref="MouseMenu" />
-    <a-modal
-      :visible="fileNameVisible"
-      :mask="false"
-      :closable="false"
-      :maskClosable="false"
-      okText="创建"
-      cancelText="取消"
-      @ok="handleCreateFile"
-      @cancel="cancleCreateFile"
-    >
-      文件夹名称：
-      <a-input
-        placeholder="请输入文件夹名称"
-        v-model="fileName"
-      />
-    </a-modal>
-		<a-layout-footer class="base-footer">
-			<basic-footer :data="DiskData.SelectTips"/>
-		</a-layout-footer>
-	</div>
+  <a-layout>
+		<a-layout-sider class="base-sider">
+			<i-logo/>
+			<sider-menu/>
+		</a-layout-sider>
+		<a-layout>
+			<a-layout-header class="base-header">
+				<basic-header/>
+			</a-layout-header>
+			<a-layout-content>
+				<template>
+					<resource-header v-if="isShowHeader"/>
+					<div class="cd-upload-tips" v-show="ShowUploadTips && DiskData.Type === 'disk' && loadClassify === 'normal'">松开鼠标开始上传文件</div>
+					<section
+						class="cd-bottom"
+						@mousedown="MainMouseFunc"
+						@dragover.prevent.stop="ShowUploadTips = true"
+						@dragleave.prevent.stop="ShowUploadTips = false"
+						ref="CloudDiskMain"
+						:style="{ height: AutoHeight }"
+					>
+						<div
+							class="resource-list"
+							v-bind:class="{ horizontalResourceList: !isShowHeader }"
+							:style="{ height: scrollHeight + 'px' }"
+							v-infinite-scroll="handleInfiniteOnLoad"
+							:infinite-scroll-disabled="busy"
+							:infinite-scroll-distance="10"
+							@dragover.prevent.stop="ShowUploadTips = true"
+							@dragleave.prevent.stop="ShowUploadTips = false"
+							@drop.prevent.stop="UploadDrop"
+						>
+							<!-- <loading :loading="IsLoadCompany" :length="UserDiskData.length" :IsNoDiskData="IsNoDiskData" /> -->
+							<div class="cd-mouse-select" v-show="MouseSelectData.width" :style="MouseSelectData" />
+							<DiskFile @SelectFiles="SelectFiles" @OpenFile="DiskFeatureControl" v-if="LoadCompany && NoTransType" :data="UserDiskData" :DiskData="DiskData" />
+							
+							<template v-if="DiskData.Type === 'transport'">
+								<TransportList @ControlTrans="ControlTrans" :data="TransformData"/>
+							</template>
+							<audio :src="NoticeSrc" ref="NoticeAudio" />
+						</div>
+					</section>
+					<input type="file" id="FileArea" @change="PrepareUploadFile" hidden ref="FileArea" multiple="multiple" />
+					<MouseMenu :type="loadClassify" :node="$refs.CloudDiskMain" :DiskData="DiskData" @callback="DiskFeatureControl" ref="MouseMenu" />
+					<a-modal
+						:visible="fileNameVisible"
+						:mask="false"
+						:closable="false"
+						:maskClosable="false"
+						okText="创建"
+						cancelText="取消"
+						@ok="handleCreateFile"
+						@cancel="cancleCreateFile"
+					>
+						文件夹名称：
+						<a-input
+							placeholder="请输入文件夹名称"
+							v-model="fileName"
+						/>
+					</a-modal>
+				</template>
+			</a-layout-content>
+			<a-layout-footer class="base-footer">
+				<basic-footer :data="DiskData.SelectTips"/>
+			</a-layout-footer>
+		</a-layout>
+	</a-layout>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import infiniteScroll from 'vue-infinite-scroll'
-import { EventBus, EventType } from '../../utils/eventBus'
-// import LocalFile from '../../utils/api/LocalFile';
-import processCenter, { EventName } from '../../utils/processCenter'
-import { ArrangeWay, ResourceItem } from '../../api/NasFileModel'
+import ILogo from '../../components/Logo/index.vue'
+import SiderMenu from '../../components/SiderMenu/index.vue'
+import BasicHeader from '../../components/BasicHeader/index.vue'
 import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
 import DiskFile from '../../components/Disk/DiskFile.vue'
 import MouseMenu from '../../components/Disk/MouseMenu.vue'
 import ResourceHeader from '../../components/ResourceList/ResourceHeader.vue'
 import BasicFooter from '../../components/BasicFooter/index.vue'
-import DiskTransList from '../../components/Disk/DiskTransList.vue'; //下载列表
+import TransportList from '../../components/TransportList/index.vue'
+import infiniteScroll from 'vue-infinite-scroll'
+import { EventBus, EventType } from '../../utils/eventBus'
+import processCenter, { EventName } from '../../utils/processCenter'
+import { ArrangeWay, ResourceItem } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
+import { TRANSFORM_INFO } from '../../common/constants'
 
 export default {
   name: 'disk',
@@ -72,9 +92,12 @@ export default {
   components: {
     ResourceHeader,
 		DiskFile,
-    MouseMenu,
+		MouseMenu,
+		TransportList,
 		BasicFooter,
-		DiskTransList
+    ILogo,
+    SiderMenu,
+    BasicHeader
   },
   props: {
     dataSource: Array
@@ -116,6 +139,11 @@ export default {
 				width: 0,
 				height: 0
 			},
+			ConfigObject: {
+				NoticeFlag: true,
+				NoticeBubble: true
+			},
+			NoticeSrc: '',
 			/*上传提示*/
 			ShowUploadTips: false,
 			/*文件传输列表参数*/
@@ -130,6 +158,7 @@ export default {
 		loadClassify: {
 			handler() {
         const myThis = this as any
+				console.log(myThis.DiskData.Type);
 				if (myThis.DiskData.Type === 'transport') {
 					myThis.$nextTick(() => {
 						console.log(myThis.TransformData);
@@ -141,6 +170,16 @@ export default {
 			},
 			deep: true
 		},
+    $route (to, from) {
+			const myThis = this as any
+      if (to.name === 'transport') {  // 仅任务管理下有变化
+				myThis.$nextTick(() => {
+					myThis.TransformData.forEach(item => {
+						// item.shows = myThis.loadClassify === item.state || (item.trans_type === myThis.loadClassify && item.state !== 'completed');
+					});
+				});
+      }
+    },
 		UserDiskData: {
 			handler() {
         const myThis = this as any
@@ -186,7 +225,7 @@ export default {
 					// myThis.$refs.DiskClassify.TransData[1].count = myThis.UploadCount;
 					// myThis.$refs.DiskClassify.TransData[2].count = myThis.FinishCount;
 				});
-				console.log(JSON.parse(JSON.stringify(myThis.TransformData)));
+				// console.log(JSON.parse(JSON.stringify(myThis.TransformData)));
 				// LocalFile.write('transfer', myThis.TransformData);
 			},
 			deep: true
@@ -233,7 +272,10 @@ export default {
     window.addEventListener('resize', myThis.observerWindowResize)
     myThis.observerEventBus()
     myThis.observerWindowResize()
-    myThis.getDeviceInfo()
+		myThis.getDeviceInfo()
+		const temp:any = localStorage.getItem(TRANSFORM_INFO)
+		let tempJson = JSON.parse(temp)
+		myThis.TransformData = tempJson !== null ? tempJson : []
   },
   destroyed () {
     const myThis = this as any
@@ -245,6 +287,8 @@ export default {
 	created() {
     const myThis = this as any
 		myThis.Bind();
+		const path = require('path');
+		myThis.NoticeSrc = myThis.$path.join(__filename, '../../../../../../../public/voice/1.mp3')
 	},
   methods: {
 		/*初始化*/
@@ -280,6 +324,9 @@ export default {
 			);
 			myThis.$ipc.on('download', (e, file, completed) => {
 				completed && myThis.DiskFeatureControl('popup', file.name + '下载完成'); /*消息提醒*/
+				// localStorage.setItem(TRANSFORM_INFO, JSON.stringify(myThis.TransformData))
+				myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify(myThis.TransformData))
+				console.log(JSON.parse(JSON.stringify(myThis.TransformData)));
 				for (let i = 0; i < myThis.TransformData.length; i++) {
 					if (file.name === myThis.TransformData[i].name) {
 						myThis.$nextTick(() => {
@@ -293,8 +340,25 @@ export default {
 				myThis.$nextTick(() => {
 					myThis.TransformData.push(file);
 				});
-				console.log(myThis.TransformData);
 			});
+			// myThis.$ipc.on('win-data', (e, data) => {
+			// 	//接收用户配置文件
+			// 	console.log('重新登录进来就开始下载操作');
+			// 	myThis.$Api.LocalFile.read('transfer', data => {
+			// 		if (data.length) {
+			// 			myThis.TransformData = data;
+			// 			myThis.TransformData.forEach(item => {
+			// 				if (item.trans_type === 'download' && item.state !== 'completed') {
+			// 					myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(item.disk_main + '?disk_name=' + item.disk_name);
+			// 				}
+			// 			});
+			// 		}
+			// 	});
+			// 	myThis.$Api.LocalFile.read('setting', data => {
+			// 		myThis.ConfigObject = data;
+			// 		myThis.$ipc.send('system', 'download-update', data.TransDownFolder);
+			// 	});
+			// })
 		},
     observerWindowResize () {
       const myThis = this as any
@@ -483,9 +547,11 @@ export default {
 						const filterArr = [1, 2, 3, 4];
 						if (filterArr.indexOf(OpenType) > -1) {
 							let data:any = myThis.UserDiskData.filter(item => item.active)
+							console.log(JSON.parse(JSON.stringify(data[0])));
 							myThis.$ipc.send('file-control', OpenType, data);
 						} else if (OpenType === 5) {	// 包含zip
 							let data:any = myThis.UserDiskData.filter(item => item.active)
+							console.log(JSON.parse(JSON.stringify(data[0])));
 							const filterCompress = ['.zip', '.rar', '.7z', '.ZIP', '.RAR', '.7Z']
 							const compressRes = filterCompress.filter(item => data[0].path.indexOf(item) > -1)
 							if (compressRes.length > 0) {	// 压缩类型
@@ -510,7 +576,7 @@ export default {
 				case 'download': //下载文件
 					if (myThis.DiskData.SelectFiles.length) {
 						myThis.DiskData.SelectFiles.forEach(item => {
-							if (item.disk_main) {
+							if (item.path) {
 								myThis.SelectDownLoadFiles.push(item);
 							}
 						});
@@ -523,7 +589,7 @@ export default {
 					let tips = myThis.SelectDownLoadFiles.length > 1 ? '所选' + myThis.SelectDownLoadFiles.length + '个项目' : myThis.SelectDownLoadFiles[0].path;
 					const { BrowserWindow } = require('electron').remote
 					myThis.SelectDownLoadFiles.forEach(item => {
-						BrowserWindow.getAllWindows()[0].webContents.downloadURL(NasFileAPI.download(item));	// 下载
+						myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(NasFileAPI.download(item));
 					});
 					myThis.SelectDownLoadFiles = [];
 					myThis.$message.info(tips + '已加入下载列队');
@@ -668,15 +734,13 @@ export default {
 					break;
 				case 'popup':
 					if (myThis.ConfigObject.NoticeFlag) {
-						myThis.NoticeSrc = localStorage.NoticeVoice;
 						let a = setTimeout(() => {
 							clearTimeout(a);
 							myThis.$refs.NoticeAudio.play();
 						}, 200);
 					}
 					if (myThis.ConfigObject.NoticeBubble) {
-						myThis.$notify(datas);
-						//myThis.$ipc.send('system', 'popup', datas);
+						myThis.$ipc.send('system', 'popup', datas);
 					}
 					break;
 			}
@@ -834,9 +898,11 @@ export default {
 			myThis.DiskData.SelectFiles = [];
 		},
 		ControlTrans(item, index, event) {
-      const myThis: any = this
+			const myThis: any = this
+			console.log(item);
 			if (event.target.className === 'sf-icon-times') {
 				if (item.trans_type === 'download') {
+					console.log('123');
 					myThis.$ipc.send('download', 'cancel', item.id);
 				}
 				return myThis.TransformData.splice(index, 1);
@@ -848,6 +914,7 @@ export default {
 				item.state = item.state === 'interrupted' ? 'progressing' : 'interrupted';
 				myThis.PrepareUploadFile(item);
 			} else {
+				console.log('123');
 				let commend = item.state === 'progressing' ? 'pause' : 'resume';
 				myThis.$ipc.send('download', commend, item.id);
 			}
@@ -1051,6 +1118,28 @@ export default {
 }
 .resource-list .ant-list-item {
   margin: 0px;
+}
+.base-footer {
+  height: 17px;
+  background-color: #edf1f0;
+  padding: 0px;
+}
+</style>
+
+<style lang="scss" scoped>
+.base-sider {
+  height: 100vh;
+  width: 200px;
+  background-color: #edf1f0;
+}
+.base-header {
+  height: 110px;
+  padding: 0px;
+  background-color: white;
+}
+.base-content {
+  padding: 0px;
+  background-color: #f6f8fb;
 }
 .base-footer {
   height: 17px;

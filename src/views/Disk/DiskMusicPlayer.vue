@@ -275,21 +275,21 @@ export default {
 			this.VisualState = false;
 		},
 		GetLyr() {
-			this.$Api.Disk.GetLyr(
-				{
-					name: this.NowPlay.path
-				},
-				rs => {
-					rs = JSON.parse(rs);
-					if (rs.lrc.lyric !== '' || rs.lrc.lyric !== null) {
-						let data = rs.lrc.lyric;
-						this.start(data, () => {
-							return this.$refs.audio.currentTime;
-						});
-					} else {
-					}
-				}
-			);
+			// this.$Api.Disk.GetLyr(
+			// 	{
+			// 		name: this.NowPlay.path
+			// 	},
+			// 	rs => {
+			// 		rs = JSON.parse(rs);
+			// 		if (rs.lrc.lyric !== '' || rs.lrc.lyric !== null) {
+			// 			let data = rs.lrc.lyric;
+			// 			this.start(data, () => {
+			// 				return this.$refs.audio.currentTime;
+			// 			});
+			// 		} else {
+			// 		}
+			// 	}
+			// );
 		},
 		start(txt, callback) {
 			if (typeof txt !== 'string' || txt.length < 1 || typeof callback !== 'function') return; /* 停止前面执行的歌曲 */

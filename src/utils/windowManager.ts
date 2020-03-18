@@ -91,7 +91,7 @@ export default {
       this.activeWindow(homeWindow)
     } else {
       homeWindow = this.createWindow({
-        path: 'home',
+        path: 'disk',
         width: 800,
         height: 600,
         title: 'nas_client',

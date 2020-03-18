@@ -18,10 +18,18 @@ const routes = [
     name: 'connecting',
     component: () => import('../views/Connecting/index.vue')
   },
+  // {
+  //   path: '/home',
+  //   name: 'home',
+  //   component: () => import('../layouts/BaseLayout.vue'),
+  //   children: [
+  //     ...HomeRouters
+  //   ]
+  // },
   {
-    path: '/home',
-    name: 'home',
-    component: () => import('../layouts/BaseLayout.vue'),
+    path: '/disk',
+    name: 'disk',
+    component: () => import('../views/Disk/index.vue'),
     children: [
       ...HomeRouters
     ]

@@ -1,5 +1,5 @@
 <template>
-  <transport-list
+  <TransportList
     ref="realResourceList"
   />
   
@@ -12,6 +12,7 @@
 import Vue from 'vue'
 import TransportList from '../../components/TransportList/index.vue'
 import { realResourceList } from '../MockData/index'
+import { TRANSFORM_INFO } from '../../common/constants'
 
 export default {
   name: 'transport',
@@ -22,6 +23,10 @@ export default {
     return {
       dataArray: realResourceList
     }
+  },
+  mounted () {
+    console.log(realResourceList);
+    console.log(localStorage.getItem(TRANSFORM_INFO));
   }
 }
 </script>

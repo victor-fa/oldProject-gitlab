@@ -1,11 +1,11 @@
 const HomeRouters = [
   {
-    // path: '/disk',
-    // component: () => import('../../views/Disk/index.vue'),
-    // name: 'disk',
-    path: '/recent',
-    component: () => import('../../views/Recent/index.vue'),
-    name: 'recent',
+    path: '/disk',
+    component: () => import('../../views/Disk/index.vue'),
+    name: 'disk',
+    // path: '/recent',
+    // component: () => import('../../views/Recent/index.vue'),
+    // name: 'recent',
     meta: {
       title: '最近使用',
       icon: require('../../assets/recent_icon.png'),

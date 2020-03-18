@@ -76,6 +76,7 @@ import { SortWay } from './Model/sortList'
 import { operateFuncList } from './Model/operateIconList'
 import { EventBus, EventType } from '../../utils/eventBus'
 import { ArrangeWay } from '../../api/NasFileModel'
+import { TRANSFORM_INFO } from '../../common/constants'
 
 interface ArrangeData {
   isSelected: boolean
@@ -85,7 +86,14 @@ export default Vue.extend({
   name: 'bottom-bar',
   components: {
     CustomButton,
-    SortPopoverList
+    SortPopoverList,
+  },
+  created () {
+    const temp:any = localStorage.getItem(TRANSFORM_INFO) !== null ? localStorage.getItem(TRANSFORM_INFO) : []
+    if (temp !== 'null') {
+      this.downloadCount = JSON.parse(temp).filter(item => item.state === 'interrupted').length
+      this.computedCount = JSON.parse(temp).filter(item => item.state === 'completed').length
+    }
   },
   data () {
     return {
@@ -104,6 +112,12 @@ export default Vue.extend({
     $route (to, from) {
       if (to.name === 'transport') {  // 仅任务管理下有变化
         this.isTaskVisiable = true;
+        this.currentTask = 1;
+        const temp:any = localStorage.getItem(TRANSFORM_INFO) !== null ? localStorage.getItem(TRANSFORM_INFO) : []
+        if (temp !== 'null') {
+          this.downloadCount = JSON.parse(temp).filter(item => item.state === 'interrupted').length
+          this.computedCount = JSON.parse(temp).filter(item => item.state === 'completed').length
+        }
       } else {
         this.isTaskVisiable = false;
       }
