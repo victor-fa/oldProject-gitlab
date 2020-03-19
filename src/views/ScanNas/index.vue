@@ -74,7 +74,7 @@ export default Vue.extend({
     //     mac: '00ce39ca56a1',
     //     sn: '1000000002',
     //     port: 1098,
-    //     ip: '113.118.132.119',
+    //     ip: '113.116.246.210',
     //     softversion: 'V1.0.0',
     //     active: NasActive.Bind
     //   }
@@ -157,6 +157,7 @@ export default Vue.extend({
         router.push('account')
       } else {
         // switch home window
+        window.close()
         processCenter.renderSend(EventName.home)
       }
     },

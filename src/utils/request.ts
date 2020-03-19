@@ -84,6 +84,7 @@ const handleReloginSence = (data: BasicResponse) => {
     }
     EventBus.$emit(EventType.showToast, data.msg)
   } else {
+    window.close()
     processCenter.renderSend(EventName.login)
   }
 }

@@ -86,6 +86,7 @@ export default Vue.extend({
         console.log(response)
         this.loading = false
         if (response.data.code !== 200) return
+        window.close()
         processCenter.renderSend(EventName.home)
       }).catch(error => {
         this.loading = false

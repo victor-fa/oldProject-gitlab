@@ -74,6 +74,7 @@ export default Vue.extend({
       // const myThis
       UserAPI.logout().then(response => {
         if (response.data.code !== 200) return
+        window.close()
         processCenter.renderSend(EventName.login)
         // 清除缓存的用户相关信息
         this.$store.dispatch('User/clearCacheUserInfo')

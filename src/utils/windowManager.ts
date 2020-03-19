@@ -25,6 +25,7 @@ export default {
       maximizable: true,
       resizable: true,
       frame: false,
+      show: false,
       backgroundColor: '#f6f8fb',
       webPreferences: {
         nodeIntegration: true,
@@ -55,13 +56,6 @@ export default {
     win.show()
     win.focus()
   },
-  closeOtherWindow (window: BrowserWindow | null): void {
-    const wins = BrowserWindow.getAllWindows()
-    for (let index = 0; index < wins.length; index++) {
-      const win = wins[index]
-      if (win !== window) win.close()
-    }
-  },
   presentLoginWindow (msg: string): BrowserWindow {
     if (loginWindow !== null) {
       this.activeWindow(loginWindow)
@@ -77,8 +71,8 @@ export default {
     loginWindow.on('closed', () => {
       loginWindow = null
     })
-    loginWindow.on('show', () => {
-      this.closeOtherWindow(loginWindow)
+    loginWindow.on('ready-to-show', () => {
+      this.activeWindow(loginWindow!)
       processCenter.mainSend(loginWindow!, MainEventName.toast, msg)
     })
     return loginWindow
@@ -97,12 +91,12 @@ export default {
     homeWindow.on('closed', () => {
       homeWindow = null
     })
-    homeWindow.on('show', () => {
-      this.closeOtherWindow(homeWindow)
+    homeWindow.on('ready-to-show', () => {
+      this.activeWindow(homeWindow!)
     })
     return homeWindow
   },
-  presentMediaWindow (data: any) {
+  presentMediaWindow (data: any) { // mediawindow 他应该是homewindow的子窗口
     if (mediaWindow !== null) {
      this.activeWindow(mediaWindow)
      return 
@@ -113,12 +107,14 @@ export default {
       height: 450,
       resizable: true, // 暂时为true
       minimizable: false,
-      title: 'meida'
+      title: 'meida',
+      parent: homeWindow!
     })
     mediaWindow.on('closed', () => {
       mediaWindow = null
     })
-    mediaWindow.once('show', () => {
+    mediaWindow.once('ready-to-show', () => {
+      this.activeWindow(mediaWindow!)
       processCenter.mainSend(mediaWindow!, MainEventName.mediaInfo, data)
     })
     return mediaWindow
