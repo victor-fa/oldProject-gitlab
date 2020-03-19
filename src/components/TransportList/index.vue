@@ -6,7 +6,7 @@
       class="transport-group"
       v-bind:style="{ 'marginBottom': (isDownOrFin === 'down' ? '-5' : '0') + 'px' }"
     >
-      <template v-if="item.state === 'interrupted' && isDownOrFin === 'down'">
+      <template v-if="(item.state === 'interrupted' || item.state === 'progressing') && isDownOrFin === 'down'">
         <div class="left-icon">
           <img :src="itemIcon(item)">
         </div>
@@ -23,12 +23,13 @@
           <div class="buttom">
             <a-progress
               class="progress"
-              :percent="50"
+              :percent="PercentCount(item)"
               :showInfo="false"
               :strokeColor="'#06B650'"
+              :status="item.state === 'progressing' ? 'active' : 'normal'"
             />
-            <p class="speed">514K/S</p>
-            <p class="size">990K/20MB</p>
+            <p class="speed">{{ MathSpeend(item) }}</p>
+            <p class="size">{{item.size*(item.chunk*0.01) | filterSize}}/{{item.size | filterSize}}</p>
           </div>
         </div>
       </template>
@@ -76,7 +77,7 @@ export default Vue.extend({
   watch: {
 		data: {
 			handler() {
-        console.log('change');
+        this.setData()
 			},
 			deep: true
 		}
@@ -85,9 +86,7 @@ export default Vue.extend({
     window.addEventListener('setItem', this.setData)
   },
   mounted () {
-    console.log(JSON.parse(JSON.stringify(this.TransportList)));
-    const temp:any = localStorage.getItem(TRANSFORM_INFO)
-    this.TransportList = JSON.parse(temp)
+    this.setData()
   },
   filters: {
     filterSize (bytes) {
@@ -102,15 +101,32 @@ export default Vue.extend({
       const temp:any = localStorage.getItem(TRANSFORM_INFO)
       this.TransportList = JSON.parse(temp)
     },
+		PercentCount(item) {
+			return parseFloat(((item.size * (item.chunk*0.01) / item.size) * 100).toFixed(1));
+		},
     observerEventBus () {
       const myThis = this as any
       EventBus.$on(EventType.transportChangeAction, (type) => {
         myThis.isDownOrFin = type === 1 ? 'down' : 'fin'
       })
       EventBus.$on(EventType.downloadChangeAction, (data) => {
-        // myThis.TransportList = data
-        // console.log(JSON.parse(JSON.stringify(data)));
+        this.setData()
       })
+    },
+		MathSpeend(item) {
+      const myThis = this as any
+			let NowTime = new Date().getTime() / 1000;
+      const res:any = item.chunk / (NowTime - item.time)
+      let speed = parseFloat(res).toFixed(1);
+      console.log(speed);
+			return myThis.filterSize(speed) + '/s';
+		},
+    filterSize (bytes) {
+      bytes = parseFloat(bytes);
+      if (bytes === 0) return '0B';
+      let k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k));
+      console.log(i);
+      return (bytes / Math.pow(k, i)).toPrecision(3) + (i !== -1 ? sizes[i] : 'B');
     },
 		OpenDownPath(item) {
       const myThis = this as any

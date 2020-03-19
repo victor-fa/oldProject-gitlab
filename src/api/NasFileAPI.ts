@@ -45,8 +45,7 @@ export default {
     }))
   },
   upload (options) {
-    let body = new Blob([options.body]);
-    return Vue.axios.post(tempServerUrl + nasFileModulePath + '/upload?' + jsonToParams(options.data), body, {
+    return Vue.axios.post(tempServerUrl + nasFileModulePath + '/upload?' + jsonToParams(options.data), options.body, {
       headers: {'Accept': '*/*'}
     })
   },

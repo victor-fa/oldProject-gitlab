@@ -92,7 +92,8 @@
       "no-eval": 0,
       "no-self-assign": 0,
       "no-labels": 0,
-      "no-dupe-keys": 0
+      "no-dupe-keys": 0,
+      "no-inner-declarations": 0
     },
     "parserOptions": {
       "parser": "@typescript-eslint/parser"

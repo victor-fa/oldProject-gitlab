@@ -85,6 +85,7 @@ import processCenter, { EventName } from '../../utils/processCenter'
 import { ArrangeWay, ResourceItem } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import { TRANSFORM_INFO } from '../../common/constants'
+import upload from '../../utils/file/upload';
 
 export default {
   name: 'disk',
@@ -201,7 +202,8 @@ export default {
 		},
 		TransformData: {
 			handler() {
-        const myThis = this as any
+				console.log(JSON.parse(JSON.stringify(this.TransformData)));
+				const myThis = this as any
 				myThis.$nextTick(() => {
 					myThis.UploadCount = 0;
 					myThis.DownloadCount = 0;
@@ -227,6 +229,8 @@ export default {
 				});
 				// console.log(JSON.parse(JSON.stringify(myThis.TransformData)));
 				// LocalFile.write('transfer', myThis.TransformData);
+				myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify(myThis.TransformData))
+				EventBus.$emit(EventType.downloadChangeAction, null)
 			},
 			deep: true
 		}
@@ -471,41 +475,33 @@ export default {
 			}
 		},
 		PrepareUploadFile(data: any) {
-			const myThis = this as any
-			const selectUploadFiles:any = [];
-			if (data.target) {
-				data = data.target;
-			}
-			for (let k = 0; k < data.files.length; k++) {
-				selectUploadFiles.push(data.files[k]);
-			}
-			let params = {
-				uuid: 'A252FB4252FB19AD',
-				path: '/.ugreen_nas/6001/' + data.files[0].name,	// 当前目录
-				start: 0,
-				end: data.files[0].size-1,
-				size: data.files[0].size,
-				action: 'f'
-			}
-			let body = selectUploadFiles[0];
-			NasFileAPI.upload({
-				data: params,
-				body: body
-			}).then(response => {
-				const rs = response.data;
-				if (rs.code !== 200) {
-					if (rs.code === '4050') {
-						myThis.$message.warning('文件已存在')
-					} else {
-						myThis.TransformDat.$message.warning(rs.msg)
+      const myThis = this as any
+			upload.prepareFile(data, {
+				data: myThis.NowDiskID,
+				add: file => {
+					console.log(file);
+					myThis.TransformData.push(file);
+					myThis.$message.info((data.target ? data.target : data).files.length + '个文件已加入上传列队');
+				},
+				success: (file, response) => {
+					console.log(response);
+					// const _this = myThis as any
+					const rs = response.data;
+					if (rs.code !== 200) {
+						if (rs.code === '4050') {
+							myThis.$message.warning('文件已存在')
+						} else {
+							myThis.$message.warning(rs.msg)
+						}
+						return
 					}
-					return
+					myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify(myThis.TransformData))
+					myThis.UserDiskData.push(file);
+					myThis.getDeviceInfo()
+					myThis.$message.success('文件上传成功！')
+					myThis.DiskFeatureControl('popup', file.name + '上传完成'); /*消息提醒*/
 				}
-				myThis.TransformData.push(rs.data);
-				myThis.UserDiskData.push(rs.data);
-				myThis.getDeviceInfo()
-				myThis.$message.success('文件上传成功！')
-			})
+			});
 		},
     // 获取到菜单返回的结果
     DiskFeatureControl (commend: any, datas: any, flag) {
@@ -585,7 +581,7 @@ export default {
 							myThis.SelectDownLoadFiles.push(myThis.DiskData.NowSelect);
 						}
 					}
-					EventBus.$emit(EventType.downloadChangeAction, myThis.SelectDownLoadFiles)
+					EventBus.$emit(EventType.downloadChangeAction, null)
 					let tips = myThis.SelectDownLoadFiles.length > 1 ? '所选' + myThis.SelectDownLoadFiles.length + '个项目' : myThis.SelectDownLoadFiles[0].path;
 					const { BrowserWindow } = require('electron').remote
 					myThis.SelectDownLoadFiles.forEach(item => {

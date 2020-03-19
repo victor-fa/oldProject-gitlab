@@ -59,8 +59,9 @@
         <span class="normal" v-bind:class="{ special: currentTask === 2 }" @click="changeTransport(2)">下载完成（{{computedCount}}）</span>
       </div>
       <div class="right-bar">
-        <a-button class="right-button">全部暂停</a-button>
-        <a-button class="right-button">全部取消</a-button>
+        <a-button class="right-button" v-if="currentTask === 1">全部暂停</a-button>
+        <a-button class="right-button" v-if="currentTask === 1">全部取消</a-button>
+        <a-button class="right-button" v-if="currentTask === 2">清除所有记录</a-button>
       </div>
     </template>
   </div>
@@ -88,11 +89,7 @@ export default Vue.extend({
     SortPopoverList,
   },
   created () {
-    const temp:any = localStorage.getItem(TRANSFORM_INFO) !== null ? localStorage.getItem(TRANSFORM_INFO) : []
-    if (temp !== 'null') {
-      this.downloadCount = JSON.parse(temp).filter(item => item.state === 'interrupted').length
-      this.computedCount = JSON.parse(temp).filter(item => item.state === 'completed').length
-    }
+    this.changeProgress()
   },
   data () {
     return {
@@ -112,11 +109,7 @@ export default Vue.extend({
       if (to.name === 'transport') {  // 仅任务管理下有变化
         this.isTaskVisiable = true;
         this.currentTask = 1;
-        const temp:any = localStorage.getItem(TRANSFORM_INFO) !== null ? localStorage.getItem(TRANSFORM_INFO) : []
-        if (temp !== 'null') {
-          this.downloadCount = JSON.parse(temp).filter(item => item.state === 'interrupted').length
-          this.computedCount = JSON.parse(temp).filter(item => item.state === 'completed').length
-        }
+        this.changeProgress()
       } else {
         this.isTaskVisiable = false;
       }
@@ -129,9 +122,15 @@ export default Vue.extend({
       console.log(this.currentTask);
       EventBus.$emit(EventType.transportChangeAction, type)
       EventBus.$on(EventType.downloadChangeAction, (data) => {
-        this.downloadCount = data.length
-        this.computedCount = data.length
+        this.changeProgress()
       })
+    },
+    changeProgress() {
+      const temp:any = localStorage.getItem(TRANSFORM_INFO) !== null ? localStorage.getItem(TRANSFORM_INFO) : []
+      if (temp !== 'null') {
+        this.downloadCount = JSON.parse(temp).filter(item => item.state === 'interrupted' || item.state === 'progressing').length
+        this.computedCount = JSON.parse(temp).filter(item => item.state === 'completed').length
+      }
     },
     sortWayChange (sender: SortWay) {
       // hide popover

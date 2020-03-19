@@ -47,7 +47,7 @@ export default Vue.extend({
       return y + '-' + MM + '-' + d + ' ' + h + ':' + m + ':' + s;
     },
     filterPath (value) {
-      return value.substr(value.lastIndexOf("/") + 1, value.length); ;
+      return value.substring(value.lastIndexOf("/") + 1, value.length); ;
     },
     filterSize (bytes) {
       bytes = parseFloat(bytes);
