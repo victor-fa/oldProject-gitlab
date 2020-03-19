@@ -206,12 +206,17 @@ export default Vue.extend({
         case 'rename':
           this.handleRenameAction()
           break
+        case 'info':
+          // 只能查看单个item的信息
+          const item = _.head(this.getSelectItems())
+          this.$emit('callbackAction', CallbackAction.mediaInfo, item)
+          break
         default:
           break;
       }
     },
     handleRenameAction () {
-      // 只能对单个item命名
+      // 只能对单个item重命名
       const item = _.head(this.getSelectItems())
       if (item === undefined) return
       const listItem: any = this.$refs[item.name]
@@ -223,7 +228,8 @@ export default Vue.extend({
 enum CallbackAction {
   back = 'back',
   openFolder = 'openFolder',
-  loadMoreData = 'loadMoreData'
+  loadMoreData = 'loadMoreData',
+  mediaInfo = 'mediaInfo'
 }
 
 export {

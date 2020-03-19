@@ -17,6 +17,7 @@ import ResourceList, { CallbackAction } from '../../components/ResourceList/inde
 import NasFileAPI from '../../api/NasFileAPI'
 import { User } from '../../api/UserModel'
 import { EventBus, EventType } from '../../utils/eventBus'
+import processCenter, { EventName } from '../../utils/processCenter'
 
 export default Vue.extend({
   name: 'recent',
@@ -91,9 +92,11 @@ export default Vue.extend({
           this.handleBackAction()
           break;
         case CallbackAction.openFolder:
-          const item = args[0]
-          this.handleOpenAction(item)
+          this.handleOpenAction(args[0])
           break;
+        case CallbackAction.mediaInfo:
+          this.handleMediaInfoAction(args[0])
+          break
       }
     },
     loadMoreData () {
@@ -115,6 +118,16 @@ export default Vue.extend({
       this.busy = false
       this.dataArray = []
       this.fetchRecentList()
+    },
+    handleMediaInfoAction (item: ResourceItem) {
+      if (_.isEmpty(item)) return
+      processCenter.renderSend(EventName.mediaInfo, {
+        path: 'media-info',
+        params: {
+          uuid: item.uuid,
+          path: item.path
+        }
+      })
     }
   }
 })

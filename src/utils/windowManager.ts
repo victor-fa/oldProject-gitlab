@@ -7,6 +7,7 @@ interface WindowOptions extends Electron.BrowserWindowConstructorOptions {
 
 let loginWindow: BrowserWindow | null = null
 let homeWindow: BrowserWindow | null = null
+let mediaWindow: BrowserWindow | null = null
 const packageInfo = require('../../package.json')
 
 export default {
@@ -70,11 +71,7 @@ export default {
         width: 800,
         height: 600,
         title: '登录',
-        resizable: false,
-        webPreferences: {
-          nodeIntegration: true,
-          webSecurity: false
-        }
+        resizable: false
       })
     }
     loginWindow.on('closed', () => {
@@ -91,26 +88,39 @@ export default {
       this.activeWindow(homeWindow)
     } else {
       homeWindow = this.createWindow({
-        path: 'disk',
+        path: 'home',
         width: 800,
         height: 600,
-        title: 'nas_client',
-        webPreferences: {
-          nodeIntegration: true,
-          webSecurity: false
-        }
+        title: 'nas_client'
       })
     }
     homeWindow.on('closed', () => {
       homeWindow = null
     })
     homeWindow.on('show', () => {
-    })
-    homeWindow.on('focus', () => {
       this.closeOtherWindow(homeWindow)
     })
-    homeWindow.on('ready-to-show', () => {
-    })
     return homeWindow
+  },
+  presentMediaWindow (data: any) {
+    if (mediaWindow !== null) {
+     this.activeWindow(mediaWindow)
+     return 
+    }
+    mediaWindow = this.createWindow({
+      path: 'media-layout',
+      width: 400,
+      height: 450,
+      resizable: true, // 暂时为true
+      minimizable: false,
+      title: 'meida'
+    })
+    mediaWindow.on('closed', () => {
+      mediaWindow = null
+    })
+    mediaWindow.once('show', () => {
+      processCenter.mainSend(mediaWindow!, MainEventName.mediaInfo, data)
+    })
+    return mediaWindow
   }
 }

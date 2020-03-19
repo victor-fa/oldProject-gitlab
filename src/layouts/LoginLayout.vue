@@ -28,7 +28,7 @@ export default Vue.extend({
   mounted () {
     const secondPath = this.$route.params.secondPath
     const loadPath = _.isEmpty(secondPath) ? 'login' : secondPath 
-    this.$router.replace(loadPath)
+    this.$router.push(loadPath)
   }
 })
 </script>

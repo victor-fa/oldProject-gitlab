@@ -10,7 +10,7 @@
         </a-layout-header>
         <a-layout-content>
           <keep-alive>
-            <router-view></router-view>
+            <router-view/>
           </keep-alive>
         </a-layout-content>
         <a-layout-footer class="base-footer">
@@ -38,7 +38,7 @@ export default Vue.extend({
   },
   mounted () {
     // this.$router.replace('disk')
-    this.$router.replace('recent')
+    this.$router.push('recent')
   }
 })
 </script>
