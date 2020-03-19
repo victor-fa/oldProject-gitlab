@@ -12,13 +12,15 @@ enum ChannelName {
 enum EventName {
   login = 'present_login',
   home = 'present_home',
-  file = 'present_file'
+  file = 'present_file',
+  mediaInfo = 'media_info'
 }
 
 // use in main process
 enum MainEventName {
   toast = 'show_toast',
-  file = 'present_file'
+  file = 'present_file',
+  mediaInfo = 'media_info'
 }
 
 export default {
@@ -33,6 +35,9 @@ export default {
           break
         case EventName.home:
           windowManager.presentHomeWindow()
+          break
+        case EventName.mediaInfo:
+          windowManager.presentMediaWindow(data)
           break
         default:
           break

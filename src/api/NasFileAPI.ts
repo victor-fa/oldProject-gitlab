@@ -86,7 +86,17 @@ export default {
     return nasServer.post(nasFileModulePath + '/rename', {
       uuid: uuid,
       old_path: oldPath,
-      new_path: newPath
+      new_path: newPath,
+      api_token: apiToken
+    })
+  },
+  fetchMediaInfo (path: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.get(nasFileModulePath + '/media', {
+      params: {
+        path: path,
+        uuid: uuid,
+        api_token: apiToken
+      }
     })
   }
 }
