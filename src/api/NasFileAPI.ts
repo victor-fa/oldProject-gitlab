@@ -33,6 +33,9 @@ const host = (() => {
 ClientAPI.setBaseUrl(host!)
 
 export default {
+  getServerUrl () {
+    return tempServerUrl
+  },
   storages () {
     return Vue.axios.get(tempServerUrl + nasFileModulePath + '/storages?' + jsonToParams(null))
   },
