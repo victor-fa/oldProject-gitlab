@@ -38,6 +38,7 @@ import ClientAPI from '../../api/ClientAPI'
 import { NasAccessInfo } from '../../api/ClientModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 import { loginIcons } from '../Login/iconList'
+import StringUtility from '../../utils/StringUtility'
 
 export default Vue.extend({
   name: 'account',
@@ -67,7 +68,7 @@ export default Vue.extend({
         this.$message.error(checkResult)
         return
       }
-      this.setAccount(this.account, this.password)
+      this.setAccount(this.account, StringUtility.encryptPassword(this.password))
     },
     checkInput () {
       if (_.isEmpty(this.account)) return '请输入账号'
@@ -80,9 +81,8 @@ export default Vue.extend({
     setAccount (account: string, password: string) {
       if (!this.checkCacheInfo()) return
       this.loading = true
-      const ugreenNo = (this.user as User).ugreenNo.toString()
       const apiToken = (this.nasInfo as NasAccessInfo).api_token
-      ClientAPI.setOfflineAccount(account, password, apiToken, ugreenNo).then(response => {
+      ClientAPI.setOfflineAccount(account, password, apiToken).then(response => {
         console.log(response)
         this.loading = false
         if (response.data.code !== 200) return

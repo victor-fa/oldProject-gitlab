@@ -74,5 +74,14 @@ export default {
       return sizestr.substring(0, len) + sizestr.substr(len + 3, 2)
     }
     return sizestr
+  },
+  // 加密密码规则
+  // recursion 递归次数
+  encryptPassword (password: string, recursion: number = 2) {
+    const crypto = require('crypto')
+    const md5 = crypto.createHash("md5")
+    const ciphertext = md5.update(password).digest('hex')
+    if (recursion === 1) return ciphertext
+    return this.encryptPassword(ciphertext, --recursion)
   }
 }
