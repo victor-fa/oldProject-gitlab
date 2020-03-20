@@ -5,7 +5,7 @@
       class="horizontal-item"
       v-bind:class="{ horizontalSelectedItem: isSelected }"
     >
-      <div class="icon-wrapper">
+      <div class="icon-wrapper" @click="didSelectItem">
         <img :src="searchResourceIcon(itemModel.type)"/>
       </div>
       <a-input
@@ -19,11 +19,19 @@
         @focus="handleFocus($event)"
         @pressEnter="handleRename"
       />
-      <span v-else>{{ itemModel.name }}</span>
+      <div v-else>
+        <a-tooltip placement="bottom">
+          <template slot="title">
+            <span>{{ itemModel.name }}</span>
+          </template>
+          <p @click="didSelectItem">{{ itemModel.name }}</p>
+        </a-tooltip>
+      </div>
     </div>
     <div
       v-else
       class="vertical-item"
+      @click="didSelectItem"
       v-bind:class="{ oddVerticalItem: isOddStyle, verticalSelectedItem: isSelected }"
     >
       <a-row type="flex" justify="space-around" align="middle">
@@ -140,6 +148,9 @@ export default Vue.extend({
     },
     beginRenaming () {
       this.renaming = true
+    },
+    didSelectItem () {
+      this.$emit('didSelectItem', this.itemModel)
     }
   }
 })
@@ -149,6 +160,7 @@ export default Vue.extend({
 .horizontal-item {
   width: 80px;
   height: 100px;
+  overflow: hidden;
   cursor: pointer;
   .icon-wrapper {
     height: 75px;
@@ -162,8 +174,9 @@ export default Vue.extend({
       margin: auto;
     }
   }
-  span {
+  p {
     height: 25px;
+    line-height: 25px;
     font-size: 12px;
     padding: 0px 3px;
     border-radius: 2px;
@@ -206,5 +219,18 @@ export default Vue.extend({
 }
 .oddVerticalItem {
   background-color: #FCFBFE;
+}
+</style>
+
+<style>
+.ant-tooltip-inner {
+  min-height: 16px;
+  font-size: 12px;
+  color: #484848;
+  background-color: #f6f8fb;
+  padding: 2px 6px;
+}
+.ant-tooltip-arrow {
+  border-bottom-color: #eaebee !important;
 }
 </style>
