@@ -34,6 +34,11 @@ export default {
     const name = _.last(path.split('/'))
     return name === undefined ? '' : name
   },
+  // 文件后缀
+  formatSuffix (path: string) {
+    const name = _.last(path.split('.'))
+    return name === undefined ? '' : name
+  },
   renamePath (oldPath: string, newName: string) {
     const components = oldPath.split('/')
     components.pop()

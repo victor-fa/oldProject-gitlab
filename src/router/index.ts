@@ -43,6 +43,11 @@ const routes = [
     ]
   },
   {
+    path: '/info',
+    name: 'DiskInfo',
+    component: () => import('../views/Disk/DiskInfo.vue')
+  },
+  {
     path: '/picture-shower',
     name: 'DiskPictureShower',
     component: () => import('../views/Disk/DiskPictureShower.vue')

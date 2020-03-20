@@ -657,13 +657,30 @@ export default {
 						okType: 'danger',
 						cancelText: '取消',
 						onOk() {
-							// TODO: 请求接口
+							const tempData:any = myThis.DiskData.NowSelect
+							const body ={
+								"type": 4,
+								"data": {
+									"mode": 1,
+									"files": [ { "path": tempData.path, "uuid": tempData.uuid } ]
+								}
+							}
+							NasFileAPI.deleteFile(body).then((response): void => {
+								if (response.data.code !== 200) {
+									myThis.$message.warning(response.data.msg)
+									return
+								}
+								myThis.getDeviceInfo()
+								myThis.$message.success('删除成功！')
+							}).catch((error): void => {
+								console.log(error);
+								myThis.$message.error('网络连接错误,请检测网络')
+							})
 						}
 					});
 					break;
 				case 'delete': //文件删除
 					let delete_data = myThis.DiskBatchData();
-					data = myThis.DiskBatchData('post', delete_data);
 					myThis.$confirm({
 						title: '删除',
 						content: '是否将所选' + delete_data.length + '个项目彻底删除',
@@ -671,7 +688,7 @@ export default {
 						okType: 'danger',
 						cancelText: '取消',
 						onOk() {
-							console.log('文件删除操作');
+							console.log('123');
 						}
 					});
 					break;
@@ -692,10 +709,30 @@ export default {
 					myThis.fileName = StringUtility.formatName(tempName)
 					break;
 				case 'info': //文件属性
-					console.log('属性未开始');
+					console.log(JSON.parse(JSON.stringify(myThis.DiskData.NowSelect)));
+					setTimeout(() => {
+						myThis.$ipc.send('file-control', 0, myThis.DiskData.NowSelect);
+					}, 400);
 					break;
 				case 'share': //提交文件分享
-					console.log('分享未开始');
+					const tempData:any = myThis.DiskData.NowSelect
+					console.log(tempData);
+					const body ={
+						"files": [
+							{ "uuid": tempData.uuid, "path": tempData.path }
+						]
+					}
+					NasFileAPI.shareFile(body).then((response): void => {
+						if (response.data.code !== 200) {
+							myThis.$message.warning(response.data.msg)
+							return
+						}
+						myThis.getDeviceInfo()
+						myThis.$message.success('分享成功！')
+					}).catch((error): void => {
+						console.log(error);
+						myThis.$message.error('网络连接错误,请检测网络')
+					})
 					break;
 				case 'post-share': //查看分享
 					myThis.$refs.DiskShareModel.ShareFile(myThis.DiskData.NowSelect);
@@ -739,7 +776,7 @@ export default {
 			const tempData:any = myThis.UserDiskData[0]
 			const body ={
 				"uuid": tempData.uuid,
-				"path": StringUtility.formatName(tempData.path),
+				"path": tempData.path.substring(0, tempData.path.lastIndexOf("/") + 1) + myThis.fileName,
 				"type": 2,
 				"alias": myThis.fileName
 			}

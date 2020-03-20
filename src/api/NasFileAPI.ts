@@ -11,6 +11,8 @@ import { OrderType } from './NasFileModel';
 axios.defaults.withCredentials = true;
 
 const nasFileModulePath = '/v1/file'
+const nasTaskModulePath = '/v1/task'
+const nasShareModulePath = '/v1/share'
 const tempServerUrl = 'http://192.168.10.91:9999'
 
 const apiToken = (() => {
@@ -54,6 +56,12 @@ export default {
   },
   addFile (body) {
     return Vue.axios.post(tempServerUrl + nasFileModulePath + '/add?' + jsonToParams(null), body)
+  },
+  deleteFile (body) {
+    return Vue.axios.post(tempServerUrl + nasTaskModulePath + '/add?' + jsonToParams(null), body)
+  },
+  shareFile (body) {
+    return Vue.axios.post(tempServerUrl + nasShareModulePath + '/share_files?' + jsonToParams(null), body)
   },
   download (option) {
     const input = { uuid: option.uuid, path: option.path }
