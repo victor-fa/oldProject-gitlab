@@ -164,7 +164,6 @@ export default Vue.extend({
       this.$store.dispatch('User/updateUser', response.user)
       this.$store.dispatch('User/updateAccessToken', response.accessToken)
       if (!this.rememberPassword) return
-      // 应该存储加密后的密码
       const account: Account = { account: this.account, password: this.ciphertext }
       this.$store.dispatch('User/addAccount', account)
     },
