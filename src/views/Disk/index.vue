@@ -202,8 +202,8 @@ export default {
 		},
 		TransformData: {
 			handler() {
-				console.log(JSON.parse(JSON.stringify(this.TransformData)));
 				const myThis = this as any
+				console.log(JSON.parse(JSON.stringify(myThis.TransformData)));
 				myThis.$nextTick(() => {
 					myThis.UploadCount = 0;
 					myThis.DownloadCount = 0;
