@@ -1,5 +1,6 @@
 // import Disk from '../api/Disk';
 import NasFileAPI from '../../api/NasFileAPI'
+import { USER_MODEL } from '../../common/constants'
 export default {
 	name: 'upload',
 	needChunkSize: 10485760,	// 规定片段位10M
@@ -15,6 +16,11 @@ export default {
 		let fileArea = data.files;
 		let file;
 		let OneFile = {};
+		const userJson = localStorage.getItem(USER_MODEL)
+		let ugreenNo = '';
+		if (userJson !== null) {
+			ugreenNo = JSON.parse(userJson).ugreenNo
+		}
 		for (let i = 0; i < fileArea.length; i++) {
 			file = fileArea[i];
 			OneFile = {
@@ -23,7 +29,7 @@ export default {
 				time: new Date().getTime() / 1000,
 				uuid: '',
 				name: file.name,
-				filePath: '/.ugreen_nas/6001/' + file.name,
+				filePath: '/.ugreen_nas/' + ugreenNo + '/' + file.name,
 				path: file.path,
 				chunk: 0,
 				size: file.size,
@@ -64,10 +70,14 @@ export default {
 		let blobFrom = Math.round(chunk * eachSize); // 分段开始
 		let blobTo = (chunk + 1) * eachSize > totalSize ? totalSize : Math.round((chunk + 1) * eachSize); // 分段结尾
 		item.chunk = blobTo;
-
+		const userJson = localStorage.getItem(USER_MODEL)
+		let ugreenNo = '';
+		if (userJson !== null) {
+			ugreenNo = JSON.parse(userJson).ugreenNo
+		}
 		let data = {	// path
 			uuid: '57f8f4bc-abf4-655f-bf67-946fc0f9f25b',
-			path: '/.ugreen_nas/6001/' + fileName,
+			path: '/.ugreen_nas/' + ugreenNo + '/' + fileName,
 			start: blobFrom,
 			end: blobTo-1,
 			size: totalSize,

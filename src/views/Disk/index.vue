@@ -84,7 +84,7 @@ import { EventBus, EventType } from '../../utils/eventBus'
 import processCenter, { EventName } from '../../utils/processCenter'
 import { ArrangeWay, ResourceItem } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
-import { TRANSFORM_INFO } from '../../common/constants'
+import { TRANSFORM_INFO, USER_MODEL } from '../../common/constants'
 import upload from '../../utils/file/upload';
 
 export default {
@@ -931,7 +931,13 @@ export default {
     },
     getFileList(params) { // 获取文件列表
       const myThis: any = this
-      NasFileAPI.list('/.ugreen_nas/6001', params).then((response): void => {
+			const userJson = localStorage.getItem(USER_MODEL)
+			let ugreenNo = '';
+			if (userJson !== null) {
+				ugreenNo = JSON.parse(userJson).ugreenNo
+			}
+			console.log(ugreenNo);
+      NasFileAPI.list('/.ugreen_nas/' + ugreenNo, params).then((response): void => {
         if (response.data.code !== 200) {
           myThis.$message.warning(response.data.msg)
           return
