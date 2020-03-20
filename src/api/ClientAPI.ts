@@ -28,12 +28,11 @@ export default {
       sign
     })
   },
-  offlineLogin (account: string, password: string, ugreenNo: string): Promise<AxiosResponse<BasicResponse>> {
-    const ciphertext = encryptPassword(account, password, ugreenNo)
+  offlineLogin (account: string, password: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/offline/login', {
       platform: parseInt(deviceMgr.getPlatform()),
       offline_username: account,
-      offline_password: ciphertext
+      offline_password: password
     })
   },
   bindUser (user: User, authCode: string): Promise<AxiosResponse<BasicResponse>> {
@@ -48,11 +47,10 @@ export default {
     }
     return nasServer.post(userModulePath + '/attach', params)
   },
-  setOfflineAccount (account: string, password: string, apiToken: string, ugreenNo: string): Promise<AxiosResponse<BasicResponse>> {
-    const ciphertext = encryptPassword(account, password, ugreenNo)
+  setOfflineAccount (account: string, password: string, apiToken: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/offline/account/set', {
       offline_username: account,
-      offline_password: ciphertext
+      offline_password: password
     }, {
       params: {
         api_token: apiToken
@@ -152,14 +150,6 @@ const encryptSign = (nasUser: any, secretKey: string) => {
     return jse.encrypt(queryUser) as string
   }
   return null
-}
-
-const encryptPassword = (account: string, password: string, ugreenNo: string) => {
-  // 账号 + 密码 + ugreen_no
-  const plaintext = account + password + ugreenNo
-  const crypto = require('crypto')
-  const md5 = crypto.createHash("md5")
-  return md5.update(plaintext).digest('hex')
 }
 
 const getBoardcastAddress = () => {

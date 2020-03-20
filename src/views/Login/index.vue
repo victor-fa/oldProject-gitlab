@@ -74,7 +74,11 @@ export default Vue.extend({
   },
   computed: {
     ...mapGetters('User', ['cacheAccounts', 'user']),
-    ...mapGetters('NasServer', ['nasInfo'])
+    ...mapGetters('NasServer', ['nasInfo']),
+    ciphertext: function () {
+      const myThis: any = this
+      return StringUtility.encryptPassword(myThis.password)
+    }
   },
   mounted () {
     this.observerToastNotify()
@@ -98,7 +102,7 @@ export default Vue.extend({
     loginAction () {
       if (!this.checkInputFrom()) return
       this.loading = true
-      UserAPI.login(this.account, this.password).then(response => {
+      UserAPI.login(this.account, this.ciphertext).then(response => {
         this.loading = false
         if (response.data.code !== 200) return
         const loginResponse = response.data.data as LoginResponse
@@ -160,7 +164,8 @@ export default Vue.extend({
       this.$store.dispatch('User/updateUser', response.user)
       this.$store.dispatch('User/updateAccessToken', response.accessToken)
       if (!this.rememberPassword) return
-      const account: Account = { account: this.account, password: this.password }
+      // 应该存储加密后的密码
+      const account: Account = { account: this.account, password: this.ciphertext }
       this.$store.dispatch('User/addAccount', account)
     },
     accountChangeAction (value: string) {

@@ -125,9 +125,8 @@ export default Vue.extend({
       ClientAPI.setBaseUrl(url)
       this.bindLoading = true
       const account = ''
-      const password = ''
-      const ugreenNo = (this.user as User).ugreenNo.toString()
-      ClientAPI.offlineLogin(account, password, ugreenNo).then(response => {
+      const password = StringUtility.encryptPassword('password')
+      ClientAPI.offlineLogin(account, password).then(response => {
         // TODO: 离线登录应该返回公钥，如果用户在其它设备上进行了离线登录，此时是没法获取到设备公钥的
         this.handleConnectSuccess(response)
       }).catch(error => {
