@@ -44,20 +44,14 @@
 					<input type="file" id="FileArea" @change="PrepareUploadFile" hidden ref="FileArea" multiple="multiple" />
 					<MouseMenu :type="loadClassify" :node="$refs.CloudDiskMain" :DiskData="DiskData" @callback="DiskFeatureControl" ref="MouseMenu" />
 					<a-modal
-						:visible="fileNameVisible"
-						:mask="false"
-						:closable="false"
-						:maskClosable="false"
-						okText="创建"
-						cancelText="取消"
-						@ok="handleCreateFile"
-						@cancel="cancleCreateFile"
-					>
-						文件夹名称：
-						<a-input
-							placeholder="请输入文件夹名称"
-							v-model="fileName"
-						/>
+						:visible="fileNameVisible" :mask="false" :closable="false" :maskClosable="false"
+						okText="创建" cancelText="取消" @ok="handleCreateFile" @cancel="cancleCreateFile">
+						文件夹名称：<a-input placeholder="请输入文件夹名称" v-model="fileName" />
+					</a-modal>
+					<a-modal
+						:visible="fileRenameVisible" :mask="false" :closable="false" :maskClosable="false"
+						okText="确定" cancelText="取消" @ok="handleRenameFile" @cancel="cancleRenameFile">
+						文件重命名：<a-input placeholder="请输入文件新名称" v-model="fileName" />
 					</a-modal>
 				</template>
 			</a-layout-content>
@@ -86,6 +80,7 @@ import { ArrangeWay, ResourceItem } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import { TRANSFORM_INFO, USER_MODEL } from '../../common/constants'
 import upload from '../../utils/file/upload';
+import StringUtility from '../../utils/StringUtility'
 
 export default {
   name: 'disk',
@@ -118,7 +113,8 @@ export default {
 				ClassifyName: '网盘', //地址栏左侧分类显示文本,
 			},
 			fileName: '',	// 新建文件名
-			fileNameVisible: false,
+			fileNameVisible: false,	// 创建文件夹
+			fileRenameVisible: false,	// 文件重命名
 			TransformData: [],
 			/*上传提示*/
       loading: false,
@@ -542,9 +538,12 @@ export default {
 						// 0: Unknown 1: Video, 2: Audio, 3:Image, 4:Document, 5:Archive, 6:Folder
 						const filterArr = [1, 2, 3, 4];
 						if (filterArr.indexOf(OpenType) > -1) {
+							console.log(myThis.UserDiskData);
 							let data:any = myThis.UserDiskData.filter(item => item.active)
-							console.log(JSON.parse(JSON.stringify(data[0])));
-							myThis.$ipc.send('file-control', OpenType, data);
+							setTimeout(() => {
+								console.log(JSON.parse(JSON.stringify(data[0])));
+								myThis.$ipc.send('file-control', OpenType, data);
+							}, 400);
 						} else if (OpenType === 5) {	// 包含zip
 							let data:any = myThis.UserDiskData.filter(item => item.active)
 							console.log(JSON.parse(JSON.stringify(data[0])));
@@ -688,18 +687,9 @@ export default {
 					});
 					break;
 				case 'rename': //重命名
-					console.log('重命名未开始');
-					myThis.InputConfrim({
-						title: '重命名',
-						tips: '请输入新的文件/文件夹名称',
-						value: myThis.DiskData.NowSelect.path,
-						// callback: value => {
-						// 	if (value.length === 0) {
-						// 		return myThis.$message.error('文件名不能为空');
-						// 	}
-						// 	// TODO: 请求接口
-						// }
-					});
+					myThis.fileRenameVisible = true;
+					const tempName = myThis.DiskData.NowSelect.path
+					myThis.fileName = StringUtility.formatName(tempName)
 					break;
 				case 'info': //文件属性
 					console.log('属性未开始');
@@ -749,7 +739,7 @@ export default {
 			const tempData:any = myThis.UserDiskData[0]
 			const body ={
 				"uuid": tempData.uuid,
-				"path": tempData.path.substring(0, tempData.path.lastIndexOf("/") + 1) + myThis.fileName,
+				"path": StringUtility.formatName(tempData.path),
 				"type": 2,
 				"alias": myThis.fileName
 			}
@@ -759,15 +749,38 @@ export default {
           return
 				}
 				myThis.getDeviceInfo()
+				myThis.fileName = ''
 				myThis.fileNameVisible = false
       }).catch((error): void => {
 				console.log(error);
         myThis.$message.error('网络连接错误,请检测网络')
       })
 		},
+		handleRenameFile(data) {	// 重命名文件
+      const myThis = this as any
+			if (myThis.fileName.length === 0) {
+				return myThis.$message.error('文件夹名称不能为空');
+			}
+			const tempData:any = myThis.DiskData.NowSelect
+      NasFileAPI.renameResource(tempData.path, tempData.path.substring(0, tempData.path.lastIndexOf("/") + 1) + myThis.fileName, tempData.uuid).then(response => {
+        console.log(response)
+        if (response.data.code !== 200) return
+				myThis.fileRenameVisible = false
+				myThis.fileName = ''
+				myThis.getDeviceInfo()
+      }).catch(error => {
+        myThis.loading = false
+        myThis.$message.error('网络连接错误，请检测网络')
+        console.log(error)
+      })
+		},
 		cancleCreateFile() {	// 关闭创建文件弹框
       const myThis = this as any
 			myThis.fileNameVisible = false
+		},
+		cancleRenameFile() {	// 关闭重命名文件弹框
+      const myThis = this as any
+			myThis.fileRenameVisible = false
 		},
 		/*切换顶部网盘分享、传输类型*/
 		SwitchType(type) {
@@ -936,7 +949,6 @@ export default {
 			if (userJson !== null) {
 				ugreenNo = JSON.parse(userJson).ugreenNo
 			}
-			console.log(ugreenNo);
       NasFileAPI.list('/.ugreen_nas/' + ugreenNo, params).then((response): void => {
         if (response.data.code !== 200) {
           myThis.$message.warning(response.data.msg)
@@ -1092,7 +1104,7 @@ export default {
   }
 }
 .horizontalResourceList {
-  padding: 20px 20px 0px;
+  padding: 20px 15px 0px;
   background-color: white;
 }
 /*分享提示*/
@@ -1102,7 +1114,7 @@ export default {
 	height: 25px;
 }
 .cd-share-select span {
-	color: #5b5bea;
+	color: #01B74F;
 }
 /*拖选框*/
 .cd-mouse-select {

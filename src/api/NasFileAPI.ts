@@ -86,11 +86,10 @@ export default {
     return this.fetchResourceList(path, uuid, page, 20, OrderType.ByModifyDesc)
   },
   renameResource (oldPath: string, newPath: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
-    return nasServer.post(nasFileModulePath + '/rename', {
+    return nasServer.post(nasFileModulePath + '/rename?api_token=' + apiToken, {
       uuid: uuid,
       old_path: oldPath,
-      new_path: newPath,
-      api_token: apiToken
+      new_path: newPath
     })
   },
   fetchMediaInfo (path: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {

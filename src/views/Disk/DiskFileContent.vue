@@ -11,6 +11,7 @@
 import WindowsHeader from '../../components/Disk/WindowHeader.vue'
 import { NAS_ACCESS } from '../../common/constants'
 import NasFileAPI from '../../api/NasFileAPI'
+import StringUtility from '../../utils/StringUtility'
 export default {
 	name: 'DiskFileContent',
 	components: { WindowsHeader },
@@ -36,9 +37,8 @@ export default {
 			//接收打开文本文件的数据
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
-					console.log(item);
 					this.NowLoad = item;
-					this.header.title = item.path + ' 文件查看';
+					this.header.title = StringUtility.formatName(item.path) + ' 文件查看';
 					this.LoadUrl =
 						this.$path.join(__static, 'plugins/syntaxhighlighter/index.html?url=') + 
 						`${NasFileAPI.getServerUrl()}/v1/file/http_download?uuid=${item.uuid}&path=${item.path}&api_token=${token}`;

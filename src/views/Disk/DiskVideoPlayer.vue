@@ -57,6 +57,7 @@
 import Media from '../../utils/file/media';
 import WindowsHeader from '../../components/Disk/WindowHeader.vue'
 import NasFileAPI from '../../api/NasFileAPI'
+import StringUtility from '../../utils/StringUtility'
 export default {
 	name: 'DiskVideoPlayer',
 	components: { WindowsHeader },
@@ -191,7 +192,7 @@ export default {
 						this.animation = 'animated zoomIn';
 						this.$ipc.send('player-control', 'video', 'play');
 					}
-					this.header.title = this.NowPlay.path;
+					this.header.title = StringUtility.formatName(this.NowPlay.path);
 					this.$refs.VideoPlayer.focus();
 					break;
 			}

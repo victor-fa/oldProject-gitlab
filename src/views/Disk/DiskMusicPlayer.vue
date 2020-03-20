@@ -9,7 +9,7 @@
 	>
 		<WindowsHeader :data="header" />
 		<div class="cd-music-player-container">
-			<div class="cd-music-player-title">{{ NowPlay.path }}</div>
+			<div class="cd-music-player-title">{{ NowPlay.path | filterName }}</div>
 			<ul>
 				<li class="cd-music-player-H-btn" />
 				<li class="sf-icon-step-backward cd-music-player-S-btn" @click="PlayerCommend('prev')" />
@@ -57,6 +57,7 @@ import Media from '../../utils/file/media';
 import MusicList from '../../components/Disk/MusicList.vue';
 import WindowsHeader from '../../components/Disk/WindowHeader.vue'
 import NasFileAPI from '../../api/NasFileAPI'
+import StringUtility from '../../utils/StringUtility'
 export default {
 	name: 'DiskMusicPlayer',
 	components: { MusicList, WindowsHeader },
@@ -66,10 +67,14 @@ export default {
 				this.PlayList.forEach((item, index) => {
 					item.play = 'active';
 					this.playCallBack(item, index);
-					this.GetLyr();
 				});
 			},
 			deep: true
+		}
+	},
+	filters: {
+		filterName(data) {
+			return StringUtility.formatName(data)
 		}
 	},
 	data() {
@@ -203,7 +208,7 @@ export default {
 						this.PlayButtonState = 'sf-icon-play';
 						this.$ipc.send('player-control', 'audio', 'play');
 					}
-					this.header.title = this.NowPlay.path;
+					this.header.title = StringUtility.formatName(this.NowPlay.path);
 					if (this.VisualState) {
 						this.Visual();
 					}
@@ -241,13 +246,13 @@ export default {
 				cheight = canvas.height,
 				meterWidth = 10, //width of the meters in the spectrum
 				capHeight = 2,
-				capStyle = '#5b5bea',
+				capStyle = '#01B74F',
 				meterNum = 800 / (10 + 2), //count of the meters
 				capYPositionArray = []; ////store the vertical position of hte caps for the preivous frame
 			ctx = canvas.getContext('2d');
 			let gradient = ctx.createLinearGradient(0, 0, 0, 300);
 			gradient.addColorStop(1, '#8140ff');
-			gradient.addColorStop(0.5, '#5b5bea');
+			gradient.addColorStop(0.5, '#01B74F');
 			gradient.addColorStop(0, '#fff');
 			function renderFrame() {
 				let array = new Uint8Array(analyser.frequencyBinCount);
@@ -273,23 +278,6 @@ export default {
 			}
 			renderFrame();
 			this.VisualState = false;
-		},
-		GetLyr() {
-			// this.$Api.Disk.GetLyr(
-			// 	{
-			// 		name: this.NowPlay.path
-			// 	},
-			// 	rs => {
-			// 		rs = JSON.parse(rs);
-			// 		if (rs.lrc.lyric !== '' || rs.lrc.lyric !== null) {
-			// 			let data = rs.lrc.lyric;
-			// 			this.start(data, () => {
-			// 				return this.$refs.audio.currentTime;
-			// 			});
-			// 		} else {
-			// 		}
-			// 	}
-			// );
 		},
 		start(txt, callback) {
 			if (typeof txt !== 'string' || txt.length < 1 || typeof callback !== 'function') return; /* 停止前面执行的歌曲 */

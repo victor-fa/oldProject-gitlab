@@ -20,6 +20,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import StringUtility from '../../utils/StringUtility'
 export default Vue.extend({
 	name: 'DiskFile',
 	props: {
@@ -47,15 +48,10 @@ export default Vue.extend({
       return y + '-' + MM + '-' + d + ' ' + h + ':' + m + ':' + s;
     },
     filterPath (value) {
-      return value.substring(value.lastIndexOf("/") + 1, value.length);
+      return StringUtility.formatName(value);
     },
     filterSize (bytes) {
-      bytes = parseFloat(bytes);
-      if (bytes === 0) return '0B';
-      let k = 1024,
-        sizes = ['B', 'KB', 'MB', 'GB', 'TB'],
-        i = Math.floor(Math.log(bytes) / Math.log(k));
-      return (bytes / Math.pow(k, i)).toPrecision(3) + sizes[i];
+      return StringUtility.formatShowSize(bytes)
 		}
 	},
 	methods: {

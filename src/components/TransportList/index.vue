@@ -60,6 +60,7 @@
 import Vue from 'vue'
 import { EventBus, EventType } from '../../utils/eventBus'
 import { TRANSFORM_INFO } from '../../common/constants'
+import StringUtility from '../../utils/StringUtility'
 
 export default Vue.extend({
   name: 'TransportList',
@@ -90,10 +91,7 @@ export default Vue.extend({
   },
   filters: {
     filterSize (bytes) {
-      bytes = parseFloat(bytes);
-      if (bytes === 0) return '0B';
-      let k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k));
-      return (bytes / Math.pow(k, i)).toPrecision(3) + sizes[i];
+      return StringUtility.formatShowSize(bytes)
     }
   },
   methods: {
@@ -122,11 +120,7 @@ export default Vue.extend({
 			return myThis.filterSize(speed) + '/s';
 		},
     filterSize (bytes) {
-      bytes = parseFloat(bytes);
-      if (bytes === 0) return '0B';
-      let k = 1024, sizes = ['B', 'KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k));
-      console.log(i);
-      return (bytes / Math.pow(k, i)).toPrecision(3) + (i !== -1 ? sizes[i] : 'B');
+      return StringUtility.formatShowSize(bytes)
     },
 		OpenDownPath(item) {
       const myThis = this as any

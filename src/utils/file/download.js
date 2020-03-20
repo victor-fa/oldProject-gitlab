@@ -1,4 +1,5 @@
 import { app, session } from 'electron';
+import StringUtility from '../../utils/StringUtility'
 
 export default {
 	transDownFolder: app.getPath('downloads'),
@@ -30,7 +31,7 @@ export default {
 			const paramsStr = item.getURL();
 			const str = paramsStr.substring(paramsStr.indexOf('?')+1, paramsStr.indexOf('&api_token'))
 			let filePath = unescape(str.substring(str.indexOf('&path=') + 6))
-			let name = filePath.substr(filePath.lastIndexOf("/") + 1, filePath.length)
+			let name = StringUtility.formatName(filePath)
 			item.uuid = str.substring(str.indexOf('uuid='), str.indexOf('&'))
 			item.name = name
 			item.filePath = filePath

@@ -1,17 +1,23 @@
 <template>
 	<ul class="sf-music-player-list">
 		<li v-for="(item, index) in PlayList" :key="index" :class="item.play" @click="ClickPlay(item, index)">
-			{{ 9 > index ? '0' : '' }}{{ index + 1 }} {{ item.path }}
+			{{ 9 > index ? '0' : '' }}{{ index + 1 }} {{ item.path | filterName }}
 		</li>
 	</ul>
 </template>
 
 <script>
+import StringUtility from '../../utils/StringUtility'
 export default {
 	name: 'MusicList',
 	props: {
 		PlayList: {
 			type: Array
+		}
+	},
+	filters: {
+		filterName(data) {
+			return StringUtility.formatName(data)
 		}
 	},
 	methods: {
@@ -45,11 +51,11 @@ export default {
 	font-size: 12px;
 }
 .sf-music-player-list li:hover {
-	color: #5b5bea;
+	color: #01B74F;
 	cursor: pointer;
 }
 .sf-music-player-list .active {
-	color: #5b5bea !important;
+	color: #01B74F !important;
 	background-color: #eaecf0;
 }
 </style>

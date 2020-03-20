@@ -10,6 +10,7 @@
 <script>
 import WindowsHeader from '../../components/Disk/WindowHeader.vue'
 import NasFileAPI from '../../api/NasFileAPI'
+import StringUtility from '../../utils/StringUtility'
 export default {
 	name: 'DiskPdfView',
 	components: { WindowsHeader },
@@ -40,7 +41,7 @@ export default {
 						uuid: item.uuid,
 						path: item.path
 					}))
-					this.header.title = item.path + '-PDF阅读器';
+					this.header.title = StringUtility.formatName(item.path) + '-PDF阅读器';
 				});
 			});
 		});
