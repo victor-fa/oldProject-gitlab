@@ -67,19 +67,19 @@ export default Vue.extend({
       console.log(error)
     })
     // temporary code
-    // setTimeout(() => {
-    //   const nasInfo: NasInfo = {
-    //     name: '小明的设备',
-    //     model: 'NAS-D2P1',
-    //     mac: '00ce39ca56a1',
-    //     sn: '1000000002',
-    //     port: 1098,
-    //     ip: '113.116.246.210',
-    //     softversion: 'V1.0.0',
-    //     active: NasActive.Bind
-    //   }
-    //   this.nasList.push(nasInfo)
-    // }, 2000);
+    setTimeout(() => {
+      const nasInfo: NasInfo = {
+        name: '小明的设备',
+        model: 'NAS-D2P1',
+        mac: '00ce39ca56a1',
+        sn: '1000000002',
+        port: 1098,
+        ip: '113.116.246.210',
+        softversion: 'V1.0.0',
+        active: NasActive.Bind
+      }
+      this.nasList.push(nasInfo)
+    }, 2000);
   },
   destroyed () {
     ClientAPI.closeBoardcast()
@@ -157,7 +157,6 @@ export default Vue.extend({
         router.push('account')
       } else {
         // switch home window
-        window.close()
         processCenter.renderSend(EventName.home)
       }
     },

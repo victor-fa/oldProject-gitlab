@@ -32,19 +32,19 @@ export default Vue.extend({
     this.searchNasInLAN()
     console.log(`sn: ${this.sn}, mac: ${this.mac}, secretKey: ${this.secretKey}`)
     // temporary code
-    // setTimeout(() => {
-    //   const nasInfo: NasInfo = {
-    //     name: '小明的设备',
-    //     model: 'NAS-D2P1',
-    //     mac: '00ce39ca56a1',
-    //     sn: '1000000002',
-    //     port: 1098,
-    //     ip: '113.116.246.210',
-    //     softversion: 'V1.0.0',
-    //     active: 1
-    //   }
-    //   this.onlineConnectNas(nasInfo)
-    // }, 2000)
+    setTimeout(() => {
+      const nasInfo: NasInfo = {
+        name: '小明的设备',
+        model: 'NAS-D2P1',
+        mac: '00ce39ca56a1',
+        sn: '1000000002',
+        port: 1098,
+        ip: '113.116.246.210',
+        softversion: 'V1.0.0',
+        active: 1
+      }
+      this.onlineConnectNas(nasInfo)
+    }, 2000)
   },
   destroyed () {
     if (timerId !== null) window.clearTimeout(timerId as any)
@@ -87,7 +87,6 @@ export default Vue.extend({
         // caceh nas info and token
         this.$store.dispatch('NasServer/updateNasAccess', accessInfo)
         this.$store.dispatch('NasServer/updateNasInfo', nasInfo)
-        window.close()
         processCenter.renderSend(EventName.home)
       }).catch(error => {
         this.loading = false

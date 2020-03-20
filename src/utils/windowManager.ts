@@ -56,6 +56,13 @@ export default {
     win.show()
     win.focus()
   },
+  closeOtherWindow (window: BrowserWindow): void {
+    const wins = BrowserWindow.getAllWindows()
+    for (let index = 0; index < wins.length; index++) {
+      const win = wins[index]
+      if (win !== window) win.close()
+    }
+  },
   presentLoginWindow (msg: string): BrowserWindow {
     if (loginWindow !== null) {
       this.activeWindow(loginWindow)
@@ -73,6 +80,7 @@ export default {
     })
     loginWindow.on('ready-to-show', () => {
       this.activeWindow(loginWindow!)
+      this.closeOtherWindow(loginWindow!)
       processCenter.mainSend(loginWindow!, MainEventName.toast, msg)
     })
     return loginWindow
@@ -93,6 +101,7 @@ export default {
     })
     homeWindow.on('ready-to-show', () => {
       this.activeWindow(homeWindow!)
+      this.closeOtherWindow(homeWindow!)
     })
     return homeWindow
   },
