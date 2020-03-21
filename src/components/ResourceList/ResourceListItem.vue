@@ -78,14 +78,16 @@ export default Vue.extend({
   },
   data () {
     let item = this.model as ResourceItem
-    item.name = StringUtility.formatName(item.path)
-    item.showMtime = StringUtility.formatShowMtime(item.mtime)
-    item.showSize = StringUtility.formatShowSize(item.size)
     return {
       itemModel: item,
       renaming: false,
       inputName: item.name,
       loading: false
+    }
+  },
+  watch: {
+    model: function (newValue) {
+      this.itemModel = newValue
     }
   },
   computed: {

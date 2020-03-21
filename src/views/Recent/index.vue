@@ -18,6 +18,7 @@ import NasFileAPI from '../../api/NasFileAPI'
 import { User } from '../../api/UserModel'
 import { EventBus, EventType } from '../../utils/eventBus'
 import processCenter, { EventName } from '../../utils/processCenter'
+import StringUtility from '../../utils/StringUtility'
 
 export default Vue.extend({
   name: 'recent',
@@ -77,6 +78,12 @@ export default Vue.extend({
         if (response.data.code !== 200) return
         const resources = response.data.data.list as Array<ResourceItem>
         if (_.isEmpty(resources)) this.busy = true
+        // parse reposne
+        resources.map(value => {  
+          value.name = StringUtility.formatName(value.path)
+          value.showMtime = StringUtility.formatShowMtime(value.mtime)
+          value.showSize = StringUtility.formatShowSize(value.size)
+        })
         this.dataArray = this.page === 1 ? resources : this.dataArray.concat(resources)
       }).catch(error => {
         this.loading = false
