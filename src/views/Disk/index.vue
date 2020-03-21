@@ -12,6 +12,12 @@
 				<template>
 					<resource-header v-if="isShowHeader"/>
 					<div class="cd-upload-tips" v-show="ShowUploadTips && DiskData.Type === 'disk' && loadClassify === 'normal'">松开鼠标开始上传文件</div>
+					<DiskSortBar
+						:show="DiskData.DiskShowState !== 'cd-disk-block-file' && NoTransType"
+						:DiskData="UserDiskData"
+						@callback="DiskFeatureControl"
+						ref="DiskSortBar"
+					/>
 					<section
 						class="cd-bottom"
 						@mousedown="MainMouseFunc"
@@ -70,6 +76,7 @@ import BasicHeader from '../../components/BasicHeader/index.vue'
 import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
 import DiskFile from '../../components/Disk/DiskFile.vue'
 import MouseMenu from '../../components/Disk/MouseMenu.vue'
+import DiskSortBar from '../../components/Disk/DiskSortBar.vue';
 import ResourceHeader from '../../components/ResourceList/ResourceHeader.vue'
 import BasicFooter from '../../components/BasicFooter/index.vue'
 import TransportList from '../../components/TransportList/index.vue'
@@ -89,6 +96,7 @@ export default {
     ResourceHeader,
 		DiskFile,
 		MouseMenu,
+		DiskSortBar,
 		TransportList,
 		BasicFooter,
     ILogo,
@@ -145,6 +153,8 @@ export default {
 			ShowUploadTips: false,
 			/*文件传输列表参数*/
 			SelectDownLoadFiles: [], //选择下载的文件
+			deviceUuid: '',
+			currentType: 'all'
     }
   },
   watch: {
@@ -272,7 +282,7 @@ export default {
     window.addEventListener('resize', myThis.observerWindowResize)
     myThis.observerEventBus()
     myThis.observerWindowResize()
-		myThis.getDeviceInfo(null)
+		myThis.getDeviceInfo()
 		const temp:any = localStorage.getItem(TRANSFORM_INFO)
 		let tempJson = JSON.parse(temp)
 		myThis.TransformData = tempJson !== null ? tempJson : []
@@ -282,7 +292,10 @@ export default {
     window.removeEventListener('resize', myThis.observerWindowResize)
     EventBus.$off(EventType.backAction)
     EventBus.$off(EventType.categoryChangeAction)
-    EventBus.$off(EventType.arrangeChangeAction)
+		EventBus.$off(EventType.arrangeChangeAction)
+		EventBus.$off(EventType.leftMenuChangeAction)
+		EventBus.$off(EventType.downloadChangeAction)
+		EventBus.$off(EventType.refreshAction)
   },
 	created() {
     const myThis = this as any
@@ -363,14 +376,21 @@ export default {
         myThis.directoryList = myThis.currentArray
       })
       EventBus.$on(EventType.categoryChangeAction, (type: CategoryType) => {
-				myThis.getDeviceInfo(myThis.changeType(type));
+				console.log(type);
+				if (['download', 'upload', 'offline', 'remote'].indexOf(type) > -1) return
+				myThis.currentType = type	// 在这里进行类型选择
+				myThis.getDeviceInfo();
       })
       EventBus.$on(EventType.arrangeChangeAction, (way: ArrangeWay) => {
-        myThis.arrangeWay = way
+				console.log(way);
+				myThis.DiskData.DiskShowState = way === 0 ? 'cd-disk-block-file' : 'cd-disk-list-file';
 			})
       EventBus.$on(EventType.leftMenuChangeAction, (path: any) => {
 				myThis.SwitchType(path.substring(1, path.length))
-      })
+			})
+			EventBus.$on(EventType.refreshAction, () => {
+				myThis.getDeviceInfo();
+			})
     },
 		changeType (type) {	// 转换枚举类型
 			let res = 0;
@@ -463,7 +483,7 @@ export default {
 					}
 					myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify(myThis.TransformData))
 					myThis.UserDiskData.push(file);
-					myThis.getDeviceInfo(null)
+					myThis.getDeviceInfo()
 					myThis.$message.success('文件上传成功！')
 					myThis.DiskFeatureControl('popup', file.name + '上传完成'); /*消息提醒*/
 				}
@@ -493,6 +513,7 @@ export default {
 				return (myThis.DiskData.ClipboardType = commend);
 			}
 			commend = commend ? commend : 'newFolder';
+			console.log(commend);
 			switch (commend) {
 				case 'open' /*打开文件夹/文件*/:
 					let item = datas;
@@ -576,6 +597,7 @@ export default {
 					}
 					break;
 				case 'state': //切换文件显示模式
+					console.log('123');
 					myThis.DiskData.DiskShowState = datas;
 					break;
 				case 'newFolder':
@@ -640,7 +662,7 @@ export default {
 									myThis.$message.warning(response.data.msg)
 									return
 								}
-								myThis.getDeviceInfo(null)
+								myThis.getDeviceInfo()
 								myThis.$message.success('删除成功！')
 							}).catch((error): void => {
 								console.log(error);
@@ -697,7 +719,7 @@ export default {
 							myThis.$message.warning(response.data.msg)
 							return
 						}
-						myThis.getDeviceInfo(null)
+						myThis.getDeviceInfo()
 						myThis.$message.success('分享成功！')
 					}).catch((error): void => {
 						console.log(error);
@@ -723,7 +745,7 @@ export default {
 					});
 					break;
 				case 'reload':
-					myThis.getDeviceInfo(null)
+					myThis.getDeviceInfo()
 					break;
 				case 'popup':
 					if (myThis.ConfigObject.NoticeFlag) {
@@ -755,7 +777,7 @@ export default {
           myThis.$message.warning(response.data.msg)
           return
 				}
-				myThis.getDeviceInfo(null)
+				myThis.getDeviceInfo()
 				myThis.fileName = ''
 				myThis.fileNameVisible = false
       }).catch((error): void => {
@@ -774,7 +796,7 @@ export default {
         if (response.data.code !== 200) return
 				myThis.fileRenameVisible = false
 				myThis.fileName = ''
-				myThis.getDeviceInfo(null)
+				myThis.getDeviceInfo()
       }).catch(error => {
         myThis.loading = false
         myThis.$message.error('网络连接错误，请检测网络')
@@ -853,7 +875,7 @@ export default {
 			event.stopPropagation();
       let area = event.target;
 			let start = {
-				x: event.clientX - area.getBoundingClientRect().left + area.scrollLeft + 203,
+				x: event.clientX - area.getBoundingClientRect().left + area.scrollLeft + 201,
 				y: event.clientY - area.getBoundingClientRect().top + area.scrollTop + 112,
 				maxy: area.scrollHeight
 			};
@@ -870,7 +892,7 @@ export default {
 			};
 			document.onmousemove = ev => {
 				let end = {
-					x: ev.clientX - area.getBoundingClientRect().left + area.scrollLeft + 203,
+					x: ev.clientX - area.getBoundingClientRect().left + area.scrollLeft + 201,
 					y: ev.clientY - area.getBoundingClientRect().top + area.scrollTop + 112,
 					scrolldown: Math.min(ev.clientY - area.getBoundingClientRect().top, event.clientY - area.getBoundingClientRect().top) + 10 + area.offsetHeight,
 					scrollup: Math.min(ev.clientY - area.getBoundingClientRect().top, event.clientY - area.getBoundingClientRect().top)
@@ -918,7 +940,6 @@ export default {
 			console.log(item);
 			if (event.target.className === 'sf-icon-times') {
 				if (item.trans_type === 'download') {
-					console.log('123');
 					myThis.$ipc.send('download', 'cancel', item.id);
 				}
 				return myThis.TransformData.splice(index, 1);
@@ -935,21 +956,25 @@ export default {
 				myThis.$ipc.send('download', commend, item.id);
 			}
 		}, //传输任务控制
-    getDeviceInfo (type) {  // 获取磁盘信息
+		getDeviceInfo () {  // 获取磁盘信息
       const myThis: any = this
+			if (myThis.deviceUuid !== '') {	// 处理频繁访问获取磁盘信息接口
+				myThis.getFileList(myThis.deviceUuid);
+				return
+			}
       NasFileAPI.storages().then((response): void => {
         if (response.data.code !== 200) {
           myThis.$message.warning(response.data.msg)
           return
         }
-        const res = response.data.data
-        myThis.getFileList(res.storages[0].partitions[0].uuid, type);
+				myThis.deviceUuid = response.data.data.storages[0].partitions[0].uuid 
+				myThis.getFileList(myThis.deviceUuid);
       }).catch((error): void => {
         console.log(error)
         myThis.$message.error('网络连接错误,请检测网络')
       })
     },
-    getFileList(params, type) { // 获取文件列表
+    getFileList(params) { // 获取文件列表
       const myThis: any = this
 			const userJson = localStorage.getItem(USER_MODEL)
 			let ugreenNo = '';
@@ -963,6 +988,7 @@ export default {
         }
         const res = response.data.data
 				myThis.LoadCompany = true;
+				const type = myThis.changeType(myThis.currentType)	// 对类型进行枚举转换
 				if (type === null || type === 0) {
 					myThis.UserDiskData = res.list
 				} else {

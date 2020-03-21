@@ -7,7 +7,7 @@ const HomeRouters = [
     // component: () => import('../../views/Recent/index.vue'),
     // name: 'recent',
     meta: {
-      title: '最近使用',
+      title: '最近',
       icon: require('../../assets/recent_icon.png'),
       selectedIcon: require('../../assets/recent_icon_selected.png'),
       isSelected: true
@@ -29,7 +29,7 @@ const HomeRouters = [
     component: () => import('../../views/Custom/index.vue'),
     name: 'custom',
     meta: {
-      title: '自定义',
+      title: '我的',
       icon: require('../../assets/custom_icon.png'),
       selectedIcon: require('../../assets/custom_icon_selected.png'),
       isSelected: false
@@ -84,7 +84,7 @@ const HomeRouters = [
     component: () => import('../../views/Transport/index.vue'),
     name: 'transport',
     meta: {
-      title: '任务管理',
+      title: '任务',
       icon: require('../../assets/transport_icon.png'),
       selectedIcon: require('../../assets/transport_icon_selected.png'),
       isSelected: false

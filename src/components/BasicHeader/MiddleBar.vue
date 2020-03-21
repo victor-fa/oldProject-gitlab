@@ -39,6 +39,8 @@ export default Vue.extend({
     observerEventBus () {
       EventBus.$on(EventType.leftMenuChangeAction, (path: any) => {
         // console.log(path);
+        taskCategorys.forEach(cell => { cell.isSelected = false })
+        taskCategorys[0].isSelected = true
         if (path === '/transport') {
           this.currentArr = taskCategorys;
           this.currentCategory = taskCategorys[0];
