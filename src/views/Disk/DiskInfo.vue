@@ -13,31 +13,22 @@
 			<span>文件位置:</span>
 			<div ref="address">{{ DiskData.path }}</div>
 		</div>
-		<!-- <div class="cd-disk-info-line"></div> -->
 		<div class="cd-disk-info-item">
 			<span>文件大小:</span>
-			<div>{{ DiskData.size }}字节</div>
+			<div>{{ DiskData.size | filterSize }}</div>
 		</div>
 		<div class="cd-disk-info-item">
 			<span>创建时间:</span>
-			<div>{{ DiskData.ctime }}</div>
+			<div>{{ DiskData.ctime | filterTime }}</div>
 		</div>
 		<div class="cd-disk-info-item">
 			<span>修改时间:</span>
-			<div>{{ DiskData.mtime }}</div>
+			<div>{{ DiskData.mtime | filterTime }}</div>
 		</div>
-		<!-- <div class="cd-disk-info-line"></div> -->
 		<div class="cd-disk-info-item">
 			<span>唯一标识:</span>
 			<div>{{ DiskData.uuid }}</div>
 		</div>
-		<!-- <div class="cd-disk-info-item">
-			<span>文件分享:</span>
-			<input v-show="DiskData.share.length" :value="DiskData.shareAddress" @focus="copy" type="text" />
-			<button v-show="DiskData.share" @click="copy">复制</button>
-			<div v-if="!DiskData.share">未分享</div>
-		</div> -->
-		<!-- <div class="cd-disk-info-line"></div> -->
 		<div class="cd-disk-info-item" style="position: absolute;bottom: 15px;right:-30px;">
 			<a-button class="cd-cancel-button" @click="close">关闭</a-button>
 		</div>
@@ -58,6 +49,12 @@ export default {
 		},
 		filterNameType (data) {
 			return StringUtility.formatSuffix(data)
+		},
+		filterTime (data) {
+			return StringUtility.formatShowMtime(data)
+		},
+		filterSize (data) {
+			return StringUtility.formatShowSize(data)
 		}
 	},
 	data() {
@@ -68,9 +65,7 @@ export default {
 				size: '',
 				ctime: '',
 				mtime: '',
-				uuid: '',
-				share: '',
-				shareAddress: ''
+				uuid: ''
 			},
 			header: {
 				title: '',
@@ -88,18 +83,9 @@ export default {
 			this.DiskData = data;
 			this.header.title = StringUtility.formatName(data.path) + ' 属性';
 			this.window.setTitle(StringUtility.formatName(data.path) + ' 属性');
-			// this.$Api.Disk.Address(data.disk_id, rs => {
-			// 	this.$refs.address.innerHTML = '我的网盘' + rs;
-			// 	this.$nextTick(() => {
-			// 		this.DiskData.address = '我的网盘' + rs;
-			// 	});
-			// });
 		});
 	},
 	methods: {
-		copy() {
-			this.$electron.clipboard.writeText(localStorage.server + '/s/' + this.DiskData.share);
-		},
 		close() {
 			this.window.close();
 		}

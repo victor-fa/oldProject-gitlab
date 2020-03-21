@@ -179,27 +179,27 @@ export default {
     },
 		UserDiskData: {
 			handler() {
-        const myThis = this as any
-				myThis.NeedHide = true;
-				myThis.DiskData.SelectFiles = [];
-				myThis.UserDiskData.forEach((item, index) => {
-					if (item.active) {
-						item.index = index;
-						myThis.DiskData.SelectFiles.push(item);
-					}
-				});
-				if (myThis.DiskData.SelectFiles.length) {
-					myThis.DiskData.SelectTips = '选中' + myThis.DiskData.SelectFiles.length + '个项目';
-				} else {
-					myThis.DiskData.SelectTips = myThis.UserDiskData.length + '个项目';
-				}
+        // const myThis = this as any
+				// myThis.NeedHide = true;
+				// myThis.DiskData.SelectFiles = [];
+				// myThis.UserDiskData.forEach((item, index) => {
+				// 	if (item.active) {
+				// 		item.index = index;
+				// 		myThis.DiskData.SelectFiles.push(item);
+				// 	}
+				// });
+				// if (myThis.DiskData.SelectFiles.length) {
+				// 	myThis.DiskData.SelectTips = '选中' + myThis.DiskData.SelectFiles.length + '个项目';
+				// } else {
+				// 	myThis.DiskData.SelectTips = myThis.UserDiskData.length + '个项目';
+				// }
 			},
 			deep: true
 		},
 		TransformData: {
 			handler() {
 				const myThis = this as any
-				console.log(JSON.parse(JSON.stringify(myThis.TransformData)));
+				// console.log(JSON.parse(JSON.stringify(myThis.TransformData)));
 				myThis.$nextTick(() => {
 					myThis.UploadCount = 0;
 					myThis.DownloadCount = 0;
@@ -272,7 +272,7 @@ export default {
     window.addEventListener('resize', myThis.observerWindowResize)
     myThis.observerEventBus()
     myThis.observerWindowResize()
-		myThis.getDeviceInfo()
+		myThis.getDeviceInfo(null)
 		const temp:any = localStorage.getItem(TRANSFORM_INFO)
 		let tempJson = JSON.parse(temp)
 		myThis.TransformData = tempJson !== null ? tempJson : []
@@ -294,32 +294,20 @@ export default {
 		/*初始化*/
 		Bind: function() {
 			const myThis = this as any
-			window.addEventListener(
-				'dragenter',
-				function(e) {
-					e.preventDefault();
-				},
+			window.addEventListener('dragenter',
+				function(e) { e.preventDefault(); },
 				false
 			);
-			window.addEventListener(
-				'dragover',
-				function(e) {
-					e.preventDefault();
-				},
+			window.addEventListener('dragover',
+				function(e) { e.preventDefault(); },
 				false
 			);
-			window.addEventListener(
-				'dragleave',
-				function(e) {
-					e.preventDefault();
-				},
+			window.addEventListener('dragleave',
+				function(e) { e.preventDefault(); },
 				false
 			);
-			window.addEventListener(
-				'drop',
-				function(e) {
-					e.preventDefault();
-				},
+			window.addEventListener('drop',
+				function(e) { e.preventDefault(); },
 				false
 			);
 			myThis.$ipc.on('download', (e, file, completed) => {
@@ -375,7 +363,7 @@ export default {
         myThis.directoryList = myThis.currentArray
       })
       EventBus.$on(EventType.categoryChangeAction, (type: CategoryType) => {
-        myThis.currentArray = myThis.filterCurrentArray(type)
+				myThis.getDeviceInfo(myThis.changeType(type));
       })
       EventBus.$on(EventType.arrangeChangeAction, (way: ArrangeWay) => {
         myThis.arrangeWay = way
@@ -384,45 +372,27 @@ export default {
 				myThis.SwitchType(path.substring(1, path.length))
       })
     },
-    filterCurrentArray (type: CategoryType) {
-      const myThis = this as any
-      let newArray:any = []
-      for (let index = 0; index < myThis.directoryList.length; index++) {
-        const element = myThis.directoryList[index]
-        if (myThis.isInclude(type, element.type)) {
-          newArray.push(element)
-        }
-      }
-      return newArray
-    },
-    isInclude (ctype: CategoryType, rtype) {
-      const myThis = this as any
-      switch (ctype) {
-        case CategoryType.all:
-          return true
-        case CategoryType.image:
-          if (rtype === 3) {
-            return true
-          }
-          break
-        case CategoryType.video:
-          if (rtype === 1) {
-            return true
-          }
-          break
-        case CategoryType.audio:
-          if (rtype === 2) {
-            return true
-          }
-          break
-        case CategoryType.document:
-          if (rtype !== 3 && rtype !== 1 && rtype !== 2 && rtype !== 6) {
-            return true
-          }
-          break
-      }
-      return false
-    },
+		changeType (type) {	// 转换枚举类型
+			let res = 0;
+			switch (type) {
+				case 'video':
+					res = 1
+					break;
+				case 'audio':
+					res = 2
+					break;
+				case 'image':
+					res = 3
+					break;
+				case 'document':
+					res = 4
+					break;
+				default:
+					res = 0
+					break;
+			}
+			return res
+		},
     handleInfiniteOnLoad () {
       const myThis = this as any
       console.log('load more data')
@@ -493,7 +463,7 @@ export default {
 					}
 					myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify(myThis.TransformData))
 					myThis.UserDiskData.push(file);
-					myThis.getDeviceInfo()
+					myThis.getDeviceInfo(null)
 					myThis.$message.success('文件上传成功！')
 					myThis.DiskFeatureControl('popup', file.name + '上传完成'); /*消息提醒*/
 				}
@@ -670,7 +640,7 @@ export default {
 									myThis.$message.warning(response.data.msg)
 									return
 								}
-								myThis.getDeviceInfo()
+								myThis.getDeviceInfo(null)
 								myThis.$message.success('删除成功！')
 							}).catch((error): void => {
 								console.log(error);
@@ -727,7 +697,7 @@ export default {
 							myThis.$message.warning(response.data.msg)
 							return
 						}
-						myThis.getDeviceInfo()
+						myThis.getDeviceInfo(null)
 						myThis.$message.success('分享成功！')
 					}).catch((error): void => {
 						console.log(error);
@@ -753,7 +723,7 @@ export default {
 					});
 					break;
 				case 'reload':
-					myThis.getDeviceInfo()
+					myThis.getDeviceInfo(null)
 					break;
 				case 'popup':
 					if (myThis.ConfigObject.NoticeFlag) {
@@ -785,7 +755,7 @@ export default {
           myThis.$message.warning(response.data.msg)
           return
 				}
-				myThis.getDeviceInfo()
+				myThis.getDeviceInfo(null)
 				myThis.fileName = ''
 				myThis.fileNameVisible = false
       }).catch((error): void => {
@@ -804,7 +774,7 @@ export default {
         if (response.data.code !== 200) return
 				myThis.fileRenameVisible = false
 				myThis.fileName = ''
-				myThis.getDeviceInfo()
+				myThis.getDeviceInfo(null)
       }).catch(error => {
         myThis.loading = false
         myThis.$message.error('网络连接错误，请检测网络')
@@ -965,7 +935,7 @@ export default {
 				myThis.$ipc.send('download', commend, item.id);
 			}
 		}, //传输任务控制
-    getDeviceInfo () {  // 获取磁盘信息
+    getDeviceInfo (type) {  // 获取磁盘信息
       const myThis: any = this
       NasFileAPI.storages().then((response): void => {
         if (response.data.code !== 200) {
@@ -973,13 +943,13 @@ export default {
           return
         }
         const res = response.data.data
-        myThis.getFileList(res.storages[0].partitions[0].uuid);
+        myThis.getFileList(res.storages[0].partitions[0].uuid, type);
       }).catch((error): void => {
         console.log(error)
         myThis.$message.error('网络连接错误,请检测网络')
       })
     },
-    getFileList(params) { // 获取文件列表
+    getFileList(params, type) { // 获取文件列表
       const myThis: any = this
 			const userJson = localStorage.getItem(USER_MODEL)
 			let ugreenNo = '';
@@ -992,7 +962,19 @@ export default {
           return
         }
         const res = response.data.data
-        myThis.DiskBatchData('print', res.list);
+				myThis.LoadCompany = true;
+				if (type === null || type === 0) {
+					myThis.UserDiskData = res.list
+				} else {
+					let newArr:any = []
+					res.list.forEach(item => {
+						if (item.type === type) {
+							newArr.push(item)
+						}
+					})
+					myThis.UserDiskData = newArr
+				}
+				console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
       }).catch((error): void => {
         console.log(error)
         myThis.$message.error('网络连接错误,请检测网络')
@@ -1026,11 +1008,6 @@ export default {
 							}
 						}
 					}
-					break;
-				case 'print':
-					myThis.LoadCompany = true;
-					myThis.UserDiskData = data
-					console.log(JSON.parse(JSON.stringify(data)));
 					break;
 			}
 			return BatchData;

@@ -26,12 +26,12 @@ export default Vue.extend({
   },
   mounted () {
     this.observerEventBus()
+    EventBus.$emit(EventType.categoryChangeAction, 'all')
   },
   methods: {
     onSelectAction: function (item: any): void {
       if (item.isSelected) { return }
-      // TODO: 现将所有置为未选中，调试状态总是出问题
-      this.currentCategory.isSelected = false
+      this.currentArr.forEach(cell => { cell.isSelected = false })  // 清空所有已选状态
       item.isSelected = true
       this.currentCategory = item
       EventBus.$emit(EventType.categoryChangeAction, item.type)

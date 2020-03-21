@@ -46,20 +46,15 @@ export default {
     return components.join('/')
   },
   // 格式化文件修改时间
-  formatShowMtime (mtime: number) {
-    let date: any = new Date(mtime)
-    let y: any = date.getFullYear()
-    let MM: any = date.getMonth() + 1
-    MM = MM < 10 ? ('0' + MM) : MM
-    let d = date.getDate()
-    d = d < 10 ? ('0' + d) : d
-    let h = date.getHours()
-    h = h < 10 ? ('0' + h) : h
-    let m = date.getMinutes()
-    m = m < 10 ? ('0' + m) : m
-    let s = date.getSeconds()
-    s = s < 10 ? ('0' + s) : s
-    return y + '-' + MM + '-' + d + ' ' + h + ':' + m + ':' + s
+  formatShowMtime (value: number) {
+    var date = new Date(value * 1000);
+    var Y = date.getFullYear() + '-';
+    var M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
+    var D = date.getDate() + ' ';
+    var h = date.getHours() + ':';
+    var m = date.getMinutes() + ':';
+    var s = date.getSeconds();
+    return Y + M + D + h + m + s;
   },
   // 格式化文件大小
   formatShowSize (size: number) {
