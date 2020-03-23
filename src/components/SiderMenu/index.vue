@@ -29,8 +29,8 @@ export default Vue.extend({
   methods: {
     onSelectAction: function (item: FuncListItem, path: string) {
       if (item.isSelected) { return }
+      this.HomeRouters.forEach(item => { item.meta.isSelected = false })
       item.isSelected = true
-      this.selectedItem.isSelected = false
       this.selectedItem = item
       EventBus.$emit(EventType.leftMenuChangeAction, path)
       router.replace(path)

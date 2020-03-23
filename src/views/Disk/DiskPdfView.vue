@@ -49,7 +49,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 /*pdf窗口*/
 html,body,#app{
 	height: 100%;
@@ -62,10 +62,10 @@ html,body,#app{
 .cd-pdf-show-container {
 	width: 100%;
 	height: calc(100% - 32px);
-}
-.cd-pdf-show-container iframe {
-	width: 100%;
-	height: 100%;
-	border: none;
+	iframe {
+		width: 100%;
+		height: 100%;
+		border: none;
+	}
 }
 </style>

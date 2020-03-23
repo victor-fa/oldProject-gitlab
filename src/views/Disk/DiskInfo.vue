@@ -93,7 +93,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 /*文件属性窗口*/
 .cd-disk-info-main {
 	width: 100%;
@@ -108,69 +108,69 @@ export default {
 	height: 56px;
 	border-bottom: 1px solid #ccc;
 	padding: 10px;
-}
-.cd-disk-info-head img {
-	width: 35px;
-}
-.cd-disk-info-head * {
-	display: inline-block;
-	float: left;
-	line-height: 35px;
-	text-indent: 10px;
-	text-overflow: ellipsis;
-}
-.cd-disk-info-head span {
-	width: calc(100% - 60px);
-	font-size: 16px;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	img {
+		width: 35px;
+	}
+	* {
+		display: inline-block;
+		float: left;
+		line-height: 35px;
+		text-indent: 10px;
+		text-overflow: ellipsis;
+	}
+	span {
+		width: calc(100% - 60px);
+		font-size: 16px;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 }
 .cd-disk-info-item {
 	width: 100%;
 	padding: 0 50px;
 	font-size: 14px;
 	line-height: 32px;
-}
-.cd-disk-info-item span {
-	float: left;
-	height: 30px;
-	display: block;
-	font-size: 14px;
-	font-weight: 600;
-}
-.cd-disk-info-item div {
-	float: left;
-	width: calc(100% - 105px);
-	height: 30px;
-	line-height: 20px;
-	padding-top: 6px;
-	padding-left: 10px;
-	color: #2d2d2d;
-	text-overflow: ellipsis;
-	white-space: normal;
-	display: -webkit-box;
-	-webkit-box-orient: vertical;
-	-webkit-line-clamp: 1;
-}
-.cd-disk-info-item input {
-	width: calc(100% - 160px);
-	height: 29px;
-	border-radius: 0;
-	margin-left: 10px;
-	-webkit-app-region: no-drag;
+	span {
+		float: left;
+		height: 30px;
+		display: block;
+		font-size: 14px;
+		font-weight: 600;
+	}
+	div {
+		float: left;
+		width: calc(100% - 105px);
+		height: 30px;
+		line-height: 20px;
+		padding-top: 6px;
+		padding-left: 10px;
+		color: #2d2d2d;
+		text-overflow: ellipsis;
+		white-space: normal;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 1;
+	}
+	input {
+		width: calc(100% - 160px);
+		height: 29px;
+		border-radius: 0;
+		margin-left: 10px;
+		-webkit-app-region: no-drag;
+	}
+	button {
+		float: right;
+		background: none;
+		height: 30px;
+		line-height: 30px;
+		padding: 0 10px;
+		-webkit-app-region: no-drag;
+		color: #5b5bea;
+	}
 }
 .cd-disk-info-item input::selection {
 	color: #5b5bea !important;
 	background-color: #eaecf0;
-}
-.cd-disk-info-item button {
-	float: right;
-	background: none;
-	height: 30px;
-	line-height: 30px;
-	padding: 0 10px;
-	-webkit-app-region: no-drag;
-	color: #5b5bea;
 }
 .cd-disk-info-line {
 	width: calc(100% - 88px);

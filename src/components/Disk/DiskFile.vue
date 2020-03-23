@@ -11,9 +11,10 @@
 			<span class="icon">
 				<img :src="itemIcon(item)" draggable="false" alt="" />
 			</span>
-			<p>{{ item.path | filterPath }}</p>
-			<div class="time">{{ item.ctime || item.mtime | formatDate }}</div>
-			<div class="time" style="width: 20%">{{ item.size | filterSize }}</div>
+			<p v-if="item.isUser">{{ item.nick_name }}（{{ item.ugreen_no }}）</p>
+			<p v-else>{{ item.path | filterPath }}</p>
+			<div v-if="!item.isUser" class="time">{{ item.ctime || item.mtime | formatDate }}</div>
+			<div v-if="!item.isUser" class="time" style="width: 20%">{{ item.size | filterSize }}</div>
 		</div>
 	</div>
 </template>
@@ -56,30 +57,10 @@ export default Vue.extend({
 		},
 		getTypeNam(data) {
 			let typeName = 'unkonw'
-			switch (data.type) {
-				case 0:
-					typeName = 'unkonw'
-					break;
-				case 1:
-					typeName = 'video'
-					break;
-				case 2:
-					typeName = 'audio'
-					break;
-				case 3:
-					typeName = 'image'
-					break;
-				case 4:
-					typeName = 'txt'
-					break;
-				case 5:
-					typeName = (data.path.indexOf('.pdf') > -1 ? 'pdf' : 'unkonw')
-					break;
-				case 6:
-					typeName = 'folder'
-					break;
-				default:
-					break;
+			if (data.type === 6) {
+				typeName = 'folder'
+			} else {
+				typeName = StringUtility.suffixToTpe(StringUtility.formatSuffix(data.path))
 			}
 			return typeName
 		}

@@ -234,7 +234,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .loading {
 	animation: loading 1s linear infinite;
 }
@@ -265,10 +265,10 @@ export default {
 	-ms-user-select: none;
 	-khtml-user-select: none;
 	user-select: none;
-}
-.cd-image-container .ivu-spin-main {
-	float: right;
-	padding: 30px 10px;
+	.ivu-spin-main {
+		float: right;
+		padding: 30px 10px;
+	}
 }
 .cd-image-zoom {
 	height: 30px;
@@ -305,12 +305,6 @@ export default {
 	-o-transition: all 0.3s ease-out !important;
 	transition: all 0.3s ease-out !important;
 }
-.cd-image-control {
-	bottom: 30px;
-	z-index: 3;
-	width: 100%;
-	height: 45px;
-}
 .ImageShowTips {
 	width: 100%;
 	text-align: right;
@@ -323,10 +317,10 @@ export default {
 	text-shadow: 0 0 5px rgb(0, 0, 0);
 }
 .cd-image-control {
+	z-index: 3;
 	position: absolute;
 	margin: 0 auto;
 	bottom: 30px;
-	width: 294px;
 	height: 42px;
 	left: calc(50% - 147px);
 	border-radius: 3px;
@@ -335,20 +329,19 @@ export default {
 	background: rgba(103, 103, 103, 0.5);
 	text-align: center;
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.2);
-}
-.cd-image-control li {
-	float: left;
-	width: 42px;
-	height: 42px;
-	font-size: 14px;
-	text-align: center;
-	line-height: 42px;
-	cursor: pointer;
-	color: #fff;
-}
-.cd-image-control .sf-icon-angle-left,
-.cd-image-control .sf-icon-angle-right {
-	font-size: 22px;
+	li {
+		float: left;
+		width: 42px;
+		height: 42px;
+		font-size: 14px;
+		text-align: center;
+		line-height: 42px;
+		cursor: pointer;
+		color: #fff;
+	}
+	.sf-icon-angle-left, .sf-icon-angle-right {
+		font-size: 22px;
+	}
 }
 .cd-image-control li:hover {
 	background: rgba(125, 125, 125, 0.5);

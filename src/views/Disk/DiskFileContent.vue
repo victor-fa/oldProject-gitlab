@@ -50,7 +50,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 /*文件查看窗口*/
 .cd-main {
 	height: 100%;
@@ -58,11 +58,11 @@ export default {
 .cd-file-show-container {
 	width: 100%;
 	height: calc(100% - 30px);
-}
-.cd-file-show-container iframe {
-	overflow: auto;
-	width: 100%;
-	height: 100%;
-	border: none;
+	iframe {
+		overflow: auto;
+		width: 100%;
+		height: 100%;
+		border: none;
+	}
 }
 </style>

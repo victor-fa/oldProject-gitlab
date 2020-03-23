@@ -40,6 +40,7 @@ export default {
 	background: #fff;
 	position: relative;
 	z-index: 2;
+	text-align: left;
 }
 .sf-music-player-list li {
 	width: 100%;

@@ -30,7 +30,7 @@ export default {
 		session.defaultSession.on('will-download', (event, item, webContents) => {
 			const paramsStr = item.getURL();
 			const str = paramsStr.substring(paramsStr.indexOf('?')+1, paramsStr.indexOf('&api_token'))
-			let filePath = unescape(str.substring(str.indexOf('&path=') + 6))
+			let filePath = decodeURIComponent(str.substring(str.indexOf('&path=') + 6))
 			let name = StringUtility.formatName(filePath)
 			item.uuid = str.substring(str.indexOf('uuid='), str.indexOf('&'))
 			item.name = name

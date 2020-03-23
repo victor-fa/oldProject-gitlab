@@ -62,7 +62,7 @@
 				</template>
 			</a-layout-content>
 			<a-layout-footer class="base-footer">
-				<basic-footer :data="DiskData.SelectTips"/>
+				<basic-footer/>
 			</a-layout-footer>
 		</a-layout>
 	</a-layout>
@@ -116,7 +116,6 @@ export default {
 				KeyFlag: false, //全局键盘记录
 				NowSelect: {}, //记录一个选择的文件
 				DiskShowState: 'cd-disk-block-file', //文件显示类型，默认图标,
-				SelectTips: '0个项目', //选择文件提示
 				Type: 'disk', //头部分类标签,
 				ClassifyName: '网盘', //地址栏左侧分类显示文本,
 			},
@@ -154,7 +153,9 @@ export default {
 			/*文件传输列表参数*/
 			SelectDownLoadFiles: [], //选择下载的文件
 			deviceUuid: '',
-			currentType: 'all'
+			currentType: 'all',
+			currentShareUser: '',	// 分享模块下的当前用户
+			isShareUser: false	// 当前是否为分享模块的用户
     }
   },
   watch: {
@@ -177,32 +178,22 @@ export default {
 			},
 			deep: true
 		},
-    $route (to, from) {
-			const myThis = this as any
-      if (to.name === 'transport') {  // 仅任务管理下有变化
-				myThis.$nextTick(() => {
-					myThis.TransformData.forEach(item => {
-						// item.shows = myThis.loadClassify === item.state || (item.trans_type === myThis.loadClassify && item.state !== 'completed');
-					});
-				});
-      }
-    },
 		UserDiskData: {
 			handler() {
-        // const myThis = this as any
-				// myThis.NeedHide = true;
-				// myThis.DiskData.SelectFiles = [];
-				// myThis.UserDiskData.forEach((item, index) => {
-				// 	if (item.active) {
-				// 		item.index = index;
-				// 		myThis.DiskData.SelectFiles.push(item);
-				// 	}
-				// });
-				// if (myThis.DiskData.SelectFiles.length) {
-				// 	myThis.DiskData.SelectTips = '选中' + myThis.DiskData.SelectFiles.length + '个项目';
-				// } else {
-				// 	myThis.DiskData.SelectTips = myThis.UserDiskData.length + '个项目';
-				// }
+        const myThis = this as any
+				myThis.NeedHide = true;
+				myThis.DiskData.SelectFiles = [];
+				myThis.UserDiskData.forEach((item, index) => {
+					if (item.active) {
+						item.index = index;
+						myThis.DiskData.SelectFiles.push(item);
+					}
+				});
+				if (myThis.DiskData.SelectFiles.length) {
+					myThis.$store.dispatch('Resource/updateShowItemCount', '已选中' + myThis.DiskData.SelectFiles.length)
+				} else {
+					myThis.$store.dispatch('Resource/updateShowItemCount', '全部' + myThis.UserDiskData.length)
+				}
 			},
 			deep: true
 		},
@@ -378,80 +369,33 @@ export default {
       EventBus.$on(EventType.categoryChangeAction, (type: CategoryType) => {
 				console.log(type);
 				if (['download', 'upload', 'offline', 'remote'].indexOf(type) > -1) return
-				myThis.currentType = type	// 在这里进行类型选择
-				myThis.getDeviceInfo();
+				if (myThis.DiskData.Type === 'share') {
+					myThis.currentType = type
+					myThis.isShareUser ? myThis.getUserList() : myThis.getShareList()
+				} else {
+					myThis.currentType = type
+					myThis.getDeviceInfo();
+				}
       })
       EventBus.$on(EventType.arrangeChangeAction, (way: ArrangeWay) => {
 				console.log(way);
 				myThis.DiskData.DiskShowState = way === 0 ? 'cd-disk-block-file' : 'cd-disk-list-file';
 			})
       EventBus.$on(EventType.leftMenuChangeAction, (path: any) => {
-				myThis.SwitchType(path.substring(1, path.length))
+				const pathStr = path.substring(1, path.length)
+				myThis.SwitchType(pathStr)
+				if (pathStr === 'transport') return
+				pathStr === 'share' ? myThis.getUserList() : myThis.getDeviceInfo();
+				myThis.loadClassify = pathStr === 'share' ? 'share' : 'normal';
 			})
 			EventBus.$on(EventType.refreshAction, () => {
 				myThis.getDeviceInfo();
 			})
     },
-		changeType (type) {	// 转换枚举类型
-			let res = 0;
-			switch (type) {
-				case 'video':
-					res = 1
-					break;
-				case 'audio':
-					res = 2
-					break;
-				case 'image':
-					res = 3
-					break;
-				case 'document':
-					res = 4
-					break;
-				default:
-					res = 0
-					break;
-			}
-			return res
-		},
     handleInfiniteOnLoad () {
       const myThis = this as any
       console.log('load more data')
       // EventBus.$emit(EventType.categoryChangeAction, item.type)
-    },
-    didSelectItem (item: ResourceItem) {
-      const myThis = this as any
-      switch (item.type) {
-        case 6:
-          myThis.openFolder(item)
-          break
-        default:
-          break
-      }
-    },
-    openFolder (item) {
-      const myThis = this as any
-      // reload data
-      myThis.currentArray = item.subResources !== undefined ? item.subResources : []
-      myThis.directoryList = myThis.currentArray
-      // change path
-      myThis.$store.dispatch('Resource/pushPath', item.name)
-    },
-    didOperatItem (event: MouseEvent, item: ResourceItem) {
-      const myThis = this as any
-      // event.preventDefault()
-      // const alter: any = myThis.$refs.operateListAlter
-      // alter.showAlter()
-      myThis.alterPosition = myThis.calculateSafePosition(event.clientX, event.clientY)
-    },
-    calculateSafePosition (clientX: number, clientY: number) {
-      const width = document.body.clientWidth
-      const height = document.body.clientHeight
-      const paddingRight = 10; const paddingBottom = 17
-      const alterWidth = 100 + paddingRight
-      const alterHeight = 189 + paddingBottom
-      let left = clientX + alterWidth < width ? clientX : width - alterWidth
-      let top = clientY + alterHeight < height ? clientY : height - alterHeight
-      return { left: left + 'px', top: top + 'px' }
     },
     UploadDrop (e: any) { //拖拽上传
       const myThis = this as any
@@ -519,6 +463,12 @@ export default {
 					let item = datas;
 					if (!item) {
 						item = myThis.DiskData.NowSelect;
+					}
+					if (item.isUser) {
+						console.log(item);
+						myThis.currentShareUser = item.ugreen_no
+						myThis.getShareList();
+						return
 					}
 					if (!item.path) {
 						myThis.DiskData.NavData.push(item);
@@ -968,35 +918,90 @@ export default {
           return
         }
 				myThis.deviceUuid = response.data.data.storages[0].partitions[0].uuid 
-				myThis.getFileList(myThis.deviceUuid);
+				myThis.getFileList();
       }).catch((error): void => {
         console.log(error)
         myThis.$message.error('网络连接错误,请检测网络')
       })
     },
-    getFileList(params) { // 获取文件列表
+    getFileList() { // 获取文件列表
       const myThis: any = this
 			const userJson = localStorage.getItem(USER_MODEL)
 			let ugreenNo = '';
 			if (userJson !== null) {
 				ugreenNo = JSON.parse(userJson).ugreenNo
 			}
-      NasFileAPI.list('/.ugreen_nas/' + ugreenNo, params).then((response): void => {
+      NasFileAPI.list('/.ugreen_nas/' + ugreenNo, myThis.deviceUuid).then((response): void => {
         if (response.data.code !== 200) {
           myThis.$message.warning(response.data.msg)
           return
         }
         const res = response.data.data
 				myThis.LoadCompany = true;
-				const type = myThis.changeType(myThis.currentType)	// 对类型进行枚举转换
-				if (type === null || type === 0) {
+				if (myThis.currentType === 'all') {
 					myThis.UserDiskData = res.list
 				} else {
 					let newArr:any = []
 					res.list.forEach(item => {
-						if (item.type === type) {
-							newArr.push(item)
-						}
+						if (StringUtility.suffixToTpe(StringUtility.formatSuffix(item.path)) === myThis.currentType) { newArr.push(item) }
+					})
+					myThis.UserDiskData = newArr
+				}
+				console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
+      }).catch((error): void => {
+        console.log(error)
+        myThis.$message.error('网络连接错误,请检测网络')
+      })
+		},
+    getUserList() { // 获取用户列表
+			const myThis: any = this
+			myThis.isShareUser = true
+      NasFileAPI.userList().then((response): void => {
+        if (response.data.code !== 200) {
+          myThis.$message.warning(response.data.msg)
+          return
+        }
+        const res = response.data.data
+				myThis.LoadCompany = true;
+				let newArr:any = []
+				res.nas_users.forEach(item => {
+					newArr.push({
+						"ugreen_no": item.ugreen_no,
+						"nick_name": item.nick_name,
+						"type": 6,
+						"isUser": true
+					})
+				})
+				if (myThis.currentType === 'all') {
+					myThis.UserDiskData = newArr
+				} else {
+					myThis.UserDiskData = newArr.filter(item => {
+						item.type === myThis.currentType
+					})
+				}
+				console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
+      }).catch((error): void => {
+        console.log(error)
+        myThis.$message.error('网络连接错误,请检测网络')
+      })
+    },
+    getShareList() { // 获取文件列表
+      const myThis: any = this
+			myThis.isShareUser = false
+			const body = {"nas_users": [{ "ugreen_no": myThis.currentShareUser }]};
+      NasFileAPI.shareList(body).then((response): void => {
+        if (response.data.code !== 200) {
+          myThis.$message.warning(response.data.msg)
+          return
+        }
+        const res = response.data.data
+				myThis.LoadCompany = true;
+				if (myThis.currentType === 'all') {
+					myThis.UserDiskData = res.files
+				} else {
+					let newArr:any = []
+					res.files.forEach(item => {
+						if (StringUtility.suffixToTpe(StringUtility.formatSuffix(item.path)) === myThis.currentType) { newArr.push(item) }
 					})
 					myThis.UserDiskData = newArr
 				}

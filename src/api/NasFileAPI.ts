@@ -60,6 +60,12 @@ export default {
   deleteFile (body) {
     return Vue.axios.post(tempServerUrl + nasTaskModulePath + '/add?' + jsonToParams(null), body)
   },
+  userList () {
+    return Vue.axios.post(tempServerUrl + nasShareModulePath + '/get_all_users?' + jsonToParams(null))
+  },
+  shareList (body) {
+    return Vue.axios.post(tempServerUrl + nasShareModulePath + '/get_shared_files_of_users?' + jsonToParams(null), body)
+  },
   shareFile (body) {
     return Vue.axios.post(tempServerUrl + nasShareModulePath + '/share_files?' + jsonToParams(null), body)
   },

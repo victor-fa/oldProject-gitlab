@@ -83,5 +83,21 @@ export default {
     const ciphertext = md5.update(password).digest('hex')
     if (recursion === 1) return ciphertext
     return this.encryptPassword(ciphertext, --recursion)
+  },
+  // 后缀转对应类型
+  suffixToTpe (suffix) {
+    let res = 'unkonw';
+    if (['mp4', 'rmvb', 'mkv'].indexOf(suffix) > -1) {
+      res = 'video';
+    } else if (['m4a', 'mp3', 'ogg', 'flac', 'f4a', 'wav', 'ape'].indexOf(suffix) > -1) {
+      res = 'audio';
+    } else if (['apng', 'png', 'jpg', 'jpeg', 'bmp', 'gif'].indexOf(suffix) > -1) {
+      res = 'image';
+    } else if (['ini', 'txt', 'xml', 'aspx', 'php', 'phtml', 'js', 'htm', 'html', 'log', 'c', 'cpp', 'java'].indexOf(suffix) > -1) {
+      res = 'txt';
+    } else if (suffix === 'pdf') {
+      res = 'pdf';
+    }
+    return res
   }
 }
