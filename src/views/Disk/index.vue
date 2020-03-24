@@ -167,7 +167,6 @@ export default {
 		loadClassify: {
 			handler() {
         const myThis = this as any
-				console.log(myThis.DiskData.Type);
 				if (myThis.DiskData.Type === 'transport') {
 					myThis.$nextTick(() => {
 						console.log(myThis.TransformData);
@@ -279,16 +278,6 @@ export default {
 		let tempJson = JSON.parse(temp)
 		myThis.TransformData = tempJson !== null ? tempJson : []
   },
-  destroyed () {
-    const myThis = this as any
-    window.removeEventListener('resize', myThis.observerWindowResize)
-    EventBus.$off(EventType.backAction)
-    EventBus.$off(EventType.categoryChangeAction)
-		EventBus.$off(EventType.arrangeChangeAction)
-		EventBus.$off(EventType.leftMenuChangeAction)
-		EventBus.$off(EventType.downloadChangeAction)
-		EventBus.$off(EventType.refreshAction)
-  },
 	created() {
     const myThis = this as any
 		myThis.Bind();
@@ -319,7 +308,7 @@ export default {
 				completed && myThis.DiskFeatureControl('popup', file.name + '下载完成'); /*消息提醒*/
 				// localStorage.setItem(TRANSFORM_INFO, JSON.stringify(myThis.TransformData))
 				myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify(myThis.TransformData))
-				console.log(JSON.parse(JSON.stringify(myThis.TransformData)));
+				// console.log(JSON.parse(JSON.stringify(myThis.TransformData)));
 				for (let i = 0; i < myThis.TransformData.length; i++) {
 					if (file.name === myThis.TransformData[i].name) {
 						myThis.$nextTick(() => {
@@ -368,12 +357,11 @@ export default {
         myThis.directoryList = myThis.currentArray
       })
       EventBus.$on(EventType.categoryChangeAction, (type: CategoryType) => {
-				console.log(type);
-				if (['download', 'upload', 'offline', 'remote'].indexOf(type) > -1) return
+				if (['download', 'upload', 'offline', 'remote'].indexOf(type) > -1) return	// 过滤任务下的筛选条件
 				myThis.currentType = type
-				if (myThis.DiskData.Type === 'share') {
+				if (myThis.DiskData.Type === 'share') {	// 分享
 					myThis.isShareUser ? myThis.getUserList() : myThis.getShareList()
-				} else if (myThis.DiskData.Type === 'collect') {
+				} else if (myThis.DiskData.Type === 'collect') {	// 收藏
 					myThis.getFavouriteList()
 				} else {
 					myThis.getDeviceInfo();
@@ -382,6 +370,9 @@ export default {
       EventBus.$on(EventType.arrangeChangeAction, (way: ArrangeWay) => {
 				console.log(way);
 				myThis.DiskData.DiskShowState = way === 0 ? 'cd-disk-block-file' : 'cd-disk-list-file';
+			})
+      EventBus.$on(EventType.transportChangeAction, (data) => {
+				data.action && data.action === 'clearAllFinish' ? myThis.TransformData = [] : null
 			})
       EventBus.$on(EventType.leftMenuChangeAction, (path: any) => {
 				const pathStr = path.substring(1, path.length)
@@ -1170,6 +1161,17 @@ export default {
 			} 
 			return result
     }
+  },
+  destroyed () {
+    const myThis = this as any
+    window.removeEventListener('resize', myThis.observerWindowResize)
+    EventBus.$off(EventType.backAction)
+    EventBus.$off(EventType.categoryChangeAction)
+		EventBus.$off(EventType.arrangeChangeAction)
+		EventBus.$off(EventType.leftMenuChangeAction)
+		EventBus.$off(EventType.downloadChangeAction)
+		EventBus.$off(EventType.refreshAction)
+		EventBus.$off(EventType.transportChangeAction)
   }
 }
 </script>

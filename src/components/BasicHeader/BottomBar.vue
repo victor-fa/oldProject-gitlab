@@ -54,14 +54,14 @@
     </template>
     <template v-if="isTaskVisiable">
       <div class="left-bar">
-        <span class="normal" v-bind:class="{ special: currentTask === 1 }" @click="changeTransport(1)">正在下载（{{downloadCount}}）</span>
+        <span class="normal" v-bind:class="{ special: currentTask === 'down' }" @click="changeTransport('down')">{{currentTag === 'download' ? '正在下载' : '正在上传'}}（{{downloadCount}}）</span>
         <span class="normal" style="margin-right: 7px;">/</span>
-        <span class="normal" v-bind:class="{ special: currentTask === 2 }" @click="changeTransport(2)">下载完成（{{computedCount}}）</span>
+        <span class="normal" v-bind:class="{ special: currentTask === 'fin' }" @click="changeTransport('fin')">{{currentTag === 'download' ? '下载完成' : '上传完成'}}（{{computedCount}}）</span>
       </div>
       <div class="right-bar">
-        <a-button class="right-button" v-if="currentTask === 1">全部暂停</a-button>
-        <a-button class="right-button" v-if="currentTask === 1">全部取消</a-button>
-        <a-button class="right-button" v-if="currentTask === 2">清除所有记录</a-button>
+        <a-button class="right-button" v-if="currentTask === 'down'" @click="sendInfoForTransport('stop')">全部暂停</a-button>
+        <a-button class="right-button" v-if="currentTask === 'down'" @click="sendInfoForTransport('cancel')">全部取消</a-button>
+        <a-button class="right-button" v-if="currentTask === 'fin'" @click="sendInfoForTransport('clearAll')">清除所有记录</a-button>
       </div>
     </template>
   </div>
@@ -96,9 +96,10 @@ export default Vue.extend({
       visible: false,
       operateFuncList,
       isTaskVisiable: false,
-      currentTask: 1,
+      currentTask: 'down',
       downloadCount: 0,
-      computedCount: 0
+      computedCount: 0,
+      currentTag: 'download'
     }
   },
   computed: {
@@ -108,28 +109,37 @@ export default Vue.extend({
     $route (to, from) {
       if (to.name === 'transport') {  // 仅任务管理下有变化
         this.isTaskVisiable = true;
-        this.currentTask = 1;
+        this.currentTask = 'down';
         this.changeProgress()
       } else {
         this.isTaskVisiable = false;
       }
-      console.log(this.isTaskVisiable);
     }
   },
+  beforeMount () {
+    this.observerEventBus()
+  },
   methods: {
-    changeTransport (type) {
-      this.currentTask = type
-      console.log(this.currentTask);
-      EventBus.$emit(EventType.transportChangeAction, type)
-      EventBus.$on(EventType.downloadChangeAction, (data) => {
+    observerEventBus () {
+      EventBus.$on(EventType.downloadChangeAction, () => {
         this.changeProgress()
       })
+      EventBus.$on(EventType.categoryChangeAction, (type) => {
+        if (['download', 'upload', 'offline', 'remote'].indexOf(type) > -1) {
+          this.currentTag = type
+        }
+        this.changeProgress()
+      })
+    },
+    changeTransport (type) {
+      this.currentTask = type
+      EventBus.$emit(EventType.transportChangeAction, { type: type })
     },
     changeProgress() {
       const temp:any = localStorage.getItem(TRANSFORM_INFO) !== null ? localStorage.getItem(TRANSFORM_INFO) : []
       if (temp !== 'null') {
-        this.downloadCount = JSON.parse(temp).filter(item => item.state === 'interrupted' || item.state === 'progressing').length
-        this.computedCount = JSON.parse(temp).filter(item => item.state === 'completed').length
+        this.downloadCount = JSON.parse(temp).filter(item => item.trans_type === this.currentTag).filter(item => item.state === 'interrupted' || item.state === 'progressing').length
+        this.computedCount = JSON.parse(temp).filter(item => item.trans_type === this.currentTag).filter(item => item.state === 'completed').length
       }
     },
     sortWayChange (sender: SortWay) {
@@ -154,7 +164,18 @@ export default Vue.extend({
       const selected: boolean = arrangeBtn.isSelected
       const arrangeWay = selected ? ArrangeWay.vertical : ArrangeWay.horizontal
       EventBus.$emit(EventType.arrangeChangeAction, arrangeWay)
+    },
+    sendInfoForTransport(data) {
+      EventBus.$emit(EventType.transportChangeAction, { action: data })
     }
+  },
+  destroyed () {
+    EventBus.$off(EventType.transportChangeAction)
+    EventBus.$off(EventType.arrangeChangeAction)
+    EventBus.$off(EventType.refreshAction)
+    EventBus.$off(EventType.backAction)
+    EventBus.$off(EventType.downloadChangeAction)
+    EventBus.$off(EventType.categoryChangeAction)
   }
 })
 </script>

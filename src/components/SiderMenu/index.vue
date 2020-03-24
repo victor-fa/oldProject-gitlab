@@ -8,7 +8,15 @@
       @click="onSelectAction(item.meta, item.path)"
     >
       <img :src="item.meta.isSelected ? item.meta.selectedIcon : item.meta.icon"/>
-      <label>{{ item.meta.title }}</label>
+      <label>{{ item.meta.title }}
+        <a-badge
+          v-show="item.name === 'transport'"
+          :count="5" :title="'您有' + 5 + '条信息'"
+          :numberStyle="{backgroundColor: '#01B74F', color: '#fff'}"
+          style="float: right;"
+        >
+        </a-badge>
+      </label>
     </li>
   </ul>
 </template>

@@ -57,24 +57,14 @@ export default {
     return Y + M + D + h + m + s;
   },
   // 格式化文件大小
-  formatShowSize (size: number) {
-    var sizestr = ""
-    if (size < 0.1 * 1024) { //如果小于0.1KB转化成B
-      sizestr = size.toFixed(2) + "B"
-    } else if (size < 0.1 * 1024 * 1024) {  //如果小于0.1MB转化成KB
-      sizestr = (size / 1024).toFixed(2) + "KB"
-    } else if (size < 0.1 * 1024 * 1024 * 1024) { //如果小于0.1GB转化成MB
-      sizestr = (size / (1024 * 1024)).toFixed(2) + "MB"
-    } else { //其他转化成GB
-      sizestr = (size / (1024 * 1024 * 1024)).toFixed(2) + "GB"
-    }
-    var len = sizestr.indexOf(`/\.`)
-    var dec = sizestr.substr(len + 1, 2)
-    if (dec === "00") { //当小数点后为00时 去掉小数部分
-      return sizestr.substring(0, len) + sizestr.substr(len + 3, 2)
-    }
-    return sizestr
-  },
+	formatShowSize(bytes) {
+		bytes = parseFloat(bytes);
+		if (bytes === 0) return '0B';
+		let k = 1024,
+			sizes = ['B', 'KB', 'MB', 'GB', 'TB'],
+			i = Math.floor(Math.log(bytes) / Math.log(k));
+		return (bytes / Math.pow(k, i)).toPrecision(3) + sizes[i];
+	},
   // 加密密码规则
   // recursion 递归次数
   encryptPassword (password: string, recursion: number = 2) {

@@ -6,7 +6,7 @@
       class="transport-group"
       v-bind:style="{ 'marginBottom': (isDownOrFin === 'down' ? '-5' : '0') + 'px' }"
     >
-      <template v-if="(item.state === 'interrupted' || item.state === 'progressing') && isDownOrFin === 'down'">
+      <template v-if="(item.state === 'interrupted' || item.state === 'progressing') && isDownOrFin === 'down' && item.trans_type === currentTag">
         <div class="left-icon">
           <img :src="itemIcon(item)">
         </div>
@@ -14,8 +14,8 @@
           <div class="top">
             <p class="title">{{item.name}}</p>
             <div class="img-cell">
-              <!-- <img src="../../assets/pause_icon.png"> -->
-              <img src="../../assets/start_icon.png">
+              <img v-if="item.state === 'progressing'" src="../../assets/pause_icon.png">
+              <img v-else src="../../assets/start_icon.png">
               <img src="../../assets/cancle_icon.png">
               <img src="../../assets/file_icon.png" @click="OpenDownPath(item)">
             </div>
@@ -29,11 +29,12 @@
               :status="item.state === 'progressing' ? 'active' : 'normal'"
             />
             <p class="speed">{{ MathSpeend(item) }}</p>
-            <p class="size">{{item.size*(item.chunk*0.01) | filterSize}}/{{item.size | filterSize}}</p>
+            <p v-if="item.trans_type === 'download'" class="size">{{item.chunk | filterSize}}/{{item.size | filterSize}}</p>
+            <p v-else class="size">{{item.size*(item.chunk*0.01) | filterSize}}/{{item.size | filterSize}}</p>
           </div>
         </div>
       </template>
-      <template v-if="item.state === 'completed' && isDownOrFin === 'fin'">
+      <template v-if="item.state === 'completed' && isDownOrFin === 'fin' && item.trans_type === currentTag">
         <div class="left-icon">
           <img :src="itemIcon(item)">
         </div>
@@ -41,7 +42,6 @@
           <div class="top">
             <p class="title">{{item.name}}</p>
             <div class="img-cell">
-              <!-- <img src="../../assets/pause_icon.png"> -->
               <img src="../../assets/text_icon.png" @click="OpenFile(item)">
               <img src="../../assets/file_icon.png" @click="OpenDownPath(item)">
               <img src="../../assets/delete_icon.png" @click="Delete(item, index)">
@@ -67,7 +67,8 @@ export default Vue.extend({
   data () {
     return {
       isDownOrFin: 'down',
-      TransportList: []
+      TransportList: [],
+      currentTag: 'download'
     }
   },
   props: {
@@ -100,23 +101,71 @@ export default Vue.extend({
       this.TransportList = JSON.parse(temp)
     },
 		PercentCount(item) {
-			return parseFloat(((item.size * (item.chunk*0.01) / item.size) * 100).toFixed(1));
+      let res = item.trans_type === 'download' ? (item.chunk / item.size) * 100 : (item.size * (item.chunk*0.01) / item.size) * 100
+      return parseFloat((res).toFixed(1));
 		},
     observerEventBus () {
       const myThis = this as any
-      EventBus.$on(EventType.transportChangeAction, (type) => {
-        myThis.isDownOrFin = type === 1 ? 'down' : 'fin'
+      EventBus.$on(EventType.transportChangeAction, (data) => {
+        if (data.type) {  // 上传、下载
+          myThis.isDownOrFin = data.type
+        }
+        if (data.action) {  // 动作
+          console.log(data.action);
+          if (data.action === 'stop') {
+
+          } else if (data.action === 'cancel') {
+            
+          } else if (data.action === 'clearAll') {  // 清空
+            myThis.$electron.shell.beep()
+            if (myThis.TransportList === null) {
+							myThis.$message.warning('当前无记录')
+              return
+            }
+            myThis.$confirm({
+              title: '删除',
+              content: '是否将所所有记录清空',
+              okText: '删除',
+              okType: 'danger',
+              cancelText: '取消',
+              onOk() {
+                myThis.TransportList.filter(item => item.trans_type === myThis.currentTag).forEach(item => {
+                  myThis.$electron.shell.moveItemToTrash(item.path)
+                })
+                myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify([]))
+                EventBus.$emit(EventType.downloadChangeAction, null)  // 通知更新头部信息
+                EventBus.$emit(EventType.transportChangeAction, { action: 'clearAllFinish' })
+                myThis.setData()
+              }
+            });
+          }
+        }
       })
-      EventBus.$on(EventType.downloadChangeAction, (data) => {
+      EventBus.$on(EventType.downloadChangeAction, () => {
         this.setData()
+      })
+      EventBus.$on(EventType.categoryChangeAction, (type) => {
+        const temp:any = localStorage.getItem(TRANSFORM_INFO)
+        let tempArr:any = [];
+        if (temp === null) return
+        if (type === 'download') {
+          JSON.parse(temp).forEach(item => {
+            if (item.trans_type === 'download') tempArr.push(item)
+          })
+        } else if (type === 'upload') {
+          JSON.parse(temp).forEach(item => {
+            if (item.trans_type === 'upload') tempArr.push(item)
+          })
+        }
+        this.currentTag = type
+        this.TransportList = tempArr
       })
     },
 		MathSpeend(item) {
       const myThis = this as any
 			let NowTime = new Date().getTime() / 1000;
       const res:any = item.chunk / (NowTime - item.time)
-      let speed = parseFloat(res).toFixed(1);
-      console.log(speed);
+      let speed = parseFloat(res).toFixed(0);
 			return myThis.filterSize(speed) + '/s';
 		},
     filterSize (bytes) {
@@ -149,6 +198,7 @@ export default Vue.extend({
           arr.splice(index, 1); 
           myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify(arr))
           this.TransportList = arr;
+          EventBus.$emit(EventType.downloadChangeAction, null)
         }
       });
     },
@@ -186,6 +236,7 @@ export default Vue.extend({
   },
   destroyed () {
     EventBus.$off(EventType.transportChangeAction)
+    EventBus.$off(EventType.downloadChangeAction)
   }
 })
 </script>
@@ -253,8 +304,8 @@ export default Vue.extend({
       color: #484848;
     }
   }
-  .transport-group:nth-child(odd) {
-    background: #FCFBFE;
-  }
+  // .transport-group:nth-child(odd) {
+  //   background: #FCFBFE;
+  // }
 }
 </style>
