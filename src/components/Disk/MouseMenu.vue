@@ -38,21 +38,19 @@ export default {
 				{ name: '复制', key: 'Ctrl+C', commend: 'Copy', data: '' },
 				{ name: '剪切', key: 'Ctrl+X', commend: 'Cut', data: '' },
 				{ name: '重命名', key: 'Ctrl+M/F2', commend: 'rename', data: '', disabled: 'SelectFiles.length>1' },
-				{ name: '删除', key: 'Delete', commend: 'trash', data: '' },
+				{ name: '删除', key: 'Delete', commend: 'delete', data: '' },
 				{ name: '分享', key: '', commend: 'share', data: '', disabled: 'SelectFiles.length>1' },
-				{ name: '属性', key: 'Alt+Enter', commend: 'info', data: '', disabled: 'SelectFiles.length>1' }
-			],
-			TrashFileMenu: [
-				{ name: '还原', key: 'Ctrl+R', commend: 'restore', data: '' },
-				{ name: '删除', key: 'Ctrl+Del', commend: 'delete', data: '' },
+				{ name: '收藏', key: '', commend: 'favourite', data: '' },
 				{ name: '属性', key: 'Alt+Enter', commend: 'info', data: '', disabled: 'SelectFiles.length>1' }
 			],
 			DiskShareMenu: [
 				{ name: '打开', key: 'Ctrl+O', commend: 'open', data: '', disabled: 'SelectFiles.length>1' },
-				// { name: '重命名', key: 'Ctrl+M/F2', commend: 'rename', data: '', disabled: 'SelectFiles.length>1' },
-				// { name: '删除', key: 'Delete', commend: 'trash', data: '' },
-				// { name: '查看分享', key: '', commend: 'share', data: '', disabled: 'SelectFiles.length>1' },
-				// { name: '取消分享', key: '', commend: 'cancel-share', data: '', disabled: 'SelectFiles.length>1' },
+				{ name: '取消分享', key: '', commend: 'cancel-share', data: '', disabled: 'SelectFiles.length>1' },
+				{ name: '属性', key: 'Alt+Enter', commend: 'info', data: '', disabled: 'SelectFiles.length>1' }
+			],
+			DiskCollectMenu: [
+				{ name: '打开', key: 'Ctrl+O', commend: 'open', data: '', disabled: 'SelectFiles.length>1' },
+				{ name: '取消收藏', key: '', commend: 'cancel-favourite', data: '' },
 				{ name: '属性', key: 'Alt+Enter', commend: 'info', data: '', disabled: 'SelectFiles.length>1' }
 			],
 			MenuData: [],
@@ -85,13 +83,12 @@ export default {
 			this.MouseMenuShow = false;
 			if (flag) {
 				console.log(this.type);
-				if (this.type !== 'trash') {
-					this.MenuData = this.DiskFileMenu;
-				} else {
-					this.MenuData = this.TrashFileMenu;
-				}
 				if (this.type === 'share') {
 					this.MenuData = this.DiskShareMenu;
+				} else if (this.type === 'collect') {
+					this.MenuData = this.DiskCollectMenu;
+				} else {
+					this.MenuData = this.DiskFileMenu;
 				}
 			} else {
 				this.MenuData = this.DiskMainMenu;

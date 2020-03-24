@@ -42,9 +42,9 @@
             <p class="title">{{item.name}}</p>
             <div class="img-cell">
               <!-- <img src="../../assets/pause_icon.png"> -->
-              <img src="../../assets/text_icon.png">
+              <img src="../../assets/text_icon.png" @click="OpenFile(item)">
               <img src="../../assets/file_icon.png" @click="OpenDownPath(item)">
-              <img src="../../assets/delete_icon.png" @click="Delete(index)">
+              <img src="../../assets/delete_icon.png" @click="Delete(item, index)">
             </div>
           </div>
           <div class="buttom">
@@ -122,6 +122,10 @@ export default Vue.extend({
     filterSize (bytes) {
       return StringUtility.formatShowSize(bytes)
     },
+    OpenFile (item) {
+      const myThis = this as any
+      myThis.$electron.shell.openItem(item.path);
+    },
 		OpenDownPath(item) {
       const myThis = this as any
 			myThis.$electron.shell.showItemInFolder(item.path);
@@ -129,13 +133,24 @@ export default Vue.extend({
 		ControlTrans(item, index) {
 			this.$emit('ControlTrans', item, index);
     },
-    Delete(index) {
+    Delete(item, index) {
       const myThis = this as any
-      const temp:any = localStorage.getItem(TRANSFORM_INFO)
-      let arr = JSON.parse(temp)
-      arr.splice(index, 1); 
-      myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify(arr))
-      this.TransportList = arr;
+      myThis.$electron.shell.beep()
+      myThis.$confirm({
+        title: '删除',
+        content: '是否将所选文件彻底删除',
+        okText: '删除',
+        okType: 'danger',
+        cancelText: '取消',
+        onOk() {
+          myThis.$electron.shell.moveItemToTrash(item.path)
+          const temp:any = localStorage.getItem(TRANSFORM_INFO)
+          let arr = JSON.parse(temp)
+          arr.splice(index, 1); 
+          myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify(arr))
+          this.TransportList = arr;
+        }
+      });
     },
 		itemIcon(item) {
 			const myThis = this as any

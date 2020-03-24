@@ -212,9 +212,12 @@ export default Vue.extend({
 
 <style>
 .bottom-bar > .right-bar > .ant-btn {
-  padding: 6px;
-  border: none;
-  background-color: transparent;
+  border: 1px solid #e5e5e5;
+  border-radius: 0px;
+  font-size: 13px;
+  padding: 0 7px;
+  height: 25px;
+  margin-right: 10px;
 }
 .sortPopover .ant-popover-inner-content {
   padding: 8px 0px;

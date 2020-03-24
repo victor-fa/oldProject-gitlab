@@ -1,4 +1,16 @@
 module.exports = {
+  css: {
+    loaderOptions: {
+      "less": {
+        modifyVars: {
+          "primary-color": "#06B650",
+          "link-color": "#06B650",
+          "border-radius-base": "2px"
+        },
+        "javascriptEnabled": true
+      }
+    }
+  },
   pluginOptions: {
     electronBuilder: {
       builderOptions: {

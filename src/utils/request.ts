@@ -5,6 +5,7 @@ import { BasicResponse } from '@/api/UserModel'
 import router from '@/router'
 import processCenter, { EventName } from './processCenter';
 import { NAS_ACCESS } from '@/common/constants'
+import { message } from 'ant-design-vue'
 
 const nasCloud = axios.create({
   baseURL: 'http://120.24.182.33',
@@ -122,9 +123,19 @@ const getToken = () => {
   return JSON.parse(tokenJson).api_token
 }
 
+const isResponsePass = (rs) => {
+  let flag = true;
+  if (rs.data.code !== 200) {
+    flag = false
+    message.warning(rs.data.msg)
+  }
+  return flag
+}
+
 export {
   nasCloud,
   nasServer,
   jsonToParams,
-  jsonToParamsForPdf
+  jsonToParamsForPdf,
+  isResponsePass
 }

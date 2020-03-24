@@ -81,13 +81,14 @@ import ResourceHeader from '../../components/ResourceList/ResourceHeader.vue'
 import BasicFooter from '../../components/BasicFooter/index.vue'
 import TransportList from '../../components/TransportList/index.vue'
 import infiniteScroll from 'vue-infinite-scroll'
-import { EventBus, EventType } from '../../utils/eventBus'
-import processCenter, { EventName } from '../../utils/processCenter'
 import { ArrangeWay, ResourceItem } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import { TRANSFORM_INFO, USER_MODEL } from '../../common/constants'
+import { EventBus, EventType } from '../../utils/eventBus'
+import processCenter, { EventName } from '../../utils/processCenter'
 import upload from '../../utils/file/upload';
 import StringUtility from '../../utils/StringUtility'
+import { isResponsePass } from '../../utils/request'
 
 export default {
   name: 'disk',
@@ -369,11 +370,12 @@ export default {
       EventBus.$on(EventType.categoryChangeAction, (type: CategoryType) => {
 				console.log(type);
 				if (['download', 'upload', 'offline', 'remote'].indexOf(type) > -1) return
+				myThis.currentType = type
 				if (myThis.DiskData.Type === 'share') {
-					myThis.currentType = type
 					myThis.isShareUser ? myThis.getUserList() : myThis.getShareList()
+				} else if (myThis.DiskData.Type === 'collect') {
+					myThis.getFavouriteList()
 				} else {
-					myThis.currentType = type
 					myThis.getDeviceInfo();
 				}
       })
@@ -384,7 +386,11 @@ export default {
       EventBus.$on(EventType.leftMenuChangeAction, (path: any) => {
 				const pathStr = path.substring(1, path.length)
 				myThis.SwitchType(pathStr)
+				console.log(pathStr);
 				if (pathStr === 'transport') return
+				pathStr === 'collect' ? myThis.getFavouriteList() : null
+				myThis.loadClassify = pathStr === 'collect' ? 'collect' : 'normal';
+				if (pathStr === 'collect') return
 				pathStr === 'share' ? myThis.getUserList() : myThis.getDeviceInfo();
 				myThis.loadClassify = pathStr === 'share' ? 'share' : 'normal';
 			})
@@ -589,12 +595,13 @@ export default {
 					data = myThis.DiskBatchData('post', myThis.DiskData.Clipboard);
 					// TODO: 请求接口
 					break;
-				case 'trash': //移入回收站:
-					let trash_data = myThis.DiskBatchData();
-					data = myThis.DiskBatchData('post', trash_data);
+				case 'delete': //文件删除
+					let delete_data = myThis.DiskBatchData();
+					data = myThis.DiskBatchData('post', delete_data);
+					myThis.$electron.shell.beep()
 					myThis.$confirm({
 						title: '删除',
-						content: '是否将所选' + trash_data.length + '个项目彻底删除',
+						content: '是否将所选' + delete_data.length + '个项目彻底删除',
 						okText: '删除',
 						okType: 'danger',
 						cancelText: '取消',
@@ -608,29 +615,13 @@ export default {
 								}
 							}
 							NasFileAPI.deleteFile(body).then((response): void => {
-								if (response.data.code !== 200) {
-									myThis.$message.warning(response.data.msg)
-									return
-								}
+								if (!isResponsePass(response)) return
 								myThis.getDeviceInfo()
 								myThis.$message.success('删除成功！')
 							}).catch((error): void => {
 								console.log(error);
 								myThis.$message.error('网络连接错误,请检测网络')
 							})
-						}
-					});
-					break;
-				case 'delete': //文件删除
-					let delete_data = myThis.DiskBatchData();
-					myThis.$confirm({
-						title: '删除',
-						content: '是否将所选' + delete_data.length + '个项目彻底删除',
-						okText: '删除',
-						okType: 'danger',
-						cancelText: '取消',
-						onOk() {
-							console.log('123');
 						}
 					});
 					break;
@@ -665,10 +656,7 @@ export default {
 						]
 					}
 					NasFileAPI.shareFile(body).then((response): void => {
-						if (response.data.code !== 200) {
-							myThis.$message.warning(response.data.msg)
-							return
-						}
+						if (!isResponsePass(response)) return
 						myThis.getDeviceInfo()
 						myThis.$message.success('分享成功！')
 					}).catch((error): void => {
@@ -676,26 +664,61 @@ export default {
 						myThis.$message.error('网络连接错误,请检测网络')
 					})
 					break;
-				case 'post-share': //查看分享
-					myThis.$refs.DiskShareModel.ShareFile(myThis.DiskData.NowSelect);
-					break;
-				case 'update-share': //更新文件分享状态
-					myThis.FindInDisk(myThis.DiskData.NowSelect, item => {
-						item.share = datas;
-						item.shareAddress = localStorage.server + '/s/' + datas;
-					});
-					break;
 				case 'cancel-share': //取消分享
-					myThis.Confrim({
+					let share_data = myThis.DiskBatchData();
+					myThis.$electron.shell.beep()
+					myThis.$confirm({
 						title: '取消分享',
-						tips: '您确认取消分享' + myThis.DiskData.NowSelect.path + '吗',
-						callback: () => {
-							// TODO: 请求接口
+						content: '是否取消分享所选' + share_data.length + '个项目',
+						okText: '取消分享',
+						okType: 'danger',
+						cancelText: '取消',
+						onOk() {
+							const tempData:any = myThis.DiskData.NowSelect
+							const body ={
+								"files": [{ "path": share_data[0].path, "uuid": share_data[0].uuid }]
+							}
+							NasFileAPI.cancleShareFile(body).then((response): void => {
+								if (!isResponsePass(response)) return
+								myThis.getShareList()
+								myThis.$message.success('取消分享成功！')
+							}).catch((error): void => {
+								console.log(error);
+								myThis.$message.error('网络连接错误,请检测网络')
+							})
 						}
 					});
 					break;
 				case 'reload':
 					myThis.getDeviceInfo()
+					break;
+				case 'favourite':
+					myThis.favouriteFile()
+					break;
+				case 'cancel-favourite':
+					let favourite_data = myThis.DiskBatchData();
+					myThis.$electron.shell.beep()
+					myThis.$confirm({
+						title: '取消收藏',
+						content: '是否取消收藏所选' + favourite_data.length + '个项目',
+						okText: '取消收藏',
+						okType: 'danger',
+						cancelText: '取消',
+						onOk() {
+							const tempData:any = myThis.DiskData.NowSelect
+							const body ={
+								"files": [{ "path": favourite_data[0].path, "uuid": favourite_data[0].uuid }]
+							}
+							NasFileAPI.cancelFavouriteFile(body).then((response): void => {
+								if (!isResponsePass(response)) return
+								myThis.getFavouriteList()
+								myThis.$message.success('取消收藏成功！')
+							}).catch((error): void => {
+								console.log(error);
+								myThis.$message.error('网络连接错误,请检测网络')
+							})
+						}
+					});
 					break;
 				case 'popup':
 					if (myThis.ConfigObject.NoticeFlag) {
@@ -723,10 +746,7 @@ export default {
 				"alias": myThis.fileName
 			}
       NasFileAPI.addFile(body).then((response): void => {
-        if (response.data.code !== 200) {
-          myThis.$message.warning(response.data.msg)
-          return
-				}
+				if (!isResponsePass(response)) return
 				myThis.getDeviceInfo()
 				myThis.fileName = ''
 				myThis.fileNameVisible = false
@@ -743,7 +763,7 @@ export default {
 			const tempData:any = myThis.DiskData.NowSelect
       NasFileAPI.renameResource(tempData.path, tempData.path.substring(0, tempData.path.lastIndexOf("/") + 1) + myThis.fileName, tempData.uuid).then(response => {
         console.log(response)
-        if (response.data.code !== 200) return
+				if (!isResponsePass(response)) return
 				myThis.fileRenameVisible = false
 				myThis.fileName = ''
 				myThis.getDeviceInfo()
@@ -913,10 +933,7 @@ export default {
 				return
 			}
       NasFileAPI.storages().then((response): void => {
-        if (response.data.code !== 200) {
-          myThis.$message.warning(response.data.msg)
-          return
-        }
+				if (!isResponsePass(response)) return
 				myThis.deviceUuid = response.data.data.storages[0].partitions[0].uuid 
 				myThis.getFileList();
       }).catch((error): void => {
@@ -932,10 +949,7 @@ export default {
 				ugreenNo = JSON.parse(userJson).ugreenNo
 			}
       NasFileAPI.list('/.ugreen_nas/' + ugreenNo, myThis.deviceUuid).then((response): void => {
-        if (response.data.code !== 200) {
-          myThis.$message.warning(response.data.msg)
-          return
-        }
+				if (!isResponsePass(response)) return
         const res = response.data.data
 				myThis.LoadCompany = true;
 				if (myThis.currentType === 'all') {
@@ -957,10 +971,7 @@ export default {
 			const myThis: any = this
 			myThis.isShareUser = true
       NasFileAPI.userList().then((response): void => {
-        if (response.data.code !== 200) {
-          myThis.$message.warning(response.data.msg)
-          return
-        }
+				if (!isResponsePass(response)) return
         const res = response.data.data
 				myThis.LoadCompany = true;
 				let newArr:any = []
@@ -990,10 +1001,53 @@ export default {
 			myThis.isShareUser = false
 			const body = {"nas_users": [{ "ugreen_no": myThis.currentShareUser }]};
       NasFileAPI.shareList(body).then((response): void => {
-        if (response.data.code !== 200) {
-          myThis.$message.warning(response.data.msg)
-          return
-        }
+				if (!isResponsePass(response)) return
+        const res = response.data.data
+				myThis.LoadCompany = true;
+				if (myThis.currentType === 'all') {
+					myThis.UserDiskData = res.files
+				} else {
+					let newArr:any = []
+					res.files.forEach(item => {
+						if (StringUtility.suffixToTpe(StringUtility.formatSuffix(item.path)) === myThis.currentType) { newArr.push(item) }
+					})
+					myThis.UserDiskData = newArr
+				}
+				console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
+      }).catch((error): void => {
+        console.log(error)
+        myThis.$message.error('网络连接错误,请检测网络')
+      })
+    },
+    favouriteFile() { // 收藏文件
+      const myThis: any = this
+			myThis.isShareUser = false
+			const body = { "files": [{ "uuid": myThis.deviceUuid, "path": myThis.DiskData.NowSelect.path }] }
+      NasFileAPI.favouriteFile(body).then((response): void => {
+				if (!isResponsePass(response)) return
+				myThis.$message.success('文件已收藏')
+      }).catch((error): void => {
+        console.log(error)
+        myThis.$message.error('网络连接错误,请检测网络')
+      })
+    },
+    cancelFavouriteFile() { // 收藏文件
+      const myThis: any = this
+			myThis.isShareUser = false
+			const body = { "files": [{ "uuid": myThis.deviceUuid, "path": myThis.DiskData.NowSelect.path }] }
+      NasFileAPI.cancelFavouriteFile(body).then((response): void => {
+				if (!isResponsePass(response)) return
+				myThis.$message.success('文件已收藏')
+      }).catch((error): void => {
+        console.log(error)
+        myThis.$message.error('网络连接错误,请检测网络')
+      })
+    },
+    getFavouriteList() { // 获取收藏列表
+      const myThis: any = this
+			myThis.isShareUser = false
+      NasFileAPI.favouriteList().then((response): void => {
+				if (!isResponsePass(response)) return
         const res = response.data.data
 				myThis.LoadCompany = true;
 				if (myThis.currentType === 'all') {

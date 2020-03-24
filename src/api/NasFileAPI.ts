@@ -13,6 +13,7 @@ axios.defaults.withCredentials = true;
 const nasFileModulePath = '/v1/file'
 const nasTaskModulePath = '/v1/task'
 const nasShareModulePath = '/v1/share'
+const nasFavoriteModulePath = '/v1/favorites'
 const tempServerUrl = 'http://192.168.10.91:9999'
 
 const apiToken = (() => {
@@ -68,6 +69,18 @@ export default {
   },
   shareFile (body) {
     return Vue.axios.post(tempServerUrl + nasShareModulePath + '/share_files?' + jsonToParams(null), body)
+  },
+  cancleShareFile (body) {
+    return Vue.axios.post(tempServerUrl + nasShareModulePath + '/cancel_shared_files1?' + jsonToParams(null), body)
+  },
+  favouriteList () {
+    return Vue.axios.post(tempServerUrl + nasFavoriteModulePath + '/get?' + jsonToParams(null))
+  },
+  favouriteFile (body) {
+    return Vue.axios.post(tempServerUrl + nasFavoriteModulePath + '/set?' + jsonToParams(null), body)
+  },
+  cancelFavouriteFile (body) {
+    return Vue.axios.post(tempServerUrl + nasFavoriteModulePath + '/cancel?' + jsonToParams(null), body)
   },
   download (option) {
     const input = { uuid: option.uuid, path: option.path }

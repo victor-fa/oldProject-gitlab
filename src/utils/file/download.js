@@ -31,14 +31,10 @@ export default {
 			const paramsStr = item.getURL();
 			const str = paramsStr.substring(paramsStr.indexOf('?')+1, paramsStr.indexOf('&api_token'))
 			let filePath = decodeURIComponent(str.substring(str.indexOf('&path=') + 6))
-			let name = StringUtility.formatName(filePath)
+			let name = StringUtility.formatName(filePath).replace(new RegExp("\\+","g"), ' ')
 			item.uuid = str.substring(str.indexOf('uuid='), str.indexOf('&'))
 			item.name = name
 			item.filePath = filePath
-			let replaceStr = name.replace("\/\/", "\\\\");
-			replaceStr = replaceStr.replace("\/", "\\");
-			replaceStr = replaceStr.replace("\/", "\\");
-			replaceStr = replaceStr.replace("\/", "\\");
 			item.path = this.transDownFolder + '\\' + name
 			item.setSavePath(this.transDownFolder + '\\' + name); // 设置保存路径,使Electron不提示保存对话框。
 			item.on('updated', () => {
