@@ -89,5 +89,15 @@ export default {
       res = 'pdf';
     }
     return res
+  },
+  // 路由转中文名
+  pathToName (path) {
+    const toolJson = [
+      { path: 'disk', name: '最近' }, { path: 'storage', name: '存储' }, 
+      { path: 'custom', name: '我的' },  { path: 'collect', name: '收藏' }, 
+      { path: 'encrypt', name: '加密' },  { path: 'backup', name: '备份' }, 
+      { path: 'share', name: '分享' },  { path: 'transport', name: '任务' }
+    ]
+    return toolJson.filter(o => o.path === path)[0].name
   }
 }

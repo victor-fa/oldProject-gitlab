@@ -16,6 +16,7 @@ export default {
     let defaultOptions = {
       width: 800,
       height: 600,
+			icon: './src/assets/logo.png',
       minWidth: 600,
       minHeight: 450,
       title: packageInfo.name,
@@ -90,7 +91,7 @@ export default {
       this.activeWindow(homeWindow)
     } else {
       homeWindow = this.createWindow({
-        path: 'home',
+        path: 'disk',
         width: 800,
         height: 600,
         title: 'nas_client'

@@ -61,7 +61,7 @@ let MusicButtons = [
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { secure: true, standard: true } }])
 
 function createWindow () {
-  // Create the browser window.
+	// Create the browser window.
   win = new BrowserWindow({ width: 800,
     icon: './src/assets/logo.png',
     height: 600,
@@ -165,6 +165,7 @@ let DiskSystem = {
 		LoginWindow = windowControl.create({
 			url: '/',
 			data: flag,
+			icon: './src/assets/logo.png',
 			title: 'uGgreen-Nas-欢迎',
 			width: 850,
 			height: 550,
@@ -233,6 +234,7 @@ let DiskSystem = {
 		}
 		AboutWindow = windowControl.create({
 			url: 'about',
+			icon: './src/assets/logo.png',
 			title: '关于uGgreen-Nas',
 			width: 600,
 			height: 330,
@@ -251,6 +253,7 @@ let DiskSystem = {
 		AccountWindow = windowControl.create({
 			url: 'disk-account',
 			data: data,
+			icon: './src/assets/logo.png',
 			title: '个人信息',
 			width: 670,
 			height: 420,
@@ -267,6 +270,7 @@ let DiskSystem = {
 		}
 		SettingWindow = windowControl.create({
 			url: 'disk-setting',
+			icon: './src/assets/logo.png',
 			title: '系统设置',
 			width: 600,
 			height: 400,
@@ -285,6 +289,7 @@ let DiskSystem = {
 		}
 		FeedBackWindow = windowControl.create({
 			url: 'disk-feedback',
+			icon: './src/assets/logo.png',
 			title: '问题反馈',
 			width: 450,
 			height: 320,
@@ -303,6 +308,7 @@ let DiskSystem = {
 		PopupWindow = windowControl.create({
 			url: 'disk-msg',
 			data: msg,
+			icon: './src/assets/logo.png',
 			width: 300,
 			height: 150,
 			useContentSize: true,
@@ -332,6 +338,7 @@ let FileViewer = {
 		MusicPlayer = windowControl.create({
 			url: 'music-player',
 			data: data,
+			icon: './src/assets/logo.png',
 			title: '音乐播放器',
 			width: 350,
 			height: 535,
@@ -353,6 +360,7 @@ let FileViewer = {
 		VideoPlayer = windowControl.create({
 			url: 'video-player',
 			data: data,
+			icon: './src/assets/logo.png',
 			title: '视频播放器',
 			width: 750,
 			height: 500,
@@ -373,6 +381,7 @@ let FileViewer = {
 		PictureViewer = windowControl.create({
 			url: 'picture-shower',
 			data: data,
+			icon: './src/assets/logo.png',
 			title: '图片查看',
 			width: 750,
 			height: 500,
@@ -391,6 +400,7 @@ let FileViewer = {
 		FileWindow = windowControl.create({
 			url: 'file-shower',
 			data: data,
+			icon: './src/assets/logo.png',
 			title: '文件查看',
 			width: 750,
 			height: 500,
@@ -408,6 +418,7 @@ let FileViewer = {
 		PdfWindow = windowControl.create({
 			url: 'pdf-viewer',
 			data: data,
+			icon: './src/assets/logo.png',
 			title: 'PDF阅读器',
 			width: 750,
 			height: 500,
@@ -425,6 +436,7 @@ let FileViewer = {
 		}
 		DiskInfo = windowControl.create({
 			url: 'info',
+			icon: './src/assets/logo.png',
 			data: data,
 			width: 600,
 			height: 390,

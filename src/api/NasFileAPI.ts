@@ -50,6 +50,9 @@ export default {
       size: 1000,
     }))
   },
+  ulist (options) {
+    return Vue.axios.get(tempServerUrl + nasFileModulePath + '/ulist?' + jsonToParams(options))
+  },
   upload (options) {
     return Vue.axios.post(tempServerUrl + nasFileModulePath + '/upload?' + jsonToParams(options.data), options.body, {
       headers: {'Accept': '*/*'}

@@ -10,7 +10,7 @@ interface ResourceState {
 export default {
   namespaced: true,
   state: {
-    directory: '网盘',
+    directory: '最近',
     storages: [],
     showItemCount: 0
   },
@@ -33,6 +33,9 @@ export default {
       const length = state.directory.lastIndexOf('/')
       state.directory = state.directory.substring(0, length)
     },
+    UPDATE_PATH (state: ResourceState, path: string) {
+      state.directory = path
+    },
     UPDATE_STORAGES (state: ResourceState, storages: Array<StorageInfo>) {
       state.storages = storages
     },
@@ -46,6 +49,9 @@ export default {
     },
     popPath (context: ActionContext<ResourceState, ResourceState>) {
       context.commit('POP_PATH')
+    },
+    updatePath (context: ActionContext<ResourceState, ResourceState>, path: string) {
+      context.commit('UPDATE_PATH', path)
     },
     updateStorages (context: ActionContext<ResourceState, ResourceState>) {
       context.commit('UPDATE_STORAGES')

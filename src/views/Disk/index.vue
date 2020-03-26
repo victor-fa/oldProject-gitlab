@@ -156,7 +156,7 @@ export default {
 			deviceUuid: '',
 			currentType: 'all',
 			currentShareUser: '',	// 分享模块下的当前用户
-			isShareUser: false	// 当前是否为分享模块的用户
+			isShareDetail: false	// 当前是否为分享模块的详情
     }
   },
   watch: {
@@ -273,7 +273,7 @@ export default {
     window.addEventListener('resize', myThis.observerWindowResize)
     myThis.observerEventBus()
     myThis.observerWindowResize()
-		myThis.getDeviceInfo()
+		myThis.getLatelyFileList()
 		const temp:any = localStorage.getItem(TRANSFORM_INFO)
 		let tempJson = JSON.parse(temp)
 		myThis.TransformData = tempJson !== null ? tempJson : []
@@ -351,42 +351,45 @@ export default {
     },
     observerEventBus () {
       const myThis = this as any
-      EventBus.$on(EventType.backAction, () => {
+      EventBus.$on(EventType.backAction, () => {	// 路由器返回
         // TODO: 在有多级目录时，这里应该设置一个数据栈
         myThis.currentArray = myThis.dataSource
         myThis.directoryList = myThis.currentArray
+        myThis.$store.dispatch('Resource/popPath')
       })
-      EventBus.$on(EventType.categoryChangeAction, (type: CategoryType) => {
+      EventBus.$on(EventType.categoryChangeAction, (type: CategoryType) => {	// 切换顶部目录
 				if (['download', 'upload', 'offline', 'remote'].indexOf(type) > -1) return	// 过滤任务下的筛选条件
 				myThis.currentType = type
-				if (myThis.DiskData.Type === 'share') {	// 分享
-					myThis.isShareUser ? myThis.getUserList() : myThis.getShareList()
-				} else if (myThis.DiskData.Type === 'collect') {	// 收藏
-					myThis.getFavouriteList()
-				} else {
-					myThis.getDeviceInfo();
-				}
+				myThis.distributeQuery();
       })
-      EventBus.$on(EventType.arrangeChangeAction, (way: ArrangeWay) => {
-				console.log(way);
+      EventBus.$on(EventType.arrangeChangeAction, (way: ArrangeWay) => {	// 切换格子、列表样式
 				myThis.DiskData.DiskShowState = way === 0 ? 'cd-disk-block-file' : 'cd-disk-list-file';
 			})
-      EventBus.$on(EventType.transportChangeAction, (data) => {
+      EventBus.$on(EventType.transportChangeAction, (data) => {	// 上传下载
 				data.action && data.action === 'clearAllFinish' ? myThis.TransformData = [] : null
 			})
-      EventBus.$on(EventType.leftMenuChangeAction, (path: any) => {
-				const pathStr = path.substring(1, path.length)
+      EventBus.$on(EventType.leftMenuChangeAction, (path: any) => {	// 切换左侧目录
+				const pathStr = StringUtility.formatName(path)
 				myThis.SwitchType(pathStr)
-				console.log(pathStr);
-				if (pathStr === 'transport') return
-				pathStr === 'collect' ? myThis.getFavouriteList() : null
-				myThis.loadClassify = pathStr === 'collect' ? 'collect' : 'normal';
-				if (pathStr === 'collect') return
-				pathStr === 'share' ? myThis.getUserList() : myThis.getDeviceInfo();
-				myThis.loadClassify = pathStr === 'share' ? 'share' : 'normal';
+        myThis.$store.dispatch('Resource/updatePath', StringUtility.pathToName(pathStr))	// 更新路由
+				myThis.isShareDetail = false	// 重置分享为用户列表
+				if (pathStr === 'disk') {
+					myThis.loadClassify = 'disk'
+				} else if (pathStr === 'transport') {
+
+				} else if (pathStr === 'storage') {
+					myThis.loadClassify = 'storage'
+				} else if (pathStr === 'collect') {
+					myThis.loadClassify = 'collect'
+				} else if (pathStr === 'share') {
+					myThis.loadClassify = 'share'
+				} else {
+					myThis.loadClassify = 'normal'
+				}
+				myThis.distributeQuery();
 			})
-			EventBus.$on(EventType.refreshAction, () => {
-				myThis.getDeviceInfo();
+			EventBus.$on(EventType.refreshAction, () => {	// 刷新
+				myThis.distributeQuery();
 			})
     },
     handleInfiniteOnLoad () {
@@ -424,7 +427,7 @@ export default {
 					}
 					myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify(myThis.TransformData))
 					myThis.UserDiskData.push(file);
-					myThis.getDeviceInfo()
+					myThis.distributeQuery();
 					myThis.$message.success('文件上传成功！')
 					myThis.DiskFeatureControl('popup', file.name + '上传完成'); /*消息提醒*/
 				}
@@ -465,6 +468,7 @@ export default {
 						console.log(item);
 						myThis.currentShareUser = item.ugreen_no
 						myThis.getShareList();
+						myThis.isShareDetail = true	// 打开后进入分享详情
 						return
 					}
 					if (!item.path) {
@@ -493,6 +497,8 @@ export default {
 							} else {	// pdf
 								myThis.$ipc.send('file-control', OpenType, data);
 							}
+						} else if (OpenType === 6) {	// 文件夹
+							myThis.$store.dispatch('Resource/pushPath', StringUtility.formatName(item.path))
 						} else {
 							myThis.$message.warning('暂不支持打开该类型文件');
 						}
@@ -520,9 +526,10 @@ export default {
 					}
 					EventBus.$emit(EventType.downloadChangeAction, null)
 					let tips = myThis.SelectDownLoadFiles.length > 1 ? '所选' + myThis.SelectDownLoadFiles.length + '个项目' : myThis.SelectDownLoadFiles[0].path;
-					const { BrowserWindow } = require('electron').remote
 					myThis.SelectDownLoadFiles.forEach(item => {
-						myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(NasFileAPI.download(item));
+						if (item.trans_type === 'download' && item.state !== 'completed') {
+							myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(NasFileAPI.download(item));
+						}
 					});
 					myThis.SelectDownLoadFiles = [];
 					myThis.$message.info(tips + '已加入下载列队');
@@ -544,11 +551,9 @@ export default {
 					}
 					break;
 				case 'state': //切换文件显示模式
-					console.log('123');
 					myThis.DiskData.DiskShowState = datas;
 					break;
 				case 'newFolder':
-					console.log('新建文件夹未开始');
 					myThis.fileNameVisible = true;
 					break;
 				case 'clear':
@@ -607,7 +612,7 @@ export default {
 							}
 							NasFileAPI.deleteFile(body).then((response): void => {
 								if (!isResponsePass(response)) return
-								myThis.getDeviceInfo()
+								myThis.distributeQuery();
 								myThis.$message.success('删除成功！')
 							}).catch((error): void => {
 								console.log(error);
@@ -648,7 +653,7 @@ export default {
 					}
 					NasFileAPI.shareFile(body).then((response): void => {
 						if (!isResponsePass(response)) return
-						myThis.getDeviceInfo()
+						myThis.distributeQuery();
 						myThis.$message.success('分享成功！')
 					}).catch((error): void => {
 						console.log(error);
@@ -681,7 +686,7 @@ export default {
 					});
 					break;
 				case 'reload':
-					myThis.getDeviceInfo()
+					myThis.distributeQuery();
 					break;
 				case 'favourite':
 					myThis.favouriteFile()
@@ -738,7 +743,7 @@ export default {
 			}
       NasFileAPI.addFile(body).then((response): void => {
 				if (!isResponsePass(response)) return
-				myThis.getDeviceInfo()
+				myThis.distributeQuery();
 				myThis.fileName = ''
 				myThis.fileNameVisible = false
       }).catch((error): void => {
@@ -757,7 +762,7 @@ export default {
 				if (!isResponsePass(response)) return
 				myThis.fileRenameVisible = false
 				myThis.fileName = ''
-				myThis.getDeviceInfo()
+				myThis.distributeQuery();
       }).catch(error => {
         myThis.loading = false
         myThis.$message.error('网络连接错误，请检测网络')
@@ -917,10 +922,30 @@ export default {
 				myThis.$ipc.send('download', commend, item.id);
 			}
 		}, //传输任务控制
+		distributeQuery () {	// 集中分发管理请求
+      const myThis: any = this
+			if (myThis.DiskData.Type === 'disk') {
+				myThis.getLatelyFileList()
+			} else if (myThis.DiskData.Type === 'transport') {
+
+			} else if (myThis.DiskData.Type === 'storage') {
+				myThis.getDeviceInfo();
+			} else if (myThis.DiskData.Type === 'collect') {
+				myThis.getFavouriteList()
+			} else if (myThis.DiskData.Type === 'share') {
+				if (myThis.isShareDetail) {	// 分享详情
+					myThis.getShareList()
+				} else {	// 分享用户列表
+					myThis.getUserList()
+				}
+			} else {
+				myThis.getLatelyFileList()
+			}
+		},
 		getDeviceInfo () {  // 获取磁盘信息
       const myThis: any = this
 			if (myThis.deviceUuid !== '') {	// 处理频繁访问获取磁盘信息接口
-				myThis.getFileList(myThis.deviceUuid);
+				myThis.getFileList();
 				return
 			}
       NasFileAPI.storages().then((response): void => {
@@ -958,9 +983,8 @@ export default {
         myThis.$message.error('网络连接错误,请检测网络')
       })
 		},
-    getUserList() { // 获取用户列表
+    getUserList() { // 获取分享用户列表
 			const myThis: any = this
-			myThis.isShareUser = true
       NasFileAPI.userList().then((response): void => {
 				if (!isResponsePass(response)) return
         const res = response.data.data
@@ -987,9 +1011,8 @@ export default {
         myThis.$message.error('网络连接错误,请检测网络')
       })
     },
-    getShareList() { // 获取文件列表
+    getShareList() { // 获取分享文件详情列表
       const myThis: any = this
-			myThis.isShareUser = false
 			const body = {"nas_users": [{ "ugreen_no": myThis.currentShareUser }]};
       NasFileAPI.shareList(body).then((response): void => {
 				if (!isResponsePass(response)) return
@@ -1012,7 +1035,6 @@ export default {
     },
     favouriteFile() { // 收藏文件
       const myThis: any = this
-			myThis.isShareUser = false
 			const body = { "files": [{ "uuid": myThis.deviceUuid, "path": myThis.DiskData.NowSelect.path }] }
       NasFileAPI.favouriteFile(body).then((response): void => {
 				if (!isResponsePass(response)) return
@@ -1024,7 +1046,6 @@ export default {
     },
     cancelFavouriteFile() { // 收藏文件
       const myThis: any = this
-			myThis.isShareUser = false
 			const body = { "files": [{ "uuid": myThis.deviceUuid, "path": myThis.DiskData.NowSelect.path }] }
       NasFileAPI.cancelFavouriteFile(body).then((response): void => {
 				if (!isResponsePass(response)) return
@@ -1036,7 +1057,6 @@ export default {
     },
     getFavouriteList() { // 获取收藏列表
       const myThis: any = this
-			myThis.isShareUser = false
       NasFileAPI.favouriteList().then((response): void => {
 				if (!isResponsePass(response)) return
         const res = response.data.data
@@ -1056,6 +1076,32 @@ export default {
         myThis.$message.error('网络连接错误,请检测网络')
       })
     },
+    getLatelyFileList() { // 获取最近
+			const myThis: any = this
+			const input = {
+				"page": 1,
+				"size": 100,
+				"order": 1
+			}
+      NasFileAPI.ulist(input).then((response): void => {
+				if (!isResponsePass(response)) return
+        const res = response.data.data
+				myThis.LoadCompany = true;
+				if (myThis.currentType === 'all') {
+					myThis.UserDiskData = res.list
+				} else {
+					let newArr:any = []
+					res.list.forEach(item => {
+						if (StringUtility.suffixToTpe(StringUtility.formatSuffix(item.path)) === myThis.currentType) { newArr.push(item) }
+					})
+					myThis.UserDiskData = newArr
+				}
+				console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
+      }).catch((error): void => {
+        console.log(error)
+        myThis.$message.error('网络连接错误,请检测网络')
+      })
+		},
 		/*批量数据操作*/
 		DiskBatchData(commend, data) {
 			let BatchData:any = [];

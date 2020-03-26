@@ -8,6 +8,7 @@ export default {
 		let defaultOptions = {
 			width: 800,
 			height: 600,
+			icon: './src/assets/logo.png',
 			title: packageInfo.name,
 			frame: false,
 			useContentSize: false,

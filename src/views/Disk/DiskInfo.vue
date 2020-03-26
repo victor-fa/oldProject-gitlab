@@ -119,7 +119,7 @@ export default {
 		text-overflow: ellipsis;
 	}
 	span {
-		width: calc(100% - 60px);
+		width: calc(100%);
 		font-size: 16px;
 		text-overflow: ellipsis;
 		white-space: nowrap;

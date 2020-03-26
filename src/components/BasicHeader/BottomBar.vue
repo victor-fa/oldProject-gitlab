@@ -151,7 +151,7 @@ export default Vue.extend({
     },
     backAction () {
       // TODO: 一级目录不能返回，应该是置灰button
-      if (this.directory === '网盘') {
+      if (this.directory === '最近') {
         return
       }
       EventBus.$emit(EventType.backAction)
