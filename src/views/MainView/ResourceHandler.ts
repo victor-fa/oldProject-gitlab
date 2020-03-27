@@ -1,5 +1,5 @@
 import { ResourceItem, ResourceType } from '@/api/NasFileModel'
-import { CategoryType } from '../BasicHeader/Model/categoryList'
+import { CategoryType } from '../../model/categoryList'
 
 export default {
   // 对资源列表进行分类
@@ -40,34 +40,54 @@ export default {
     }
     return false
   },
+  // 设置aIndex对应item的选中状态
+  // isNot 标记是否取反,aIndex对应item的选中状态是取反，还是置为true
+  setSelectState (currentShowList: Array<ResourceItem>, aIndex: number, isNot: boolean) {
+    return currentShowList.map((item, index) => {
+      if (index === aIndex) {
+        item.isSelected = isNot ? !item.isSelected : true
+      } else {
+        item.isSelected = false
+      }
+      return item
+    })
+  },
+  // 重置选中状态
+  resetSelectState (currentShowList: Array<ResourceItem>) {
+    for (let index = 0; index < currentShowList.length; index++) {
+      const element = currentShowList[index]
+      if (!element.isSelected) continue
+      element.isSelected = false
+      currentShowList.splice(index, 1, element)
+    }
+  },
+  // 获取第一个选中的item
+  getFirstSelectItem (showArray: Array<ResourceItem>) {
+    for (let index = 0; index < showArray.length; index++) {
+      const element = showArray[index]
+      if (element.isSelected) return element
+    }
+    return null
+  },
+  // 获取选中的item
+  getSelectItems (showArray: Array<ResourceItem>) {
+    let items: Array<ResourceItem> = []
+    for (let index = 0; index < showArray.length; index++) {
+      const element = showArray[index]
+      if (element.isSelected) items.push(element) 
+    }
+    return items
+  },
   // 计算在window内的安全点
   calculateSafePositionOnWindow (clientX: number, clientY: number) {
     const width = document.body.clientWidth
     const height = document.body.clientHeight
-    const paddingRight = 10; const paddingBottom = 17
+    const paddingRight = 10; const paddingBottom = 20
     const alterWidth = 100 + paddingRight
     const alterHeight = 189 + paddingBottom
     let left = clientX + alterWidth < width ? clientX : width - alterWidth
     let top = clientY + alterHeight < height ? clientY : height - alterHeight
     return { left: left + 'px', top: top + 'px' }
-  },
-  // 设置aIndex对应item的选中状态
-  // isNot 标记是否取反,如果为true，就取反aIndex对应的item，否则将aIndex对应的item置为true
-  setSelectState (currentShowList: Array<ResourceItem>, aIndex: number, isNot: boolean) {
-    for (let index = 0; index < currentShowList.length; index++) {
-      const element = currentShowList[index]
-      // set selecte state of the current item
-      if (index === aIndex) {
-        element.isSelected = isNot ? !element.isSelected : true
-        currentShowList.splice(index, 1, element)
-        continue
-      }
-      // reset selete state of the other item 
-      if (element.isSelected) {
-        element.isSelected = false
-        currentShowList.splice(index, 1, element)
-      }
-    }
   },
   // 计算弹窗列表的安全点
   calculateSafePosition (event: MouseEvent, list: Element, alter: Element) {

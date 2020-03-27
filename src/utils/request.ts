@@ -7,6 +7,8 @@ import processCenter, { EventName } from './processCenter';
 import { NAS_ACCESS } from '@/common/constants'
 import { message } from 'ant-design-vue'
 
+const CancelToken = axios.CancelToken
+const source = CancelToken.source()
 const nasCloud = axios.create({
   baseURL: 'http://120.24.182.33',
   timeout: 10000,
@@ -137,5 +139,6 @@ export {
   nasServer,
   jsonToParams,
   jsonToParamsForPdf,
-  isResponsePass
+  isResponsePass,
+  source
 }

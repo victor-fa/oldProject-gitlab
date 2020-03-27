@@ -9,19 +9,15 @@
       :infinite-scroll-disabled="busy"
       :infinite-scroll-distance="0"
       :infinite-scroll-immediate-check="false"
-      @click="listClick"
+      v-on:contextMenuClick="handleListContextMenu"
     >
       <a-list
-        :dataSource="currentShowList"
+        :dataSource="dataSource"
         :grid="grid"
       >
         <a-list-item
           slot="renderItem"
           slot-scope="item, index"
-          @click.stop.native.exact="singleSelectItem(index)"
-          @click.shift.native.stop="multipleSelectItem(index)"
-          @dblclick="doubleClickItem(item)"
-          @contextmenu.prevent="handleContextMenu($event, index)"
         >
           <resource-list-item
             :ref="item.name"
@@ -29,16 +25,14 @@
             :index="index"
             :arrangeWay="arrangeWay"
             :isSelected="item.isSelected"
+            v-on:singleSelectClick="singleSelectItem"
+            v-on:multipleSelectClick="multipleSelectItem"
+            v-on:doubleClick="doubleClickItem"
+            v-on:contextMenuClick="handleContextMenu"
           />
         </a-list-item>
       </a-list>
     </div>
-    <operate-list-alter
-      v-if="showAlter"
-      ref="operateListAlter"
-      :style="alterStyle"
-      v-on:didSelectItem="handleAlterAction"
-    />
   </div>
 </template>
 
@@ -49,44 +43,41 @@ import infiniteScroll from 'vue-infinite-scroll'
 import { EventBus, EventType } from '../../utils/eventBus'
 import processCenter, { EventName } from '../../utils/processCenter'
 import { ArrangeWay, ResourceType, ResourceItem } from '../../api/NasFileModel'
-import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
+import { CategoryType } from '../../model/categoryList'
 import ResourceListItem from './ResourceListItem.vue'
 import ResourceHeader from './ResourceHeader.vue'
-import OperateListAlter from '../OperateListAlter/index.vue'
-import ResourceHandler from './ResourceHandler'
+import { SortWay } from '../../model/sortList'
 
 export default Vue.extend({
   name: 'resource-list',
   directives: { infiniteScroll },
   components: {
     ResourceListItem,
-    ResourceHeader,
-    OperateListAlter
+    ResourceHeader
   },
   props: {
     dataSource: Array,
     busy: {
       type: Boolean,
       default: false
+    },
+    arrangeWay: {
+      type: Number,
+      validator: function (value) {
+        return [ArrangeWay.horizontal, ArrangeWay.vertical].indexOf(value) !== -1
+      }
     }
   },
   data () {
-    let list = this.dataSource as Array<ResourceItem>
     return {
-      scrollHeight: 450,
-      arrangeWay: ArrangeWay.horizontal,
-      currentShowList: list,
-      alterPosition: { left: '0px', top: '0px' },
-      showAlter: false
+      scrollHeight: document.body.clientHeight - 122
     }
   },
   watch: {
-    dataSource: function (newValue, oldValue) {
-      this.currentShowList = newValue
-    },
-    currentShowList: function (newValue) {
-      this.$store.dispatch('Resource/updateShowItemCount', newValue.length)
-    }
+    arrangeWay: function (newValue) {
+      const asjust = newValue === ArrangeWay.horizontal ? 28 : -28
+      this.scrollHeight += asjust
+    } 
   },
   computed: {
     grid: function () {
@@ -100,146 +91,70 @@ export default Vue.extend({
         return true
       }
       return false
-    },
-    alterStyle: function (): object {
-      return {
-        left: this.alterPosition.left,
-        top: this.alterPosition.top
-      }
     }
   },
   mounted () {
     window.addEventListener('resize', this.observerWindowResize)
-    this.observerEventBus()
-    this.observerWindowResize()
   },
   destroyed () {
     window.removeEventListener('resize', this.observerWindowResize)
-    EventBus.$off(EventType.backAction)
-    EventBus.$off(EventType.categoryChangeAction)
-    EventBus.$off(EventType.arrangeChangeAction)
   },
   methods: {
-    getSelectItems () {
-      let items: Array<ResourceItem> = []
-      for (let index = 0; index < this.currentShowList.length; index++) {
-        const element = this.currentShowList[index]
-        if (element.isSelected) items.push(element)
-      }
-      return items
-    },
     observerWindowResize () {
-      const newHeight = document.body.clientHeight - 128
+      const adjust = this.arrangeWay === ArrangeWay.horizontal ? 122 : 150
+      const newHeight = document.body.clientHeight - adjust
       if (newHeight !== this.scrollHeight) {
         this.scrollHeight = newHeight
       }
     },
-    observerEventBus () {
-      EventBus.$on(EventType.backAction, () => {
-        this.$store.dispatch('Resource/popPath')
-        this.$emit('callbackAction', CallbackAction.back)
-      })
-      EventBus.$on(EventType.categoryChangeAction, (type: CategoryType) => {
-        this.currentShowList = ResourceHandler.classifyArray((this.dataSource as Array<ResourceItem>), type)
-      })
-      EventBus.$on(EventType.arrangeChangeAction, (way: ArrangeWay) => {
-        this.arrangeWay = way
-      })
-    },
     handleInfiniteOnLoad () {
       if (_.isEmpty(this.dataSource)) return
-      this.$emit('callbackAction', CallbackAction.loadMoreData)
-    },
-    listClick () {
-      // reset select state
-      for (let index = 0; index < this.currentShowList.length; index++) {
-        const element = this.currentShowList[index]
-        if (!element.isSelected) continue
-        element.isSelected = false
-        this.currentShowList.splice(index, 1, element)
-      }
-      this.autoHideAlter()
+      this.$emit('CallbackAction', ResourceListAction.loadMoreData)
     },
     singleSelectItem (aIndex: number) {
-      this.autoHideAlter()
-      ResourceHandler.setSelectState(this.currentShowList, aIndex, true)
+      this.$emit('CallbackAction', ResourceListAction.singleSelectItem, aIndex)
     },
     multipleSelectItem (index: number) {
-      this.autoHideAlter()
-      const item = this.currentShowList[index]
-      item.isSelected = !item.isSelected
-      this.currentShowList.splice(index, 1, item)
+      this.$emit('CallbackAction', ResourceListAction.multipleSelectItem, index)
     },
-    doubleClickItem (item: ResourceItem) {
-      this.autoHideAlter()
+    doubleClickItem (index: number) {
+      const item = this.dataSource[index] as ResourceItem
       switch (item.type) {
         case ResourceType.floder:
-          this.openFolder(item)
+          this.$emit('CallbackAction', ResourceListAction.openItem, index)
           break
         default:
           break
       }
-    },
-    openFolder (item: ResourceItem) {
-      // change path
-      this.$store.dispatch('Resource/pushPath', item.name)
-      // notify parent component
-      this.$emit('callbackAction', CallbackAction.openFolder, item)
     },
     handleContextMenu (event: MouseEvent, aIndex: number) {
-      event.preventDefault()
-      ResourceHandler.setSelectState(this.currentShowList, aIndex, false)
-      this.showAlter = true
-      const alter = this.$refs.showAlter as Element
-      this.alterPosition = ResourceHandler.calculateSafePosition(event, this.$el, alter)
-      // TODO: 不同文件类型和不同场景会展示不同的右键菜单
+      this.$emit('CallbackAction', ResourceListAction.contextMenu, event, aIndex)
     },
-    autoHideAlter () {
-      this.showAlter = false
+    handleListContextMenu (event: MouseEvent) {
+      this.$emit('CallbackAction', ResourceListAction.listContextMenu, event)
     },
-    handleAlterAction (command: string) {
-      this.autoHideAlter()
-      switch (command) {
-        case 'open':
-          console.log('123')
-          break;
-        case 'rename':
-          this.handleRenameAction()
-          break
-        case 'info':
-          // 只能查看单个item的信息
-          const item = _.head(this.getSelectItems())
-          this.$emit('callbackAction', CallbackAction.mediaInfo, item)
-          break
-        default:
-          break;
-      }
-    },
-    handleRenameAction () {
-      // 只能对单个item重命名
-      const item = _.head(this.getSelectItems())
-      if (item === undefined) return
+    handleRenameAction (item: ResourceItem) {
       const listItem: any = this.$refs[item.name]
       listItem.beginRenaming()
     }
   }
 })
-
-enum CallbackAction {
-  back = 'back',
-  openFolder = 'openFolder',
-  loadMoreData = 'loadMoreData',
-  mediaInfo = 'mediaInfo'
+enum ResourceListAction {
+  loadMoreData = 'load_more_data',
+  openItem = 'open_item',
+  contextMenu = 'context_menu',
+  listContextMenu = 'list_context_menu',
+  singleSelectItem = 'single_select_item',
+  multipleSelectItem = 'multiple_select_item'
 }
-
 export {
-  CallbackAction
+  ResourceListAction
 }
-
 </script>
 
 <style lang="less" scoped>
 .resource-list {
+  background-color: white;
   overflow: auto;
   .demo-loading-container {
     position: absolute;
@@ -249,7 +164,7 @@ export {
   }
 }
 .horizontalResourceList {
-  padding: 20px 20px 0px;
+  padding: 20px;
   background-color: white;
 }
 </style>

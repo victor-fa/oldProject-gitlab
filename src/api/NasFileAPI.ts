@@ -6,7 +6,7 @@ import { NAS_ACCESS, NAS_INFO } from '@/common/constants'
 import { nasServer } from '@/utils/request';
 import { NasInfo } from './ClientModel';
 import ClientAPI from './ClientAPI';
-import { OrderType } from './NasFileModel';
+import { OrderType, UploadTimeSort } from './NasFileModel';
 
 axios.defaults.withCredentials = true;
 
@@ -125,9 +125,6 @@ export default {
       }
     })
   },
-  fetchRecentResourceList (path: string, uuid: string, page: number): Promise<AxiosResponse<BasicResponse>> {
-    return this.fetchResourceList(path, uuid, page, 20, OrderType.ByModifyDesc)
-  },
   renameResource (oldPath: string, newPath: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasFileModulePath + '/rename?api_token=' + apiToken, {
       uuid: uuid,
@@ -140,6 +137,26 @@ export default {
       params: {
         path: path,
         uuid: uuid,
+        api_token: apiToken
+      }
+    })
+  },
+  fetchUlist (page: number, size: number = 20, order: UploadTimeSort = UploadTimeSort.descend): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.get(nasFileModulePath + '/ulist', {
+      params: {
+        page,
+        size,
+        order,
+        api_token: apiToken
+      }
+    })
+  },
+  searchFile (uuid: string, path: string, keyword: string): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.get(nasFileModulePath + '/search', {
+      params: {
+        uuid,
+        path,
+        key: keyword,
         api_token: apiToken
       }
     })

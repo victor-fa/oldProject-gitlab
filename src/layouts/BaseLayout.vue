@@ -13,9 +13,6 @@
             <router-view/>
           </keep-alive>
         </a-layout-content>
-        <a-layout-footer class="base-footer">
-          <basic-footer/>
-        </a-layout-footer>
       </a-layout>
     </a-layout>
 </template>
@@ -25,7 +22,6 @@ import Vue from 'vue'
 import ILogo from '../components/Logo/index.vue'
 import SiderMenu from '../components/SiderMenu/index.vue'
 import BasicHeader from '../components/BasicHeader/index.vue'
-import BasicFooter from '../components/BasicFooter/index.vue'
 import processCenter, { EventName } from '../utils/processCenter'
 
 export default Vue.extend({
@@ -33,8 +29,7 @@ export default Vue.extend({
   components: {
     ILogo,
     SiderMenu,
-    BasicHeader,
-    BasicFooter
+    BasicHeader
   },
   mounted () {
     // this.$router.replace('disk')
@@ -50,17 +45,12 @@ export default Vue.extend({
   background-color: #edf1f0;
 }
 .base-header {
-  height: 110px;
+  height: 32px;
   padding: 0px;
   background-color: white;
 }
 .base-content {
   padding: 0px;
   background-color: #f6f8fb;
-}
-.base-footer {
-  height: 17px;
-  background-color: #edf1f0;
-  padding: 0px;
 }
 </style>

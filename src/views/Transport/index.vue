@@ -1,7 +1,11 @@
 <template>
-  <TransportList
-    ref="realResourceList"
-  />
+  <div>
+    <transport-header-view/>
+    <TransportList
+      ref="realResourceList"
+    />
+    <main-bottom-view/>
+  </div>
   
   <!-- :style="alterStyle"
     @blur="alterBlur"
@@ -10,6 +14,8 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import TransportHeaderView from './TransportHeaderView.vue'
+import MainBottomView from '../MainView/MainBottomView.vue'
 import TransportList from '../../components/TransportList/index.vue'
 import { realResourceList } from '../MockData/index'
 import { TRANSFORM_INFO } from '../../common/constants'
@@ -17,7 +23,9 @@ import { TRANSFORM_INFO } from '../../common/constants'
 export default {
   name: 'transport',
   components: {
-    TransportList
+    TransportList,
+    TransportHeaderView,
+    MainBottomView
   },
   data () {
     return {

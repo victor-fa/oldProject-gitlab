@@ -35,8 +35,8 @@ let sortList = {
     { kind: SortKind.fileType, title: '类型', isSelected: false }
   ],
   types: [
-    { type: SortType.ascending, title: '升序', isSelected: true },
-    { type: SortType.descending, title: '降序', isSelected: false }
+    { type: SortType.descending, title: '降序', isSelected: true },
+    { type: SortType.ascending, title: '升序', isSelected: false }
   ]
 }
 
@@ -44,5 +44,7 @@ export {
   sortList,
   SortKindItem,
   SortTypeItem,
-  SortWay
+  SortWay,
+  SortKind,
+  SortType
 }

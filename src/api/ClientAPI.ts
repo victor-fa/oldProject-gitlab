@@ -1,6 +1,6 @@
 import { AxiosResponse } from 'axios';
 import _ from 'lodash'
-import { nasServer } from '../utils/request'
+import { nasServer, source } from '../utils/request'
 import { User, BasicResponse } from './UserModel'
 import deviceMgr from '../utils/deviceMgr'
 import JSEncrypt from 'jsencrypt'
@@ -45,7 +45,12 @@ export default {
       user_basic: userBasic,
       auth_code: authCode
     }
-    return nasServer.post(userModulePath + '/attach', params)
+    return nasServer.post(userModulePath + '/attach', params, {
+      cancelToken: source.token
+    })
+  },
+  cancelBindRequest () {
+    source.cancel('Request canceled')
   },
   setOfflineAccount (account: string, password: string, apiToken: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/offline/account/set', {

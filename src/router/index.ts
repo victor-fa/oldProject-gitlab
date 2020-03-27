@@ -4,6 +4,7 @@ import VueRouter from 'vue-router'
 import Launch from '../views/Launch/index.vue'
 import { HomeRouters } from './modules/HomeList'
 import { LoginRouters } from './modules/LoginList'
+import { MediaRouters } from './modules/MediaList'
 
 Vue.use(VueRouter)
 
@@ -18,18 +19,13 @@ const routes = [
     name: 'connecting',
     component: () => import('../views/Connecting/index.vue')
   },
-  // {
-  //   path: '/home',
-  //   name: 'home',
-  //   component: () => import('../layouts/BaseLayout.vue'),
-  //   children: [
-  //     ...HomeRouters
-  //   ]
-  // },
   {
-    path: '/disk',
-    name: 'disk',
-    component: () => import('../views/Disk/index.vue'),
+    // path: '/disk',
+    // name: 'disk',
+    // component: () => import('../views/Disk/index.vue'),
+    path: '/home',
+    name: 'home',
+    component: () => import('../layouts/BaseLayout.vue'),
     children: [
       ...HomeRouters
     ]
@@ -46,6 +42,14 @@ const routes = [
     path: '/info',
     name: 'DiskInfo',
     component: () => import('../views/Disk/DiskInfo.vue')
+  },
+  {
+    path: '/media-layout',
+    name: 'media-layout',
+    component: () => import('../layouts/MediaLayout.vue'),
+    children: [
+      ...MediaRouters
+    ]
   },
   {
     path: '/picture-shower',
