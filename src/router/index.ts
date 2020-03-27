@@ -72,6 +72,11 @@ const routes = [
     name: 'DiskMusicPlayer',
     component: () => import('../views/Disk/DiskMusicPlayer.vue')
   },
+  {
+    path: '/disk-msg',
+    name: 'MessageWindow',
+    component: () => import('../views/Disk/MessageWindow.vue')
+  },
 ]
 
 const router = new VueRouter({

@@ -23,7 +23,8 @@
 		</div>
 		<div class="cd-disk-info-item">
 			<span>修改时间:</span>
-			<div>{{ DiskData.mtime | filterTime }}</div>
+			<div v-if="DiskData.mtime === 0">未修改</div>
+			<div v-else>{{ DiskData.mtime | filterTime }}</div>
 		</div>
 		<div class="cd-disk-info-item">
 			<span>唯一标识:</span>
@@ -62,10 +63,11 @@ export default {
 			DiskData: {
 				path: '',
 				disk_type: '',
-				size: '',
+				size: 0,
 				ctime: '',
 				mtime: '',
-				uuid: ''
+				uuid: '',
+				isMyself: false
 			},
 			header: {
 				title: '',
@@ -81,6 +83,12 @@ export default {
 			console.log(JSON.parse(JSON.stringify(data)));
 			//接收打开文件的数据
 			this.DiskData = data;
+			if (data.myself_folder) {
+				this.DiskData.isMyself = true
+				this.DiskData.size = 0
+				this.DiskData.ctime = data.myself_folder.mtime
+				this.DiskData.mtime = data.myself_folder.mtime
+			}
 			this.header.title = StringUtility.formatName(data.path) + ' 属性';
 			this.window.setTitle(StringUtility.formatName(data.path) + ' 属性');
 		});

@@ -25,33 +25,42 @@ export default {
 	data() {
 		return {
 			DiskMainMenu: [
-				{ name: '上传文件', key: 'Ctrl+U', commend: 'upload', disabled: "ClassifyName!=='网盘'" },
-				{ name: '新建文件夹', key: 'Ctrl+N', commend: '', disabled: "ClassifyName!=='网盘'" },
+				{ name: '上传文件', key: '', commend: 'upload', disabled: "ClassifyName!=='网盘'" },
+				{ name: '新建文件夹', key: '', commend: '', disabled: "ClassifyName!=='网盘'" },
 				{ name: '清空剪切板', key: '', commend: 'clear', vif: "ClassifyName==='网盘'", disabled: 'Clipboard.length===0' },
-				{ name: '粘贴', key: 'Ctrl+V', commend: 'paste', vif: "ClassifyName==='网盘'", disabled: 'Clipboard.length===0' },
-				{ name: '刷新', key: 'F5', commend: 'reload' }
+				{ name: '粘贴', key: '', commend: 'paste', vif: "ClassifyName==='网盘'", disabled: 'Clipboard.length===0' },
+				{ name: '刷新', key: '', commend: 'reload' }
 			],
 			DiskFileMenu: [
-				{ name: '打开', key: 'Ctrl+O', commend: 'open', data: '', disabled: 'SelectFiles.length>1' },
-				{ name: '下载', key: 'Ctrl+O', commend: 'download', data: '' },
+				{ name: '打开', key: '', commend: 'open', data: '', disabled: 'SelectFiles.length>1' },
+				{ name: '下载', key: '', commend: 'download', data: '' },
 				{ name: '移动到', key: '', commend: 'MoveTo', data: '' },
-				{ name: '复制', key: 'Ctrl+C', commend: 'Copy', data: '' },
-				{ name: '剪切', key: 'Ctrl+X', commend: 'Cut', data: '' },
-				{ name: '重命名', key: 'Ctrl+M/F2', commend: 'rename', data: '', disabled: 'SelectFiles.length>1' },
-				{ name: '删除', key: 'Delete', commend: 'delete', data: '' },
+				{ name: '复制', key: '', commend: 'Copy', data: '' },
+				{ name: '剪切', key: '', commend: 'Cut', data: '' },
+				{ name: '重命名', key: '', commend: 'rename', data: '', disabled: 'SelectFiles.length>1' },
+				{ name: '删除', key: '', commend: 'delete', data: '' },
 				{ name: '分享', key: '', commend: 'share', data: '', disabled: 'SelectFiles.length>1' },
 				{ name: '收藏', key: '', commend: 'favourite', data: '' },
-				{ name: '属性', key: 'Alt+Enter', commend: 'info', data: '', disabled: 'SelectFiles.length>1' }
+				{ name: '移入加密空间', key: '', commend: 'encrypt', data: '' },
+				{ name: '移入备份空间', key: '', commend: 'backup', data: '' },
+				{ name: '属性', key: '', commend: 'info', data: '', disabled: 'SelectFiles.length>1' }
+			],
+			DiskMyselfMenu: [
+				{ name: '打开', key: '', commend: 'open', data: '', disabled: 'SelectFiles.length>1' },
+				{ name: '修改信息', key: '', commend: 'modify', data: '', disabled: 'SelectFiles.length>1' },
+				{ name: '删除', key: '', commend: 'delete', data: '' },
+				{ name: '分享', key: '', commend: 'share', data: '' },
+				{ name: '属性', key: '', commend: 'info', data: '', disabled: 'SelectFiles.length>1' }
 			],
 			DiskShareMenu: [
-				{ name: '打开', key: 'Ctrl+O', commend: 'open', data: '', disabled: 'SelectFiles.length>1' },
+				{ name: '打开', key: '', commend: 'open', data: '', disabled: 'SelectFiles.length>1' },
 				{ name: '取消分享', key: '', commend: 'cancel-share', data: '', disabled: 'SelectFiles.length>1' },
-				{ name: '属性', key: 'Alt+Enter', commend: 'info', data: '', disabled: 'SelectFiles.length>1' }
+				{ name: '属性', key: '', commend: 'info', data: '', disabled: 'SelectFiles.length>1' }
 			],
 			DiskCollectMenu: [
-				{ name: '打开', key: 'Ctrl+O', commend: 'open', data: '', disabled: 'SelectFiles.length>1' },
+				{ name: '打开', key: '', commend: 'open', data: '', disabled: 'SelectFiles.length>1' },
 				{ name: '取消收藏', key: '', commend: 'cancel-favourite', data: '' },
-				{ name: '属性', key: 'Alt+Enter', commend: 'info', data: '', disabled: 'SelectFiles.length>1' }
+				{ name: '属性', key: '', commend: 'info', data: '', disabled: 'SelectFiles.length>1' }
 			],
 			MenuData: [],
 			MouseMenuShow: false
@@ -87,6 +96,8 @@ export default {
 					this.MenuData = this.DiskShareMenu;
 				} else if (this.type === 'collect') {
 					this.MenuData = this.DiskCollectMenu;
+				} else if (this.type === 'custom') {
+					this.MenuData = this.DiskMyselfMenu;
 				} else {
 					this.MenuData = this.DiskFileMenu;
 				}

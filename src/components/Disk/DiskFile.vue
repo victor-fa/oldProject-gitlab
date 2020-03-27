@@ -57,7 +57,7 @@ export default Vue.extend({
 		},
 		getTypeNam(data) {
 			let typeName = 'unkonw'
-			if (data.type === 6) {
+			if (data.type === 6 || data.myself_folder) {
 				typeName = 'folder'
 			} else {
 				typeName = StringUtility.suffixToTpe(StringUtility.formatSuffix(data.path))

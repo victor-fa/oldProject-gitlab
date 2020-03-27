@@ -1,71 +1,80 @@
 <template>
-  <a-layout>
-		<a-layout-sider class="base-sider">
-			<i-logo/>
-			<sider-menu/>
-		</a-layout-sider>
 		<a-layout>
-			<a-layout-header class="base-header">
-				<basic-header/>
-			</a-layout-header>
-			<a-layout-content>
-				<template>
-					<resource-header v-if="isShowHeader"/>
-					<div class="cd-upload-tips" v-show="ShowUploadTips && DiskData.Type === 'disk' && loadClassify === 'normal'">松开鼠标开始上传文件</div>
-					<DiskSortBar
-						:show="DiskData.DiskShowState !== 'cd-disk-block-file' && NoTransType"
-						:DiskData="UserDiskData"
-						@callback="DiskFeatureControl"
-						ref="DiskSortBar"
-					/>
-					<section
-						class="cd-bottom"
-						@mousedown="MainMouseFunc"
-						@dragover.prevent.stop="ShowUploadTips = true"
-						@dragleave.prevent.stop="ShowUploadTips = false"
-						ref="CloudDiskMain"
-						:style="{ height: AutoHeight }"
-					>
-						<div
-							class="resource-list"
-							v-bind:class="{ horizontalResourceList: !isShowHeader }"
-							:style="{ height: scrollHeight + 'px' }"
-							v-infinite-scroll="handleInfiniteOnLoad"
-							:infinite-scroll-disabled="busy"
-							:infinite-scroll-distance="10"
+			<a-layout-sider class="base-sider">
+				<i-logo/>
+				<sider-menu/>
+			</a-layout-sider>
+			<a-layout>
+				<a-layout-header class="base-header">
+					<basic-header/>
+				</a-layout-header>
+				<a-layout-content>
+					<template>
+						<resource-header v-if="isShowHeader"/>
+						<div class="cd-upload-tips" v-show="ShowUploadTips && DiskData.Type === 'disk' && loadClassify === 'normal'">松开鼠标开始上传文件</div>
+						<DiskSortBar
+							:show="DiskData.DiskShowState !== 'cd-disk-block-file' && NoTransType"
+							:DiskData="UserDiskData"
+							@callback="DiskFeatureControl"
+							ref="DiskSortBar"
+						/>
+						<section
+							class="cd-bottom"
+							@mousedown="MainMouseFunc"
 							@dragover.prevent.stop="ShowUploadTips = true"
 							@dragleave.prevent.stop="ShowUploadTips = false"
-							@drop.prevent.stop="UploadDrop"
+							ref="CloudDiskMain"
+							:style="{ height: AutoHeight }"
 						>
-							<!-- <loading :loading="IsLoadCompany" :length="UserDiskData.length" :IsNoDiskData="IsNoDiskData" /> -->
-							<div class="cd-mouse-select" v-show="MouseSelectData.width" :style="MouseSelectData" />
-							<DiskFile @SelectFiles="SelectFiles" @OpenFile="DiskFeatureControl" v-if="LoadCompany && NoTransType" :data="UserDiskData" :DiskData="DiskData" />
-							
-							<template v-if="DiskData.Type === 'transport'">
-								<TransportList @ControlTrans="ControlTrans" :data="TransformData"/>
-							</template>
-							<audio :src="NoticeSrc" ref="NoticeAudio" />
-						</div>
-					</section>
-					<input type="file" id="FileArea" @change="PrepareUploadFile" hidden ref="FileArea" multiple="multiple" />
-					<MouseMenu :type="loadClassify" :node="$refs.CloudDiskMain" :DiskData="DiskData" @callback="DiskFeatureControl" ref="MouseMenu" />
-					<a-modal
-						:visible="fileNameVisible" :mask="false" :closable="false" :maskClosable="false"
-						okText="创建" cancelText="取消" @ok="handleCreateFile" @cancel="cancleCreateFile">
-						文件夹名称：<a-input placeholder="请输入文件夹名称" v-model="fileName" />
-					</a-modal>
-					<a-modal
-						:visible="fileRenameVisible" :mask="false" :closable="false" :maskClosable="false"
-						okText="确定" cancelText="取消" @ok="handleRenameFile" @cancel="cancleRenameFile">
-						文件重命名：<a-input placeholder="请输入文件新名称" v-model="fileName" />
-					</a-modal>
-				</template>
-			</a-layout-content>
-			<a-layout-footer class="base-footer">
-				<basic-footer/>
-			</a-layout-footer>
+							<div
+								class="resource-list"
+								v-bind:class="{ horizontalResourceList: !isShowHeader }"
+								:style="{ height: scrollHeight + 'px' }"
+								v-infinite-scroll="handleInfiniteOnLoad"
+								:infinite-scroll-disabled="busy"
+								:infinite-scroll-distance="10"
+								@dragover.prevent.stop="ShowUploadTips = true"
+								@dragleave.prevent.stop="ShowUploadTips = false"
+								@drop.prevent.stop="UploadDrop"
+							>
+								<!-- <loading :loading="IsLoadCompany" :length="UserDiskData.length" :IsNoDiskData="IsNoDiskData" /> -->
+								<div class="cd-mouse-select" v-show="MouseSelectData.width" :style="MouseSelectData" />
+								<DiskFile @SelectFiles="SelectFiles" @OpenFile="DiskFeatureControl" v-if="LoadCompany && NoTransType" :data="UserDiskData" :DiskData="DiskData" />
+								
+								<template v-if="DiskData.Type === 'transport'">
+									<TransportList @ControlTrans="ControlTrans" :data="TransformData"/>
+								</template>
+								<audio :src="NoticeSrc" ref="NoticeAudio" />
+							</div>
+						</section>
+						<input type="file" id="FileArea" @change="PrepareUploadFile" hidden ref="FileArea" multiple="multiple" />
+						<MouseMenu :type="loadClassify" :node="$refs.CloudDiskMain" :DiskData="DiskData" @callback="DiskFeatureControl" ref="MouseMenu" />
+						<a-modal
+							:visible="fileNameVisible" :mask="false" :closable="false" :maskClosable="false"
+							okText="创建" cancelText="取消" @ok="handleCreateFile" @cancel="cancleCreateFile">
+							文件夹名称：<a-input placeholder="请输入文件夹名称" v-model="fileName" />
+						</a-modal>
+						<a-modal
+							:visible="fileRenameVisible" :mask="false" :closable="false" :maskClosable="false"
+							okText="确定" cancelText="取消" @ok="handleRenameFile" @cancel="cancleRenameFile">
+							文件重命名：<a-input placeholder="请输入文件新名称" v-model="fileName" />
+						</a-modal>
+						<a-modal
+							:visible="myselfFile.visiable" :mask="false" :closable="false" :maskClosable="false"
+							okText="创建" cancelText="取消" @ok="handleCreateMyselfFile" @cancel="cancleCreateMyselfFile">
+							模块名：<a-input placeholder="请输入模块名" v-model="myselfFile.name" class="myself-input" />
+							模块标题：<a-input placeholder="请输入模块标题" v-model="myselfFile.title" class="myself-input" />
+							模块简介：<a-input placeholder="请输入模块简介" v-model="myselfFile.brief" class="myself-input" />
+							模块备注：<a-input placeholder="请输入模块备注" v-model="myselfFile.desc" class="myself-input" />
+							模块标签：<a-input placeholder="请输入模块标签：收藏，风景，美女…" v-model="myselfFile.tags" />
+						</a-modal>
+					</template>
+				</a-layout-content>
+				<a-layout-footer class="base-footer">
+					<basic-footer/>
+				</a-layout-footer>
+			</a-layout>
 		</a-layout>
-	</a-layout>
 </template>
 
 <script lang="ts">
@@ -123,6 +132,15 @@ export default {
 			fileName: '',	// 新建文件名
 			fileNameVisible: false,	// 创建文件夹
 			fileRenameVisible: false,	// 文件重命名
+			myselfFile: {
+				visiable: false,
+				isModify: false,
+				name: '',
+				title: '',
+				brief: '',
+				desc: '',
+				tags: ''
+			},
 			TransformData: [],
 			/*上传提示*/
       loading: false,
@@ -233,6 +251,16 @@ export default {
 		}
   },
   computed: {
+		isDisk() {
+			const myThis = this as any
+			console.log(myThis.loadClassify);
+			console.log(myThis.DiskData.Type);
+			console.log(myThis.DiskData.SelectFiles);
+			return (
+				myThis.loadClassify !== 'transport' &&
+				(myThis.DiskData.SelectFiles.length > 0 || myThis.DiskData.NowSelect.path !== undefined)
+			);
+		},
     grid: function () {
       const myThis = this as any
       if (myThis.arrangeWay === ArrangeWay.horizontal) {
@@ -375,6 +403,8 @@ export default {
 				myThis.isShareDetail = false	// 重置分享为用户列表
 				if (pathStr === 'disk') {
 					myThis.loadClassify = 'disk'
+				} else if (pathStr === 'custom') {
+					myThis.loadClassify = 'custom'
 				} else if (pathStr === 'transport') {
 
 				} else if (pathStr === 'storage') {
@@ -454,6 +484,7 @@ export default {
 						break;
 				}
 				myThis.$message.info(tips);
+				console.log(myThis.DiskData.Clipboard);
 				return (myThis.DiskData.ClipboardType = commend);
 			}
 			commend = commend ? commend : 'newFolder';
@@ -480,15 +511,18 @@ export default {
 						// 0: Unknown 1: Video, 2: Audio, 3:Image, 4:Document, 5:Archive, 6:Folder
 						const filterArr = [1, 2, 3, 4];
 						if (filterArr.indexOf(OpenType) > -1) {
-							console.log(myThis.UserDiskData);
-							let data:any = myThis.UserDiskData.filter(item => item.active)
+							let data:any = []
+							myThis.UserDiskData.forEach(item => {
+								if (item.active) { data.push(item) }
+							})
 							setTimeout(() => {
-								console.log(JSON.parse(JSON.stringify(data[0])));
+								console.log(data[0]);
 								myThis.$ipc.send('file-control', OpenType, data);
 							}, 400);
 						} else if (OpenType === 5) {	// 包含zip
+							// SelectFiles
 							let data:any = myThis.UserDiskData.filter(item => item.active)
-							console.log(JSON.parse(JSON.stringify(data[0])));
+							console.log(data[0]);
 							const filterCompress = ['.zip', '.rar', '.7z', '.ZIP', '.RAR', '.7Z']
 							const compressRes = filterCompress.filter(item => data[0].path.indexOf(item) > -1)
 							if (compressRes.length > 0) {	// 压缩类型
@@ -515,21 +549,15 @@ export default {
 				case 'download': //下载文件
 					if (myThis.DiskData.SelectFiles.length) {
 						myThis.DiskData.SelectFiles.forEach(item => {
-							if (item.path) {
-								myThis.SelectDownLoadFiles.push(item);
-							}
+							if (item.path) { myThis.SelectDownLoadFiles.push(item); }
 						});
 					} else {
-						if (myThis.DiskData.NowSelect) {
-							myThis.SelectDownLoadFiles.push(myThis.DiskData.NowSelect);
-						}
+						if (myThis.DiskData.NowSelect) { myThis.SelectDownLoadFiles.push(myThis.DiskData.NowSelect); }
 					}
 					EventBus.$emit(EventType.downloadChangeAction, null)
 					let tips = myThis.SelectDownLoadFiles.length > 1 ? '所选' + myThis.SelectDownLoadFiles.length + '个项目' : myThis.SelectDownLoadFiles[0].path;
 					myThis.SelectDownLoadFiles.forEach(item => {
-						if (item.trans_type === 'download' && item.state !== 'completed') {
-							myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(NasFileAPI.download(item));
-						}
+						myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(NasFileAPI.download(item));
 					});
 					myThis.SelectDownLoadFiles = [];
 					myThis.$message.info(tips + '已加入下载列队');
@@ -554,7 +582,11 @@ export default {
 					myThis.DiskData.DiskShowState = datas;
 					break;
 				case 'newFolder':
-					myThis.fileNameVisible = true;
+					if (myThis.DiskData.Type === 'custom') {	// 删除自定义文件
+						myThis.myselfFile.visiable = true;
+					} else {
+						myThis.fileNameVisible = true;
+					}
 					break;
 				case 'clear':
 					myThis.DiskData.Clipboard = [];
@@ -603,32 +635,34 @@ export default {
 						cancelText: '取消',
 						onOk() {
 							const tempData:any = myThis.DiskData.NowSelect
-							const body ={
-								"type": 4,
-								"data": {
-									"mode": 1,
-									"files": [ { "path": tempData.path, "uuid": tempData.uuid } ]
+							if (myThis.DiskData.Type === 'custom') {	// 删除自定义文件
+								const body ={
+									"uuid": tempData.uuid,
+									"path": tempData.path
 								}
+								NasFileAPI.deleteMyselfFile(body).then((response): void => {
+									if (!isResponsePass(response)) return
+									myThis.distributeQuery();
+									myThis.$message.success('删除成功！')
+								}).catch((error): void => {
+									myThis.$message.error('网络连接错误,请检测网络')
+								})
+							} else {
+								const body ={
+									"type": 4,
+									"data": {
+										"mode": 1,
+										"files": [ { "path": tempData.path, "uuid": tempData.uuid } ]
+									}
+								}
+								NasFileAPI.deleteFile(body).then((response): void => {
+									if (!isResponsePass(response)) return
+									myThis.distributeQuery();
+									myThis.$message.success('删除成功！')
+								}).catch((error): void => {
+									myThis.$message.error('网络连接错误,请检测网络')
+								})
 							}
-							NasFileAPI.deleteFile(body).then((response): void => {
-								if (!isResponsePass(response)) return
-								myThis.distributeQuery();
-								myThis.$message.success('删除成功！')
-							}).catch((error): void => {
-								console.log(error);
-								myThis.$message.error('网络连接错误,请检测网络')
-							})
-						}
-					});
-					break;
-				case 'restore': //文件还原
-					let restore_data = myThis.DiskBatchData();
-					data = myThis.DiskBatchData('post', restore_data);
-					myThis.Confrim({
-						title: '还原文件',
-						tips: '是否将所选' + restore_data.length + '个项目移出回收站',
-						callback: () => {
-							// TODO: 请求接口
 						}
 					});
 					break;
@@ -636,6 +670,16 @@ export default {
 					myThis.fileRenameVisible = true;
 					const tempName = myThis.DiskData.NowSelect.path
 					myThis.fileName = StringUtility.formatName(tempName)
+					break;
+				case 'modify': //自定义文件修改
+					myThis.myselfFile.visiable = true;
+					myThis.myselfFile.isModify = true;
+					let modify_data = myThis.DiskBatchData();
+					myThis.myselfFile.name = modify_data[0].myself_folder.name
+					myThis.myselfFile.title = modify_data[0].myself_folder.title
+					myThis.myselfFile.brief = modify_data[0].myself_folder.brief
+					myThis.myselfFile.desc = modify_data[0].myself_folder.desc
+					myThis.myselfFile.tags = modify_data[0].myself_folder.tags.join(',')
 					break;
 				case 'info': //文件属性
 					console.log(JSON.parse(JSON.stringify(myThis.DiskData.NowSelect)));
@@ -656,7 +700,6 @@ export default {
 						myThis.distributeQuery();
 						myThis.$message.success('分享成功！')
 					}).catch((error): void => {
-						console.log(error);
 						myThis.$message.error('网络连接错误,请检测网络')
 					})
 					break;
@@ -679,7 +722,6 @@ export default {
 								myThis.getShareList()
 								myThis.$message.success('取消分享成功！')
 							}).catch((error): void => {
-								console.log(error);
 								myThis.$message.error('网络连接错误,请检测网络')
 							})
 						}
@@ -710,7 +752,6 @@ export default {
 								myThis.getFavouriteList()
 								myThis.$message.success('取消收藏成功！')
 							}).catch((error): void => {
-								console.log(error);
 								myThis.$message.error('网络连接错误,请检测网络')
 							})
 						}
@@ -729,6 +770,64 @@ export default {
 					break;
 			}
 		},
+		handleCreateMyselfFile() {	// 创建自定义文件
+      const myThis = this as any
+			if (myThis.myselfFile.name.length === 0) {
+				return myThis.$message.error('模块名不能为空');
+			} else if (myThis.myselfFile.title.length === 0) {
+				return myThis.$message.error('模块标题不能为空');
+			} else if (myThis.myselfFile.brief.length === 0) {
+				return myThis.$message.error('模块简介不能为空');
+			} else if (myThis.myselfFile.tags.length === 0) {
+				return myThis.$message.error('模块标签不能为空');
+			}
+			myThis.myselfFile.tags = myThis.myselfFile.tags.replace(/，/g, ',')
+			const tagArr = myThis.myselfFile.tags.split(',')
+			if (myThis.myselfFile.isModify) {	// 修改
+				const modify_data = myThis.DiskBatchData();
+				const body ={
+					"uuid": modify_data[0].uuid,
+					"path": modify_data[0].path,
+					"myself_folder": {
+						"name": myThis.myselfFile.name,
+						"title": myThis.myselfFile.title,
+						"brief": myThis.myselfFile.brief,
+						"desc": myThis.myselfFile.desc,
+						"tags": tagArr
+					}
+				}
+				NasFileAPI.modifyMyselfFile(body).then((response): void => {
+					if (!isResponsePass(response)) return
+					myThis.distributeQuery();
+					myThis.fileName = ''
+					myThis.myselfFile.visiable = false
+				}).catch((error): void => {
+					myThis.$message.error('网络连接错误,请检测网络')
+				})
+			} else {	// 
+				const body ={
+					"uuid": "",
+					"myself_folder": {
+						"name": myThis.myselfFile.name,
+						"title": myThis.myselfFile.title,
+						"brief": myThis.myselfFile.brief,
+						"desc": myThis.myselfFile.desc,
+						"tags": tagArr
+					}
+				}
+				NasFileAPI.addMyselfFile(body).then((response): void => {
+					if (response.data.code === 4004) {
+						return myThis.$message.warning('文件已存在')
+					} else if (response.data.code === 4105) {
+						return myThis.$message.warning('模块标签存在重复')
+					}
+					myThis.distributeQuery();
+					myThis.cancleCreateMyselfFile()
+				}).catch((error): void => {
+					myThis.$message.error('网络连接错误,请检测网络')
+				})
+			}
+		},
 		handleCreateFile() {	// 创建文件
       const myThis = this as any
 			if (myThis.fileName.length === 0) {
@@ -741,15 +840,13 @@ export default {
 				"type": 2,
 				"alias": myThis.fileName
 			}
-      NasFileAPI.addFile(body).then((response): void => {
+			NasFileAPI.addFile(body).then((response): void => {
 				if (!isResponsePass(response)) return
 				myThis.distributeQuery();
-				myThis.fileName = ''
-				myThis.fileNameVisible = false
-      }).catch((error): void => {
-				console.log(error);
-        myThis.$message.error('网络连接错误,请检测网络')
-      })
+				myThis.cancleCreateMyselfFile()
+			}).catch((error): void => {
+				myThis.$message.error('网络连接错误,请检测网络')
+			})
 		},
 		handleRenameFile(data) {	// 重命名文件
       const myThis = this as any
@@ -766,16 +863,26 @@ export default {
       }).catch(error => {
         myThis.loading = false
         myThis.$message.error('网络连接错误，请检测网络')
-        console.log(error)
       })
 		},
 		cancleCreateFile() {	// 关闭创建文件弹框
       const myThis = this as any
+			myThis.fileName = ''
 			myThis.fileNameVisible = false
 		},
 		cancleRenameFile() {	// 关闭重命名文件弹框
       const myThis = this as any
+			myThis.fileName = ''
 			myThis.fileRenameVisible = false
+		},
+		cancleCreateMyselfFile() {	// 关闭创建自定义文件
+      const myThis = this as any
+			myThis.myselfFile.name = ''
+			myThis.myselfFile.title = ''
+			myThis.myselfFile.brief = ''
+			myThis.myselfFile.desc = ''
+			myThis.myselfFile.tags = ''
+			myThis.myselfFile.visiable = false
 		},
 		/*切换顶部网盘分享、传输类型*/
 		SwitchType(type) {
@@ -917,7 +1024,6 @@ export default {
 				item.state = item.state === 'interrupted' ? 'progressing' : 'interrupted';
 				myThis.PrepareUploadFile(item);
 			} else {
-				console.log('123');
 				let commend = item.state === 'progressing' ? 'pause' : 'resume';
 				myThis.$ipc.send('download', commend, item.id);
 			}
@@ -926,6 +1032,8 @@ export default {
       const myThis: any = this
 			if (myThis.DiskData.Type === 'disk') {
 				myThis.getLatelyFileList()
+			} else if (myThis.DiskData.Type === 'custom') {
+				myThis.getMyselfList();
 			} else if (myThis.DiskData.Type === 'transport') {
 
 			} else if (myThis.DiskData.Type === 'storage') {
@@ -953,7 +1061,26 @@ export default {
 				myThis.deviceUuid = response.data.data.storages[0].partitions[0].uuid 
 				myThis.getFileList();
       }).catch((error): void => {
-        console.log(error)
+        myThis.$message.error('网络连接错误,请检测网络')
+      })
+    },
+		getMyselfList () {  // 获取自定义文件夹
+      const myThis: any = this
+      NasFileAPI.myselfList().then((response): void => { 
+				if (!isResponsePass(response)) return
+        const res = response.data.data
+				myThis.LoadCompany = true;
+				if (myThis.currentType === 'all') {
+					myThis.UserDiskData = res.myself_folder_list
+				} else {
+					let newArr:any = []
+					res.myself_folder_list.forEach(item => {
+						if (StringUtility.suffixToTpe(StringUtility.formatSuffix(item.path)) === myThis.currentType) { newArr.push(item) }
+					})
+					myThis.UserDiskData = newArr
+				}
+				console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
+      }).catch((error): void => {
         myThis.$message.error('网络连接错误,请检测网络')
       })
     },
@@ -979,7 +1106,6 @@ export default {
 				}
 				console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
       }).catch((error): void => {
-        console.log(error)
         myThis.$message.error('网络连接错误,请检测网络')
       })
 		},
@@ -1007,7 +1133,6 @@ export default {
 				}
 				console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
       }).catch((error): void => {
-        console.log(error)
         myThis.$message.error('网络连接错误,请检测网络')
       })
     },
@@ -1029,7 +1154,6 @@ export default {
 				}
 				console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
       }).catch((error): void => {
-        console.log(error)
         myThis.$message.error('网络连接错误,请检测网络')
       })
     },
@@ -1040,7 +1164,6 @@ export default {
 				if (!isResponsePass(response)) return
 				myThis.$message.success('文件已收藏')
       }).catch((error): void => {
-        console.log(error)
         myThis.$message.error('网络连接错误,请检测网络')
       })
     },
@@ -1051,7 +1174,6 @@ export default {
 				if (!isResponsePass(response)) return
 				myThis.$message.success('文件已收藏')
       }).catch((error): void => {
-        console.log(error)
         myThis.$message.error('网络连接错误,请检测网络')
       })
     },
@@ -1072,7 +1194,6 @@ export default {
 				}
 				console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
       }).catch((error): void => {
-        console.log(error)
         myThis.$message.error('网络连接错误,请检测网络')
       })
     },
@@ -1098,7 +1219,6 @@ export default {
 				}
 				console.log(JSON.parse(JSON.stringify(myThis.UserDiskData)));
       }).catch((error): void => {
-        console.log(error)
         myThis.$message.error('网络连接错误,请检测网络')
       })
 		},
@@ -1270,6 +1390,10 @@ export default {
 	opacity: 0.7;
 	border: 2px solid #01b74f7a;
 	z-index: 1;
+}
+/* 自定义文件 */
+.myself-input {
+	margin-bottom: 10px;
 }
 </style>
 

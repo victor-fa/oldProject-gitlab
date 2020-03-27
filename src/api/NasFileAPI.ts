@@ -14,6 +14,7 @@ const nasFileModulePath = '/v1/file'
 const nasTaskModulePath = '/v1/task'
 const nasShareModulePath = '/v1/share'
 const nasFavoriteModulePath = '/v1/favorites'
+const nasMyselfModulePath = '/v1/myself'
 const tempServerUrl = 'http://192.168.10.91:9999'
 
 const apiToken = (() => {
@@ -84,6 +85,18 @@ export default {
   },
   cancelFavouriteFile (body) {
     return Vue.axios.post(tempServerUrl + nasFavoriteModulePath + '/cancel?' + jsonToParams(null), body)
+  },
+  myselfList () {
+    return Vue.axios.post(tempServerUrl + nasMyselfModulePath + '/get_myself_folders?' + jsonToParams(null))
+  },
+  addMyselfFile (body) {
+    return Vue.axios.post(tempServerUrl + nasMyselfModulePath + '/create_myself_folder?' + jsonToParams(null), body)
+  },
+  modifyMyselfFile (body) {
+    return Vue.axios.post(tempServerUrl + nasMyselfModulePath + '/update_myself_folder?' + jsonToParams(null), body)
+  },
+  deleteMyselfFile (body) {
+    return Vue.axios.post(tempServerUrl + nasMyselfModulePath + '/del_myself_folder?' + jsonToParams(null), body)
   },
   download (option) {
     const input = { uuid: option.uuid, path: option.path }
