@@ -1,26 +1,29 @@
 <template>
-  <div class="basic-footer">
-    <label>{{ showItemCount }}个项目</label>
+  <div class="main-bottom-view">
+    <label>{{ itemCount }}个项目</label>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import { mapGetters } from 'vuex'
 
 export default Vue.extend({
-  name: 'basic-footer',
-  computed: {
-    ...mapGetters('Resource', ['showItemCount'])
+  name: 'main-bottom-view',
+  props: {
+    itemCount: {
+      type: Number,
+      default: 0
+    }
   }
 })
 </script>
 
 <style lang="less" scoped>
-.basic-footer {
+.main-bottom-view {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  background-color: #edf1f0;
   label {
     font-size: 12px;
     color: #484848;

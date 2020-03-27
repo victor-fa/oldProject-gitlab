@@ -42,12 +42,12 @@ interface ResourceItem {
 }
 
 enum OrderType {
-  byNameDesc = 0,
-  byNameAsc,
-  bySizeDesc,
-  bySizeAsc,
-  ByModifyDesc,
-  ByModifyAsc
+  byNameDesc = 1,
+  byNameAsc = 2,
+  bySizeDesc = 3,
+  bySizeAsc = 4,
+  ByModifyDesc = 5,
+  ByModifyAsc = 6
 }
 
 enum StorageType {
@@ -81,6 +81,12 @@ interface StorageInfo {
   partitions: Array<PartitionInfo>
 }
 
+// 文件上传历史排序规则
+enum UploadTimeSort {
+  descend = 1,
+  ascend
+}
+
 export {
   ResourceItem,
   ResourceStatus,
@@ -89,5 +95,6 @@ export {
   OrderType,
   StorageType,
   StorageInfo,
-  PartitionInfo
+  PartitionInfo,
+  UploadTimeSort
 }

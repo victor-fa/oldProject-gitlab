@@ -73,7 +73,7 @@ import Vue from 'vue'
 import ILogo from '../../components/Logo/index.vue'
 import SiderMenu from '../../components/SiderMenu/index.vue'
 import BasicHeader from '../../components/BasicHeader/index.vue'
-import { CategoryType } from '../../components/BasicHeader/Model/categoryList'
+import { CategoryType } from '../../model/categoryList'
 import DiskFile from '../../components/Disk/DiskFile.vue'
 import MouseMenu from '../../components/Disk/MouseMenu.vue'
 import DiskSortBar from '../../components/Disk/DiskSortBar.vue';

@@ -38,8 +38,8 @@ export default Vue.extend({
         model: 'NAS-D2P1',
         mac: '00ce39ca56a1',
         sn: '1000000002',
-        port: 1098,
-        ip: '113.116.246.210',
+        port: 9999,
+        ip: '192.168.10.91',
         softversion: 'V1.0.0',
         active: 1
       }

@@ -1,36 +1,22 @@
-<template>
-  <a-spin :spinning="loading">
-    <resource-list
-      :dataSource="dataArray"
-      :busy="busy"
-      v-on:callbackAction="handleListInnerAction"
-    />
-  </a-spin>
-</template>
-
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import { mapGetters } from 'vuex'
-import { ResourceItem, StorageInfo } from '../../api/NasFileModel'
-import ResourceList, { CallbackAction } from '../../components/ResourceList/index.vue'
+import MainView, { PageConfig } from '../MainView/index.vue'
+import { ResourceItem, OrderType } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
-import { User } from '../../api/UserModel'
-import { EventBus, EventType } from '../../utils/eventBus'
-import processCenter, { EventName } from '../../utils/processCenter'
+import { BasicResponse } from '../../api/UserModel'
 import StringUtility from '../../utils/StringUtility'
 
 export default Vue.extend({
   name: 'recent',
-  components: {
-    ResourceList
-  },
+  extends: MainView,
   data () {
     let items: Array<ResourceItem> = []
     let config: PageConfig = { path: '', uuid: '' }
     let stacks: Array<PageConfig> = []
     return {
       loading: false,
+      currentPath: '最近',
       dataArray: items,
       pageConfig: config,
       pageConfigStacks: stacks,
@@ -38,85 +24,50 @@ export default Vue.extend({
       busy: false
     }
   },
-  computed: {
-    ...mapGetters('User', ['user']),
-    ...mapGetters('Resource', ['storages'])
-  },
   created () {
-    this.fetchStorage()
-  },
-  mounted () {
-    EventBus.$on(EventType.refreshAction, () => {
-      this.page = 1
-      this.busy = false
-      this.fetchRecentList()
-    })
-  },
-  destroyed () {
-    EventBus.$off(EventType.refreshAction)
+    this.fetchUlist()
   },
   methods: {
-    fetchStorage () {
+    fetchUlist () {
       this.loading = true
-      NasFileAPI.fetchStorages().then(response => {
-        if (response.data.code !== 200) return
-        const storages = response.data.data.storages as Array<StorageInfo>
-        this.$store.dispatch('Resource/updateStorages', storages)
-        this.pageConfig.path = `/.ugreen_nas/${(this.user as User).ugreenNo}`
-        this.pageConfig.uuid = storages[0].partitions[0].uuid
-        this.fetchRecentList()
-      }).catch(error => {
+      NasFileAPI.fetchUlist(this.page).then(response => {
         this.loading = false
-        console.log(error)
-      })
-    },
-    fetchRecentList () {
-      this.loading = true
-      NasFileAPI.fetchRecentResourceList(this.pageConfig.path, this.pageConfig.uuid, this.page).then(response => {
+        if (response.data.code !== 200) return
         console.log(response)
-        this.loading = false
-        if (response.data.code !== 200) return
-        const resources = response.data.data.list as Array<ResourceItem>
-        if (_.isEmpty(resources)) this.busy = true
-        // parse reposne
-        resources.map(value => {  
-          value.name = StringUtility.formatName(value.path)
-          value.showMtime = StringUtility.formatShowMtime(value.mtime)
-          value.showSize = StringUtility.formatShowSize(value.size)
-        })
-        this.dataArray = this.page === 1 ? resources : this.dataArray.concat(resources)
+        this.parseResponse(response.data)
       }).catch(error => {
         this.loading = false
+        this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
     },
-    handleListInnerAction (actionType: CallbackAction, ...args: any[]) {
-      switch (actionType) {
-        case CallbackAction.loadMoreData:
-          this.loadMoreData()
-          break;
-        case CallbackAction.back:
-          this.handleBackAction()
-          break;
-        case CallbackAction.openFolder:
-          this.handleOpenAction(args[0])
-          break;
-        case CallbackAction.mediaInfo:
-          this.handleMediaInfoAction(args[0])
-          break
-      }
+    parseResponse (data: BasicResponse) {
+      const ulist = _.get(data.data, 'list') as Array<ResourceItem>
+      if (_.isEmpty(ulist)) this.busy = true
+      ulist.map(value => {
+        value.name = StringUtility.formatName(value.path)
+        value.showMtime = StringUtility.formatShowMtime(value.mtime)
+        value.showSize = StringUtility.formatShowSize(value.size)
+      })
+      this.dataArray = this.page === 1 ? ulist : this.dataArray.concat(ulist)
     },
+    // 重写父类中的方法
     loadMoreData () {
       if (this.busy) return
       this.page++
-      this.fetchRecentList()
+      this.fetchUlist()
     },
     handleBackAction () {
       this.pageConfig = this.pageConfigStacks.pop()!
       this.page = 1
       this.busy = false
       this.dataArray = []
-      this.fetchRecentList()
+      this.fetchUlist()
+    },
+    handleRefreshAction () {
+      this.page = 1
+      this.busy = false
+      this.fetchUlist()
     },
     handleOpenAction (item: ResourceItem) {
       this.pageConfigStacks.push(this.pageConfig)
@@ -124,24 +75,13 @@ export default Vue.extend({
       this.page = 1
       this.busy = false
       this.dataArray = []
-      this.fetchRecentList()
+      this.fetchUlist()
     },
-    handleMediaInfoAction (item: ResourceItem) {
-      if (_.isEmpty(item)) return
-      processCenter.renderSend(EventName.mediaInfo, {
-        path: 'media-info',
-        params: {
-          uuid: item.uuid,
-          path: item.path
-        }
-      })
+    handleSortWayChangeAction (type: OrderType) {
+      console.log(type)
     }
   }
 })
-interface PageConfig {
-  path: string, 
-  uuid: string
-}
 </script>
 
 <style lang="less" scoped>

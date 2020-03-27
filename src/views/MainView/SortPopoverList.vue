@@ -36,7 +36,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { sortList, SortKindItem, SortTypeItem } from './Model/sortList'
+import { sortList, SortKindItem, SortTypeItem } from '../../model/sortList'
 
 export default Vue.extend({
   name: 'sort-popover',
@@ -70,6 +70,7 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .sort-popover {
+  padding: 0px;
   .sort-item {
     padding: 0px 16px;
   }
@@ -89,5 +90,11 @@ export default Vue.extend({
     margin: 4px 10px;
     background-color: #01B74F;
   }
+}
+</style>
+
+<style>
+.ant-popover-inner-content {
+  padding: 6px 0px;
 }
 </style>

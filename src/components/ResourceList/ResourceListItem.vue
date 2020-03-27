@@ -5,8 +5,14 @@
       class="horizontal-item"
       v-bind:class="{ horizontalSelectedItem: isSelected }"
     >
-      <div class="icon-wrapper" @click="didSelectItem">
-        <img :src="searchResourceIcon(itemModel.type)"/>
+      <div class="icon-wrapper">
+        <img
+          :src="searchResourceIcon(itemModel.type)"
+          @click.stop.exact="singleClick()"
+          @click.shift.stop="multipleClick()"
+          @dblclick="doubleClick()"
+          @contextmenu.prevent="contextMenuClick($event)"
+        />
       </div>
       <a-input
         v-if="renaming"
@@ -24,17 +30,31 @@
           <template slot="title">
             <span>{{ itemModel.name }}</span>
           </template>
-          <p @click="didSelectItem">{{ itemModel.name }}</p>
+          <p
+            @click.stop.exact="singleClick()"
+            @click.shift.stop="multipleClick()"
+            @dblclick="doubleClick()"
+            @contextmenu.prevent="contextMenuClick($event)"
+          >
+            {{ itemModel.name }}
+          </p>
         </a-tooltip>
       </div>
     </div>
     <div
       v-else
       class="vertical-item"
-      @click="didSelectItem"
       v-bind:class="{ oddVerticalItem: isOddStyle, verticalSelectedItem: isSelected }"
     >
-      <a-row type="flex" justify="space-around" align="middle">
+      <a-row
+        type="flex"
+        justify="space-around"
+        align="middle"
+        @click.stop.exact="singleClick()"
+        @click.shift.stop="multipleClick()"
+        @dblclick="doubleClick()"
+        @contextmenu.prevent="contextMenuClick($event)"
+      >
         <a-col :span="13">
           <img :src="searchResourceIcon(itemModel.type)">
           {{ itemModel.name }}
@@ -124,7 +144,7 @@ export default Vue.extend({
         return
       }
       this.loading = true
-      // TODO: 当前没有对文件名进行校验
+      // TODO: 当前没有对文件名合法性进行校验
       const newPath = StringUtility.renamePath(this.itemModel.path, this.inputName)
       NasFileAPI.renameResource(this.itemModel.path, newPath, this.itemModel.uuid).then(response => {
         this.loading = false
@@ -151,8 +171,17 @@ export default Vue.extend({
     beginRenaming () {
       this.renaming = true
     },
-    didSelectItem () {
-      this.$emit('didSelectItem', this.itemModel)
+    singleClick () {
+      this.$emit('singleSelectClick', this.index)
+    },
+    multipleClick () {
+      this.$emit('multipleSelectClick', this.index)
+    },
+    doubleClick () {
+      this.$emit('doubleClick', this.index)
+    },
+    contextMenuClick (event: MouseEvent) {
+      this.$emit('contextMenuClick', event, this.index)
     }
   }
 })
@@ -177,11 +206,11 @@ export default Vue.extend({
     }
   }
   p {
-    height: 25px;
-    line-height: 25px;
+    margin-top: 6px;
+    line-height: 14px;
     font-size: 12px;
     padding: 0px 3px;
-    border-radius: 2px;
+    border-radius: 4px;
     color: #484848;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -199,7 +228,7 @@ export default Vue.extend({
   .icon-wrapper {
     background-color: #ececec;
   }
-  span {
+  p {
     background-color: #3888ff;
   }
 }

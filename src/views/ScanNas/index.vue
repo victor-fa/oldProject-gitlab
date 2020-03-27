@@ -40,7 +40,7 @@ import { NasInfo, NasActive, NasAccessInfo } from '../../api/ClientModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 import { User, BasicResponse, DeviceRole } from '../../api/UserModel'
 import router from '../../router'
-import { AxiosResponse } from 'axios'
+import axios, { AxiosResponse } from 'axios'
 import StringUtility from '../../utils/StringUtility'
 
 export default Vue.extend({
@@ -73,8 +73,8 @@ export default Vue.extend({
         model: 'NAS-D2P1',
         mac: '00ce39ca56a1',
         sn: '1000000002',
-        port: 1098,
-        ip: '113.116.246.210',
+        port: 9999,
+        ip: '192.168.10.91',
         softversion: 'V1.0.0',
         active: NasActive.Bind
       }
@@ -106,6 +106,7 @@ export default Vue.extend({
       this.bindUserToNas(authCode)
     },
     handleCancel () {
+      ClientAPI.cancelBindRequest()
       this.visible = false
       this.bindLoading = false
     },
@@ -161,6 +162,7 @@ export default Vue.extend({
     },
     handleConnectFailure (error) {
       console.log(error)
+      if (axios.isCancel(error)) return
       this.bindLoading = false
       this.$message.error('网络连接错误，请检测网络')
     }

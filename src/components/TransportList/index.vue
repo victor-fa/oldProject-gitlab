@@ -1,5 +1,5 @@
 <template>
-  <div class="transport-list">
+  <div class="transport-list" :style="{ height: scrollHeight + 'px' }">
     <div
       v-for="(item, index) in TransportList"
       :key="index"
@@ -68,7 +68,8 @@ export default Vue.extend({
     return {
       isDownOrFin: 'down',
       TransportList: [],
-      currentTag: 'download'
+      currentTag: 'download',
+      scrollHeight: document.body.clientHeight - 127
     }
   },
   props: {
@@ -89,6 +90,7 @@ export default Vue.extend({
   },
   mounted () {
     this.setData()
+    window.addEventListener('resize', this.observerWindowResize)
   },
   filters: {
     filterSize (bytes) {
@@ -96,6 +98,12 @@ export default Vue.extend({
     }
   },
   methods: {
+    observerWindowResize () {
+      const newHeight = document.body.clientHeight - 127
+      if (newHeight !== this.scrollHeight) {
+        this.scrollHeight = newHeight
+      }
+    },
     setData() {
       const temp:any = localStorage.getItem(TRANSFORM_INFO)
       this.TransportList = JSON.parse(temp)
@@ -237,6 +245,7 @@ export default Vue.extend({
   destroyed () {
     EventBus.$off(EventType.transportChangeAction)
     EventBus.$off(EventType.downloadChangeAction)
+    window.removeEventListener('resize', this.observerWindowResize)
   }
 })
 </script>
