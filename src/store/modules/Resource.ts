@@ -1,10 +1,20 @@
 import { ActionContext } from 'vuex'
-import { StorageInfo } from '@/api/NasFileModel'
+import { StorageInfo, ResourceItem } from '@/api/NasFileModel'
+
+interface ClipboardModel {
+  isClipboard: boolean, // true 剪切，false 拷贝
+  items: Array<ResourceItem>
+}
+
+export {
+  ClipboardModel
+}
 
 interface ResourceState {
   directory: string,
   storages: Array<StorageInfo>,
-  showItemCount: number
+  showItemCount: number,
+  clipboard: ClipboardModel
 }
 
 export default {
@@ -12,7 +22,8 @@ export default {
   state: {
     directory: '最近',
     storages: [],
-    showItemCount: 0
+    showItemCount: 0,
+    clipboard: [] // TODO: 目前没有对剪切板进行缓存
   },
   getters: {
     directory: (state: ResourceState) => {
@@ -23,6 +34,9 @@ export default {
     },
     showItemCount: (state: ResourceState) => {
       return state.showItemCount
+    },
+    clipboard: (state: ResourceState) => {
+      return state.clipboard
     }
   },
   mutations: {
@@ -41,6 +55,9 @@ export default {
     },
     UPDATE_SHOW_ITEM_COUNT (state: ResourceState, count: number) {
       state.showItemCount = count
+    },
+    UPDATE_CLIPBOARD (state: ResourceState, clipboard: ClipboardModel) {
+      state.clipboard = clipboard
     }
   },
   actions: {
@@ -58,6 +75,9 @@ export default {
     },
     updateShowItemCount (context: ActionContext<ResourceState, ResourceState>, count: number) {
       context.commit('UPDATE_SHOW_ITEM_COUNT', count)
+    },
+    updateClipboard (context: ActionContext<ResourceState, ResourceState>, clipboard: ClipboardModel) {
+      context.commit('UPDATE_CLIPBOARD', clipboard)
     }
   }
 }

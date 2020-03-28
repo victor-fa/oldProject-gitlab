@@ -1,7 +1,7 @@
 <template>
   <ul class="operate-list-alter" :style="{ height: listHeight + 'px'}">
       <li
-        v-for="(item, index) in operateList"
+        v-for="(item, index) in showItems"
         :key="index"
         class="operate-group"
       >
@@ -29,6 +29,26 @@ export default Vue.extend({
   props: {
     operateList: Array
   },
+  data () {
+    let items: Array<OperateGroup> = []
+    return {
+      showItems: items
+    }
+  },
+  watch: {
+    operateList: function (newVlaue: Array<OperateGroup>) {
+      this.showItems = newVlaue.filter(group => {
+        let items: Array<OperateItem> = []
+        for (let index = 0; index < group.items.length; index++) {
+          const element = group.items[index]
+          if (!element.hide) items.push(element)
+        }
+        if (items.length === 0) return false
+        group.items = items
+        return true
+      })
+    }
+  },
   computed: {
     listHeight: function () {
       const marginCount = 6 * this.operateList.length
@@ -38,6 +58,7 @@ export default Vue.extend({
         const element = this.operateList[index] as OperateGroup
         for (let i = 0; i < element.items.length; i++) {
           const el = element.items[i];
+          if (el.hide) continue
           itemCount += 16
         }
       }
@@ -83,7 +104,7 @@ export default Vue.extend({
         line-height: 16px;
       }
       .operateItem:hover {
-        background-color: gray;
+        background-color: #DEF1EA;
       }
       .operateItemDisable {
         display: flex;
@@ -92,6 +113,11 @@ export default Vue.extend({
         color: #48484866;
         font-size: 10px;
         line-height: 16px;
+        cursor:not-allowed;
+      }
+      .operateItemDisable:hover {
+        background-color: #DEF1EA;
+        cursor: not-allowed;
       }
     }
   }

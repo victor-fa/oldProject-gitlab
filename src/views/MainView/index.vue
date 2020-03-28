@@ -8,7 +8,6 @@
         :busy="busy"
         :arrangeWay="arrangeWay"
         v-on:CallbackAction="handleResourceListAction"
-        @click.native="listClick"
       />
     </a-spin>
     <main-bottom-view :itemCount="itemCount"/>
@@ -36,7 +35,6 @@ import { CategoryType } from '../../model/categoryList'
 import OperateListAlter from '../../components/OperateListAlter/index.vue'
 import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse, User } from '../../api/UserModel'
-import StringUtility from '../../utils/StringUtility'
 import { itemoOperateList, operateList, OperateItem, OperateGroup } from '../../components/OperateListAlter/operateList'
 
 export default Vue.extend({
@@ -82,9 +80,11 @@ export default Vue.extend({
       const myThis: any = this
       return myThis.showArray.length
     },
-    ...mapGetters('User', ['user'])
+    ...mapGetters('User', ['user']),
+    ...mapGetters('Resource', ['clipboard'])
   },
   methods: {
+    // handle component callback action
     handleHeaderViewAction (actionType: MainHeaderAction, ...args: any[]) {
       switch (actionType) {
         case MainHeaderAction.tabChange:
@@ -118,9 +118,7 @@ export default Vue.extend({
           this.loadMoreData()
           break;
         case ResourceListAction.openItem:
-          const item = this.showArray[args[0]]
-          this.currentPath += `/${item.name}`
-          this.handleOpenAction(item)
+          this.handleOpenAction()
           break;
         case ResourceListAction.contextMenu:
           this.handleContextMenuAction(args[0], args[1])
@@ -134,16 +132,16 @@ export default Vue.extend({
         case ResourceListAction.multipleSelectItem:
           this.handleMultipleAction(args[0])
           break;
+        case ResourceListAction.listClick:
+          this.handleListClickAction()
+          break;
       }
     },
     handleAlterAction (command: string) {
       this.showAlter = false
       switch (command) {
-        case 'open': {
-          const item = ResourceHandler.getFirstSelectItem(this.showArray)
-          this.currentPath += `/${item!.name}`
-          if (item !== null)  this.handleOpenAction(item)
-        }
+        case 'open': 
+          this.handleOpenAction()
           break;
         case 'openMode':
           
@@ -154,61 +152,105 @@ export default Vue.extend({
         case 'share':
           
           break;
-        case 'copy':
+        case 'unshare':
           
           break;
-        case 'cut':
+        case 'collect':
+          this.handleCollection()
+          break;
+        case 'uncollect':
           
+          break;
+        case 'copy': 
+          this.handleClipboardAction(false)
+          break;
+        case 'cut':
+          this.handleClipboardAction()
           break;
         case 'moveto':
           
           break;
-        case 'delete': {
-          const items = ResourceHandler.getSelectItems(this.showArray)
-          if (!_.isEmpty(items)) this.handleDeletAction(items)
-        }
+        case 'delete':
+          this.handleDeletAction()
           break;
-        case 'rename': {
-          const item = ResourceHandler.getFirstSelectItem(this.showArray)
-          if (item !== null)  this.handleRenameAction(item)
-        }
+        case 'rename':
+          this.handleRenameAction()
           break;
-        case 'info': {
-          const item = ResourceHandler.getFirstSelectItem(this.showArray)
-          if (item !== null)  this.handleInfoAction(item)
-        }
+        case 'info':
+          this.handleInfoAction()
+          break;
+        case 'upload':
+          
+          break;
+        case 'newFolder':
+          
+          break;
+        case 'clearClipboard':
+          
+          break;
+        case 'paste':
+          
+          break;
+        case 'refresh':
+          this.handleRefreshAction()
           break;
       }
     },
-    handleDeletAction (items: Array<ResourceItem>) {
-      // TODO: 删除文件
+    // handle main header view compoennt action methods
+    handleTabChange (categoryType: CategoryType) {
+      this.showArray = ResourceHandler.classifyArray(this.dataArray, categoryType)
     },
-    handleRenameAction (item: ResourceItem) {
-      const list: any = this.$refs.resourceList
-      list.handleRenameAction(item)
+    handleBackAction () {
+      this.overrideBackAction()
     },
-    handleInfoAction (item: ResourceItem) {
-      processCenter.renderSend(EventName.mediaInfo, {
-        path: 'media-info',
-        params: {
-          uuid: item.uuid,
-          path: item.path
-        }
+    handleSearchAction (keyword: string) {
+      // 在当前目录下搜索
+      this.loading = true
+      const prefix = `/.ugreen_nas/${(this.user as User).ugreenNo}`
+      let path = this.pageConfig.path
+      path = path.substring(prefix.length, path.length)
+      path = path.length === 0 ? '/' : path
+      NasFileAPI.searchFile(this.pageConfig.uuid, path, keyword).then(response => {
+        this.loading = false
+        if (response.data.code !== 200) return
+        const list = _.get(response.data.data, 'list') as Array<ResourceItem>
+        if (_.isEmpty(list)) this.busy = true
+        this.showArray = ResourceHandler.formateResponseList(list)
+      }).catch(error => {
+        this.loading = false
+        console.log(error)
+        this.$message.error('网络连接错误，请检测网络')
       })
     },
-    listClick (event: MouseEvent) {
-      ResourceHandler.resetSelectState(this.showArray)
-      if (!this.showAlter) return
-      event.stopPropagation()
-      this.showAlter = false
+    handleEndSerchAction () {
+      this.showArray = this.dataArray
+    },
+    handleRefreshAction () {
+      this.overrideRefreshAction()
+    },
+    handleSortWayChangeAction (sender: OrderType) {
+      this.overrideSortWayChangeAction(sender)
+    },
+    handleArrangeChange (arrangeWay: ArrangeWay) {
+      this.arrangeWay = arrangeWay
+    },
+    // TODO: handle resource list action methods
+    loadMoreData () {
+      this.overrideloadMoreData()
+    },
+    handleOpenAction () {
+      const item = ResourceHandler.getFirstSelectItem(this.showArray)
+      this.currentPath += `/${item!.name}`
+      if (item !== null)  this.overrideOpenAction(item)
     },
     handleContextMenuAction (event: MouseEvent, index: number) {
-      // TODO: 不同场景可能会展示不同的右键菜单
-      this.showArray = ResourceHandler.setSelectState(this.showArray, index, false)
-      this.showContextMenu(this.itemoOperateList, event)
+      this.showArray = ResourceHandler.setSelectState(this.showArray, index, true)
+      const itemOperateList = ResourceHandler.filterItemOperateList(this.showArray, this.itemoOperateList)
+      this.showContextMenu(itemoOperateList, event)
     },
     handleListContextMenuAction (event: MouseEvent) {
-     this.showContextMenu(this.operateList, event)
+      const operateList = ResourceHandler.filterOperateList(this.clipboard, this.operateList)
+      this.showContextMenu(operateList, event)
     },
     showContextMenu (list: Array<OperateGroup>, event: MouseEvent) {
       this.showOperateList = list
@@ -220,15 +262,48 @@ export default Vue.extend({
     },
     handleSingleAction (index: number) {
       this.showAlter = false
-      this.showArray = ResourceHandler.setSelectState(this.showArray, index, true)
+      this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
     },
     handleMultipleAction (index: number) {
-      const item = this.showArray[index]
-      item.isSelected = !item.isSelected
-      this.showArray.splice(index, 1, item)
+      // 多选问题还没有处理完整
+      this.showArray = ResourceHandler.setSelectState(this.showArray, index, true)
     },
-    handleMediaInfoAction (item: ResourceItem) {
-      if (_.isEmpty(item)) return
+    handleListClickAction () {
+      ResourceHandler.resetSelectState(this.showArray)
+      if (!this.showAlter) return
+      this.showAlter = false
+    },
+    // handle operate list component action methods
+    handleCollection () {
+      
+    },
+    handleClipboardAction (isClipboard: boolean = true) {
+      const items = ResourceHandler.getSelectItems(this.showArray)
+      if (_.isEmpty(items)) return
+      this.$store.dispatch('Resource/updateClipboard', {
+        isClipboard: isClipboard,
+        items
+      })
+    },
+    handleDeletAction () {
+      const items = ResourceHandler.getSelectItems(this.showArray)
+      if (_.isEmpty(items)) return
+      console.log(items)
+      // TODO: 删除文件
+    },
+    handleRenameAction () {
+      const items = ResourceHandler.getSelectItems(this.showArray)
+      if (_.isEmpty(items)) return
+      if (items.length > 1) return
+      const item = items[0]
+      const list: any = this.$refs.resourceList
+      list.handleRenameAction(item)
+    },
+    handleInfoAction () {
+      const items = ResourceHandler.getSelectItems(this.showArray)
+      if (_.isEmpty(items)) return
+      if (items.length > 1) return
+      const item = items[0]
       processCenter.renderSend(EventName.mediaInfo, {
         path: 'media-info',
         params: {
@@ -237,52 +312,16 @@ export default Vue.extend({
         }
       })
     },
-    handleTabChange (categoryType: CategoryType) {
-      this.showArray = ResourceHandler.classifyArray(this.dataArray, categoryType)
+    // subclass implementation methods
+    overrideloadMoreData () {
     },
-    handleSearchAction (keyword: string) {
-      // TODO: 默认在当前目录下搜索
-      this.loading = true
-      const prefix = `/.ugreen_nas/${(this.user as User).ugreenNo}`
-      let path = this.pageConfig.path
-      path = path.substring(prefix.length, path.length)
-      path = path.length === 0 ? '/' : path
-      NasFileAPI.searchFile(this.pageConfig.uuid, path, keyword).then(response => {
-        this.loading = false
-        if (response.data.code !== 200) return
-        this.handleSearchResponse(response.data)
-      }).catch(error => {
-        this.loading = false
-        console.log(error)
-        this.$message.error('网络连接错误，请检测网络')
-      })
+    overrideBackAction () {
     },
-    handleSearchResponse (data: BasicResponse) {
-      const list = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(list)) this.busy = true
-      list.map(value => {
-        value.name = StringUtility.formatName(value.path)
-        value.showMtime = StringUtility.formatShowMtime(value.mtime)
-        value.showSize = StringUtility.formatShowSize(value.size)
-      })
-      this.showArray = list
+    overrideRefreshAction () {
     },
-    handleEndSerchAction () {
-      this.showArray = this.dataArray
+    overrideOpenAction (item: ResourceItem) {
     },
-    handleArrangeChange (arrangeWay: ArrangeWay) {
-      this.arrangeWay = arrangeWay
-    },
-    // 下面的方法都由子类实现
-    loadMoreData () {
-    },
-    handleBackAction () {
-    },
-    handleRefreshAction () {
-    },
-    handleOpenAction (item: ResourceItem) {
-    },
-    handleSortWayChangeAction (sender: OrderType) {
+    overrideSortWayChangeAction (sender: OrderType) {
     },
   }
 })

@@ -4,18 +4,29 @@ enum ArrangeWay {
 }
 
 enum ResourceType {
+  unknown = 0,
   video = 1,
-  audio,
-  image,
-  document,
-  archive,
-  floder
+  audio = 2,
+  image = 3,
+  document = 4,
+  archive = 5,
+  floder = 6
 }
 
 enum ResourceStatus {
   unlock = 0,
   prelock,
   locked
+}
+
+enum CollectStatus {
+  not = 0,
+  has = 1
+}
+
+enum ShareStatus {
+  not = 0,
+  has = 1
 }
 
 interface ResourceItem {
@@ -27,18 +38,40 @@ interface ResourceItem {
   status: ResourceStatus,
   ctime: number,
   mtime: number,
-  shared: number,
+  shared: ShareStatus,
   utime: number,
   alias: string,
-  collected: number,
+  collected: CollectStatus,
   duration: number,
   thumbs: Array<string>,
-  // calculate property
   name: string,
+  md5: string,
+  // calculate property
   showMtime: string,
   showSize: string,
   // custom property
   isSelected: boolean
+}
+
+interface CollectItem {
+  uuid: string,
+  path: string,
+  ugreen_no: number,
+  file_detail: CollectItemDetail
+}
+
+interface CollectItemDetail {
+  id: number,
+  type: ResourceType,
+  size: number,
+  path: string,
+  tags: Array<string>,
+  ctime: number,
+  utime: number,
+  mtime: number,
+  shared: number,
+  collected: number,
+  thumbs: Array<string>
 }
 
 enum OrderType {
@@ -91,10 +124,14 @@ export {
   ResourceItem,
   ResourceStatus,
   ResourceType,
+  ShareStatus,
+  CollectStatus,
   ArrangeWay,
   OrderType,
   StorageType,
   StorageInfo,
   PartitionInfo,
-  UploadTimeSort
+  UploadTimeSort,
+  CollectItem,
+  CollectItemDetail
 }

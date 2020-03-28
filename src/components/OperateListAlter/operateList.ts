@@ -3,7 +3,8 @@ interface OperateItem {
   icon?: any,
   subItems?: any,
   command: string,
-  disable?: boolean
+  disable?: boolean,
+  hide?: boolean
 }
 
 interface OperateGroup {
@@ -23,7 +24,10 @@ const itemoOperateList: Array<OperateGroup> = [
     icon: require('../../assets/down_accessory.png'),
     items: [
       { title: '下载', command: 'download' },
-      { title: '分享', command: 'share' }
+      { title: '分享', command: 'share' },
+      { title: '取消分享', command: 'unshare', hide: true },
+      { title: '收藏', command: 'collect' },
+      { title: '取消收藏', command: 'uncollect', hide: true }
     ]
   },
   {
@@ -54,7 +58,7 @@ const operateList: Array<OperateGroup> = [
   {
     icon: require('../../assets/delet_accessory.png'),
     items: [
-      { title: '清空剪切板', command: 'clear' },
+      { title: '清空剪切板', command: 'clearClipboard' },
       { title: '粘贴', command: 'paste' },
       { title: '刷新', command: 'refresh' }
     ]

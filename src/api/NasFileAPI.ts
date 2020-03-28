@@ -1,3 +1,4 @@
+import { ResourceItem } from '@/api/NasFileModel';
 import { BasicResponse } from '@/api/UserModel';
 import Vue from 'vue'
 import { jsonToParams, jsonToParamsForPdf } from '../utils/request'
@@ -145,6 +146,41 @@ export default {
         path,
         key: keyword,
         api_token: apiToken
+      }
+    })
+  },
+  fetchCollectList (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasFavoriteModulePath + '/get', null, {
+      params: {
+        api_token: apiToken
+      }
+    })
+  },
+  addCollect (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+    const files = items.map((item) => {
+      return {
+        uuid: item.uuid,
+        path: item.path,
+        id: item.id
+      }
+    })
+    return nasServer.post(nasFavoriteModulePath + 'set', null, {
+      params: {
+        files
+      }
+    })
+  },
+  cancelCollect (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+    const files = items.map((item) => {
+      return {
+        uuid: item.uuid,
+        path: item.path,
+        id: item.id
+      }
+    })
+    return nasServer.post(nasFavoriteModulePath + 'cancel', null, {
+      params: {
+        files
       }
     })
   }

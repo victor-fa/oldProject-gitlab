@@ -10,6 +10,7 @@
       :infinite-scroll-distance="0"
       :infinite-scroll-immediate-check="false"
       @contextmenu.prevent="handleListContextMenu"
+      @click="handleListClick"
     >
       <a-list
         :dataSource="dataSource"
@@ -135,6 +136,10 @@ export default Vue.extend({
       event.stopPropagation()
       this.$emit('CallbackAction', ResourceListAction.listContextMenu, event)
     },
+    handleListClick (event: MouseEvent) {
+      event.stopPropagation()
+      this.$emit('CallbackAction', ResourceListAction.listClick)
+    },
     handleRenameAction (item: ResourceItem) {
       const listItem: any = this.$refs[item.name]
       listItem.beginRenaming()
@@ -147,7 +152,8 @@ enum ResourceListAction {
   contextMenu = 'context_menu',
   listContextMenu = 'list_context_menu',
   singleSelectItem = 'single_select_item',
-  multipleSelectItem = 'multiple_select_item'
+  multipleSelectItem = 'multiple_select_item',
+  listClick = 'list_click'
 }
 export {
   ResourceListAction

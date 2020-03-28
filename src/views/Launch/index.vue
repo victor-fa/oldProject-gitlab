@@ -59,6 +59,7 @@ export default Vue.extend({
       if (timestamp > localExpiresTime) {
         return ValidatorResult.couldTokenExpires
       }
+      // TODO: 有用户信息，没有nas信息，可能是上次连接nas失败，或者是绑定nas失败
       if (_.isEmpty(this.nasInfo) || _.isEmpty(this.accessInfo)) {
         return ValidatorResult.notBind
       }
