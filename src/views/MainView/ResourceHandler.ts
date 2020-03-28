@@ -79,12 +79,12 @@ export default {
     return items
   },
   // 计算在window内的安全点
-  calculateSafePositionOnWindow (clientX: number, clientY: number) {
+  calculateSafePositionOnWindow (clientX: number, clientY: number, alter: Vue) {
     const width = document.body.clientWidth
     const height = document.body.clientHeight
     const paddingRight = 10; const paddingBottom = 20
-    const alterWidth = 100 + paddingRight
-    const alterHeight = 189 + paddingBottom
+    const alterWidth = alter.$el.clientWidth + paddingRight
+    const alterHeight = alter.$el.clientHeight + paddingBottom
     let left = clientX + alterWidth < width ? clientX : width - alterWidth
     let top = clientY + alterHeight < height ? clientY : height - alterHeight
     return { left: left + 'px', top: top + 'px' }

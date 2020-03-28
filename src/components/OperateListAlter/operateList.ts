@@ -2,7 +2,8 @@ interface OperateItem {
   title: string,
   icon?: any,
   subItems?: any,
-  command?: string
+  command: string,
+  disable?: boolean
 }
 
 interface OperateGroup {
@@ -10,7 +11,7 @@ interface OperateGroup {
   items: Array<OperateItem>
 }
 
-const operateList: Array<OperateGroup> = [
+const itemoOperateList: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
@@ -42,6 +43,27 @@ const operateList: Array<OperateGroup> = [
   }
 ]
 
+const operateList: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '上传文件', command: 'upload' },
+      { title: '新建文件夹', command: 'newFolder' }
+    ]
+  },
+  {
+    icon: require('../../assets/delet_accessory.png'),
+    items: [
+      { title: '清空剪切板', command: 'clear' },
+      { title: '粘贴', command: 'paste' },
+      { title: '刷新', command: 'refresh' }
+    ]
+  }
+]
+
 export {
-  operateList
+  itemoOperateList,
+  operateList,
+  OperateItem,
+  OperateGroup
 }

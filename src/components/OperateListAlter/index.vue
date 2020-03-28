@@ -1,5 +1,5 @@
 <template>
-  <ul class="operate-list-alter">
+  <ul class="operate-list-alter" :style="{ height: listHeight + 'px'}">
       <li
         v-for="(item, index) in operateList"
         :key="index"
@@ -10,8 +10,8 @@
           <li
             v-for="(subItem, index) in item.items"
             :key="index"
-            @click="menuClick(subItem.command)"
-            class="operate-item"
+            @click="menuClick(subItem)"
+            v-bind:class="{ operateItemDisable: subItem.disable, operateItem: !subItem.disable }"
           >
             {{ subItem.title }}
           </li>
@@ -22,28 +22,34 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { operateList } from './operateList'
+import { OperateItem, OperateGroup } from './operateList'
 
 export default Vue.extend({
   name: 'operate-list-alter',
-  data () {
-    return {
-      operateList
+  props: {
+    operateList: Array
+  },
+  computed: {
+    listHeight: function () {
+      const marginCount = 6 * this.operateList.length
+      const borderCount = 1 * (this.operateList.length + 1)
+      let itemCount = 0
+      for (let index = 0; index < this.operateList.length; index++) {
+        const element = this.operateList[index] as OperateGroup
+        for (let i = 0; i < element.items.length; i++) {
+          const el = element.items[i];
+          itemCount += 16
+        }
+      }
+      return marginCount + borderCount + itemCount
+    },
+    listWidth: function () {
+      return 100
     }
   },
   methods: {
-    menuClick (command: String) {
-      this.$emit('didSelectItem', command)
-    },
-    async getWidth () {
-      let width = 0
-      await this.$nextTick(() => {
-        width = (this.$el.getBoundingClientRect() as DOMRect).width
-      })
-      return width
-    },
-    getHeight () {
-      return (this.$el.getBoundingClientRect() as DOMRect).height
+    menuClick (item: OperateItem) {
+      this.$emit('didSelectItem', item.command)
     }
   }
 })
@@ -68,7 +74,7 @@ export default Vue.extend({
       padding: 3px 0px;
       border-left: 1px solid #acacac;
       border-bottom: 1px solid #acacb7;
-      .operate-item {
+      .operateItem {
         display: flex;
         flex: 1;
         padding: 0px 8px;
@@ -76,8 +82,16 @@ export default Vue.extend({
         font-size: 10px;
         line-height: 16px;
       }
-      .operate-item:hover {
+      .operateItem:hover {
         background-color: gray;
+      }
+      .operateItemDisable {
+        display: flex;
+        flex: 1;
+        padding: 0px 8px;
+        color: #48484866;
+        font-size: 10px;
+        line-height: 16px;
       }
     }
   }

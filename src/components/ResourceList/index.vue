@@ -9,7 +9,7 @@
       :infinite-scroll-disabled="busy"
       :infinite-scroll-distance="0"
       :infinite-scroll-immediate-check="false"
-      v-on:contextMenuClick="handleListContextMenu"
+      @contextmenu.prevent="handleListContextMenu"
     >
       <a-list
         :dataSource="dataSource"
@@ -131,6 +131,8 @@ export default Vue.extend({
       this.$emit('CallbackAction', ResourceListAction.contextMenu, event, aIndex)
     },
     handleListContextMenu (event: MouseEvent) {
+      event.preventDefault()
+      event.stopPropagation()
       this.$emit('CallbackAction', ResourceListAction.listContextMenu, event)
     },
     handleRenameAction (item: ResourceItem) {

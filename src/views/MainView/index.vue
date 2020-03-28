@@ -13,8 +13,9 @@
     </a-spin>
     <main-bottom-view :itemCount="itemCount"/>
     <operate-list-alter
-      v-if="showAlter"
+      v-show="showAlter"
       ref="operateListAlter"
+      :operateList="showOperateList"
       :style="alterStyle"
       v-on:didSelectItem="handleAlterAction"
     />
@@ -36,6 +37,7 @@ import OperateListAlter from '../../components/OperateListAlter/index.vue'
 import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse, User } from '../../api/UserModel'
 import StringUtility from '../../utils/StringUtility'
+import { itemoOperateList, operateList, OperateItem, OperateGroup } from '../../components/OperateListAlter/operateList'
 
 export default Vue.extend({
   name: 'main-view',
@@ -47,6 +49,7 @@ export default Vue.extend({
   },
   data () {
     let items: Array<ResourceItem> = []
+    let list: Array<OperateGroup> = []
     let config: PageConfig = { path: '', uuid: '' }
     return {
       loading: false,
@@ -57,7 +60,10 @@ export default Vue.extend({
       busy: false,
       arrangeWay: ArrangeWay.horizontal,
       alterPosition: { left: '0px', top: '0px' }, // 右键菜单样式
-      showAlter: false // 是否显示右键菜单
+      showAlter: false, // 是否显示右键菜单
+      itemoOperateList, // item的右键菜单选项
+      operateList, // list的右键菜单选项
+      showOperateList: list // 展示的操作菜单选项
     }
   },
   watch: {
@@ -198,15 +204,19 @@ export default Vue.extend({
     },
     handleContextMenuAction (event: MouseEvent, index: number) {
       // TODO: 不同场景可能会展示不同的右键菜单
-      event.preventDefault()
       this.showArray = ResourceHandler.setSelectState(this.showArray, index, false)
-      this.showAlter = true
-      const alter = this.$refs.showAlter as Vue
-      const list = this.$refs.resourceList as Vue
-      this.alterPosition = ResourceHandler.calculateSafePositionOnWindow(event.clientX, event.clientY)
+      this.showContextMenu(this.itemoOperateList, event)
     },
     handleListContextMenuAction (event: MouseEvent) {
-      // TODO: 点击列表的右键菜单
+     this.showContextMenu(this.operateList, event)
+    },
+    showContextMenu (list: Array<OperateGroup>, event: MouseEvent) {
+      this.showOperateList = list
+      this.showAlter = true
+      this.$nextTick(() => {
+        const alter = this.$refs.operateListAlter as Vue
+        this.alterPosition = ResourceHandler.calculateSafePositionOnWindow(event.clientX, event.clientY, alter)
+      })
     },
     handleSingleAction (index: number) {
       this.showAlter = false

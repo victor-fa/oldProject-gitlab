@@ -53,7 +53,7 @@
         @click.stop.exact="singleClick()"
         @click.shift.stop="multipleClick()"
         @dblclick="doubleClick()"
-        @contextmenu.prevent="contextMenuClick($event)"
+        @contextmenu.prevent.stop="contextMenuClick($event)"
       >
         <a-col :span="13">
           <img :src="searchResourceIcon(itemModel.type)">
@@ -181,6 +181,8 @@ export default Vue.extend({
       this.$emit('doubleClick', this.index)
     },
     contextMenuClick (event: MouseEvent) {
+      event.preventDefault()
+      event.stopPropagation()
       this.$emit('contextMenuClick', event, this.index)
     }
   }
