@@ -9,7 +9,8 @@
         <img
           :src="searchResourceIcon(itemModel.type)"
           @click.stop.exact="singleClick()"
-          @click.shift.stop="multipleClick()"
+          @click.meta.stop="multipleClick()"
+          @click.shift.stop="listMultipleClick()"
           @dblclick="doubleClick()"
           @contextmenu.prevent="contextMenuClick($event)"
         />
@@ -32,7 +33,8 @@
           </template>
           <p
             @click.stop.exact="singleClick()"
-            @click.shift.stop="multipleClick()"
+            @click.meta.stop="multipleClick()"
+            @click.shift.stop="listMultipleClick()"
             @dblclick="doubleClick()"
             @contextmenu.prevent="contextMenuClick($event)"
           >
@@ -51,7 +53,8 @@
         justify="space-around"
         align="middle"
         @click.stop.exact="singleClick()"
-        @click.shift.stop="multipleClick()"
+        @click.meta.stop="multipleClick()"
+        @click.shift.stop="listMultipleClick()"
         @dblclick="doubleClick()"
         @contextmenu.prevent.stop="contextMenuClick($event)"
       >
@@ -176,6 +179,9 @@ export default Vue.extend({
     },
     multipleClick () {
       this.$emit('multipleSelectClick', this.index)
+    },
+    listMultipleClick () {
+      this.$emit('listMultipleSelectClick', this.index)
     },
     doubleClick () {
       this.$emit('doubleClick', this.index)

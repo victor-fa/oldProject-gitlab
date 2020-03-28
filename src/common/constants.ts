@@ -2,10 +2,10 @@
 
 // storage key值常量
 const ACCESS_TOKEN = 'access_token'
-const USER_MODEL = 'user_model'
+const USER_MODEL = 'user_info'
 const ACCOUNT = 'account'
 const NAS_INFO = 'nas_info'
-const NAS_ACCESS = 'nas_access'
+const NAS_ACCESS = 'nas_token'
 const TRANSFORM_INFO = 'transform_info'
 
 export {

@@ -28,6 +28,7 @@
             :isSelected="item.isSelected"
             v-on:singleSelectClick="singleSelectItem"
             v-on:multipleSelectClick="multipleSelectItem"
+            v-on:listMultipleSelectClick="listMultipleSelectItem"
             v-on:doubleClick="doubleClickItem"
             v-on:contextMenuClick="handleContextMenu"
           />
@@ -118,6 +119,9 @@ export default Vue.extend({
     multipleSelectItem (index: number) {
       this.$emit('CallbackAction', ResourceListAction.multipleSelectItem, index)
     },
+    listMultipleSelectItem (index: number) {
+      this.$emit('CallbackAction', ResourceListAction.listMultipleSelectItem, index)
+    },
     doubleClickItem (index: number) {
       const item = this.dataSource[index] as ResourceItem
       switch (item.type) {
@@ -153,6 +157,7 @@ enum ResourceListAction {
   listContextMenu = 'list_context_menu',
   singleSelectItem = 'single_select_item',
   multipleSelectItem = 'multiple_select_item',
+  listMultipleSelectItem = 'list_multiple_select_item',
   listClick = 'list_click'
 }
 export {

@@ -62,14 +62,27 @@ export default {
       return item
     })
   },
+  // shift多选规则: 
+  // 1. 如果当前有选中：取第一个已选中item的下标bIndex，将aIndex与bIndex之间的所有item全部选中
+  // 2. 如果当前没有选中， 直接选中当前的item
+  shiftMultipleSelect (showList: Array<ResourceItem>, aIndex: number) {
+    const firstIndex = this.getFirstSelectItemIndex(showList)
+    if (firstIndex === -1) {
+      return this.setSelectState(showList, aIndex, true)
+    }
+    const beginIndex = firstIndex > aIndex ? aIndex : firstIndex
+    const endIndex = firstIndex + aIndex - beginIndex
+    return showList.map((item, index) => {
+      if (index >= beginIndex && index <= endIndex) item.isSelected = true
+      return item
+    })
+  },
   // 重置选中状态
   resetSelectState (currentShowList: Array<ResourceItem>) {
-    for (let index = 0; index < currentShowList.length; index++) {
-      const element = currentShowList[index]
-      if (!element.isSelected) continue
-      element.isSelected = false
-      currentShowList.splice(index, 1, element)
-    }
+    return currentShowList.map(item => {
+      item.isSelected = false
+      return item
+    })
   },
   // 获取第一个选中的item
   getFirstSelectItem (showArray: Array<ResourceItem>) {
@@ -78,6 +91,14 @@ export default {
       if (element.isSelected) return element
     }
     return null
+  },
+  // 获取第一个选中item的下标
+  getFirstSelectItemIndex (showArray: Array<ResourceItem>) {
+    for (let index = 0; index < showArray.length; index++) {
+      const element = showArray[index]
+      if (element.isSelected) return index
+    }
+    return -1
   },
   // 获取选中的item
   getSelectItems (showArray: Array<ResourceItem>) {

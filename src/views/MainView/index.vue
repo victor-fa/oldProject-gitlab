@@ -132,6 +132,9 @@ export default Vue.extend({
         case ResourceListAction.multipleSelectItem:
           this.handleMultipleAction(args[0])
           break;
+        case ResourceListAction.listMultipleSelectItem:
+          this.handleListMultipleAction(args[0])
+          break;
         case ResourceListAction.listClick:
           this.handleListClickAction()
           break;
@@ -204,7 +207,6 @@ export default Vue.extend({
       this.overrideBackAction()
     },
     handleSearchAction (keyword: string) {
-      // 在当前目录下搜索
       this.loading = true
       const prefix = `/.ugreen_nas/${(this.user as User).ugreenNo}`
       let path = this.pageConfig.path
@@ -265,17 +267,18 @@ export default Vue.extend({
       this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
     },
     handleMultipleAction (index: number) {
-      // 多选问题还没有处理完整
       this.showArray = ResourceHandler.setSelectState(this.showArray, index, true)
     },
+    handleListMultipleAction (index: number) {
+      this.showArray = ResourceHandler.shiftMultipleSelect(this.showArray, index)
+    },
     handleListClickAction () {
-      ResourceHandler.resetSelectState(this.showArray)
-      if (!this.showAlter) return
+      this.showArray = ResourceHandler.resetSelectState(this.showArray)
       this.showAlter = false
     },
     // handle operate list component action methods
     handleCollection () {
-      
+      // TODO: 收藏文件
     },
     handleClipboardAction (isClipboard: boolean = true) {
       const items = ResourceHandler.getSelectItems(this.showArray)
