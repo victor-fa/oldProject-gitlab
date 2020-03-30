@@ -29,7 +29,6 @@ export default Vue.extend({
   methods: {
     fetchCollectList () {
       this.loading = true
-      console.log('fetchCollectList')
       NasFileAPI.fetchCollectList().then(response => {
         this.loading = false
         if (response.data.code !== 200) return
@@ -55,11 +54,10 @@ export default Vue.extend({
         type: item.file_detail.type,
         size: item.file_detail.size,
         path: item.path,
-        status: ResourceStatus.unlock,
         ctime: item.file_detail.ctime,
         mtime: item.file_detail.mtime,
         shared: item.file_detail.shared,
-        utime: item.file_detail.utime,
+        utime: item.file_detail.atime,
         collected: item.file_detail.collected,
         thumbs: item.file_detail.thumbs,
         name: StringUtility.formatName(item.path),
@@ -79,6 +77,7 @@ export default Vue.extend({
       this.fetchCollectList()
     },
     handleOpenAction (item: ResourceItem) {
+      // TODO: 收藏列表中的打开目录需要重新处理
       this.pageConfigStacks.push(this.pageConfig)
       this.pageConfig = { path: item.path, uuid: item.uuid }
       this.busy = false

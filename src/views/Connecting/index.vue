@@ -49,6 +49,7 @@ export default Vue.extend({
       //   // TODO: 扫描当前设备失败，界面如何展示
       //   console.log(error)
       // })
+      console.log(`begin connecting: sn=${this.sn}, mac=${this.mac}`)
       ClientAPI.scanNas(data => {
         if (data.sn === this.sn && data.mac === this.mac) {
           this.loading = false

@@ -99,12 +99,19 @@ export default {
       return item
     })
   },
-  // 重置收藏状态, 收藏成功时应该重置disable和select状态，并标记当前item已收藏
+  // 重置收藏状态, 收藏成功时应该重置item的disable和select状态，并设置当前item的收藏状态
   resetCollectState (showArray: Array<ResourceItem>, status: CollectStatus = CollectStatus.has) {
     return showArray.map(item => {
-      if (item.isSelected) {
-        item.collected = status
-      }
+      if (item.isSelected) item.collected = status
+      item.disable = false
+      item.isSelected = false
+      return item
+    })
+  },
+  // 重置分享状态，分享成功时应该重置item的disable和select状态，并设置当前item的收藏状态
+  resetShareState (showArray: Array<ResourceItem>, status: ShareStatus = ShareStatus.has) {
+    return showArray.map(item => {
+      if (item.isSelected) item.shared = status
       item.disable = false
       item.isSelected = false
       return item

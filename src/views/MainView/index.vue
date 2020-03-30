@@ -28,7 +28,7 @@ import { mapGetters } from 'vuex'
 import MainHeaderView, { MainHeaderAction } from './MainHeaderView.vue'
 import MainBottomView from './MainBottomView.vue'
 import ResourceList, { ResourceListAction } from '../../components/ResourceList/index.vue'
-import { ResourceItem, ArrangeWay, OrderType, CollectStatus } from '../../api/NasFileModel'
+import { ResourceItem, ArrangeWay, OrderType, CollectStatus, ShareStatus } from '../../api/NasFileModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 import ResourceHandler from './ResourceHandler'
 import { CategoryType } from '../../model/categoryList'
@@ -152,10 +152,10 @@ export default Vue.extend({
           
           break;
         case 'share':
-          
+          this.handleShareAction()
           break;
         case 'unshare':
-          
+          this.handleUnshareAction()
           break;
         case 'collect':
           this.handleCollection()
@@ -277,18 +277,40 @@ export default Vue.extend({
       this.showArray = ResourceHandler.resetSelectState(this.showArray)
     },
     // handle operate list component action methods
+    handleShareAction () {
+      this.handleItem = true
+      const items = ResourceHandler.disableSelectItems(this.showArray)
+      NasFileAPI.shareResource(items).then(response => {
+        this.handleItem = false
+        if (response.data.code !== 200) return
+        this.$message.info('分享成功')
+        this.showArray = ResourceHandler.resetShareState(this.showArray)
+      }).catch(error => {
+        this.handleItemError(error)
+      })
+    },
+    handleUnshareAction () {
+      this.handleItem = true
+      const items = ResourceHandler.disableSelectItems(this.showArray)
+      NasFileAPI.cancelShare(items).then(response => {
+        this.handleItem = false
+        if (response.data.code !== 200) return
+        this.$message.info('取消分享')
+        this.showArray = ResourceHandler.resetShareState(this.showArray, ShareStatus.not)
+      }).catch(error => {
+        this.handleItemError(error)
+      })
+    },
     handleCollection () {
       this.handleItem = true
       const items = ResourceHandler.disableSelectItems(this.showArray)
-      NasFileAPI.addCollect(items).then(response => {
+      NasFileAPI.collectFile(items).then(response => {
         this.handleItem = false
         if (response.data.code !== 200) return
         this.$message.info('收藏成功')
         this.showArray = ResourceHandler.resetCollectState(this.showArray)
-      }).catch(_ => {
-        this.handleItem = false
-        this.$message.error('网络连接错误，请检测网络')
-        this.showArray = ResourceHandler.resetDisableState(this.showArray)
+      }).catch(error => {
+        this.handleItemError(error)
       })
     },
     handleUnCollectAction () {
@@ -299,11 +321,15 @@ export default Vue.extend({
         if (response.data.code !== 200) return
         this.$message.info('取消成功')
         this.showArray = ResourceHandler.resetCollectState(this.showArray, CollectStatus.not)
-      }).catch(_ => {
-        this.handleItem = false
-        this.$message.error('网络连接错误，请检测网络')
-        this.showArray = ResourceHandler.resetDisableState(this.showArray)
+      }).catch(error => {
+        this.handleItemError(error)
       })
+    },
+    handleItemError (error: any) {
+      console.log(error)
+      this.handleItem = false
+      this.$message.error('网络连接错误，请检测网络')
+      this.showArray = ResourceHandler.resetDisableState(this.showArray)
     },
     handleClipboardAction (isClipboard: boolean = true) {
       const items = ResourceHandler.getSelectItems(this.showArray)

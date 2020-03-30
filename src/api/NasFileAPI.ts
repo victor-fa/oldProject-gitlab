@@ -135,7 +135,7 @@ export default {
   fetchCollectList (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasFavoriteModulePath + '/get')
   },
-  addCollect (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+  collectFile (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
     const files = items.map((item, index) => {
       return {
         uuid: item.uuid,
@@ -153,5 +153,26 @@ export default {
       }
     })
     return nasServer.post(nasFavoriteModulePath + '/cancel', { files })
+  },
+  fetchShareList (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasShareModulePath + '/get_all_users')
+  },
+  shareResource (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+    const files = items.map(item => {
+      return {
+        path: item.path,
+        uuid: item.uuid
+      }
+    })
+    return nasServer.post(nasShareModulePath + '/share_files', { files })
+  },
+  cancelShare (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+    const files = items.map(item => {
+      return {
+        path: item.path,
+        uuid: item.uuid
+      }
+    })
+    return nasServer.post(nasShareModulePath + '/cancel_shared_files1', { files })
   }
 }

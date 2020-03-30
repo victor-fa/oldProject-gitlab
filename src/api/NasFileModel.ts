@@ -70,6 +70,7 @@ interface CollectItemDetail {
   ctime: number,
   utime: number,
   mtime: number,
+  atime: number,
   shared: number,
   collected: number,
   thumbs: Array<string>
