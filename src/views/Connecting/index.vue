@@ -39,11 +39,23 @@ export default Vue.extend({
     searchNasInLAN () {
       timerId = this.beginTimer()
       this.loading = true
-      ClientAPI.searchNas(this.sn, this.mac, data => {
+      // ClientAPI.searchNas(this.sn, this.mac, data => {
+      //   if (data.sn === this.sn && data.mac === this.mac) {
+      //     window.clearTimeout(timerId as any)
+      //     this.onlineConnectNas(data)
+      //   } 
+      // }, error => {
+      //   this.loading = false
+      //   // TODO: 扫描当前设备失败，界面如何展示
+      //   console.log(error)
+      // })
+      ClientAPI.scanNas(data => {
         if (data.sn === this.sn && data.mac === this.mac) {
+          this.loading = false
           window.clearTimeout(timerId as any)
+          ClientAPI.closeBoardcast()
           this.onlineConnectNas(data)
-        } 
+        }
       }, error => {
         this.loading = false
         // TODO: 扫描当前设备失败，界面如何展示
@@ -55,7 +67,7 @@ export default Vue.extend({
         ClientAPI.closeBoardcast()
         this.loading = false
         // TODO: 未扫描到当前设备，界面如何展示
-      }, 5000)
+      }, 10000)
     },
     onlineConnectNas (nasInfo: NasInfo) {
       ClientAPI.setBaseUrl(`http://${nasInfo.ip}:${nasInfo.port}`)

@@ -1,5 +1,5 @@
 import { EventBus, EventType } from './eventBus';
-import Vue from 'vue'
+import _ from 'lodash'
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import { BasicResponse } from '@/api/UserModel'
 import router from '@/router'
@@ -14,6 +14,14 @@ const nasCloud = axios.create({
   timeout: 10000,
   withCredentials: false
 })
+const apiToken = (() => {
+  const tokenJson = localStorage.getItem(NAS_ACCESS)
+    if (tokenJson === null) {
+      console.log('not find access_token in localStorage')
+      return null
+    }
+    return JSON.parse(tokenJson).api_token
+})()
 
 nasCloud.interceptors.request.use((config) => {
   // Do something before request is sent
@@ -40,6 +48,11 @@ const nasServer = axios.create({
 
 nasServer.interceptors.request.use((config) => {
   // Do something before request is sent
+  if (_.isEmpty(config.params)) {
+    config.params = { api_token: apiToken }
+  } else if (!_.isEmpty(apiToken)) {
+    config.params.api_token = apiToken
+  }
   return config
 }, (error) => {
   // Do something with request error
