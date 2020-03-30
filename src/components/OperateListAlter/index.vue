@@ -41,7 +41,7 @@ export default Vue.extend({
         let items: Array<OperateItem> = []
         for (let index = 0; index < group.items.length; index++) {
           const element = group.items[index]
-          if (!element.hide) items.push(element)
+          if (!element.isHidden) items.push(element)
         }
         if (items.length === 0) return false
         group.items = items
@@ -58,7 +58,7 @@ export default Vue.extend({
         const element = this.operateList[index] as OperateGroup
         for (let i = 0; i < element.items.length; i++) {
           const el = element.items[i];
-          if (el.hide) continue
+          if (el.isHidden) continue
           itemCount += 16
         }
       }

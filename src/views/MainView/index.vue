@@ -28,14 +28,14 @@ import { mapGetters } from 'vuex'
 import MainHeaderView, { MainHeaderAction } from './MainHeaderView.vue'
 import MainBottomView from './MainBottomView.vue'
 import ResourceList, { ResourceListAction } from '../../components/ResourceList/index.vue'
-import { ResourceItem, ArrangeWay, OrderType } from '../../api/NasFileModel'
+import { ResourceItem, ArrangeWay, OrderType, CollectStatus } from '../../api/NasFileModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 import ResourceHandler from './ResourceHandler'
 import { CategoryType } from '../../model/categoryList'
 import OperateListAlter from '../../components/OperateListAlter/index.vue'
 import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse, User } from '../../api/UserModel'
-import { itemoOperateList, operateList, OperateItem, OperateGroup } from '../../components/OperateListAlter/operateList'
+import { OperateGroup } from '../../components/OperateListAlter/operateList'
 
 export default Vue.extend({
   name: 'main-view',
@@ -59,9 +59,8 @@ export default Vue.extend({
       arrangeWay: ArrangeWay.horizontal,
       alterPosition: { left: '0px', top: '0px' }, // 右键菜单样式
       showAlter: false, // 是否显示右键菜单
-      itemoOperateList, // item的右键菜单选项
-      operateList, // list的右键菜单选项
-      showOperateList: list // 展示的操作菜单选项
+      showOperateList: list, // 展示的操作菜单选项,
+      handleItem: false // 在处理item(如：收藏、分享)时，不能将item的选中状态重置
     }
   },
   watch: {
@@ -162,7 +161,7 @@ export default Vue.extend({
           this.handleCollection()
           break;
         case 'uncollect':
-          
+          this.handleUnCollectAction()
           break;
         case 'copy': 
           this.handleClipboardAction(false)
@@ -236,7 +235,7 @@ export default Vue.extend({
     handleArrangeChange (arrangeWay: ArrangeWay) {
       this.arrangeWay = arrangeWay
     },
-    // TODO: handle resource list action methods
+    // handle resource list action methods
     loadMoreData () {
       this.overrideloadMoreData()
     },
@@ -247,12 +246,12 @@ export default Vue.extend({
     },
     handleContextMenuAction (event: MouseEvent, index: number) {
       this.showArray = ResourceHandler.setSelectState(this.showArray, index, true)
-      const itemOperateList = ResourceHandler.filterItemOperateList(this.showArray, this.itemoOperateList)
-      this.showContextMenu(itemoOperateList, event)
+      const list = ResourceHandler.filterItemOperateList(this.showArray)
+      this.showContextMenu(list, event)
     },
     handleListContextMenuAction (event: MouseEvent) {
-      const operateList = ResourceHandler.filterOperateList(this.clipboard, this.operateList)
-      this.showContextMenu(operateList, event)
+      const list = ResourceHandler.filterOperateList(this.clipboard)
+      this.showContextMenu(list, event)
     },
     showContextMenu (list: Array<OperateGroup>, event: MouseEvent) {
       this.showOperateList = list
@@ -273,16 +272,41 @@ export default Vue.extend({
       this.showArray = ResourceHandler.shiftMultipleSelect(this.showArray, index)
     },
     handleListClickAction () {
-      this.showArray = ResourceHandler.resetSelectState(this.showArray)
       this.showAlter = false
+      if (this.handleItem) return
+      this.showArray = ResourceHandler.resetSelectState(this.showArray)
     },
     // handle operate list component action methods
     handleCollection () {
-      // TODO: 收藏文件
+      this.handleItem = true
+      const items = ResourceHandler.disableSelectItems(this.showArray)
+      NasFileAPI.addCollect(items).then(response => {
+        this.handleItem = false
+        if (response.data.code !== 200) return
+        this.$message.info('收藏成功')
+        this.showArray = ResourceHandler.resetCollectState(this.showArray)
+      }).catch(_ => {
+        this.handleItem = false
+        this.$message.error('网络连接错误，请检测网络')
+        this.showArray = ResourceHandler.resetDisableState(this.showArray)
+      })
+    },
+    handleUnCollectAction () {
+      this.handleItem = true
+      const items = ResourceHandler.disableSelectItems(this.showArray)
+      NasFileAPI.cancelCollect(items).then(response => {
+        this.handleItem = false
+        if (response.data.code !== 200) return
+        this.$message.info('取消成功')
+        this.showArray = ResourceHandler.resetCollectState(this.showArray, CollectStatus.not)
+      }).catch(_ => {
+        this.handleItem = false
+        this.$message.error('网络连接错误，请检测网络')
+        this.showArray = ResourceHandler.resetDisableState(this.showArray)
+      })
     },
     handleClipboardAction (isClipboard: boolean = true) {
       const items = ResourceHandler.getSelectItems(this.showArray)
-      if (_.isEmpty(items)) return
       this.$store.dispatch('Resource/updateClipboard', {
         isClipboard: isClipboard,
         items

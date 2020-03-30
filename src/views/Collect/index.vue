@@ -2,7 +2,7 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import MainView, { PageConfig } from '../MainView/index.vue'
-import { ResourceItem, OrderType, CollectItem } from '../../api/NasFileModel'
+import { ResourceItem, OrderType, CollectItem, ResourceStatus } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse } from '../../api/UserModel'
 import StringUtility from '../../utils/StringUtility'
@@ -43,37 +43,30 @@ export default Vue.extend({
     },
     parseResponse (data: BasicResponse) {
       const ulist = _.get(data.data, 'files') as Array<CollectItem>
-      // if (_.isEmpty(ulist)) this.busy = true
-      // ulist.map(value => {
-      //   value.name = StringUtility.formatName(value.path)
-      //   value.showMtime = StringUtility.formatShowMtime(value.mtime)
-      //   value.showSize = StringUtility.formatShowSize(value.size)
-      // })
-      // this.dataArray = ulist
+      if (_.isEmpty(ulist)) this.busy = true
+      this.dataArray = ulist.map(item => {
+        return this.convertResourceItem(item) as ResourceItem
+      })
     },
-    // convertResourceItem (item: CollectItem): ResourceItem {
-    //   return {
-    //     id: item.file_detail.id,
-    //     uuid: item.uuid,
-    //     type: item.file_detail.type,
-    //     size: item.file_detail.size,
-    //     path: item.path,
-    //     status: 0,
-    //     ctime: item.file_detail.ctime,
-    //     mtime: item.file_detail.mtime,
-    //     shared: item.file_detail.shared,
-    //     utime: item.file_detail.utime,
-    //     alias: '',
-    //     collected: item.file_detail.collected,
-    //     duration: 0,
-    //     thumbs: item.file_detail.thumbs,
-    //     name: StringUtility.formatName(item.path),
-    //     showMtime: StringUtility.formatShowMtime(item.file_detail.mtime),
-    //     showSize: StringUtility.formatShowSize(item.file_detail.size),
-    //     // custom property
-    //     isSelected: false
-    //   }
-    // },
+    convertResourceItem (item: CollectItem) {
+      return {
+        id: item.file_detail.id,
+        uuid: item.uuid,
+        type: item.file_detail.type,
+        size: item.file_detail.size,
+        path: item.path,
+        status: ResourceStatus.unlock,
+        ctime: item.file_detail.ctime,
+        mtime: item.file_detail.mtime,
+        shared: item.file_detail.shared,
+        utime: item.file_detail.utime,
+        collected: item.file_detail.collected,
+        thumbs: item.file_detail.thumbs,
+        name: StringUtility.formatName(item.path),
+        showMtime: StringUtility.formatShowMtime(item.file_detail.mtime),
+        showSize: StringUtility.formatShowSize(item.file_detail.size)
+      }
+    },
     // 重写父类中的方法
     handleBackAction () {
       this.pageConfig = this.pageConfigStacks.pop()!

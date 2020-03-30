@@ -50,7 +50,8 @@ interface ResourceItem {
   showMtime: string,
   showSize: string,
   // custom property
-  isSelected: boolean
+  isSelected: boolean,
+  disable: boolean
 }
 
 interface CollectItem {

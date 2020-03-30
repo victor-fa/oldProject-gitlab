@@ -26,6 +26,7 @@
             :index="index"
             :arrangeWay="arrangeWay"
             :isSelected="item.isSelected"
+            :disable="item.disable"
             v-on:singleSelectClick="singleSelectItem"
             v-on:multipleSelectClick="multipleSelectItem"
             v-on:listMultipleSelectClick="listMultipleSelectItem"

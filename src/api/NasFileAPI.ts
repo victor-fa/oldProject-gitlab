@@ -6,7 +6,6 @@ import axios, { AxiosResponse } from 'axios/index';
 import { NAS_ACCESS, NAS_INFO } from '@/common/constants'
 import { nasServer } from '@/utils/request';
 import { NasInfo } from './ClientModel';
-import ClientAPI from './ClientAPI';
 import { OrderType, UploadTimeSort } from './NasFileModel';
 
 axios.defaults.withCredentials = true;
@@ -34,7 +33,7 @@ const host = (() => {
     const nasInfo = JSON.parse(nasInfoJson) as NasInfo
     return `http://${nasInfo.ip}:${nasInfo.port}`
 })()
-ClientAPI.setBaseUrl(host!)
+nasServer.defaults.baseURL = host!
 
 export default {
   getServerUrl () {
@@ -157,17 +156,17 @@ export default {
     })
   },
   addCollect (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
-    const files = items.map((item) => {
+    const files = items.map((item, index) => {
       return {
         uuid: item.uuid,
-        path: item.path,
-        id: item.id
+        path: item.path
       }
     })
-    return nasServer.post(nasFavoriteModulePath + 'set', null, {
+    return nasServer.post(nasFavoriteModulePath + '/set', null, {
       params: {
-        files
-      }
+        api_token: apiToken
+      },
+      data: { files }
     })
   },
   cancelCollect (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
@@ -178,10 +177,11 @@ export default {
         id: item.id
       }
     })
-    return nasServer.post(nasFavoriteModulePath + 'cancel', null, {
+    return nasServer.post(nasFavoriteModulePath + '/cancel', null, {
       params: {
-        files
-      }
+        api_token: apiToken
+      },
+      data: { files }
     })
   }
 }

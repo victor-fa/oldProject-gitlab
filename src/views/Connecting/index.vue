@@ -30,21 +30,6 @@ export default Vue.extend({
   },
   mounted () {
     this.searchNasInLAN()
-    console.log(`sn: ${this.sn}, mac: ${this.mac}, secretKey: ${this.secretKey}`)
-    // temporary code
-    setTimeout(() => {
-      const nasInfo: NasInfo = {
-        name: '小明的设备',
-        model: 'NAS-D2P1',
-        mac: '00ce39ca56a1',
-        sn: '1000000002',
-        port: 9999,
-        ip: '192.168.10.91',
-        softversion: 'V1.0.0',
-        active: 1
-      }
-      this.onlineConnectNas(nasInfo)
-    }, 2000)
   },
   destroyed () {
     if (timerId !== null) window.clearTimeout(timerId as any)

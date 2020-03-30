@@ -76,7 +76,7 @@ export default {
     const dgram = require('dgram')
     client = dgram.createSocket('udp4')
     const msg = generateBoardcastPacket(sn, mac)
-    console.log(msg);
+    console.log(`start boardcast: sn=${sn}, mac=${mac}`);
     const port = 60000
     client.bind(() => {
       client.setBroadcast(true)
