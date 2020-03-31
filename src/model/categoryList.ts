@@ -67,6 +67,11 @@ let taskCategorys: Category[] = [
     isSelected: false
   },
   {
+    type: TaskCategoryType.backup,
+    title: '备份列表',
+    isSelected: false
+  },
+  {
     type: TaskCategoryType.remote,
     title: '远程操作',
     isSelected: false

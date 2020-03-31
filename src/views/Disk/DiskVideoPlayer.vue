@@ -289,4 +289,12 @@ export default {
 
 <style scoped>
 @import url('../../assets/css/player.css');
+.sf-icon-pause {
+    transition: all .1s linear;
+    transform: scale(0);
+}
+.sf-icon-pause:hover {
+    transition: all .6s linear;
+    transform: scale(1);
+}
 </style>

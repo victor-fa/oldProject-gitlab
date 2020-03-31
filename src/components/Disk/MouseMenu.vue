@@ -27,8 +27,8 @@ export default {
 			DiskMainMenu: [
 				{ name: '上传文件', key: '', commend: 'upload', disabled: "ClassifyName!=='网盘'" },
 				{ name: '新建文件夹', key: '', commend: '', disabled: "ClassifyName!=='网盘'" },
-				{ name: '清空剪切板', key: '', commend: 'clear', vif: "ClassifyName==='网盘'", disabled: 'Clipboard.length===0' },
-				{ name: '粘贴', key: '', commend: 'paste', vif: "ClassifyName==='网盘'", disabled: 'Clipboard.length===0' },
+				{ name: '清空剪切板', key: '', commend: 'clear', vif: "ClassifyName==='网盘'", disabled: 'Clipboard.length === 0' },
+				{ name: '粘贴', key: '', commend: 'paste', vif: "ClassifyName==='网盘'", disabled: 'Clipboard.length === 0' },
 				{ name: '刷新', key: '', commend: 'reload' }
 			],
 			DiskFileMenu: [

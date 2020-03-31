@@ -6,10 +6,6 @@
     />
     <main-bottom-view/>
   </div>
-  
-  <!-- :style="alterStyle"
-    @blur="alterBlur"
-    @callback="DiskFeatureControl" -->
 </template>
 
 <script lang="ts">
@@ -33,8 +29,6 @@ export default {
     }
   },
   mounted () {
-    console.log(realResourceList);
-    console.log(localStorage.getItem(TRANSFORM_INFO));
   }
 }
 </script>
