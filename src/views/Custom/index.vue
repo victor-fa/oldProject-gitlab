@@ -24,7 +24,8 @@ export default Vue.extend({
       pageConfig: config,
       pageConfigStacks: stacks,
       page: 1,
-      busy: false
+      busy: false,
+      order: OrderType.byNameDesc
     }
   },
   computed: {
@@ -50,9 +51,9 @@ export default Vue.extend({
         console.log(error)
       })
     },
-    fetchResourceList (orderType: OrderType = OrderType.byNameDesc) {
+    fetchResourceList () {
       this.loading = true
-      NasFileAPI.fetchResourceList(this.pageConfig.path, this.pageConfig.uuid, this.page, 20, orderType).then(response => {
+      NasFileAPI.fetchResourceList(this.pageConfig.path, this.pageConfig.uuid, this.page, 20, this.order).then(response => {
         console.log(response)
         this.loading = false
         if (response.data.code !== 200) return
@@ -74,24 +75,24 @@ export default Vue.extend({
       this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
     },
     // 重写父类中的方法
-    loadMoreData () {
+    overrideloadMoreData () {
       if (this.busy) return
       this.page++
       this.fetchResourceList()
     },
-    handleBackAction () {
+    overrideBackAction () {
       this.pageConfig = this.pageConfigStacks.pop()!
       this.page = 1
       this.busy = false
       this.dataArray = []
       this.fetchResourceList()
     },
-    handleRefreshAction () {
+    overrideRefreshAction () {
       this.page = 1
       this.busy = false
       this.fetchResourceList()
     },
-    handleOpenAction (item: ResourceItem) {
+    overrideOpenAction (item: ResourceItem) {
       this.pageConfigStacks.push(this.pageConfig)
       this.pageConfig = { path: item.path, uuid: item.uuid }
       this.page = 1
@@ -99,11 +100,11 @@ export default Vue.extend({
       this.dataArray = []
       this.fetchResourceList()
     },
-    handleSortWayChangeAction (order: OrderType) {
-      console.log(order)
+    overrideSortWayChangeAction (order: OrderType) {
       this.page = 1
       this.busy = false
-      this.fetchResourceList(order)
+      this.order = order
+      this.fetchResourceList()
     }
   }
 })

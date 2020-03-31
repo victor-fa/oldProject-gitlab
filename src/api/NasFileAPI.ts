@@ -127,7 +127,7 @@ export default {
       }
     })
   },
-  fetchUlist (page: number, size: number = 20, order: UploadTimeSort = UploadTimeSort.descend): Promise<AxiosResponse<BasicResponse>> {
+  fetchUlist (page: number, order: UploadTimeSort = UploadTimeSort.descend, size: number = 20): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.get(nasFileModulePath + '/ulist', {
       params: {
         page,

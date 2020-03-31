@@ -1,6 +1,10 @@
 <template>
   <div class="main-view">
-    <main-header-view :directory="currentPath" v-on:CallbackAction="handleHeaderViewAction"/>
+    <main-header-view
+      :directory="currentPath"
+      :popoverList="sortList"
+      v-on:CallbackAction="handleHeaderViewAction"
+    />
     <a-spin :spinning="loading">
       <resource-list
         ref="resourceList"
@@ -36,6 +40,7 @@ import OperateListAlter from '../../components/OperateListAlter/index.vue'
 import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse, User } from '../../api/UserModel'
 import { OperateGroup } from '../../components/OperateListAlter/operateList'
+import { sortList } from '../../model/sortList'
 
 export default Vue.extend({
   name: 'main-view',
@@ -60,7 +65,8 @@ export default Vue.extend({
       alterPosition: { left: '0px', top: '0px' }, // 右键菜单样式
       showAlter: false, // 是否显示右键菜单
       showOperateList: list, // 展示的操作菜单选项,
-      handleItem: false // 在处理item(如：收藏、分享)时，不能将item的选中状态重置
+      handleItem: false, // 在处理item(如：收藏、分享)过程中，item将设置为disable状态
+      sortList: sortList // MianHeaderView中排序弹窗列表的数据源
     }
   },
   watch: {
@@ -230,6 +236,7 @@ export default Vue.extend({
       this.overrideRefreshAction()
     },
     handleSortWayChangeAction (sender: OrderType) {
+      if (this.dataArray.length === 0) return
       this.overrideSortWayChangeAction(sender)
     },
     handleArrangeChange (arrangeWay: ArrangeWay) {

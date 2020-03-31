@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { ResourceItem, ResourceType, ShareStatus, CollectStatus } from '@/api/NasFileModel'
+import { ResourceItem, ResourceType, ShareStatus, CollectStatus, OrderType } from '@/api/NasFileModel'
 import { CategoryType } from '../../model/categoryList'
 import { OperateGroup, OperateItem, operateList, itemOperateList } from '@/components/OperateListAlter/operateList'
 import { ClipboardModel } from '@/store/modules/Resource'
@@ -262,5 +262,35 @@ export default {
       })
       return group
     })
+  },
+  // 对当前展示的数据源根据type进行排序
+  orderShowArray (showArray: Array<ResourceItem>, type: OrderType) {
+    let iterate = 'name'
+    let order: OrderEnum = OrderEnum.desc
+    switch (type) {
+      case OrderType.byNameAsc:
+        order = OrderEnum.asc
+        break;
+      case OrderType.bySizeDesc:
+        iterate = 'size'
+        break;
+      case OrderType.bySizeAsc:
+        iterate = 'size'
+        order = OrderEnum.asc
+        break;
+      case OrderType.ByModifyDesc:
+        iterate = 'mtime'
+        break;
+      case OrderType.ByModifyAsc:
+        iterate = 'mtime'
+        order = OrderEnum.asc
+        break;
+    }
+    return _.orderBy(showArray, [iterate], [order])
   }
+}
+
+enum OrderEnum  {
+  desc = 'desc',
+  asc = 'asc'
 }

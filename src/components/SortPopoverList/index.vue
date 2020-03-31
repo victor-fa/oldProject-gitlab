@@ -15,41 +15,51 @@
       />
       </li>
     </ul>
-    <div class="split-line"/>
-    <ul>
-      <li
-        v-for="(item, index) in sortList.types"
-        :key="index"
-        class="sort-item"
-        @click="sortTypeChange(item)"
-      >
-      <label class="sort-title">{{ item.title }}</label>
-      <img
-        v-if="item.isSelected"
-        class="accsory-icon"
-        src="../../assets/sort_select_icon.png"
-      />
-      </li>
-    </ul>
+    <div v-if="showTypes">
+      <div class="split-line"/>
+      <ul>
+        <li
+          v-for="(item, index) in sortList.types"
+          :key="index"
+          class="sort-item"
+          @click="sortTypeChange(item)"
+        >
+        <label class="sort-title">{{ item.title }}</label>
+        <img
+          v-if="item.isSelected"
+          class="accsory-icon"
+          src="../../assets/sort_select_icon.png"
+        />
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import { sortList, SortKindItem, SortTypeItem } from '../../model/sortList'
+import { sortList, SortKindItem, SortTypeItem, SortList } from '../../model/sortList'
 
 export default Vue.extend({
   name: 'sort-popover',
+  props: {
+    sortList: Object
+  },
   data () {
+    const list = this.sortList as SortList
     return {
-      sortList,
-      sortKind: sortList.kinds[0],
-      sortType: sortList.types[0]
+      sortKind: list.kinds[0],
+      sortType: list.types[0]
+    }
+  },
+  computed: {
+    showTypes: function () {
+      const list = this.sortList as SortList
+      return list.types.length !== 0
     }
   },
   methods: {
     sortKindChange (sender: SortKindItem) {
-      if (sender.isSelected) { return }
       sender.isSelected = true
       this.sortKind.isSelected = false
       this.sortKind = sender
@@ -57,7 +67,6 @@ export default Vue.extend({
       this.$emit('sortWayChange', parameters)
     },
     sortTypeChange (sender: SortTypeItem) {
-      if (sender.isSelected) { return }
       sender.isSelected = true
       this.sortType.isSelected = false
       this.sortType = sender

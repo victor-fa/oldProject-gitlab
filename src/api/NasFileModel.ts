@@ -82,7 +82,9 @@ enum OrderType {
   bySizeDesc = 3,
   bySizeAsc = 4,
   ByModifyDesc = 5,
-  ByModifyAsc = 6
+  ByModifyAsc = 6,
+  ByUploadDesc = 7,
+  ByUploadAsc = 8
 }
 
 enum StorageType {
