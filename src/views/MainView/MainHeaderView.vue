@@ -45,6 +45,7 @@
         >
           <sort-popover-list
             slot="content"
+            :sortList="popoverList"
             v-on:sortWayChange="sortWayChange"
           />
           <span>
@@ -76,10 +77,18 @@ import BasicTabs from '../../components/BasicTabs/index.vue'
 import { categorys, taskCategorys, Category } from '../../model/categoryList'
 import { EventBus, EventType } from '../../utils/eventBus'
 import CustomButton from '../../components/CustomButton/index.vue'
-import SortPopoverList from './SortPopoverList.vue'
-import { SortWay, SortKind, SortType } from '../../model/sortList'
-import { operateFuncList } from './operateIconList'
+import SortPopoverList from '../../components/SortPopoverList/index.vue'
+import { SortWay, SortKind, SortType, sortList, uploadSortList } from '../../model/sortList'
 import { ArrangeWay, OrderType } from '../../api/NasFileModel'
+
+const operateFuncList = {
+  back: require('../../assets/back_icon.png'),
+  search: require('../../assets/search_icon.png'),
+  refresh: require('../../assets/refresh_icon.png'),
+  sort: require('../../assets/sort_icon.png'),
+  arrange: require('../../assets/arrange_icon.png'),
+  selectedBg: require('../../assets/func_button_bg.png')
+}
 
 export default Vue.extend({
   name: 'main-header-view',
@@ -100,7 +109,8 @@ export default Vue.extend({
     directory: {
       type: String,
       default: ''
-    }
+    },
+    popoverList: Object
   },
   data () {
     return {
@@ -130,6 +140,8 @@ export default Vue.extend({
           return way.type === SortType.descending ? OrderType.ByModifyDesc : OrderType.ByModifyAsc
         case SortKind.memory:
           return way.type === SortType.descending ? OrderType.bySizeDesc : OrderType.bySizeAsc
+        case SortKind.upload:
+          return way.type === SortType.descending ? OrderType.ByUploadDesc : OrderType.ByUploadAsc
         case SortKind.fileType:
           // TODO: 目前还无法处理文件类型
           break;

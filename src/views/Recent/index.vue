@@ -2,10 +2,11 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import MainView, { PageConfig } from '../MainView/index.vue'
-import { ResourceItem, OrderType } from '../../api/NasFileModel'
+import { ResourceItem, OrderType, UploadTimeSort } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse } from '../../api/UserModel'
 import StringUtility from '../../utils/StringUtility'
+import { uploadSortList } from '../../model/sortList'
 
 export default Vue.extend({
   name: 'recent',
@@ -21,7 +22,9 @@ export default Vue.extend({
       pageConfig: config,
       pageConfigStacks: stacks,
       page: 1,
-      busy: false
+      busy: false,
+      sortList: uploadSortList,
+      order: UploadTimeSort.descend
     }
   },
   created () {
@@ -30,7 +33,7 @@ export default Vue.extend({
   methods: {
     fetchUlist () {
       this.loading = true
-      NasFileAPI.fetchUlist(this.page).then(response => {
+      NasFileAPI.fetchUlist(this.page, this.order).then(response => {
         this.loading = false
         if (response.data.code !== 200) return
         console.log(response)
@@ -52,33 +55,41 @@ export default Vue.extend({
       this.dataArray = this.page === 1 ? ulist : this.dataArray.concat(ulist)
     },
     // 重写父类中的方法
-    loadMoreData () {
+    overrideloadMoreData () {
       if (this.busy) return
       this.page++
       this.fetchUlist()
     },
-    handleBackAction () {
+    overrideBackAction () {
       this.pageConfig = this.pageConfigStacks.pop()!
       this.page = 1
       this.busy = false
       this.dataArray = []
       this.fetchUlist()
     },
-    handleRefreshAction () {
+    overrideRefreshAction () {
       this.page = 1
       this.busy = false
       this.fetchUlist()
     },
-    handleOpenAction (item: ResourceItem) {
-      this.pageConfigStacks.push(this.pageConfig)
-      this.pageConfig = { path: item.path, uuid: item.uuid }
+    overrideOpenAction (item: ResourceItem) {
+      // TODO: 最近列表中有目录该如何处理
+      // this.pageConfigStacks.push(this.pageConfig)
+      // this.pageConfig = { path: item.path, uuid: item.uuid }
+      // this.page = 1
+      // this.busy = false
+      // this.dataArray = []
+      // this.fetchUlist()
+    },
+    overrideSortWayChangeAction (type: OrderType) {
+      if (type === OrderType.ByUploadDesc) {
+        this.order = UploadTimeSort.descend
+      } else if (type === OrderType.ByUploadAsc) {
+        this.order = UploadTimeSort.ascend
+      }
       this.page = 1
       this.busy = false
-      this.dataArray = []
       this.fetchUlist()
-    },
-    handleSortWayChangeAction (type: OrderType) {
-      console.log(type)
     }
   }
 })

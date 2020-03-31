@@ -6,6 +6,7 @@ import { ResourceItem, OrderType, CollectItem, ResourceStatus } from '../../api/
 import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse } from '../../api/UserModel'
 import StringUtility from '../../utils/StringUtility'
+import ResourceHandler from '../MainView/ResourceHandler'
 
 export default Vue.extend({
   name: 'share',
@@ -66,26 +67,27 @@ export default Vue.extend({
       }
     },
     // 重写父类中的方法
-    handleBackAction () {
+    overrideBackAction () {
       this.pageConfig = this.pageConfigStacks.pop()!
       this.busy = false
       this.dataArray = []
       this.fetchShareList()
     },
-    handleRefreshAction () {
+    overrideRefreshAction () {
       this.busy = false
       this.fetchShareList()
     },
-    handleOpenAction (item: ResourceItem) {
+    overrideOpenAction (item: ResourceItem) {
       // TODO: 分享列表中的打开目录需要重新处理
-      this.pageConfigStacks.push(this.pageConfig)
-      this.pageConfig = { path: item.path, uuid: item.uuid }
-      this.busy = false
-      this.dataArray = []
-      this.fetchShareList()
+      // TODO: 打开操作要区分资源类型
+      // this.pageConfigStacks.push(this.pageConfig)
+      // this.pageConfig = { path: item.path, uuid: item.uuid }
+      // this.busy = false
+      // this.dataArray = []
+      // this.fetchShareList()
     },
-    handleSortWayChangeAction (type: OrderType) {
-      console.log(type)
+    overrideSortWayChangeAction (type: OrderType) {
+      this.dataArray = ResourceHandler.orderShowArray(this.dataArray, type)
     }
   }
 })
