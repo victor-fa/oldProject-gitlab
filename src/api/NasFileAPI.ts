@@ -1,3 +1,4 @@
+import { ResourceItem } from '@/api/NasFileModel';
 import { BasicResponse } from '@/api/UserModel';
 import Vue from 'vue'
 import { jsonToParams, jsonToParamsForPdf } from '../utils/request'
@@ -5,7 +6,6 @@ import axios, { AxiosResponse } from 'axios/index';
 import { NAS_ACCESS, NAS_INFO } from '@/common/constants'
 import { nasServer } from '@/utils/request';
 import { NasInfo } from './ClientModel';
-import ClientAPI from './ClientAPI';
 import { OrderType, UploadTimeSort } from './NasFileModel';
 
 axios.defaults.withCredentials = true;
@@ -17,14 +17,6 @@ const nasFavoriteModulePath = '/v1/favorites'
 const nasMyselfModulePath = '/v1/myself'
 const tempServerUrl = 'http://192.168.10.91:9999'
 
-const apiToken = (() => {
-  const tokenJson = localStorage.getItem(NAS_ACCESS)
-    if (tokenJson === null) {
-      console.log('not find access_token in localStorage')
-      return null
-    }
-    return JSON.parse(tokenJson).api_token
-})()
 const host = (() => {
   const nasInfoJson = localStorage.getItem(NAS_INFO)
     if (nasInfoJson === null) {
@@ -34,7 +26,7 @@ const host = (() => {
     const nasInfo = JSON.parse(nasInfoJson) as NasInfo
     return `http://${nasInfo.ip}:${nasInfo.port}`
 })()
-ClientAPI.setBaseUrl(host!)
+nasServer.defaults.baseURL = host!
 
 export default {
   getServerUrl () {
@@ -107,11 +99,7 @@ export default {
     return tempServerUrl + nasFileModulePath + '/http_download?' + jsonToParamsForPdf(input)
   },
   fetchStorages (): Promise<AxiosResponse<BasicResponse>> {
-    return nasServer.get(nasFileModulePath + '/storages', {
-      params: {
-        api_token: apiToken
-      }
-    })
+    return nasServer.get(nasFileModulePath + '/storages')
   },
   fetchResourceList (path: string, uuid: string, page: number, size: number, order: OrderType = OrderType.byNameDesc): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.get(nasFileModulePath + '/list', {
@@ -120,13 +108,12 @@ export default {
         uuid: uuid,
         page: page,
         size: size,
-        order: order,
-        api_token: apiToken
+        order: order
       }
     })
   },
   renameResource (oldPath: string, newPath: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
-    return nasServer.post(nasFileModulePath + '/rename?api_token=' + apiToken, {
+    return nasServer.post(nasFileModulePath + '/rename', {
       uuid: uuid,
       old_path: oldPath,
       new_path: newPath
@@ -136,8 +123,7 @@ export default {
     return nasServer.get(nasFileModulePath + '/media', {
       params: {
         path: path,
-        uuid: uuid,
-        api_token: apiToken
+        uuid: uuid
       }
     })
   },
@@ -146,8 +132,7 @@ export default {
       params: {
         page,
         size,
-        order,
-        api_token: apiToken
+        order
       }
     })
   },
@@ -156,9 +141,51 @@ export default {
       params: {
         uuid,
         path,
-        key: keyword,
-        api_token: apiToken
+        key: keyword
       }
     })
+  },
+  fetchCollectList (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasFavoriteModulePath + '/get')
+  },
+  collectFile (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+    const files = items.map((item, index) => {
+      return {
+        uuid: item.uuid,
+        path: item.path
+      }
+    })
+    return nasServer.post(nasFavoriteModulePath + '/set', { files })
+  },
+  cancelCollect (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+    const files = items.map((item) => {
+      return {
+        uuid: item.uuid,
+        path: item.path,
+        id: item.id
+      }
+    })
+    return nasServer.post(nasFavoriteModulePath + '/cancel', { files })
+  },
+  fetchShareList (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasShareModulePath + '/get_all_users')
+  },
+  shareResource (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+    const files = items.map(item => {
+      return {
+        path: item.path,
+        uuid: item.uuid
+      }
+    })
+    return nasServer.post(nasShareModulePath + '/share_files', { files })
+  },
+  cancelShare (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+    const files = items.map(item => {
+      return {
+        path: item.path,
+        uuid: item.uuid
+      }
+    })
+    return nasServer.post(nasShareModulePath + '/cancel_shared_files1', { files })
   }
 }

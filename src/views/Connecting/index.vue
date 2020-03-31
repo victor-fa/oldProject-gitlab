@@ -30,21 +30,6 @@ export default Vue.extend({
   },
   mounted () {
     this.searchNasInLAN()
-    console.log(`sn: ${this.sn}, mac: ${this.mac}, secretKey: ${this.secretKey}`)
-    // temporary code
-    setTimeout(() => {
-      const nasInfo: NasInfo = {
-        name: '小明的设备',
-        model: 'NAS-D2P1',
-        mac: '00ce39ca56a1',
-        sn: '1000000002',
-        port: 9999,
-        ip: '192.168.10.91',
-        softversion: 'V1.0.0',
-        active: 1
-      }
-      this.onlineConnectNas(nasInfo)
-    }, 2000)
   },
   destroyed () {
     if (timerId !== null) window.clearTimeout(timerId as any)
@@ -54,11 +39,24 @@ export default Vue.extend({
     searchNasInLAN () {
       timerId = this.beginTimer()
       this.loading = true
-      ClientAPI.searchNas(this.sn, this.mac, data => {
+      // ClientAPI.searchNas(this.sn, this.mac, data => {
+      //   if (data.sn === this.sn && data.mac === this.mac) {
+      //     window.clearTimeout(timerId as any)
+      //     this.onlineConnectNas(data)
+      //   } 
+      // }, error => {
+      //   this.loading = false
+      //   // TODO: 扫描当前设备失败，界面如何展示
+      //   console.log(error)
+      // })
+      console.log(`begin connecting: sn=${this.sn}, mac=${this.mac}`)
+      ClientAPI.scanNas(data => {
         if (data.sn === this.sn && data.mac === this.mac) {
+          this.loading = false
           window.clearTimeout(timerId as any)
+          ClientAPI.closeBoardcast()
           this.onlineConnectNas(data)
-        } 
+        }
       }, error => {
         this.loading = false
         // TODO: 扫描当前设备失败，界面如何展示
@@ -70,7 +68,7 @@ export default Vue.extend({
         ClientAPI.closeBoardcast()
         this.loading = false
         // TODO: 未扫描到当前设备，界面如何展示
-      }, 5000)
+      }, 10000)
     },
     onlineConnectNas (nasInfo: NasInfo) {
       ClientAPI.setBaseUrl(`http://${nasInfo.ip}:${nasInfo.port}`)

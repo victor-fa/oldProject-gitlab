@@ -8,13 +8,13 @@
         :busy="busy"
         :arrangeWay="arrangeWay"
         v-on:CallbackAction="handleResourceListAction"
-        @click.native="listClick"
       />
     </a-spin>
     <main-bottom-view :itemCount="itemCount"/>
     <operate-list-alter
-      v-if="showAlter"
+      v-show="showAlter"
       ref="operateListAlter"
+      :operateList="showOperateList"
       :style="alterStyle"
       v-on:didSelectItem="handleAlterAction"
     />
@@ -28,14 +28,14 @@ import { mapGetters } from 'vuex'
 import MainHeaderView, { MainHeaderAction } from './MainHeaderView.vue'
 import MainBottomView from './MainBottomView.vue'
 import ResourceList, { ResourceListAction } from '../../components/ResourceList/index.vue'
-import { ResourceItem, ArrangeWay, OrderType } from '../../api/NasFileModel'
+import { ResourceItem, ArrangeWay, OrderType, CollectStatus, ShareStatus } from '../../api/NasFileModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 import ResourceHandler from './ResourceHandler'
 import { CategoryType } from '../../model/categoryList'
 import OperateListAlter from '../../components/OperateListAlter/index.vue'
 import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse, User } from '../../api/UserModel'
-import StringUtility from '../../utils/StringUtility'
+import { OperateGroup } from '../../components/OperateListAlter/operateList'
 
 export default Vue.extend({
   name: 'main-view',
@@ -47,6 +47,7 @@ export default Vue.extend({
   },
   data () {
     let items: Array<ResourceItem> = []
+    let list: Array<OperateGroup> = []
     let config: PageConfig = { path: '', uuid: '' }
     return {
       loading: false,
@@ -57,7 +58,9 @@ export default Vue.extend({
       busy: false,
       arrangeWay: ArrangeWay.horizontal,
       alterPosition: { left: '0px', top: '0px' }, // 右键菜单样式
-      showAlter: false // 是否显示右键菜单
+      showAlter: false, // 是否显示右键菜单
+      showOperateList: list, // 展示的操作菜单选项,
+      handleItem: false // 在处理item(如：收藏、分享)时，不能将item的选中状态重置
     }
   },
   watch: {
@@ -76,9 +79,11 @@ export default Vue.extend({
       const myThis: any = this
       return myThis.showArray.length
     },
-    ...mapGetters('User', ['user'])
+    ...mapGetters('User', ['user']),
+    ...mapGetters('Resource', ['clipboard'])
   },
   methods: {
+    // handle component callback action
     handleHeaderViewAction (actionType: MainHeaderAction, ...args: any[]) {
       switch (actionType) {
         case MainHeaderAction.tabChange:
@@ -112,9 +117,7 @@ export default Vue.extend({
           this.loadMoreData()
           break;
         case ResourceListAction.openItem:
-          const item = this.showArray[args[0]]
-          this.currentPath += `/${item.name}`
-          this.handleOpenAction(item)
+          this.handleOpenAction()
           break;
         case ResourceListAction.contextMenu:
           this.handleContextMenuAction(args[0], args[1])
@@ -128,16 +131,19 @@ export default Vue.extend({
         case ResourceListAction.multipleSelectItem:
           this.handleMultipleAction(args[0])
           break;
+        case ResourceListAction.listMultipleSelectItem:
+          this.handleListMultipleAction(args[0])
+          break;
+        case ResourceListAction.listClick:
+          this.handleListClickAction()
+          break;
       }
     },
     handleAlterAction (command: string) {
       this.showAlter = false
       switch (command) {
-        case 'open': {
-          const item = ResourceHandler.getFirstSelectItem(this.showArray)
-          this.currentPath += `/${item!.name}`
-          if (item !== null)  this.handleOpenAction(item)
-        }
+        case 'open': 
+          this.handleOpenAction()
           break;
         case 'openMode':
           
@@ -146,92 +152,60 @@ export default Vue.extend({
           
           break;
         case 'share':
-          
+          this.handleShareAction()
           break;
-        case 'copy':
-          
+        case 'unshare':
+          this.handleUnshareAction()
+          break;
+        case 'collect':
+          this.handleCollection()
+          break;
+        case 'uncollect':
+          this.handleUnCollectAction()
+          break;
+        case 'copy': 
+          this.handleClipboardAction(false)
           break;
         case 'cut':
-          
+          this.handleClipboardAction()
           break;
         case 'moveto':
           
           break;
-        case 'delete': {
-          const items = ResourceHandler.getSelectItems(this.showArray)
-          if (!_.isEmpty(items)) this.handleDeletAction(items)
-        }
+        case 'delete':
+          this.handleDeletAction()
           break;
-        case 'rename': {
-          const item = ResourceHandler.getFirstSelectItem(this.showArray)
-          if (item !== null)  this.handleRenameAction(item)
-        }
+        case 'rename':
+          this.handleRenameAction()
           break;
-        case 'info': {
-          const item = ResourceHandler.getFirstSelectItem(this.showArray)
-          if (item !== null)  this.handleInfoAction(item)
-        }
+        case 'info':
+          this.handleInfoAction()
+          break;
+        case 'upload':
+          
+          break;
+        case 'newFolder':
+          
+          break;
+        case 'clearClipboard':
+          
+          break;
+        case 'paste':
+          
+          break;
+        case 'refresh':
+          this.handleRefreshAction()
           break;
       }
     },
-    handleDeletAction (items: Array<ResourceItem>) {
-      // TODO: 删除文件
-    },
-    handleRenameAction (item: ResourceItem) {
-      const list: any = this.$refs.resourceList
-      list.handleRenameAction(item)
-    },
-    handleInfoAction (item: ResourceItem) {
-      processCenter.renderSend(EventName.mediaInfo, {
-        path: 'media-info',
-        params: {
-          uuid: item.uuid,
-          path: item.path
-        }
-      })
-    },
-    listClick (event: MouseEvent) {
-      ResourceHandler.resetSelectState(this.showArray)
-      if (!this.showAlter) return
-      event.stopPropagation()
-      this.showAlter = false
-    },
-    handleContextMenuAction (event: MouseEvent, index: number) {
-      // TODO: 不同场景可能会展示不同的右键菜单
-      event.preventDefault()
-      this.showArray = ResourceHandler.setSelectState(this.showArray, index, false)
-      this.showAlter = true
-      const alter = this.$refs.showAlter as Vue
-      const list = this.$refs.resourceList as Vue
-      this.alterPosition = ResourceHandler.calculateSafePositionOnWindow(event.clientX, event.clientY)
-    },
-    handleListContextMenuAction (event: MouseEvent) {
-      // TODO: 点击列表的右键菜单
-    },
-    handleSingleAction (index: number) {
-      this.showAlter = false
-      this.showArray = ResourceHandler.setSelectState(this.showArray, index, true)
-    },
-    handleMultipleAction (index: number) {
-      const item = this.showArray[index]
-      item.isSelected = !item.isSelected
-      this.showArray.splice(index, 1, item)
-    },
-    handleMediaInfoAction (item: ResourceItem) {
-      if (_.isEmpty(item)) return
-      processCenter.renderSend(EventName.mediaInfo, {
-        path: 'media-info',
-        params: {
-          uuid: item.uuid,
-          path: item.path
-        }
-      })
-    },
+    // handle main header view compoennt action methods
     handleTabChange (categoryType: CategoryType) {
       this.showArray = ResourceHandler.classifyArray(this.dataArray, categoryType)
     },
+    handleBackAction () {
+      this.overrideBackAction()
+    },
     handleSearchAction (keyword: string) {
-      // TODO: 默认在当前目录下搜索
       this.loading = true
       const prefix = `/.ugreen_nas/${(this.user as User).ugreenNo}`
       let path = this.pageConfig.path
@@ -240,39 +214,167 @@ export default Vue.extend({
       NasFileAPI.searchFile(this.pageConfig.uuid, path, keyword).then(response => {
         this.loading = false
         if (response.data.code !== 200) return
-        this.handleSearchResponse(response.data)
+        const list = _.get(response.data.data, 'list') as Array<ResourceItem>
+        if (_.isEmpty(list)) this.busy = true
+        this.showArray = ResourceHandler.formateResponseList(list)
       }).catch(error => {
         this.loading = false
         console.log(error)
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    handleSearchResponse (data: BasicResponse) {
-      const list = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(list)) this.busy = true
-      list.map(value => {
-        value.name = StringUtility.formatName(value.path)
-        value.showMtime = StringUtility.formatShowMtime(value.mtime)
-        value.showSize = StringUtility.formatShowSize(value.size)
-      })
-      this.showArray = list
-    },
     handleEndSerchAction () {
       this.showArray = this.dataArray
+    },
+    handleRefreshAction () {
+      this.overrideRefreshAction()
+    },
+    handleSortWayChangeAction (sender: OrderType) {
+      this.overrideSortWayChangeAction(sender)
     },
     handleArrangeChange (arrangeWay: ArrangeWay) {
       this.arrangeWay = arrangeWay
     },
-    // 下面的方法都由子类实现
+    // handle resource list action methods
     loadMoreData () {
+      this.overrideloadMoreData()
     },
-    handleBackAction () {
+    handleOpenAction () {
+      const item = ResourceHandler.getFirstSelectItem(this.showArray)
+      this.currentPath += `/${item!.name}`
+      if (item !== null)  this.overrideOpenAction(item)
     },
-    handleRefreshAction () {
+    handleContextMenuAction (event: MouseEvent, index: number) {
+      this.showArray = ResourceHandler.setSelectState(this.showArray, index, true)
+      const list = ResourceHandler.filterItemOperateList(this.showArray)
+      this.showContextMenu(list, event)
     },
-    handleOpenAction (item: ResourceItem) {
+    handleListContextMenuAction (event: MouseEvent) {
+      const list = ResourceHandler.filterOperateList(this.clipboard)
+      this.showContextMenu(list, event)
     },
-    handleSortWayChangeAction (sender: OrderType) {
+    showContextMenu (list: Array<OperateGroup>, event: MouseEvent) {
+      this.showOperateList = list
+      this.showAlter = true
+      this.$nextTick(() => {
+        const alter = this.$refs.operateListAlter as Vue
+        this.alterPosition = ResourceHandler.calculateSafePositionOnWindow(event.clientX, event.clientY, alter)
+      })
+    },
+    handleSingleAction (index: number) {
+      this.showAlter = false
+      this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
+    },
+    handleMultipleAction (index: number) {
+      this.showArray = ResourceHandler.setSelectState(this.showArray, index, true)
+    },
+    handleListMultipleAction (index: number) {
+      this.showArray = ResourceHandler.shiftMultipleSelect(this.showArray, index)
+    },
+    handleListClickAction () {
+      this.showAlter = false
+      if (this.handleItem) return
+      this.showArray = ResourceHandler.resetSelectState(this.showArray)
+    },
+    // handle operate list component action methods
+    handleShareAction () {
+      this.handleItem = true
+      const items = ResourceHandler.disableSelectItems(this.showArray)
+      NasFileAPI.shareResource(items).then(response => {
+        this.handleItem = false
+        if (response.data.code !== 200) return
+        this.$message.info('分享成功')
+        this.showArray = ResourceHandler.resetShareState(this.showArray)
+      }).catch(error => {
+        this.handleItemError(error)
+      })
+    },
+    handleUnshareAction () {
+      this.handleItem = true
+      const items = ResourceHandler.disableSelectItems(this.showArray)
+      NasFileAPI.cancelShare(items).then(response => {
+        this.handleItem = false
+        if (response.data.code !== 200) return
+        this.$message.info('取消分享')
+        this.showArray = ResourceHandler.resetShareState(this.showArray, ShareStatus.not)
+      }).catch(error => {
+        this.handleItemError(error)
+      })
+    },
+    handleCollection () {
+      this.handleItem = true
+      const items = ResourceHandler.disableSelectItems(this.showArray)
+      NasFileAPI.collectFile(items).then(response => {
+        this.handleItem = false
+        if (response.data.code !== 200) return
+        this.$message.info('收藏成功')
+        this.showArray = ResourceHandler.resetCollectState(this.showArray)
+      }).catch(error => {
+        this.handleItemError(error)
+      })
+    },
+    handleUnCollectAction () {
+      this.handleItem = true
+      const items = ResourceHandler.disableSelectItems(this.showArray)
+      NasFileAPI.cancelCollect(items).then(response => {
+        this.handleItem = false
+        if (response.data.code !== 200) return
+        this.$message.info('取消成功')
+        this.showArray = ResourceHandler.resetCollectState(this.showArray, CollectStatus.not)
+      }).catch(error => {
+        this.handleItemError(error)
+      })
+    },
+    handleItemError (error: any) {
+      console.log(error)
+      this.handleItem = false
+      this.$message.error('网络连接错误，请检测网络')
+      this.showArray = ResourceHandler.resetDisableState(this.showArray)
+    },
+    handleClipboardAction (isClipboard: boolean = true) {
+      const items = ResourceHandler.getSelectItems(this.showArray)
+      this.$store.dispatch('Resource/updateClipboard', {
+        isClipboard: isClipboard,
+        items
+      })
+    },
+    handleDeletAction () {
+      const items = ResourceHandler.getSelectItems(this.showArray)
+      if (_.isEmpty(items)) return
+      console.log(items)
+      // TODO: 删除文件
+    },
+    handleRenameAction () {
+      const items = ResourceHandler.getSelectItems(this.showArray)
+      if (_.isEmpty(items)) return
+      if (items.length > 1) return
+      const item = items[0]
+      const list: any = this.$refs.resourceList
+      list.handleRenameAction(item)
+    },
+    handleInfoAction () {
+      const items = ResourceHandler.getSelectItems(this.showArray)
+      if (_.isEmpty(items)) return
+      if (items.length > 1) return
+      const item = items[0]
+      processCenter.renderSend(EventName.mediaInfo, {
+        path: 'media-info',
+        params: {
+          uuid: item.uuid,
+          path: item.path
+        }
+      })
+    },
+    // subclass implementation methods
+    overrideloadMoreData () {
+    },
+    overrideBackAction () {
+    },
+    overrideRefreshAction () {
+    },
+    overrideOpenAction (item: ResourceItem) {
+    },
+    overrideSortWayChangeAction (sender: OrderType) {
     },
   }
 })

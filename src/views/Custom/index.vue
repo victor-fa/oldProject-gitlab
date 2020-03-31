@@ -46,6 +46,7 @@ export default Vue.extend({
         this.fetchResourceList()
       }).catch(error => {
         this.loading = false
+        this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
     },
@@ -58,6 +59,7 @@ export default Vue.extend({
         this.parseResponse(response.data)
       }).catch(error => {
         this.loading = false
+        this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
     },

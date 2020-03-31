@@ -3,13 +3,14 @@
     <div
       v-if="isHorizontalArrange"
       class="horizontal-item"
-      v-bind:class="{ horizontalSelectedItem: isSelected }"
+      v-bind:class="{ horizontalSelectedItem: isSelected, disableItem: disable }"
     >
       <div class="icon-wrapper">
         <img
           :src="searchResourceIcon(itemModel.type)"
           @click.stop.exact="singleClick()"
-          @click.shift.stop="multipleClick()"
+          @click.meta.stop="multipleClick()"
+          @click.shift.stop="listMultipleClick()"
           @dblclick="doubleClick()"
           @contextmenu.prevent="contextMenuClick($event)"
         />
@@ -32,7 +33,8 @@
           </template>
           <p
             @click.stop.exact="singleClick()"
-            @click.shift.stop="multipleClick()"
+            @click.meta.stop="multipleClick()"
+            @click.shift.stop="listMultipleClick()"
             @dblclick="doubleClick()"
             @contextmenu.prevent="contextMenuClick($event)"
           >
@@ -44,16 +46,17 @@
     <div
       v-else
       class="vertical-item"
-      v-bind:class="{ oddVerticalItem: isOddStyle, verticalSelectedItem: isSelected }"
+      v-bind:class="{ oddVerticalItem: isOddStyle, verticalSelectedItem: isSelected, disableItem: disable }"
     >
       <a-row
         type="flex"
         justify="space-around"
         align="middle"
         @click.stop.exact="singleClick()"
-        @click.shift.stop="multipleClick()"
+        @click.meta.stop="multipleClick()"
+        @click.shift.stop="shiftMultipleClick()"
         @dblclick="doubleClick()"
-        @contextmenu.prevent="contextMenuClick($event)"
+        @contextmenu.prevent.stop="contextMenuClick($event)"
       >
         <a-col :span="13">
           <img :src="searchResourceIcon(itemModel.type)">
@@ -86,6 +89,9 @@ export default Vue.extend({
     model: Object,
     index: Number,
     isSelected: {
+      default: false
+    },
+    disable: {
       default: false
     },
     arrangeWay: {
@@ -172,15 +178,25 @@ export default Vue.extend({
       this.renaming = true
     },
     singleClick () {
+      if (this.itemModel.disable) return
       this.$emit('singleSelectClick', this.index)
     },
     multipleClick () {
+      if (this.itemModel.disable) return
       this.$emit('multipleSelectClick', this.index)
     },
+    shiftMultipleClick () {
+      if (this.itemModel.disable) return
+      this.$emit('listMultipleSelectClick', this.index)
+    },
     doubleClick () {
+      if (this.itemModel.disable) return
       this.$emit('doubleClick', this.index)
     },
     contextMenuClick (event: MouseEvent) {
+      event.preventDefault()
+      event.stopPropagation()
+      if (this.itemModel.disable) return
       this.$emit('contextMenuClick', event, this.index)
     }
   }
@@ -250,6 +266,9 @@ export default Vue.extend({
 }
 .oddVerticalItem {
   background-color: #FCFBFE;
+}
+.disableItem {
+  cursor: not-allowed;
 }
 </style>
 

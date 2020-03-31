@@ -2,7 +2,9 @@ interface OperateItem {
   title: string,
   icon?: any,
   subItems?: any,
-  command?: string
+  command: string,
+  disable?: boolean,
+  isHidden?: boolean
 }
 
 interface OperateGroup {
@@ -10,7 +12,7 @@ interface OperateGroup {
   items: Array<OperateItem>
 }
 
-const operateList: Array<OperateGroup> = [
+const itemOperateList: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
@@ -22,7 +24,10 @@ const operateList: Array<OperateGroup> = [
     icon: require('../../assets/down_accessory.png'),
     items: [
       { title: '下载', command: 'download' },
-      { title: '分享', command: 'share' }
+      { title: '分享', command: 'share' },
+      { title: '取消分享', command: 'unshare', isHidden: true },
+      { title: '收藏', command: 'collect' },
+      { title: '取消收藏', command: 'uncollect', isHidden: true }
     ]
   },
   {
@@ -42,6 +47,27 @@ const operateList: Array<OperateGroup> = [
   }
 ]
 
+const operateList: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '上传文件', command: 'upload' },
+      { title: '新建文件夹', command: 'newFolder' }
+    ]
+  },
+  {
+    icon: require('../../assets/delet_accessory.png'),
+    items: [
+      { title: '清空剪切板', command: 'clearClipboard' },
+      { title: '粘贴', command: 'paste' },
+      { title: '刷新', command: 'refresh' }
+    ]
+  }
+]
+
 export {
-  operateList
+  itemOperateList,
+  operateList,
+  OperateItem,
+  OperateGroup
 }
