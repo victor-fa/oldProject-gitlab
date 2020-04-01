@@ -110,6 +110,9 @@ export default {
       client.close()
       client = null
     }
+  },
+  fetchBindUserList (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(userModulePath + '/list')
   }
 }
 

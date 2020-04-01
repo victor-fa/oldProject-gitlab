@@ -1,9 +1,10 @@
 import _ from 'lodash'
-import { ResourceItem, ResourceType, ShareStatus, CollectStatus, OrderType } from '@/api/NasFileModel'
+import { ResourceItem, ResourceType, ShareStatus, CollectStatus, OrderType, CollectItem, ShareItem } from '@/api/NasFileModel'
 import { CategoryType } from '../../model/categoryList'
 import { OperateGroup, OperateItem, operateList, itemOperateList } from '@/components/OperateListAlter/operateList'
 import { ClipboardModel } from '@/store/modules/Resource'
 import StringUtility from '@/utils/StringUtility'
+import { NasUser } from '@/api/ClientModel'
 
 export default {
   // 对资源列表进行分类
@@ -37,7 +38,7 @@ export default {
         }
         break
       case CategoryType.document:
-        if (rtype !== ResourceType.image && rtype !== ResourceType.video && rtype !== ResourceType.audio && rtype !== ResourceType.floder) {
+        if (rtype !== ResourceType.image && rtype !== ResourceType.video && rtype !== ResourceType.audio && rtype !== ResourceType.folder) {
           return true
         }
         break
@@ -287,6 +288,30 @@ export default {
         break;
     }
     return _.orderBy(showArray, [iterate], [order])
+  },
+  searchShowArray (showArray: Array<ResourceItem>, keyword: string) {
+    return showArray.filter(item => {
+      return item.name.indexOf(keyword) !== -1
+    })
+  },
+  // 将CollecItem转换成ResourceItem
+  convertResourceItem (item: CollectItem | ShareItem) {
+    return {
+      id: item.file_detail.id,
+      uuid: item.uuid,
+      type: item.file_detail.type,
+      size: item.file_detail.size,
+      path: item.path,
+      ctime: item.file_detail.ctime,
+      mtime: item.file_detail.mtime,
+      shared: item.file_detail.shared,
+      utime: item.file_detail.atime,
+      collected: item.file_detail.collected,
+      thumbs: item.file_detail.thumbs,
+      name: StringUtility.formatName(item.path),
+      showMtime: StringUtility.formatShowMtime(item.file_detail.mtime),
+      showSize: StringUtility.formatShowSize(item.file_detail.size)
+    }
   }
 }
 

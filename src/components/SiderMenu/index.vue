@@ -1,7 +1,7 @@
 <template>
   <ul>
     <li
-      v-for="(item, index) in HomeRouters"
+      v-for="(item, index) in showItems"
       :key="index"
       class="item"
       v-bind:class="{ itemSelected: item.meta.isSelected }"
@@ -22,26 +22,29 @@
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
 import { HomeRouters, FuncListItem } from '../../router/modules/HomeList'
-import router from '../../router'
 import { EventBus, EventType } from '../../utils/eventBus'
 
 export default Vue.extend({
+  name: 'sider-menu',
   data () {
+    let showItems = HomeRouters.filter(item => {
+      return !_.isEmpty(item.meta)
+    })
     return {
-      HomeRouters,
-      selectedItem: HomeRouters[0].meta
+      showItems
     }
   },
   methods: {
     onSelectAction: function (item: FuncListItem, path: string) {
-      if (item.isSelected) { return }
-      this.HomeRouters.forEach(item => { item.meta.isSelected = false })
-      item.isSelected = true
-      this.selectedItem = item
+      this.showItems = this.showItems.map(aItem => {
+        aItem.meta!.isSelected = aItem.path === path ? true : false
+        return aItem
+      })
       EventBus.$emit(EventType.leftMenuChangeAction, path)
-      router.replace(path)
+      if (this.$route.path !== path) this.$router.replace(path)
     }
   }
 })

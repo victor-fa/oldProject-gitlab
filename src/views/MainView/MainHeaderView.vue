@@ -5,6 +5,7 @@
       <div class="left-bar">
         <custom-button
           :image="operateFuncList.back"
+          :disable="disableBack"
           class="back-icon-style"
           iconWidth="6px"
           @click.native="backAction"
@@ -118,11 +119,17 @@ export default Vue.extend({
       operateFuncList,
       visible: false, // 控制排序气泡弹窗是否显示 
       showSearch: false, // 控制搜索框是否显示
-      keyword: '' // 搜索关键字
+      keyword: '', // 搜索关键字
+    }
+  },
+  computed: {
+    disableBack: function () {
+      return this.directory.indexOf('/') === -1
     }
   },
   methods: {
     handleTabChange (index: number) {
+      this.hideSearchInput()
       const item = categorys[index]
       this.$emit('CallbackAction', MainHeaderAction.tabChange, item.type)
     },
@@ -149,10 +156,7 @@ export default Vue.extend({
       return OrderType.byNameDesc
     },
     backAction () {
-      // TODO: 一级目录不能返回，应该是置灰button
-      if (this.directory === '网盘' || this.directory === '备份') {
-        return
-      }
+      this.hideSearchInput()
       this.$emit('CallbackAction', MainHeaderAction.back)
     },
     searchAction () {
@@ -163,31 +167,36 @@ export default Vue.extend({
       const searchInput = this.$refs.searchInput as Vue
       const clearButton = searchInput.$el.lastChild as ChildNode
       clearButton.addEventListener('click', () => {
-        this.stopSearchLoading()
+        this.endSearch()
       })
     },
     handleSearchBlur (event: FocusEvent) {
       if (this.keyword.length === 0) { 
-        this.stopSearchLoading()
+        this.endSearch()
       }
     },
     handleSearchAction () {
       if (_.isEmpty(this.keyword)) {
-        this.stopSearchLoading()
+        this.endSearch()
         return
       }
       this.$emit('CallbackAction', MainHeaderAction.search, this.keyword)
     },
-    stopSearchLoading () {
+    endSearch () {
       if (!this.showSearch) return
-      this.showSearch = false
-      this.keyword = ''
+      this.hideSearchInput()
       this.$emit('CallbackAction', MainHeaderAction.endSearch)
     },
+    hideSearchInput () {
+      this.showSearch = false
+      this.keyword = ''
+    },
     refreshAction() {
+      this.hideSearchInput()
       this.$emit('CallbackAction', MainHeaderAction.refresh)
     },
     arrangeBtnClick () {
+      this.hideSearchInput()
       const arrangeBtn: any = this.$refs.arrangeBtn
       const selected: boolean = arrangeBtn.isSelected
       const arrangeWay = selected ? ArrangeWay.vertical : ArrangeWay.horizontal

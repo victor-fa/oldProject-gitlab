@@ -24,30 +24,7 @@ export default Vue.extend({
   },
   created () {
     const result = this.validatorToken()
-    switch (result) {
-      case ValidatorResult.notLogin:
-        this.loadLoginPage()
-        break
-      case ValidatorResult.couldTokenExpires:
-        this.$store.dispatch('User/clearCacheUserInfo')
-        this.loadLoginPage().then(() => {
-          this.$message.error('token过期，请重新登录')
-        })
-        break
-      case ValidatorResult.notBind:
-        this.loadLoginPage('scan-nas')
-        break
-      case ValidatorResult.pass:
-        this.$router.replace({
-          name: 'connecting',
-          params: {
-            sn: this.nasInfo.sn,
-            mac: this.nasInfo.mac,
-            secretKey: this.accessInfo.key
-          }
-        })
-        break
-    }
+    this.handleValidatorResult(result)
   },
   methods: {
     validatorToken (): ValidatorResult {
@@ -64,6 +41,32 @@ export default Vue.extend({
         return ValidatorResult.notBind
       }
       return ValidatorResult.pass
+    },
+    handleValidatorResult (result: ValidatorResult) {
+      switch (result) {
+        case ValidatorResult.notLogin:
+          this.loadLoginPage()
+          break
+        case ValidatorResult.couldTokenExpires:
+          this.$store.dispatch('User/clearCacheUserInfo')
+          this.loadLoginPage().then(() => {
+            this.$message.error('token过期，请重新登录')
+          })
+          break
+        case ValidatorResult.notBind:
+          this.loadLoginPage('scan-nas')
+          break
+        case ValidatorResult.pass:
+          this.$router.replace({
+            name: 'connecting',
+            params: {
+              sn: this.nasInfo.sn,
+              mac: this.nasInfo.mac,
+              secretKey: this.accessInfo.key
+            }
+          })
+          break
+      }
     },
     loadLoginPage (secondPath: string = 'login') {
       // temporary code

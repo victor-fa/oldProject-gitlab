@@ -1,27 +1,35 @@
-<template>
-  <resource-list
-    :dataSource="dataArray"
-  />
-</template>
-
 <script lang="ts">
 import Vue from 'vue'
-import ResourceList from '../../components/ResourceList/index.vue'
-import { realResourceList } from '../MockData/index'
+import MainView from '../MainView/index.vue'
+import { ResourceItem, OrderType } from '../../api/NasFileModel'
 
-export default {
+export default Vue.extend({
   name: 'encrypt',
-  components: {
-    ResourceList
-  },
+  extends: MainView,
   data () {
+    let items: Array<ResourceItem> = []
     return {
-      dataArray: realResourceList
+      loading: false,
+      currentPath: '最近',
+      dataArray: items,
+      page: 1,
+      busy: false
+    }
+  },
+  methods: {
+    // 重写父类中的方法
+    overrideloadMoreData () {
+
+    },
+    overrideRefreshAction () {
+
+    },
+    overrideOpenFolderAction (item: ResourceItem) {
+
+    },
+    overrideSortWayChangeAction (type: OrderType) {
+
     }
   }
-}
+})
 </script>
-
-<style lang="less" scoped>
-
-</style>

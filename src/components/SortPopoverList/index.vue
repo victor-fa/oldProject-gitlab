@@ -60,16 +60,20 @@ export default Vue.extend({
   },
   methods: {
     sortKindChange (sender: SortKindItem) {
-      sender.isSelected = true
-      this.sortKind.isSelected = false
-      this.sortKind = sender
+      if (!sender.isSelected) {
+        sender.isSelected = true
+        this.sortKind.isSelected = false
+        this.sortKind = sender
+      }
       let parameters = { kind: sender.kind, type: this.sortType.type }
       this.$emit('sortWayChange', parameters)
     },
     sortTypeChange (sender: SortTypeItem) {
-      sender.isSelected = true
-      this.sortType.isSelected = false
-      this.sortType = sender
+      if (!sender.isSelected) {
+        sender.isSelected = true
+        this.sortType.isSelected = false
+        this.sortType = sender
+      }
       let parameters = { kind: this.sortKind.kind, type: sender.type }
       this.$emit('sortWayChange', parameters)
     }

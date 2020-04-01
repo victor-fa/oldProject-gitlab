@@ -173,8 +173,13 @@ export default {
     })
     return nasServer.post(nasFavoriteModulePath + '/cancel', { files })
   },
-  fetchShareList (): Promise<AxiosResponse<BasicResponse>> {
+  fetchShareUserList (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasShareModulePath + '/get_all_users')
+  },
+  fetchShareFileList (ugreenNo: string): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasShareModulePath + '/get_shared_files_of_users', {
+      nas_users: [ { ugreen_no: ugreenNo } ]
+    })
   },
   shareResource (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
     const files = items.map(item => {

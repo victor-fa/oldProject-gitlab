@@ -1,30 +1,27 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import MainView, { PageConfig } from '../MainView/index.vue'
+import MainView from '../MainView/index.vue'
 import { ResourceItem, OrderType, UploadTimeSort } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse } from '../../api/UserModel'
+import { uploadSortList, sortList } from '../../model/sortList'
 import StringUtility from '../../utils/StringUtility'
-import { uploadSortList } from '../../model/sortList'
 
 export default Vue.extend({
   name: 'recent',
   extends: MainView,
   data () {
     let items: Array<ResourceItem> = []
-    let config: PageConfig = { path: '', uuid: '' }
-    let stacks: Array<PageConfig> = []
     return {
       loading: false,
       currentPath: '最近',
       dataArray: items,
-      pageConfig: config,
-      pageConfigStacks: stacks,
       page: 1,
       busy: false,
       sortList: uploadSortList,
-      order: UploadTimeSort.descend
+      uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
+      order: OrderType.byNameDesc // 目录列表的排序方式
     }
   },
   created () {
@@ -33,7 +30,7 @@ export default Vue.extend({
   methods: {
     fetchUlist () {
       this.loading = true
-      NasFileAPI.fetchUlist(this.page, this.order).then(response => {
+      NasFileAPI.fetchUlist(this.page, this.uploadOrder).then(response => {
         this.loading = false
         if (response.data.code !== 200) return
         console.log(response)
@@ -60,32 +57,28 @@ export default Vue.extend({
       this.page++
       this.fetchUlist()
     },
-    overrideBackAction () {
-      this.pageConfig = this.pageConfigStacks.pop()!
-      this.page = 1
-      this.busy = false
-      this.dataArray = []
-      this.fetchUlist()
-    },
     overrideRefreshAction () {
       this.page = 1
       this.busy = false
       this.fetchUlist()
     },
-    overrideOpenAction (item: ResourceItem) {
-      // TODO: 最近列表中有目录该如何处理
-      // this.pageConfigStacks.push(this.pageConfig)
-      // this.pageConfig = { path: item.path, uuid: item.uuid }
-      // this.page = 1
-      // this.busy = false
-      // this.dataArray = []
-      // this.fetchUlist()
+    overrideOpenFolderAction (item: ResourceItem) {
+      this.$router.push({
+        name: 'main-resource-view',
+        query: {
+          path: item.path,
+          uuid: item.uuid
+        },
+        params: {
+          showPath: `${this.currentPath}/${item.name}`
+        }
+      })
     },
     overrideSortWayChangeAction (type: OrderType) {
       if (type === OrderType.ByUploadDesc) {
-        this.order = UploadTimeSort.descend
+        this.uploadOrder = UploadTimeSort.descend
       } else if (type === OrderType.ByUploadAsc) {
-        this.order = UploadTimeSort.ascend
+        this.uploadOrder = UploadTimeSort.ascend
       }
       this.page = 1
       this.busy = false

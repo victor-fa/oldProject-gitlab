@@ -90,7 +90,7 @@ export default Vue.extend({
 <style lang="less" scoped>
 .basic-header {
   height: 32px;
-  padding-top: 8px;
+  padding: 4px 0px;
   display: flex;
   align-items: center;
   flex-direction: row-reverse;

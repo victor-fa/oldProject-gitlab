@@ -91,7 +91,7 @@ export default Vue.extend({
     isSelected: {
       default: false
     },
-    disable: {
+    disable: { // 禁用item的交互
       default: false
     },
     arrangeWay: {
@@ -138,7 +138,7 @@ export default Vue.extend({
           return require('../../assets/resource/txt_icon.png')
         case ResourceType.archive:
           return require('../../assets/resource/pdf_icon.png')
-        case ResourceType.floder:
+        case ResourceType.folder:
           return require('../../assets/resource/folder_icon.png')
       }
       return require('../../assets/resource/unkonw_icon.png')
@@ -166,7 +166,7 @@ export default Vue.extend({
     handleFocus (event: FocusEvent) {
       // 输入框聚焦，选中名称字段
       const target = event.currentTarget as any
-      if (this.itemModel.type === ResourceType.floder) {
+      if (this.itemModel.type === ResourceType.folder) {
         target.select()
       } else {
         const offset = this.inputName.lastIndexOf('.')

@@ -92,7 +92,7 @@ export default Vue.extend({
       this.busy = false
       this.fetchResourceList()
     },
-    overrideOpenAction (item: ResourceItem) {
+    overrideOpenFolderAction (item: ResourceItem) {
       this.pageConfigStacks.push(this.pageConfig)
       this.pageConfig = { path: item.path, uuid: item.uuid }
       this.page = 1
