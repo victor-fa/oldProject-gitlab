@@ -82,5 +82,6 @@ export {
   categorys,
   taskCategorys,
   Category,
-  CategoryType
+  CategoryType,
+  TaskCategoryType
 }

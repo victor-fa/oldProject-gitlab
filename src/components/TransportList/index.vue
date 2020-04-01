@@ -4,7 +4,6 @@
       v-for="(item, index) in TransportList"
       :key="index"
       class="transport-group"
-      v-bind:style="{ 'marginBottom': (isDownOrFin === 'down' ? '-5' : '0') + 'px' }"
     >
       <template v-if="(item.state === 'interrupted' || item.state === 'progressing') && isDownOrFin === 'down' && item.trans_type === currentTag">
         <div class="left-icon">
@@ -58,7 +57,6 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { EventBus, EventType } from '../../utils/eventBus'
 import { TRANSFORM_INFO } from '../../common/constants'
 import StringUtility from '../../utils/StringUtility'
 
@@ -66,30 +64,24 @@ export default Vue.extend({
   name: 'TransportList',
   data () {
     return {
-      isDownOrFin: 'down',
       TransportList: [],
-      currentTag: 'download',
       scrollHeight: document.body.clientHeight - 127
     }
   },
   props: {
-		data: {
-			type: Array
-		},
+    transformList: Array,
+    currentTag: String,
+    isDownOrFin: String
   },
   watch: {
-		data: {
-			handler() {
-        this.setData()
-			},
-			deep: true
-		}
-  },
-  created() {
-    window.addEventListener('setItem', this.setData)
+    transformList: function (newValue) {
+      this.TransportList = newValue
+    },
+    currentTag: function (newValue) {
+      this.tagChange()
+    }
   },
   mounted () {
-    this.setData()
     window.addEventListener('resize', this.observerWindowResize)
   },
   filters: {
@@ -104,71 +96,18 @@ export default Vue.extend({
         this.scrollHeight = newHeight
       }
     },
-    setData() {
-      const temp:any = localStorage.getItem(TRANSFORM_INFO)
-      this.TransportList = JSON.parse(temp)
+    tagChange () {
+      let tempArr:any = [];
+      if (this.TransportList === null) return
+      this.TransportList.forEach((item: any) => {
+        if (item.trans_type === this.currentTag) tempArr.push(item)
+      })
+      this.TransportList = tempArr
     },
 		PercentCount(item) {
       let res = item.trans_type === 'download' ? (item.chunk / item.size) * 100 : (item.size * (item.chunk*0.01) / item.size) * 100
       return parseFloat((res).toFixed(1));
 		},
-    observerEventBus () {
-      const myThis = this as any
-      EventBus.$on(EventType.transportChangeAction, (data) => {
-        if (data.type) {  // 上传、下载
-          myThis.isDownOrFin = data.type
-        }
-        if (data.action) {  // 动作
-          console.log(data.action);
-          if (data.action === 'stop') {
-
-          } else if (data.action === 'cancel') {
-            
-          } else if (data.action === 'clearAll') {  // 清空
-            myThis.$electron.shell.beep()
-            if (myThis.TransportList === null) {
-							myThis.$message.warning('当前无记录')
-              return
-            }
-            myThis.$confirm({
-              title: '删除',
-              content: '是否将所所有记录清空',
-              okText: '删除',
-              okType: 'danger',
-              cancelText: '取消',
-              onOk() {
-                myThis.TransportList.filter(item => item.trans_type === myThis.currentTag).forEach(item => {
-                  myThis.$electron.shell.moveItemToTrash(item.path)
-                })
-                myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify([]))
-                EventBus.$emit(EventType.downloadChangeAction, null)  // 通知更新头部信息
-                EventBus.$emit(EventType.transportChangeAction, { action: 'clearAllFinish' })
-                myThis.setData()
-              }
-            });
-          }
-        }
-      })
-      EventBus.$on(EventType.downloadChangeAction, () => {
-        this.setData()
-      })
-      EventBus.$on(EventType.categoryChangeAction, (type) => {
-        const temp:any = localStorage.getItem(TRANSFORM_INFO)
-        let tempArr:any = [];
-        if (temp === null) return
-        if (type === 'download') {
-          JSON.parse(temp).forEach(item => {
-            if (item.trans_type === 'download') tempArr.push(item)
-          })
-        } else if (type === 'upload') {
-          JSON.parse(temp).forEach(item => {
-            if (item.trans_type === 'upload') tempArr.push(item)
-          })
-        }
-        this.currentTag = type
-        this.TransportList = tempArr
-      })
-    },
 		MathSpeend(item) {
       const myThis = this as any
 			let NowTime = new Date().getTime() / 1000;
@@ -186,9 +125,9 @@ export default Vue.extend({
 		OpenDownPath(item) {
       const myThis = this as any
 			myThis.$electron.shell.showItemInFolder(item.path);
-		},
-		ControlTrans(item, index) {
-			this.$emit('ControlTrans', item, index);
+    },
+    handleTabChange () {
+      
     },
     Delete(item, index) {
       const myThis = this as any
@@ -201,14 +140,13 @@ export default Vue.extend({
         cancelText: '取消',
         onOk() {
           myThis.$electron.shell.moveItemToTrash(item.path)
-          const temp:any = localStorage.getItem(TRANSFORM_INFO)
-          let arr = JSON.parse(temp)
+          let arr = myThis.TransportList
           arr.splice(index, 1); 
-          myThis.$resetSetItem(TRANSFORM_INFO, JSON.stringify(arr))
-          this.TransportList = arr;
-          EventBus.$emit(EventType.downloadChangeAction, null)
+          localStorage.setItem(TRANSFORM_INFO, JSON.stringify(arr))
+          myThis.TransportList = arr;
         }
       });
+      this.$emit('CallbackItemAction', 'refresh') // call parent
     },
 		itemIcon(item) {
 			const myThis = this as any
@@ -236,15 +174,7 @@ export default Vue.extend({
 			return typeName
 		}
   },
-  beforeDestroy() {
-    window.removeEventListener('setItem', this.setData)
-  },
-  beforeMount () {
-    this.observerEventBus()
-  },
   destroyed () {
-    EventBus.$off(EventType.transportChangeAction)
-    EventBus.$off(EventType.downloadChangeAction)
     window.removeEventListener('resize', this.observerWindowResize)
   }
 })
@@ -258,17 +188,18 @@ export default Vue.extend({
   .transport-group {
     display: flex;
     justify-content: space-around;
-    padding: 5px 0;
+    // padding: 5px 0;
     .left-icon {
       width: 45px;
       height: 40px;
-      padding-top: 8px;
+      padding-top: 13px;
       img {
         width: 22px;
       }
     }
     .right-panel {
       flex: 1;
+      padding: 6px 0;
       .top {
         display: flex;
         justify-content: space-around;
@@ -313,8 +244,8 @@ export default Vue.extend({
       color: #484848;
     }
   }
-  // .transport-group:nth-child(odd) {
-  //   background: #FCFBFE;
-  // }
+  .transport-group:nth-child(odd) {
+    background: #FCFBFE;
+  }
 }
 </style>

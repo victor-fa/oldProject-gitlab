@@ -8,8 +8,8 @@
         <span class="normal" v-bind:class="{ special: currentTask === 'fin' }" @click="changeTransport('fin')">{{currentTag === 'download' ? '下载完成' : '上传完成'}}（{{computedCount}}）</span>
       </div>
       <div class="right-bar">
-        <a-button class="right-button" v-if="currentTask === 'down'" @click="sendInfoForTransport('stop')">全部暂停</a-button>
-        <a-button class="right-button" v-if="currentTask === 'down'" @click="sendInfoForTransport('cancel')">全部取消</a-button>
+        <a-button class="right-button" v-if="currentTask === 'down'" @click="sendInfoForTransport('stopAll')">全部暂停</a-button>
+        <a-button class="right-button" v-if="currentTask === 'down'" @click="sendInfoForTransport('cancelAll')">全部取消</a-button>
         <a-button class="right-button" v-if="currentTask === 'fin'" @click="sendInfoForTransport('clearAll')">清除所有记录</a-button>
       </div>
     </div>
@@ -19,14 +19,17 @@
 <script lang="ts">
 import Vue from 'vue'
 import BasicTabs from '../../components/BasicTabs/index.vue'
-import { EventBus, EventType } from '../../utils/eventBus';
 import { TRANSFORM_INFO } from '../../common/constants';
 import { taskCategorys } from '../../model/categoryList'
+import NasFileAPI from '../../api/NasFileAPI'
 
 export default Vue.extend({
   name: 'transport-header-view',
   components: {
     BasicTabs
+  },
+  props: {
+    transformList: Array
   },
   data () {
     return {
@@ -34,56 +37,35 @@ export default Vue.extend({
       currentTask: 'down',
       downloadCount: 0,
       computedCount: 0,
-      currentTag: 'download'
+      currentTag: 'download',
+      transformData: [] // 上传下载
     }
   },
   watch: {
     $route (to, from) {
       if (to.name === 'transport') {  // 仅任务管理下有变化
-        // this.isTaskVisiable = true;
         this.currentTask = 'down';
-        this.changeProgress()
-      } else {
-        // this.isTaskVisiable = false;
       }
-    }
-  },
-  beforeMount () {
-    this.observerEventBus()
-  },
-  destroyed () {
-    EventBus.$off(EventType.transportChangeAction)
-    EventBus.$off(EventType.downloadChangeAction)
+    },
+    transformList: function (newValue) {
+      this.transformData = newValue
+      this.downloadCount = newValue.filter((item:any) => item.trans_type === this.currentTag).filter((item:any) => item.state === 'interrupted' || item.state === 'progressing').length
+      this.computedCount = newValue.filter((item:any) => item.trans_type === this.currentTag).filter((item:any) => item.state === 'completed').length
+    },
   },
   methods: {
-    observerEventBus () {
-      EventBus.$on(EventType.downloadChangeAction, () => {
-        this.changeProgress()
-      })
-      EventBus.$on(EventType.categoryChangeAction, (type) => {
-        if (['download', 'upload', 'offline', 'remote'].indexOf(type) > -1) {
-          this.currentTag = type
-        }
-        this.changeProgress()
-      })
-    },
     handleTabChange (index: number) {
-      console.log(index)
+      const item = taskCategorys[index]
+      this.$emit('CallbackAction', item.type) // call parent
+      this.currentTag = item.type
     },
     changeTransport (type) {
       this.currentTask = type
-      EventBus.$emit(EventType.transportChangeAction, { type: type })
-    },
-    changeProgress() {
-      const temp:any = localStorage.getItem(TRANSFORM_INFO) !== null ? localStorage.getItem(TRANSFORM_INFO) : []
-      if (temp !== 'null') {
-        this.downloadCount = JSON.parse(temp).filter(item => item.trans_type === this.currentTag).filter(item => item.state === 'interrupted' || item.state === 'progressing').length
-        this.computedCount = JSON.parse(temp).filter(item => item.trans_type === this.currentTag).filter(item => item.state === 'completed').length
-      }
+      this.$emit('CallbackAction', type) // call parent
     },
     sendInfoForTransport(data) {
-      EventBus.$emit(EventType.transportChangeAction, { action: data })
-    }
+      this.$emit('CallbackAction', data) // call parent
+    },
   }
 })
 </script>
@@ -125,6 +107,8 @@ export default Vue.extend({
         border: 1px solid #e5e5e5;
         border-radius: 0px;
         margin-right: 7px;
+        height: 25px;
+        font-size: 13px;
       }
     }
   }

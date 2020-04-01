@@ -14,6 +14,7 @@
         v-on:CallbackAction="handleResourceListAction"
       />
     </a-spin>
+    <input type="file" id="FileArea" @change="PrepareUploadFile" hidden ref="FileArea" multiple="multiple" />
     <main-bottom-view :itemCount="itemCount"/>
     <operate-list-alter
       v-show="showAlter"
@@ -41,6 +42,9 @@ import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse, User } from '../../api/UserModel'
 import { OperateGroup } from '../../components/OperateListAlter/operateList'
 import { sortList } from '../../model/sortList'
+import { EventBus, EventType } from '../../utils/eventBus'
+import { TRANSFORM_INFO } from '../../common/constants'
+import upload from '../../utils/file/upload';
 
 export default Vue.extend({
   name: 'main-view',
@@ -66,13 +70,26 @@ export default Vue.extend({
       showAlter: false, // 是否显示右键菜单
       showOperateList: list, // 展示的操作菜单选项,
       handleItem: false, // 在处理item(如：收藏、分享)过程中，item将设置为disable状态
-      sortList: sortList // MianHeaderView中排序弹窗列表的数据源
+      sortList: sortList, // MianHeaderView中排序弹窗列表的数据源
+      transformData: []
     }
   },
   watch: {
     dataArray: function (newValue) {
       this.showArray = newValue
-    }
+    },
+		transformData: {
+			handler() {
+				const myThis = this as any
+				myThis.$nextTick(() => {
+					myThis.transformData.forEach((item, index) => {
+						item.shows = myThis.loadClassify === item.state || (item.trans_type === myThis.loadClassify && item.state !== 'completed');
+					});
+				});
+				localStorage.setItem(TRANSFORM_INFO, JSON.stringify(myThis.transformData))
+			},
+			deep: true
+		}
   },
   computed: {
     alterStyle: function (): object {
@@ -87,6 +104,12 @@ export default Vue.extend({
     },
     ...mapGetters('User', ['user']),
     ...mapGetters('Resource', ['clipboard'])
+  },
+	created() {
+    this.Bind();
+	},
+  mounted () {
+    this.getTransformInfo()
   },
   methods: {
     // handle component callback action
@@ -155,7 +178,8 @@ export default Vue.extend({
           
           break;
         case 'download':
-          
+          this.getTransformInfo()
+          this.handleDownloadAction()
           break;
         case 'share':
           this.handleShareAction()
@@ -188,7 +212,11 @@ export default Vue.extend({
           this.handleInfoAction()
           break;
         case 'upload':
-          
+          const myThis = this as any
+          myThis.getTransformInfo()
+          console.log('shangchuan');
+					myThis.$refs.FileArea.value = '';
+					myThis.$refs.FileArea.click();
           break;
         case 'newFolder':
           
@@ -283,7 +311,71 @@ export default Vue.extend({
       if (this.handleItem) return
       this.showArray = ResourceHandler.resetSelectState(this.showArray)
     },
+    getTransformInfo () {
+			const myThis = this as any
+      const temp:any = localStorage.getItem(TRANSFORM_INFO)
+      let tempJson = JSON.parse(temp)
+      myThis.transformData = tempJson !== null ? tempJson : []
+      console.log(myThis.transformData);
+    },
+		Bind: function() {
+			const myThis = this as any
+			myThis.$ipc.on('download', (e, file, completed) => {
+        completed && myThis.$ipc.send('system', 'popup', file.name + '下载完成');
+        localStorage.setItem(TRANSFORM_INFO, JSON.stringify(myThis.transformData))
+				for (let i = 0; i < myThis.transformData.length; i++) {
+					if (file.name === myThis.transformData[i].name) {
+						myThis.$nextTick(() => {
+							for (let name in myThis.transformData[i]) {
+								myThis.transformData[i][name] = file[name];
+							}
+						});
+						return;
+					}
+        }
+				myThis.$nextTick(() => {
+					myThis.transformData.push(file);
+				});
+			});
+		},
     // handle operate list component action methods
+    handleDownloadAction () {
+      const myThis = this as any
+      const items = ResourceHandler.getSelectItems(this.showArray)
+      items.forEach(item => {
+        myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(NasFileAPI.download(item));
+      });
+    },
+		PrepareUploadFile(data: any) {
+      const myThis = this as any
+      console.log(data.target);
+			upload.prepareFile(data.target, {
+				// data: myThis.NowDiskID,
+				add: file => {
+					console.log(file);
+					myThis.transformData.push(file);
+					myThis.$message.info((data.target ? data.target : data).files.length + '个文件已加入上传列队');
+				},
+				success: (file, response) => {
+					console.log(response);
+					// const _this = myThis as any
+					const rs = response.data;
+					if (rs.code !== 200) {
+						if (rs.code === '4050') {
+							myThis.$message.warning('文件已存在')
+						} else {
+							myThis.$message.warning(rs.msg)
+						}
+						return
+					}
+          localStorage.setItem(TRANSFORM_INFO, JSON.stringify(myThis.transformData))
+          // 刷新
+          myThis.handleRefreshAction()
+					myThis.$message.success('文件上传成功！')
+          myThis.$ipc.send('system', 'popup', file.name + '上传完成');
+				}
+			});
+		},
     handleShareAction () {
       this.handleItem = true
       const items = ResourceHandler.disableSelectItems(this.showArray)
