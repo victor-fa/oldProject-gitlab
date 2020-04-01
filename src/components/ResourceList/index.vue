@@ -69,6 +69,9 @@ export default Vue.extend({
       validator: function (value) {
         return [ArrangeWay.horizontal, ArrangeWay.vertical].indexOf(value) !== -1
       }
+    },
+    disableContextMenu: { // 禁用list的右键菜单
+      default: false
     }
   },
   data () {
@@ -125,20 +128,18 @@ export default Vue.extend({
     },
     doubleClickItem (index: number) {
       const item = this.dataSource[index] as ResourceItem
-      switch (item.type) {
-        case ResourceType.floder:
-          this.$emit('CallbackAction', ResourceListAction.openItem, index)
-          break
-        default:
-          break
-      }
+      this.$emit('CallbackAction', ResourceListAction.openItem, index)
+      item.isSelected = false
+      this.dataSource.splice(index, 1, item)
     },
     handleContextMenu (event: MouseEvent, aIndex: number) {
+      if (this.disableContextMenu) return
       this.$emit('CallbackAction', ResourceListAction.contextMenu, event, aIndex)
     },
     handleListContextMenu (event: MouseEvent) {
       event.preventDefault()
       event.stopPropagation()
+      if (this.disableContextMenu) return
       this.$emit('CallbackAction', ResourceListAction.listContextMenu, event)
     },
     handleListClick (event: MouseEvent) {

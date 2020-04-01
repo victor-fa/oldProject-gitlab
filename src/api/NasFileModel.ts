@@ -10,7 +10,7 @@ enum ResourceType {
   image = 3,
   document = 4,
   archive = 5,
-  floder = 6
+  folder = 6
 }
 
 enum ResourceStatus {
@@ -50,18 +50,26 @@ interface ResourceItem {
   showMtime: string,
   showSize: string,
   // custom property
-  isSelected: boolean,
-  disable: boolean
+  isSelected: boolean, // 当前item是否是选中状态
+  disable: boolean // 当前item是否是禁用状态
 }
 
 interface CollectItem {
   uuid: string,
   path: string,
   ugreen_no: number,
-  file_detail: CollectItemDetail
+  file_detail: FileDeatil
 }
 
-interface CollectItemDetail {
+interface ShareItem {
+  share_id: number,
+  uuid: string,
+  path: string,
+  ugreen_no: number,
+  file_detail: FileDeatil
+}
+
+interface FileDeatil {
   id: number,
   type: ResourceType,
   size: number,
@@ -124,6 +132,11 @@ enum UploadTimeSort {
   ascend
 }
 
+interface ShareUser {
+  ugreen_no: string,
+  nick_name: string
+}
+
 export {
   ResourceItem,
   ResourceStatus,
@@ -137,5 +150,7 @@ export {
   PartitionInfo,
   UploadTimeSort,
   CollectItem,
-  CollectItemDetail
+  FileDeatil,
+  ShareUser,
+  ShareItem
 }

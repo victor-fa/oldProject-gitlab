@@ -89,6 +89,16 @@ const HomeRouters = [
       selectedIcon: require('../../assets/transport_icon_selected.png'),
       isSelected: false
     }
+  },
+  {
+    path: '/main-resource-view',
+    name: 'main-resource-view',
+    component: () => import('../../views/MainView/MainResourceView.vue')
+  },
+  {
+    path: '/share-file-page',
+    name: 'share-file-page',
+    component: () => import('../../views/Share/ShareFilePage.vue')
   }
 ]
 

@@ -1,8 +1,12 @@
 <template>
-  <div class="custom-button" :style="backgroundStyle">
+  <div 
+    class="custom-button" 
+    :style="backgroundStyle"
+  >
     <a-button
       ghost
       block
+      :disabled="disable"
       v-on:click.native="clickAction"
       v-on:mousedown="mousedownAction"
       v-on:mouseup="mouseupAction"
@@ -34,6 +38,9 @@ export default Vue.extend({
     },
     selectedBackgroundImage: {
       default: null
+    },
+    disable: {
+      default: false
     }
   },
   data () {
@@ -110,5 +117,11 @@ export default Vue.extend({
     border: none;
     box-shadow: none;
   }
+}
+</style>
+
+<style>
+.custom-button .ant-btn[disabled] {
+  cursor: default;
 }
 </style>

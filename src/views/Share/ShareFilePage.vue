@@ -2,51 +2,58 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import MainView from '../MainView/index.vue'
-import { ResourceItem, OrderType, CollectItem, ResourceStatus } from '../../api/NasFileModel'
+import { ResourceItem, ShareItem } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
-import { BasicResponse } from '../../api/UserModel'
 import ResourceHandler from '../MainView/ResourceHandler'
 
 export default Vue.extend({
-  name: 'collect',
+  name: 'share-file-page',
   extends: MainView,
   data () {
     let items: Array<ResourceItem> = []
     return {
       loading: false,
-      currentPath: '收藏',
+      currentPath: '',
       dataArray: items,
-      order: OrderType.byNameDesc // 当前选择的排序规则
+    }
+  },
+  watch: {
+    $route: {
+      handler: function () {
+        if (_.isEmpty(this.$route.params.ugreenNo)) return
+        this.fetchShareFileList()
+        this.currentPath = this.$route.params.showPath
+      },
+      deep: true
     }
   },
   created () {
-    this.fetchCollectList()
+    this.fetchShareFileList()
+    this.currentPath = this.$route.params.showPath
   },
   methods: {
-    fetchCollectList () {
+    fetchShareFileList () {
       this.loading = true
-      NasFileAPI.fetchCollectList().then(response => {
+      NasFileAPI.fetchShareFileList(this.$route.params.ugreenNo).then(response => {
         this.loading = false
-        if (response.data.code !== 200) return
         console.log(response)
-        this.parseResponse(response.data)
+        if (response.data.code !== 200) return
+        const list = _.get(response.data.data, 'files') as Array<ShareItem>
+        this.dataArray = list.map(item => {
+          return ResourceHandler.convertResourceItem(item) as ResourceItem
+        })
       }).catch(error => {
-        this.loading = false
         console.log(error)
+        this.loading = false
         this.$message.error('网络连接错误，请检测网络')
-      })
-    },
-    parseResponse (data: BasicResponse) {
-      const ulist = _.get(data.data, 'files') as Array<CollectItem>
-      this.dataArray = ulist.map(item => {
-        return ResourceHandler.convertResourceItem(item) as ResourceItem
       })
     },
     // 重写父类中的方法
     overrideRefreshAction () {
-      this.fetchCollectList()
+      this.fetchShareFileList()
     },
     overrideOpenFolderAction (item: ResourceItem) {
+      console.log(item.name)
       this.$router.push({
         name: 'main-resource-view',
         query: {
@@ -61,7 +68,3 @@ export default Vue.extend({
   }
 })
 </script>
-
-<style lang="less" scoped>
-
-</style>

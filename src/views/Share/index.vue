@@ -1,11 +1,10 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import MainView, { PageConfig } from '../MainView/index.vue'
-import { ResourceItem, OrderType, CollectItem, ResourceStatus } from '../../api/NasFileModel'
+import MainView from '../MainView/index.vue'
+import { ResourceItem, OrderType, CollectItem, ResourceStatus, ShareUser, ResourceType } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse } from '../../api/UserModel'
-import StringUtility from '../../utils/StringUtility'
 import ResourceHandler from '../MainView/ResourceHandler'
 
 export default Vue.extend({
@@ -13,81 +12,50 @@ export default Vue.extend({
   extends: MainView,
   data () {
     let items: Array<ResourceItem> = []
-    let config: PageConfig = { path: '', uuid: '' }
-    let stacks: Array<PageConfig> = []
     return {
       loading: false,
       currentPath: '分享',
       dataArray: items,
-      pageConfig: config,
-      pageConfigStacks: stacks,
-      busy: false
+      disableAlter: true,
+      ugreenNo: '' // 当前选中的用户编号
     }
   },
   created () {
-    this.fetchShareList()
+    this.fetchShareUserList()
   },
   methods: {
-    fetchShareList () {
+    fetchShareUserList () {
       this.loading = true
-      NasFileAPI.fetchCollectList().then(response => {
+      NasFileAPI.fetchShareUserList().then(response => {
         this.loading = false
         if (response.data.code !== 200) return
         console.log(response)
-        this.parseResponse(response.data)
+        const users = _.get(response.data.data, 'nas_users') as Array<ShareUser>
+        this.dataArray = users.map(user => {
+          return {
+            type: ResourceType.folder,
+            name: _.isEmpty(user.nick_name) ? user.ugreen_no : user.nick_name,
+            path: user.ugreen_no
+          } as ResourceItem
+        })
       }).catch(error => {
-        this.loading = false
         console.log(error)
+        this.loading = false
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    parseResponse (data: BasicResponse) {
-      const ulist = _.get(data.data, 'files') as Array<CollectItem>
-      if (_.isEmpty(ulist)) this.busy = true
-      this.dataArray = ulist.map(item => {
-        return this.convertResourceItem(item) as ResourceItem
-      })
-    },
-    convertResourceItem (item: CollectItem) {
-      return {
-        id: item.file_detail.id,
-        uuid: item.uuid,
-        type: item.file_detail.type,
-        size: item.file_detail.size,
-        path: item.path,
-        ctime: item.file_detail.ctime,
-        mtime: item.file_detail.mtime,
-        shared: item.file_detail.shared,
-        utime: item.file_detail.atime,
-        collected: item.file_detail.collected,
-        thumbs: item.file_detail.thumbs,
-        name: StringUtility.formatName(item.path),
-        showMtime: StringUtility.formatShowMtime(item.file_detail.mtime),
-        showSize: StringUtility.formatShowSize(item.file_detail.size)
-      }
-    },
     // 重写父类中的方法
-    overrideBackAction () {
-      this.pageConfig = this.pageConfigStacks.pop()!
-      this.busy = false
-      this.dataArray = []
-      this.fetchShareList()
-    },
     overrideRefreshAction () {
-      this.busy = false
-      this.fetchShareList()
+      this.fetchShareUserList()
     },
-    overrideOpenAction (item: ResourceItem) {
-      // TODO: 分享列表中的打开目录需要重新处理
-      // TODO: 打开操作要区分资源类型
-      // this.pageConfigStacks.push(this.pageConfig)
-      // this.pageConfig = { path: item.path, uuid: item.uuid }
-      // this.busy = false
-      // this.dataArray = []
-      // this.fetchShareList()
-    },
-    overrideSortWayChangeAction (type: OrderType) {
-      this.dataArray = ResourceHandler.orderShowArray(this.dataArray, type)
+    overrideOpenFolderAction (item: ResourceItem) {
+      this.$router.push({
+        name: 'share-file-page',
+        params: {
+          ugreenNo: item.path,
+          showPath: `${this.currentPath}/${item.name}`
+        }
+      })
     }
   }
 })

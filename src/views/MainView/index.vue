@@ -11,6 +11,7 @@
         :dataSource="showArray"
         :busy="busy"
         :arrangeWay="arrangeWay"
+        :disableContextMenu="disableAlter"
         v-on:CallbackAction="handleResourceListAction"
       />
     </a-spin>
@@ -33,7 +34,7 @@ import { mapGetters } from 'vuex'
 import MainHeaderView, { MainHeaderAction } from './MainHeaderView.vue'
 import MainBottomView from './MainBottomView.vue'
 import ResourceList, { ResourceListAction } from '../../components/ResourceList/index.vue'
-import { ResourceItem, ArrangeWay, OrderType, CollectStatus, ShareStatus } from '../../api/NasFileModel'
+import { ResourceItem, ArrangeWay, OrderType, CollectStatus, ShareStatus, ResourceType } from '../../api/NasFileModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 import ResourceHandler from './ResourceHandler'
 import { CategoryType } from '../../model/categoryList'
@@ -57,18 +58,17 @@ export default Vue.extend({
   data () {
     let items: Array<ResourceItem> = []
     let list: Array<OperateGroup> = []
-    let config: PageConfig = { path: '', uuid: '' }
     return {
       loading: false,
-      pageConfig: config,
       dataArray: items, // 当前页的全部数据
       showArray: items, // 当前页展示的数据
       currentPath: '', // 当前页的路径
-      busy: false,
-      arrangeWay: ArrangeWay.horizontal,
+      busy: false, // 控制是否响应加载更多方法
+      arrangeWay: ArrangeWay.horizontal, // list的排序方式
       alterPosition: { left: '0px', top: '0px' }, // 右键菜单样式
-      showAlter: false, // 是否显示右键菜单
-      showOperateList: list, // 展示的操作菜单选项,
+      showAlter: false, // 控制右键菜单的显示与隐藏
+      disableAlter: false, // 是否禁用右键菜单
+      showOperateList: list, // 展示的右键菜单选项集合,
       handleItem: false, // 在处理item(如：收藏、分享)过程中，item将设置为disable状态
       sortList: sortList, // MianHeaderView中排序弹窗列表的数据源
       transformData: []
@@ -102,7 +102,6 @@ export default Vue.extend({
       const myThis: any = this
       return myThis.showArray.length
     },
-    ...mapGetters('User', ['user']),
     ...mapGetters('Resource', ['clipboard'])
   },
 	created() {
@@ -119,8 +118,6 @@ export default Vue.extend({
           this.handleTabChange(args[0])
           break;
         case MainHeaderAction.back:
-          const length = this.currentPath.lastIndexOf('/')
-          this.currentPath = this.currentPath.substring(0, length)
           this.handleBackAction()
           break;
         case MainHeaderAction.search:
@@ -237,25 +234,10 @@ export default Vue.extend({
       this.showArray = ResourceHandler.classifyArray(this.dataArray, categoryType)
     },
     handleBackAction () {
-      this.overrideBackAction()
+      this.$router.go(-1)
     },
     handleSearchAction (keyword: string) {
-      this.loading = true
-      const prefix = `/.ugreen_nas/${(this.user as User).ugreenNo}`
-      let path = this.pageConfig.path
-      path = path.substring(prefix.length, path.length)
-      path = path.length === 0 ? '/' : path
-      NasFileAPI.searchFile(this.pageConfig.uuid, path, keyword).then(response => {
-        this.loading = false
-        if (response.data.code !== 200) return
-        const list = _.get(response.data.data, 'list') as Array<ResourceItem>
-        if (_.isEmpty(list)) this.busy = true
-        this.showArray = ResourceHandler.formateResponseList(list)
-      }).catch(error => {
-        this.loading = false
-        console.log(error)
-        this.$message.error('网络连接错误，请检测网络')
-      })
+      this.overrideSearchAction(keyword)
     },
     handleEndSerchAction () {
       this.showArray = this.dataArray
@@ -276,8 +258,11 @@ export default Vue.extend({
     },
     handleOpenAction () {
       const item = ResourceHandler.getFirstSelectItem(this.showArray)
-      this.currentPath += `/${item!.name}`
-      if (item !== null)  this.overrideOpenAction(item)
+      if (item === null) return
+      item.type === ResourceType.folder ? this.overrideOpenFolderAction(item) : this.handleOpenFileAction(item)
+    },
+    handleOpenFileAction (item: ResourceItem) {
+      // TODO: 打开除文件夹以外的资源文件
     },
     handleContextMenuAction (event: MouseEvent, index: number) {
       this.showArray = ResourceHandler.setSelectState(this.showArray, index, true)
@@ -467,25 +452,16 @@ export default Vue.extend({
     // subclass implementation methods
     overrideloadMoreData () {
     },
-    overrideBackAction () {
-    },
     overrideRefreshAction () {
     },
-    overrideOpenAction (item: ResourceItem) {
+    overrideOpenFolderAction (item: ResourceItem) {
     },
-    overrideSortWayChangeAction (sender: OrderType) {
+    overrideSortWayChangeAction (order: OrderType) {
+      this.showArray = ResourceHandler.orderShowArray(this.showArray, order)
     },
+    overrideSearchAction (keyword: string) {
+      this.showArray = ResourceHandler.searchShowArray(this.showArray, keyword)
+    }
   }
 })
-interface PageConfig {
-  path: string, 
-  uuid: string
-}
-export {
-  PageConfig
-}
 </script>
-
-<style lang="less" scoped>
-
-</style>

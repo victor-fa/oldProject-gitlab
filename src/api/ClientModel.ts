@@ -37,7 +37,11 @@ interface NasUser {
   email: string,
   sex: UserSex,
   birthday: string,
-  version: number
+  role: number,
+  status: number,
+  version: number,
+  image: string,
+  is_connecting: number
 }
 
 export {
