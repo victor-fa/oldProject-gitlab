@@ -11,6 +11,7 @@
       :transformList="transformData"
       v-on:CallbackItemAction="handleListViewAction"
     />
+    <input type="file" id="FileArea" multiple="multiple" directory accept="*/*"  @change="PrepareUploadFile" webkitdirectory mozdirectory hidden ref="FileArea" />
     <main-bottom-view/>
   </div>
 </template>
@@ -38,7 +39,7 @@ export default {
     return {
       dataArray: realResourceList,
       transformData: [],
-      currentTag: '',
+      currentTag: 'download',
       isDownOrFin: ''
     }
   },
@@ -64,14 +65,16 @@ export default {
           break;
         case TaskCategoryType.upload:
           myThis.currentTag = TaskCategoryType.upload
-          // myThis.handleArrangeChange(args[0])
           break;
-        // case TaskCategoryType.offline:
-        //   break;
-        // case TaskCategoryType.backup:
-        //   break;
-        // case TaskCategoryType.remote:
-        //   break;
+        case TaskCategoryType.offline:
+          myThis.currentTag = TaskCategoryType.offline
+          break;
+        case TaskCategoryType.backup:
+          myThis.currentTag = TaskCategoryType.backup
+          break;
+        case TaskCategoryType.remote:
+          myThis.currentTag = TaskCategoryType.remote
+          break;
         case 'down':
           myThis.isDownOrFin = 'down' // 正在下载、正在上传
           break;
@@ -84,6 +87,9 @@ export default {
           break;
         case 'clearAll':  // 清除所有记录
           myThis.clearAllTrans()
+          break;
+        case 'backupFile':  // 上传备份
+          myThis.backUpload()
           break;
       }
       myThis.getData()
@@ -123,7 +129,44 @@ export default {
           myThis.getData()
         }
       });
-    }
+    },
+    backUpload () { // 上传备份文件
+      const myThis = this as any
+      console.log(123);
+      myThis.$refs.FileArea.value = '';
+      myThis.$refs.FileArea.click();
+    },
+		PrepareUploadFile(data: any) {
+      const myThis = this as any
+      console.log(data.target);
+      console.log(data);
+			// upload.prepareFile(data.target, {
+			// 	// data: myThis.NowDiskID,
+			// 	add: file => {
+			// 		console.log(file);
+			// 		myThis.transformData.push(file);
+			// 		myThis.$message.info((data.target ? data.target : data).files.length + '个文件已加入上传列队');
+			// 	},
+			// 	success: (file, response) => {
+			// 		console.log(response);
+			// 		// const _this = myThis as any
+			// 		const rs = response.data;
+			// 		if (rs.code !== 200) {
+			// 			if (rs.code === '4050') {
+			// 				myThis.$message.warning('文件已存在')
+			// 			} else {
+			// 				myThis.$message.warning(rs.msg)
+			// 			}
+			// 			return
+			// 		}
+      //     localStorage.setItem(TRANSFORM_INFO, JSON.stringify(myThis.transformData))
+      //     // 刷新
+      //     myThis.handleRefreshAction()
+			// 		myThis.$message.success('文件上传成功！')
+      //     myThis.$ipc.send('system', 'popup', file.name + '上传完成');
+			// 	}
+			// });
+		},
   }
 }
 </script>

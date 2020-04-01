@@ -136,6 +136,12 @@ export default {
       }
     })
   },
+  fetchBackuplist (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.get(nasFileModulePath + '/backup/list', {
+      params: {
+      }
+    })
+  },
   searchFile (uuid: string, path: string, keyword: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.get(nasFileModulePath + '/search', {
       params: {

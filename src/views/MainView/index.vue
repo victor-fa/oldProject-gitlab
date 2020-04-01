@@ -214,7 +214,6 @@ export default Vue.extend({
         case 'upload':
           const myThis = this as any
           myThis.getTransformInfo()
-          console.log('shangchuan');
 					myThis.$refs.FileArea.value = '';
 					myThis.$refs.FileArea.click();
           break;

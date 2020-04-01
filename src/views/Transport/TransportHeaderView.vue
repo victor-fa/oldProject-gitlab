@@ -1,7 +1,7 @@
 <template>
   <div class="transport-header-view">
     <basic-tabs :tabs="taskCategorys" v-on:tabChange="handleTabChange"/>
-    <div class="bottom-bar">
+    <div class="bottom-bar" v-if="currentTag === 'download' || currentTag === 'upload'">
       <div class="left-bar">
         <span class="normal" v-bind:class="{ special: currentTask === 'down' }" @click="changeTransport('down')">{{currentTag === 'download' ? '正在下载' : '正在上传'}}（{{downloadCount}}）</span>
         <span class="normal" style="margin-right: 7px;">/</span>
@@ -13,13 +13,20 @@
         <a-button class="right-button" v-if="currentTask === 'fin'" @click="sendInfoForTransport('clearAll')">清除所有记录</a-button>
       </div>
     </div>
+    <div class="bottom-bar" v-if="currentTag === 'backup'">
+      <div class="left-bar"></div>
+      <div class="right-bar">
+        <a-button class="right-button" v-if="currentTask === 'down'" @click="sendInfoForTransport('backupFile')">上传备份文件</a-button>
+        <!-- <a-button class="right-button" v-if="currentTask === 'down'" @click="sendInfoForTransport('cancelAll')">全部取消</a-button> -->
+        <!-- <a-button class="right-button" v-if="currentTask === 'fin'" @click="sendInfoForTransport('clearAll')">清除所有记录</a-button> -->
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 import BasicTabs from '../../components/BasicTabs/index.vue'
-import { TRANSFORM_INFO } from '../../common/constants';
 import { taskCategorys } from '../../model/categoryList'
 import NasFileAPI from '../../api/NasFileAPI'
 

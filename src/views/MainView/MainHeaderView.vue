@@ -150,7 +150,7 @@ export default Vue.extend({
     },
     backAction () {
       // TODO: 一级目录不能返回，应该是置灰button
-      if (this.directory === '网盘') {
+      if (this.directory === '网盘' || this.directory === '备份') {
         return
       }
       this.$emit('CallbackAction', MainHeaderAction.back)
