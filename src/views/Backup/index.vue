@@ -1,57 +1,36 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import MainView, { PageConfig } from '../MainView/index.vue'
+import MainView from '../MainView/index.vue'
 import { ResourceItem, OrderType, UploadTimeSort } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse } from '../../api/UserModel'
+import { uploadSortList, sortList } from '../../model/sortList'
 import StringUtility from '../../utils/StringUtility'
-import { uploadSortList } from '../../model/sortList'
 
 export default Vue.extend({
   name: 'backup',
   extends: MainView,
   data () {
     let items: Array<ResourceItem> = []
-    let config: PageConfig = { path: '', uuid: '' }
-    let stacks: Array<PageConfig> = []
     return {
       loading: false,
-      currentPath: '备份',
+      currentPath: '最近',
       dataArray: items,
-      pageConfig: config,
-      pageConfigStacks: stacks,
       page: 1,
       busy: false,
       sortList: uploadSortList,
-      order: OrderType.byNameDesc,
-      rootPath: {
-        flag: true,
-        path: '',
-        uuid: ''
-      }
+      uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
+      order: OrderType.byNameDesc // 目录列表的排序方式
     }
   },
   created () {
-    this.fetchBackuplist()
+    this.fetchUlist()
   },
   methods: {
-    fetchBackuplist () {  // 备份列表查询
+    fetchUlist () {
       this.loading = true
       NasFileAPI.fetchBackuplist().then(response => {
-        this.loading = false
-        if (response.data.code !== 200) return
-        console.log(response)
-        this.parseResponse(response.data)
-      }).catch(error => {
-        this.loading = false
-        this.$message.error('网络连接错误，请检测网络')
-        console.log(error)
-      })
-    },
-    fetchResourceList () {  
-      this.loading = true
-      NasFileAPI.fetchResourceList(this.pageConfig.path, this.pageConfig.uuid, this.page, 20, this.order).then(response => {
         this.loading = false
         if (response.data.code !== 200) return
         this.parseResponse(response.data)
@@ -62,59 +41,47 @@ export default Vue.extend({
       })
     },
     parseResponse (data: BasicResponse) {
-      const list = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(list)) this.busy = true
-      list.map(value => {
+      const ulist = _.get(data.data, 'list') as Array<ResourceItem>
+      if (_.isEmpty(ulist)) this.busy = true
+      ulist.map(value => {
         value.name = StringUtility.formatName(value.path)
         value.showMtime = StringUtility.formatShowMtime(value.mtime)
         value.showSize = StringUtility.formatShowSize(value.size)
       })
-      this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
+      this.dataArray = this.page === 1 ? ulist : this.dataArray.concat(ulist)
     },
     // 重写父类中的方法
     overrideloadMoreData () {
       if (this.busy) return
       this.page++
-      this.fetchResourceList()
-    },
-    overrideBackAction () {
-      this.page = 1
-      this.busy = false
-      this.dataArray = []
-      if (this.pageConfig.path === this.rootPath.path) {  // 当前为根路径
-        this.rootPath.flag = true
-        this.fetchBackuplist()  // 根目录下请求根目录
-      } else {
-        this.pageConfig = this.pageConfigStacks.pop()!
-        this.fetchResourceList()  // 非根目录下请求查询文件资源接口
-      }
+      this.fetchUlist()
     },
     overrideRefreshAction () {
       this.page = 1
       this.busy = false
-      this.fetchResourceList()
+      this.fetchUlist()
     },
-    overrideOpenAction (item: ResourceItem) {
-      if (this.rootPath.flag) { // 仅当根目录时需要定义它的path
-        this.rootPath.path = item.path
-        this.rootPath.uuid = item.uuid
-        this.rootPath.flag = false
-      }
-      this.pageConfigStacks.push(this.pageConfig)
-      this.pageConfig = {
-        path: item.path,
-        uuid: item.uuid
+    overrideOpenFolderAction (item: ResourceItem) {
+      this.$router.push({
+        name: 'main-resource-view',
+        query: {
+          path: item.path,
+          uuid: item.uuid
+        },
+        params: {
+          showPath: `${this.currentPath}/${item.name}`
+        }
+      })
+    },
+    overrideSortWayChangeAction (type: OrderType) {
+      if (type === OrderType.ByUploadDesc) {
+        this.uploadOrder = UploadTimeSort.descend
+      } else if (type === OrderType.ByUploadAsc) {
+        this.uploadOrder = UploadTimeSort.ascend
       }
       this.page = 1
       this.busy = false
-      this.dataArray = []
-      this.fetchResourceList()
-    },
-    overrideSortWayChangeAction (order: OrderType) {
-      this.page = 1
-      this.busy = false
-      this.order = order
-      this.fetchResourceList()
+      this.fetchUlist()
     }
   }
 })
