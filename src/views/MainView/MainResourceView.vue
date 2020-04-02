@@ -29,24 +29,29 @@ export default Vue.extend({
   watch: {
     $route: {
       handler: function(value) {
-        if (_.isEmpty(this.$route.query)) return
-        this.fetchResourceList()
-        this.currentPath = this.$route.params.showPath
+        if (!_.isEmpty(this.$route.query)) this.fetchResourceList()
+        if (!_.isEmpty(this.$route.params)) this.updateShowPath()
       },
       deep: true
     }
   },
   created () {
-    if (this.checkQueryParams()) this.fetchResourceList()
-    this.currentPath = this.$route.params.showPath
+    if (this.checkQuery()) this.fetchResourceList()
+    if (this.checkParams()) this.updateShowPath()
   },
   methods: {
-    checkQueryParams () {
+    checkQuery () {
       const path = this.$route.query.path
       const uuid = this.$route.query.uuid
       const result = !_.isEmpty(path) && !_.isEmpty(uuid)
       if (!result) console.log(`Incorrect parameters: path: ${path}, uuid: ${uuid}`)
       return result
+    },
+    checkParams () {
+      const showPath = this.$route.params.showPath
+      const result = _.isEmpty(showPath)
+      if (!result) console.log(`Incorrect parameters: showPath: ${showPath}`)
+      return !result
     },
     fetchResourceList () {
       this.loading = true
@@ -63,6 +68,9 @@ export default Vue.extend({
         console.log(error)
       })
     },
+    updateShowPath () {
+      this.currentPath = this.$route.params.showPath
+    },
     parseResponse (data: BasicResponse) {
       const list = _.get(data.data, 'list') as Array<ResourceItem>
       if (_.isEmpty(list)) this.busy = true
@@ -74,6 +82,11 @@ export default Vue.extend({
       this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
     },
     // 重写父类中的方法
+    handleBackAction () {
+      this.$router.go(-1)
+      const length = this.currentPath.lastIndexOf('/')
+      this.currentPath = this.currentPath.substring(0, length)
+    },
     overrideloadMoreData () {
       if (this.busy) return
       this.page++
