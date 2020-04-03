@@ -139,7 +139,7 @@ export default Vue.extend({
         okType: 'danger',
         cancelText: '取消',
         onOk() {
-          myThis.$electron.shell.moveItemToTrash(item.path)
+          // myThis.$electron.shell.moveItemToTrash(item.path)  // 暂时不把本地文件删除了
           let arr = myThis.TransportList
           arr.splice(index, 1); 
           localStorage.setItem(TRANSFORM_INFO, JSON.stringify(arr))

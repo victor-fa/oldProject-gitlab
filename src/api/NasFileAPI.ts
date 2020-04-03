@@ -51,6 +51,11 @@ export default {
       headers: {'Accept': '*/*'}
     })
   },
+  uploadBackup (options) {
+    return Vue.axios.post(tempServerUrl + nasFileModulePath + '/backup/upload?' + jsonToParams(options.data), options.body, {
+      headers: {'Accept': '*/*'}
+    })
+  },
   addFile (body) {
     return Vue.axios.post(tempServerUrl + nasFileModulePath + '/add?' + jsonToParams(null), body)
   },

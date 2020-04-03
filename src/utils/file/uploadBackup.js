@@ -1,8 +1,10 @@
 // import Disk from '../api/Disk';
 import NasFileAPI from '../../api/NasFileAPI'
 import { USER_MODEL } from '../../common/constants'
+import SparkMD5 from 'spark-md5'
+
 export default {
-	name: 'upload',
+	name: 'uploadBackup',
 	needChunkSize: 1024 * 1024 * 10,	// 规定片段位10M
 	selectUploadFiles: [],
 	uploadHistory: [],
@@ -14,30 +16,41 @@ export default {
 		}
 		return ugreenNo
 	},
-	prepareFile(data, options) {
-		// if (data.target) {
-		// 	data = data.target;
-		// }
+	async prepareFile(data, options) {	// 处理成同步
 		for (let k = 0; k < data.files.length; k++) {
 			this.selectUploadFiles.push(data.files[k]);
 		}
 		let fileArea = data.files;
-		let file;
 		let OneFile = {};
 		for (let i = 0; i < fileArea.length; i++) {
+			let file;
 			file = fileArea[i];
-			OneFile = {
-				id: new Date().getTime() / 1000,
-				time: new Date().getTime() / 1000,
-				name: file.name,
-				filePath: '/.ugreen_nas/' + this.getUgreenNo() + '/' + file.name,
-				path: file.path,
-				chunk: 0,
-				size: file.size,
-				trans_type: 'upload',
-				state: 'progressing',
-				shows: true
-			};
+			await this.handlePrepareUpload(file).then(callbackMd5 => {	// 获取文件的md5
+				const filePath = '/' +(options.data + '\\' + file.path).replace(new RegExp("\\\\", "g"), '/')
+				OneFile = {
+					id: new Date().getTime() / 1000,
+					time: new Date().getTime() / 1000,
+					name: file.name,
+					filePath: filePath,
+					path: file.path,
+					chunk: 0,
+					size: file.size,
+					trans_type: 'backup',
+					state: 'progressing',
+					shows: true,
+					mac: options.data,
+					md5: callbackMd5
+				}
+				this.handleUpload(OneFile, options).then().catch(err => {	// 处理过程切换成同步
+					console.log(err)
+				})
+			}).catch(err => {
+				console.log(err)
+			})
+		}
+	},
+	handleUpload (OneFile, options) {	// 获取到结果后同步处理
+		return new Promise((resolve, reject) => {
 			for (let j = 0; j < this.uploadHistory.length; j++) {
 				let item = this.uploadHistory[j];
 				if (item.name === OneFile.name && item.chunk !== 0 && item.state !== 'completed') {
@@ -48,8 +61,9 @@ export default {
 			}
 			this.uploadHistory.push(OneFile);
 			options.add && options.add(OneFile);
+			console.log(JSON.parse(JSON.stringify(OneFile)));
 			this.postUploadData(OneFile, 'first', options.success);
-		}
+		})
 	},
 	chunkFileData(item, times) {
 		let fileName = item.name; //文件名
@@ -69,20 +83,21 @@ export default {
 		let blobFrom = Math.round(chunk * eachSize); // 分段开始
 		let blobTo = (chunk + 1) * eachSize > totalSize ? totalSize : Math.round((chunk + 1) * eachSize); // 分段结尾
 		item.chunk = blobTo;
-		let data = {	// path
-			uuid: '57f8f4bc-abf4-655f-bf67-946fc0f9f25b',
-			path: '/.ugreen_nas/' + this.getUgreenNo() + '/' + fileName,
+		let data = {
+			path: item.filePath,
 			start: blobFrom,
 			end: blobTo-1,
 			size: totalSize,
-			action: 'f'
+			md5: item.md5,
+			alias: item.mac,
+			id: item.mac
 		}
 		let body = this.findTheFile(fileName).slice(blobFrom, blobTo)
 		return { data, chunk, body };
 	},
 	postUploadData(item, times, finishCallBack) {
 		let data = this.chunkFileData(item, times);
-		NasFileAPI.upload({
+		NasFileAPI.uploadBackup({
 			data: data.data,
 			body: data.body
 		}).then(response => {
@@ -111,7 +126,6 @@ export default {
 	findTheFile(fileName) { //查找上传的文件
 		let files = this.selectUploadFiles, theFile;
 		for (let i = 0, j = files.length; i < j; ++i) {
-			console.log(files[i].name, fileName)
 			if (files[i].name === fileName) {
 				theFile = files[i];
 				break;
@@ -135,5 +149,39 @@ export default {
 			}
 		}
 		callback(item, rs);
+	},
+	handlePrepareUpload(file) {
+		return new Promise((resolve, reject) => {
+			const fileSize = file.size; // 文件大小
+			const chunkSize = 1024 * 1024 * 10; // 切片的大小
+			const chunks = Math.ceil(fileSize / chunkSize); // 获取切片个数
+			const fileReader = new FileReader();
+			const spark = new SparkMD5.ArrayBuffer();
+			const bolbSlice =
+				File.prototype.slice ||
+				File.prototype.mozSlice ||
+				File.prototype.webkitSlice;
+			let currentChunk = 0;
+			let md5 = '';
+			fileReader.onload = e => {
+				const res = e.target.result;
+				spark.append(res);
+				currentChunk++;
+				if (currentChunk < chunks) {
+					loadNext();
+					console.log(`第${currentChunk}分片解析完成, 开始第${currentChunk +1}分片解析`);
+				} else {
+					md5 = spark.end();
+					resolve(md5)
+				}
+			};
+			const loadNext = () => {
+				const start = currentChunk * chunkSize;
+				const end =
+					start + chunkSize > file.size ? file.size : start + chunkSize;
+				fileReader.readAsArrayBuffer(bolbSlice.call(file, start, end));
+			};
+			loadNext();
+		})
 	}
 };

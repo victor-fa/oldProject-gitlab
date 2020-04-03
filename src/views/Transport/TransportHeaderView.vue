@@ -3,9 +3,13 @@
     <basic-tabs :tabs="taskCategorys" v-on:tabChange="handleTabChange"/>
     <div class="bottom-bar" v-if="currentTag === 'download' || currentTag === 'upload'">
       <div class="left-bar">
-        <span class="normal" v-bind:class="{ special: currentTask === 'down' }" @click="changeTransport('down')">{{currentTag === 'download' ? '正在下载' : '正在上传'}}（{{downloadCount}}）</span>
+        <span class="normal" v-bind:class="{ special: currentTask === 'down' }" @click="changeTransport('down')">
+          {{currentTag === 'download' ? '正在下载' : currentTag === 'upload' ? '正在上传' : ''}}（{{downloadCount}}）
+        </span>
         <span class="normal" style="margin-right: 7px;">/</span>
-        <span class="normal" v-bind:class="{ special: currentTask === 'fin' }" @click="changeTransport('fin')">{{currentTag === 'download' ? '下载完成' : '上传完成'}}（{{computedCount}}）</span>
+        <span class="normal" v-bind:class="{ special: currentTask === 'fin' }" @click="changeTransport('fin')">
+          {{currentTag === 'download' ? '下载完成' : currentTag === 'upload' ? '上传完成' : ''}}（{{computedCount}}）
+        </span>
       </div>
       <div class="right-bar">
         <a-button class="right-button" v-if="currentTask === 'down'" @click="sendInfoForTransport('stopAll')">全部暂停</a-button>
@@ -14,11 +18,31 @@
       </div>
     </div>
     <div class="bottom-bar" v-if="currentTag === 'backup'">
+      <div class="left-bar">
+        <span class="normal" v-bind:class="{ special: currentTask === 'down' }" @click="changeTransport('down')">
+          正在备份（{{backupUploadingCount}}）
+        </span>
+        <span class="normal" style="margin-right: 7px;">/</span>
+        <span class="normal" v-bind:class="{ special: currentTask === 'fin' }" @click="changeTransport('fin')">
+          备份完成（{{backupComputedCount}}）
+        </span>
+      </div>
+      <div class="right-bar">
+        <a-dropdown>
+          <a-menu slot="overlay" @click="uploadBack">
+            <a-menu-item key="backupFile">上传文件</a-menu-item>
+            <a-menu-item key="backupFolder">上传文件夹</a-menu-item>
+          </a-menu>
+          <a-button class="right-button" style="margin-left: 8px"> 上传备份 <a-icon type="down" /> </a-button>
+        </a-dropdown>
+        <a-button class="right-button" v-if="currentTask === 'down'" @click="sendInfoForTransport('stopAll')">全部暂停</a-button>
+        <a-button class="right-button" v-if="currentTask === 'down'" @click="sendInfoForTransport('cancelAll')">全部取消</a-button>
+        <a-button class="right-button" v-if="currentTask === 'fin'" @click="sendInfoForTransport('clearAll')">清除所有记录</a-button>
+      </div>
+    </div>
+    <div class="bottom-bar" v-if="currentTag === 'offline' || currentTag === 'remote'">
       <div class="left-bar"></div>
       <div class="right-bar">
-        <a-button class="right-button" v-if="currentTask === 'down'" @click="sendInfoForTransport('backupFile')">上传备份文件</a-button>
-        <!-- <a-button class="right-button" v-if="currentTask === 'down'" @click="sendInfoForTransport('cancelAll')">全部取消</a-button> -->
-        <!-- <a-button class="right-button" v-if="currentTask === 'fin'" @click="sendInfoForTransport('clearAll')">清除所有记录</a-button> -->
       </div>
     </div>
   </div>
@@ -33,7 +57,7 @@ import NasFileAPI from '../../api/NasFileAPI'
 export default Vue.extend({
   name: 'transport-header-view',
   components: {
-    BasicTabs
+    BasicTabs,
   },
   props: {
     transformList: Array
@@ -44,6 +68,8 @@ export default Vue.extend({
       currentTask: 'down',
       downloadCount: 0,
       computedCount: 0,
+      backupUploadingCount: 0,
+      backupComputedCount: 0,
       currentTag: 'download',
       transformData: [] // 上传下载
     }
@@ -58,6 +84,8 @@ export default Vue.extend({
       this.transformData = newValue
       this.downloadCount = newValue.filter((item:any) => item.trans_type === this.currentTag).filter((item:any) => item.state === 'interrupted' || item.state === 'progressing').length
       this.computedCount = newValue.filter((item:any) => item.trans_type === this.currentTag).filter((item:any) => item.state === 'completed').length
+      this.backupUploadingCount = newValue.filter((item:any) => item.trans_type === this.currentTag).filter((item:any) => item.state === 'interrupted' || item.state === 'progressing').length
+      this.backupComputedCount = newValue.filter((item:any) => item.trans_type === this.currentTag).filter((item:any) => item.state === 'completed').length
     },
   },
   methods: {
@@ -73,6 +101,9 @@ export default Vue.extend({
     sendInfoForTransport(data) {
       this.$emit('CallbackAction', data) // call parent
     },
+    uploadBack(e) {
+      this.$emit('CallbackAction', e.key) // call parent
+    }
   }
 })
 </script>

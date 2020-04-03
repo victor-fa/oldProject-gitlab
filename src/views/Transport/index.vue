@@ -11,29 +11,24 @@
       :transformList="transformData"
       v-on:CallbackItemAction="handleListViewAction"
     />
-    <form role="form" id="fileUploadForm" name="fileUploadForm" method="post" enctype="multipart/form-data" hidden>
-			<div>
-				<input ref="FileArea" id="FileArea" name="fileFolder" type="file" @change="PrepareUploadFile" webkitdirectory>
-        <span id="msg" style="color:#F00000"></span>
-			</div>
-			<button type="button" id="subButton" onclick="commit">Submit</button>
-		</form>
-    <!-- <input type="file" id="FileArea" multiple="multiple" directory accept="*/*"  @change="PrepareUploadFile" webkitdirectory mozdirectory hidden ref="FileArea" /> -->
-    <main-bottom-view/>
+    <!-- 上传所选文件 -->
+    <input ref="FileArea" type="file" multiple="multiple" directory accept="*/*" @change="PrepareUploadFile" mozdirectory hidden />
+    <!-- 上传所选文件夹 -->
+    <input ref="FolderArea" type="file" accept="*/*" @change="PrepareUploadFile" webkitdirectory hidden>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 import TransportHeaderView from './TransportHeaderView.vue'
-import MainBottomView from '../MainView/MainBottomView.vue'
 import MainView from '../MainView/index.vue'
 import TransportList from '../../components/TransportList/index.vue'
 import { realResourceList } from '../MockData/index'
 import { TaskCategoryType } from '../../model/categoryList'
 import { TRANSFORM_INFO } from '../../common/constants';
 import { EventBus, EventType } from '../../utils/eventBus'
-import upload from '../../utils/file/upload';
+import uploadBackup from '../../utils/file/uploadBackup';
+import getMAC from 'getmac'
 
 export default {
   name: 'transport',
@@ -41,7 +36,6 @@ export default {
   components: {
     TransportList,
     TransportHeaderView,
-    MainBottomView
   },
   data () {
     return {
@@ -58,6 +52,12 @@ export default {
         myThis.getData()
       }
     }
+  },
+  computed: {
+    // itemCount: function () {
+    //   const myThis: any = this
+    //   return myThis.transformData.length
+    // }
   },
   mounted () {
     const myThis = this as any
@@ -97,7 +97,10 @@ export default {
           myThis.clearAllTrans()
           break;
         case 'backupFile':  // 上传备份
-          myThis.backUpload()
+          myThis.backUpload('backupFile')
+          break;
+        case 'backupFolder':  // 上传备份文件夹
+          myThis.backUpload('backupFolder')
           break;
       }
       myThis.getData()
@@ -138,26 +141,28 @@ export default {
         }
       });
     },
-    backUpload () { // 上传备份文件
+    backUpload (flag) { // 上传备份文件
       const myThis = this as any
-      console.dir(myThis.$refs.FileArea);
-      myThis.$refs.FileArea.value = '';
-      myThis.$refs.FileArea.click();
+      if (flag === 'backupFile') {
+        console.dir(myThis.$refs.FileArea);
+        myThis.$refs.FileArea.value = '';
+        myThis.$refs.FileArea.click();
+      } else if (flag === 'backupFolder') {
+        console.dir(myThis.$refs.FolderArea);
+        myThis.$refs.FolderArea.value = '';
+        myThis.$refs.FolderArea.click();
+      }
     },
 		PrepareUploadFile(data: any) {
       const myThis = this as any
-      console.log(data.target);
-      console.log(data.target.files);
-			upload.prepareFile(data.target, {
-				// data: myThis.NowDiskID,
+      var hostname = require("os").hostname();  // 获取主机名
+			uploadBackup.prepareFile(data.target, { // 备份上传
+				data: hostname+getMAC(),
 				add: file => {
-					console.log(file);
 					myThis.transformData.push(file);
 					myThis.$message.info((data.target ? data.target : data).files.length + '个文件已加入上传列队');
 				},
 				success: (file, response) => {
-					console.log(response);
-					// const _this = myThis as any
 					const rs = response.data;
 					if (rs.code !== 200) {
 						if (rs.code === '4050') {
