@@ -113,6 +113,10 @@ export default {
   },
   fetchBindUserList (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/list')
+  },
+  getMac () {
+    console.log(getIPAddress('mac'));
+    return getIPAddress('mac')
   }
 }
 
@@ -161,7 +165,7 @@ const encryptSign = (nasUser: any, secretKey: string) => {
 }
 
 const getBoardcastAddress = () => {
-  const address = getIPAddress()
+  const address = getIPAddress('address')
   if (address === null) {
     console.log('not found IP address')
     return null
@@ -179,7 +183,7 @@ const getBoardcastAddress = () => {
   return _.trim(boardcasts, '.')
 }
 
-const getIPAddress = () => {
+const getIPAddress = (flag: string) => {
   const os = require("os")
   const netInfo = os.networkInterfaces()
   for (const key in netInfo) {
@@ -188,7 +192,12 @@ const getIPAddress = () => {
       for (let index = 0; index < interfaces.length; index++) {
         const alias = interfaces[index];
         if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
-          return { address: alias.address, netmask: alias.netmask }
+          if (flag === 'address') { // 返回address以及netmask
+            return { address: alias.address, netmask: alias.netmask }
+          } else if (flag === 'mac') {  // 返回mac地址
+            console.log(alias.mac);
+            return alias.mac
+          }
         }
       }
     }

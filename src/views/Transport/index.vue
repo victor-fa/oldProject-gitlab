@@ -28,7 +28,7 @@ import { TaskCategoryType } from '../../model/categoryList'
 import { TRANSFORM_INFO } from '../../common/constants';
 import { EventBus, EventType } from '../../utils/eventBus'
 import uploadBackup from '../../utils/file/uploadBackup';
-import getMAC from 'getmac'
+import ClientAPI from '../../api/ClientAPI'
 
 export default {
   name: 'transport',
@@ -157,7 +157,7 @@ export default {
       const myThis = this as any
       var hostname = require("os").hostname();  // 获取主机名
 			uploadBackup.prepareFile(data.target, { // 备份上传
-				data: hostname+getMAC(),
+        data: hostname + ClientAPI.getMac(),
 				add: file => {
 					myThis.transformData.push(file);
 					myThis.$message.info((data.target ? data.target : data).files.length + '个文件已加入上传列队');

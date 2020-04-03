@@ -64,7 +64,7 @@ export default Vue.extend({
   methods: {
     confirmAction () {
       const checkResult = this.checkInput()
-      if (!_.isEmpty(checkResult)) {
+      if (!_.isEmpty(checkResult) && checkResult !== null) {
         this.$message.error(checkResult)
         return
       }
