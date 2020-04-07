@@ -5,7 +5,8 @@ interface OperateItem {
   command: string,
   disable?: boolean, // 根据不同状态确定是否可用
   enable?: boolean, // 在某些场景下完全禁用该功能
-  isHidden?: boolean
+  isHidden?: boolean,
+  children?: any
 }
 
 interface OperateGroup {
@@ -53,7 +54,14 @@ const operateList: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
-      { title: '上传文件', command: 'upload' },
+      { title: '上传',
+        command: 'upload',
+        children: [{
+          title: '上传文件', command: 'uploadFile'
+        }, {
+          title: '上传文件夹', command: 'uploadFolder'
+        }]
+      },
       { title: '新建文件夹', command: 'newFolder' }
     ]
   },

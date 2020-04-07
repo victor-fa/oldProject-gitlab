@@ -16,6 +16,10 @@
       />
     </a-spin>
     <input type="file" id="FileArea" @change="PrepareUploadFile" hidden ref="FileArea" multiple="multiple" />
+    <!-- 上传所选文件 -->
+    <input ref="FileArea" type="file" multiple directory @change="PrepareUploadFile" mozdirectory hidden />
+    <!-- 上传所选文件夹 -->
+    <input ref="FolderArea" type="file" multiple @change="PrepareUploadFile" webkitdirectory hidden>
     <main-bottom-view :itemCount="itemCount"/>
     <operate-list-alter
       v-show="showAlter"
@@ -167,6 +171,7 @@ export default Vue.extend({
     },
     handleAlterAction (command: string, ...args: any[]) {
       this.showAlter = false
+      const myThis = this as any
       switch (command) {
         case 'open': 
           this.handleOpenAction()
@@ -213,11 +218,15 @@ export default Vue.extend({
         case 'info':
           this.handleInfoAction()
           break;
-        case 'upload':
-          const myThis = this as any
+        case 'uploadFile':
           myThis.getTransformInfo()
-					myThis.$refs.FileArea.value = '';
-					myThis.$refs.FileArea.click();
+          myThis.$refs.FileArea.value = '';
+          myThis.$refs.FileArea.click();
+          break;
+        case 'uploadFolder':
+          myThis.getTransformInfo()
+          myThis.$refs.FolderArea.value = '';
+          myThis.$refs.FolderArea.click();
           break;
         case 'newFolder':
           

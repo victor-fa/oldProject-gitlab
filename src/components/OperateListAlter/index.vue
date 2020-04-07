@@ -1,5 +1,5 @@
 <template>
-  <ul class="operate-list-alter" :style="{ height: listHeight + 'px'}">
+  <ul class="operate-list-alter" ref="operateListAlter" :style="{ height: listHeight + 'px'}">
     <li
       v-for="(item, index) in showItems"
       :key="index"
@@ -10,7 +10,7 @@
         <li
           v-for="(subItem, index) in item.items"
           :key="index"
-          @click="menuClick(subItem)"
+          @click="menuClick(subItem, $event)"
           class="operate-item"
           v-bind:class="{
             'operate-item-disable': subItem.disable,
@@ -18,6 +18,18 @@
           }"
         >
           {{ subItem.title }}
+          <img v-show="subItem.children" src="../../assets/operate_icon.png">
+          <ul v-show="subItem.children && showChildren" class="operate-children"
+            :style="{ 'left': (isChildPosLeft ? '100' : '-79') + 'px', 'border-left': (isChildPosLeft ? 'none' : '1px solid #acacb7') }">
+            <li
+              v-for="(cell, index) in subItem.children"
+              :key="index"
+              @click="menuClick(cell, $event)"
+              v-bind:class="{ operateItemDisable: cell.disable, operateItem: !cell.disable }"
+            >
+              {{ cell.title }}
+            </li>
+          </ul>
         </li>
       </ul>
     </li>
@@ -36,11 +48,14 @@ export default Vue.extend({
   data () {
     let items: Array<OperateGroup> = []
     return {
-      showItems: items
+      showItems: items,
+      showChildren: false, // 默认children不展示
+      isChildPosLeft: false // 二级菜单是否展示在左侧
     }
   },
   watch: {
     operateList: function (newVlaue: Array<OperateGroup>) {
+      this.showChildren = false // 重置children
       this.showItems = newVlaue.filter(group => {
         let items: Array<OperateItem> = []
         for (let index = 0; index < group.items.length; index++) {
@@ -73,8 +88,20 @@ export default Vue.extend({
     }
   },
   methods: {
-    menuClick (item: OperateItem) {
+    childClick (event) {
+      const alter:any = this.$refs.operateListAlter
+      this.isChildPosLeft = false
+      if (document.body.clientWidth - alter.clientWidth - 30 > event.clientX) {
+        this.isChildPosLeft = true
+      }
+      this.showChildren = true  // 仅当点击了上传，才会展示children
+    },
+    menuClick (item: OperateItem, event) {
       if (item.disable || item.enable) return
+      if (item.command === 'upload') {
+        this.childClick(event)
+        return
+      }
       if (this.isSpecificItem(item)) {
         this.$emit('didSelectItem', 'unkown') // 用于隐藏右键菜单
         return
@@ -162,6 +189,25 @@ const buttons = ['跳过', '重命名', '覆盖']
       .operate-item-enable {
         color: #48484866;
         cursor:not-allowed;
+      }      
+      img {
+        height: 10px;
+        width: 9px;
+        position: absolute;
+        right: 3px;
+        top: 6px;
+        margin: 0;
+      }
+      .operate-children {
+        // left: 100px;
+        top: -1px;
+        flex: 1;
+        padding: 3px 0px;
+        border-right: 1px solid #acacac;
+        border-bottom: 1px solid #acacb7;
+        border-top: 1px solid #acacb7;
+        position: absolute;
+        width: 79px;
       }
     }
   }
