@@ -115,7 +115,6 @@ export default {
     return nasServer.post(userModulePath + '/list')
   },
   getMac () {
-    console.log(getIPAddress('mac'));
     return getIPAddress('mac')
   }
 }
@@ -195,7 +194,6 @@ const getIPAddress = (flag: string) => {
           if (flag === 'address') { // 返回address以及netmask
             return { address: alias.address, netmask: alias.netmask }
           } else if (flag === 'mac') {  // 返回mac地址
-            console.log(alias.mac);
             return alias.mac
           }
         }

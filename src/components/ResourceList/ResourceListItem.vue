@@ -242,10 +242,10 @@ export default Vue.extend({
 }
 .horizontalSelectedItem {
   .icon-wrapper {
-    background-color: #ececec;
+    background-color: #DEF1EA;
   }
   p {
-    background-color: #3888ff;
+    background-color: #DEF1EA;
   }
 }
 .vertical-item {

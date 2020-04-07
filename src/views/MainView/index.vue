@@ -261,7 +261,24 @@ export default Vue.extend({
       item.type === ResourceType.folder ? this.overrideOpenFolderAction(item) : this.handleOpenFileAction(item)
     },
     handleOpenFileAction (item: ResourceItem) {
-      // TODO: 打开除文件夹以外的资源文件
+      const myThis: any = this
+      let OpenType = item.type;
+      const filterArr = [1, 2, 3, 4]; // 0: Unknown 1: Video, 2: Audio, 3:Image, 4:Document, 5:Archive, 6:Folder
+      if (filterArr.indexOf(OpenType) > -1) {
+        let data:any = []
+        data.push(item)
+        myThis.$ipc.send('file-control', OpenType, data);
+      } else if (OpenType === 5) {	// 包含zip
+        let data:any = []
+        data.push(item)
+        const filterCompress = ['.zip', '.rar', '.7z', '.ZIP', '.RAR', '.7Z']
+        const compressRes = filterCompress.filter(item => data[0].path.indexOf(item) > -1)
+        if (compressRes.length === 0) {	// pdf
+          myThis.$ipc.send('file-control', OpenType, data);
+        }
+      } else {
+        this.$message.warning('暂不支持打开该类型文件');
+      }
     },
     handleContextMenuAction (event: MouseEvent, index: number) {
       this.showArray = ResourceHandler.setSelectState(this.showArray, index, true)

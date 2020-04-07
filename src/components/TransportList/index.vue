@@ -13,9 +13,9 @@
           <div class="top">
             <p class="title">{{item.name}}</p>
             <div class="img-cell">
-              <img v-if="item.state === 'progressing'" src="../../assets/pause_icon.png">
-              <img v-else src="../../assets/start_icon.png">
-              <img src="../../assets/cancle_icon.png">
+              <img v-if="item.state === 'progressing'" src="../../assets/pause_icon.png" @click="handleOperateChange('pause', item)">
+              <img v-else src="../../assets/start_icon.png" @click="handleOperateChange('start', item, index)">
+              <img src="../../assets/cancle_icon.png" @click="handleOperateChange('cancle', item, index)">
               <img src="../../assets/file_icon.png" @click="OpenDownPath(item)">
             </div>
           </div>
@@ -90,6 +90,9 @@ export default Vue.extend({
     }
   },
   methods: {
+    handleOperateChange (flag: string, item, index) {
+      this.$emit('CallbackItemAction', flag, item, index) // call parent
+    },
     observerWindowResize () {
       const newHeight = document.body.clientHeight - 127
       if (newHeight !== this.scrollHeight) {

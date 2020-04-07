@@ -110,12 +110,9 @@ export default {
 			//接收打开视频文件的数据
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
-					item.play = false;
-					if (item.active) {
-						item.play = 'active';
-						this.playCallBack(item, index);
-						this.VideoPlayerCommend('play');
-					}
+					item.play = 'active';
+					this.playCallBack(item, index);
+					this.VideoPlayerCommend('play');
 				});
 				this.PlayList = data;
 			});

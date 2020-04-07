@@ -12,9 +12,9 @@
       v-on:CallbackItemAction="handleListViewAction"
     />
     <!-- 上传所选文件 -->
-    <input ref="FileArea" type="file" multiple="multiple" directory accept="*/*" @change="PrepareUploadFile" mozdirectory hidden />
+    <input ref="FileArea" type="file" multiple directory @change="PrepareUploadFile" mozdirectory hidden />
     <!-- 上传所选文件夹 -->
-    <input ref="FolderArea" type="file" accept="*/*" @change="PrepareUploadFile" webkitdirectory hidden>
+    <input ref="FolderArea" type="file" multiple @change="PrepareUploadFile" webkitdirectory hidden>
   </div>
 </template>
 
@@ -108,8 +108,20 @@ export default {
     handleListViewAction (actionType: any, ...args: any[]) {
       const myThis = this as any
       switch (actionType) {
-        case 'refresh':
+        case 'refresh': // 刷新
           myThis.getData()
+          break;
+        case 'pause': // 暂停
+          args[0].state = args[0].state === 'interrupted' ? 'progressing' : 'interrupted';
+          myThis.PrepareUploadFile(args[0])
+          break;
+        case 'start': // 开始
+          args[0].state = args[0].state === 'interrupted' ? 'progressing' : 'interrupted';
+          myThis.PrepareUploadFile(args[0])
+          break;
+        case 'cancle':  // 删除
+          myThis.transformData.splice(args[1], 1)
+          localStorage.setItem(TRANSFORM_INFO, JSON.stringify(myThis.transformData))
           break;
       }
     },
@@ -133,9 +145,9 @@ export default {
         okType: 'danger',
         cancelText: '取消',
         onOk() {
-          myThis.transformData.filter(item => item.trans_type === myThis.currentTag).forEach(item => {
-            myThis.$electron.shell.moveItemToTrash(item.path)
-          })
+          // myThis.transformData.filter(item => item.trans_type === myThis.currentTag).forEach(item => {
+          //   myThis.$electron.shell.moveItemToTrash(item.path)  // 暂时先不清空本地文件
+          // })
           localStorage.setItem(TRANSFORM_INFO, JSON.stringify([]))
           myThis.getData()
         }
@@ -144,11 +156,10 @@ export default {
     backUpload (flag) { // 上传备份文件
       const myThis = this as any
       if (flag === 'backupFile') {
-        console.dir(myThis.$refs.FileArea);
         myThis.$refs.FileArea.value = '';
         myThis.$refs.FileArea.click();
       } else if (flag === 'backupFolder') {
-        console.dir(myThis.$refs.FolderArea);
+        console.log(myThis.$refs.FolderArea);
         myThis.$refs.FolderArea.value = '';
         myThis.$refs.FolderArea.click();
       }
@@ -156,7 +167,7 @@ export default {
 		PrepareUploadFile(data: any) {
       const myThis = this as any
       var hostname = require("os").hostname();  // 获取主机名
-			uploadBackup.prepareFile(data.target, { // 备份上传
+			uploadBackup.prepareFile(data, { // 备份上传
         data: hostname + ClientAPI.getMac(),
 				add: file => {
 					myThis.transformData.push(file);

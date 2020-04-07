@@ -128,12 +128,9 @@ export default {
 			//接收音乐文件列表的数据
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
-					item.play = false;
-					if (item.active) {
-						item.play = 'active';
-						this.playCallBack(item, index);
-						this.PlayerCommend('play');
-					}
+					item.play = 'active';
+					this.playCallBack(item, index);
+					this.PlayerCommend('play');
 				});
 				this.PlayList = data;
 			});

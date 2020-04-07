@@ -73,12 +73,10 @@ export default {
 			//接收打开图片文件的数据
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
-					item.now = false;
+					// item.now = false;
 					item.count = index;
-					if (item.active) {
-						item.now = 'PlayThis';
-						this.ShowPicture(item, index);
-					}
+					item.now = 'PlayThis';
+					this.ShowPicture(item, index);
 				});
 				this.PhotoList = data;
 			});

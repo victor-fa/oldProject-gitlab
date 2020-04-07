@@ -17,6 +17,9 @@ export default {
 		return ugreenNo
 	},
 	async prepareFile(data, options) {	// 处理成同步
+		if (data.target) {
+			data = data.target;
+		}
 		for (let k = 0; k < data.files.length; k++) {
 			this.selectUploadFiles.push(data.files[k]);
 		}
@@ -41,6 +44,7 @@ export default {
 					mac: options.data,
 					md5: callbackMd5
 				}
+				console.log(OneFile);
 				this.handleUpload(OneFile, options).then().catch(err => {	// 处理过程切换成同步
 					console.log(err)
 				})
