@@ -10,6 +10,8 @@
       v-on:click.native="clickAction"
       v-on:mousedown="mousedownAction"
       v-on:mouseup="mouseupAction"
+      v-on:onmouseenter="handleMouseEnter"
+      v-on:onmouseleave="handleMouseLeave"
     >
       <label class="button-title" v-if="isShowLabel">
         {{ currentTitle }}
@@ -33,6 +35,12 @@ export default Vue.extend({
     selectedImage: {
       default: null
     },
+    highlightImage: {
+      default: null
+    },
+    hoverImage: {
+      default: null
+    },
     backgroundImage: {
       default: null
     },
@@ -49,7 +57,6 @@ export default Vue.extend({
       currentImage: this.image,
       currentBackgroundImage: this.backgroundImage,
       isSelected: false,
-      isHighlighted: false,
       isHover: false
     }
   },
@@ -72,31 +79,40 @@ export default Vue.extend({
     isSelected: function (value: boolean) {
       this.isSelected = value
       value ? this.changeSelectStyle() : this.changeNormalStyle()
-    },
-    isHighlighted: function (value: boolean) {
-      this.isHighlighted = value
     }
   },
   methods: {
-    clickAction: function (event: MouseEvent) {
+    clickAction (event: MouseEvent) {
       this.isSelected = !this.isSelected
     },
-    mousedownAction: function () {
-      this.isHighlighted = true
+    mousedownAction () {
+      this.changeHighlightStyle()
     },
-    mouseupAction: function () {
-      this.isHighlighted = false
+    mouseupAction () {
+      this.changeNormalStyle()
     },
-    changeNormalStyle: function () {
+    handleMouseEnter () {
+      this.changeHoverStyle()
+    },
+    handleMouseLeave () {
+      this.changeNormalStyle()
+    },
+    changeNormalStyle () {
       this.currentTitle = this.title
       this.currentImage = this.image
       this.currentBackgroundImage = this.backgroundImage
     },
     // 背景图片可有可无，标题和icon选中状态同默认状态
-    changeSelectStyle: function () {
+    changeSelectStyle () {
       this.selectedTitle && (this.currentTitle = this.selectedTitle)
       this.selectedImage && (this.currentImage = this.selectedImage)
-      this.currentBackgroundImage = this.selectedBackgroundImage
+      this.selectedBackgroundImage && (this.currentBackgroundImage = this.selectedBackgroundImage)
+    },
+    changeHighlightStyle () {
+      this.highlightImage && (this.currentImage = this.highlightImage)
+    },
+    changeHoverStyle () {
+      this.hoverImage && (this.currentImage = this.hoverImage)
     }
   }
 })
@@ -121,7 +137,7 @@ export default Vue.extend({
 </style>
 
 <style>
-.custom-button .ant-btn[disabled] {
+/* .custom-button .ant-btn[disabled] {
   cursor: default;
-}
+} */
 </style>

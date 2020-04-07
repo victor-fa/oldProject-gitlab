@@ -5,6 +5,7 @@ import { OperateGroup, OperateItem, operateList, itemOperateList } from '@/compo
 import { ClipboardModel } from '@/store/modules/Resource'
 import StringUtility from '@/utils/StringUtility'
 import { NasUser } from '@/api/ClientModel'
+import { TaskMode } from '@/api/NasFileAPI'
 
 export default {
   // 对资源列表进行分类
@@ -196,12 +197,12 @@ export default {
   },
   // item的右键菜单显示规则：
   // 1. 已分享的显示取消分享，已收藏的显示取消收藏
-  // 2. 多选情况下，打开，属性，重命名不可用
+  // 2. 多选情况下，打开、到文件位置、属性、重命名不可用
   // 3. 多选情况下，如果既包含已分享(收藏)和未分享(收藏)，就展示成不可用的分享(收藏)
   filterItemOperateList (showArray: Array<ResourceItem>) {
     const selectItems = this.getSelectItems(showArray)
     const state = this.calculateOperateItemState(selectItems)
-    const multipleDisableItem = ['open', 'info', 'rename']
+    const multipleDisableItem = ['open', 'jump', 'info', 'rename']
     const list = _.cloneDeep(itemOperateList)
     return list.map(group => {
       group.items.map(item => {
@@ -250,7 +251,7 @@ export default {
   // list的右键菜单显示规则
   // 1. 如果剪切板为空，就禁用清空剪切板和粘贴
   filterOperateList (clipboard: ClipboardModel) {
-    const disable = _.isEmpty(clipboard)
+    const disable = _.isEmpty(clipboard.items)
     const list = _.cloneDeep(operateList)
     return list.map(group => {
       group.items.map(item => {
@@ -312,6 +313,37 @@ export default {
       showMtime: StringUtility.formatShowMtime(item.file_detail.mtime),
       showSize: StringUtility.formatShowSize(item.file_detail.size)
     }
+  },
+  // 匹配任务模式
+  matchTaskMode (mode: string) {
+    switch (mode) {
+      case 'skip':
+        return TaskMode.skip
+      case 'rename':
+        return TaskMode.rename
+      case 'cover':
+        return TaskMode.cover
+      default:
+        return TaskMode.rename
+    }
+  },
+  // 根据文件类型匹配文件icon的占位图
+  searchResourceIcon (type: ResourceType) {
+    switch (type) {
+      case ResourceType.video:
+        return require('../../assets/resource/video_icon.png')
+      case ResourceType.audio:
+        return require('../../assets/resource/audio_icon.png')
+      case ResourceType.image:
+        return require('../../assets/resource/image_icon.png')
+      case ResourceType.document:
+        return require('../../assets/resource/txt_icon.png')
+      case ResourceType.archive:
+        return require('../../assets/resource/pdf_icon.png')
+      case ResourceType.folder:
+        return require('../../assets/resource/folder_icon.png')
+    }
+    return require('../../assets/resource/unkonw_icon.png')
   }
 }
 

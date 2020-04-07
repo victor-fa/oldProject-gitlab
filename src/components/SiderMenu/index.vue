@@ -11,9 +11,9 @@
       <label>{{ item.meta.title }}
         <a-badge
           v-show="item.name === 'transport'"
-          :count="5" :title="'您有' + 5 + '条信息'"
+          :count="taskCount"
           :numberStyle="{backgroundColor: '#01B74F', color: '#fff'}"
-          style="float: right;"
+          style="float: right"
         >
         </a-badge>
       </label>
@@ -24,6 +24,7 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
 import { HomeRouters, FuncListItem } from '../../router/modules/HomeList'
 import { EventBus, EventType } from '../../utils/eventBus'
 
@@ -36,6 +37,9 @@ export default Vue.extend({
     return {
       showItems
     }
+  },
+  computed: {
+    ...mapGetters('Resource', ['taskCount'])
   },
   methods: {
     onSelectAction: function (item: FuncListItem, path: string) {

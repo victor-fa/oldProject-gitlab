@@ -137,6 +137,20 @@ interface ShareUser {
   nick_name: string
 }
 
+interface TransportTask {
+  id: number, //（任务ID，唯一标识）
+  type: ResourceType, //（类型）
+  uid: number, //（用户）
+  status: number, //（状态）
+  total_num: number, //（总数量）
+  total_size: number, //（总大小）
+  curr_num: number, //（已完成数量（文件））
+  curr_size: number, //（已完成大小（字节））
+  speed: number,  // 速度，B/s）
+  curr_src_path: string, // 当前操作的源文件）
+  curr_dst_path: string // (当前操作的目的文件）
+}
+
 export {
   ResourceItem,
   ResourceStatus,
@@ -152,5 +166,6 @@ export {
   CollectItem,
   FileDeatil,
   ShareUser,
-  ShareItem
+  ShareItem,
+  TransportTask
 }

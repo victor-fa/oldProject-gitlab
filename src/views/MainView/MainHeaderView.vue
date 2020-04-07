@@ -115,7 +115,7 @@ export default Vue.extend({
   },
   data () {
     return {
-      categorys,
+      categorys: _.cloneDeep(categorys),
       operateFuncList,
       visible: false, // 控制排序气泡弹窗是否显示 
       showSearch: false, // 控制搜索框是否显示

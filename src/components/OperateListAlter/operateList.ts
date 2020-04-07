@@ -3,7 +3,8 @@ interface OperateItem {
   icon?: any,
   subItems?: any,
   command: string,
-  disable?: boolean,
+  disable?: boolean, // 根据不同状态确定是否可以
+  enable?: boolean, // 在某些场景下完全禁用该功能
   isHidden?: boolean
 }
 
@@ -17,7 +18,7 @@ const itemOperateList: Array<OperateGroup> = [
     icon: require('../../assets/open_accessory.png'),
     items: [
       { title: '打开', command: 'open' },
-      { title: '打开方式', command: 'openMode' }
+      { title: '到文件位置', command: 'jump' }
     ]
   },
   {
@@ -42,6 +43,7 @@ const itemOperateList: Array<OperateGroup> = [
     items: [
       { title: '删除', command: 'delete' },
       { title: '重命名', command: 'rename' },
+      { title: '加密', command: 'encrypt' },
       { title: '属性', command: 'info' }
     ]
   }

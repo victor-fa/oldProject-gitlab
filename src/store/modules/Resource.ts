@@ -2,7 +2,7 @@ import { ActionContext } from 'vuex'
 import { StorageInfo, ResourceItem } from '@/api/NasFileModel'
 
 interface ClipboardModel {
-  isClipboard: boolean, // true 剪切，false 拷贝
+  isClip: boolean, // true 剪切，false 拷贝
   items: Array<ResourceItem>
 }
 
@@ -14,7 +14,8 @@ interface ResourceState {
   directory: string,
   storages: Array<StorageInfo>,
   showItemCount: number,
-  clipboard: ClipboardModel
+  clipboard: ClipboardModel,
+  taskCount: number // 传输中的任务数
 }
 
 export default {
@@ -23,7 +24,8 @@ export default {
     directory: '最近',
     storages: [],
     showItemCount: 0,
-    clipboard: [] // TODO: 目前没有对剪切板进行缓存
+    clipboard: [], // TODO: 目前没有对剪切板进行缓存
+    taskCount: 0
   },
   getters: {
     directory: (state: ResourceState) => {
@@ -37,7 +39,10 @@ export default {
     },
     clipboard: (state: ResourceState) => {
       return state.clipboard
-    }
+    },
+    taskCount: (state: ResourceState) => {
+      return state.taskCount
+    } 
   },
   mutations: {
     PUSH_PATH (state: ResourceState, path: string) {
@@ -58,6 +63,9 @@ export default {
     },
     UPDATE_CLIPBOARD (state: ResourceState, clipboard: ClipboardModel) {
       state.clipboard = clipboard
+    },
+    UPDATE_TASK_COUNT (state: ResourceState, adjust: number) {
+      state.taskCount += adjust
     }
   },
   actions: {
@@ -78,6 +86,12 @@ export default {
     },
     updateClipboard (context: ActionContext<ResourceState, ResourceState>, clipboard: ClipboardModel) {
       context.commit('UPDATE_CLIPBOARD', clipboard)
+    },
+    increaseTask (context: ActionContext<ResourceState, ResourceState>) {
+      context.commit('UPDATE_TASK_COUNT', 1)
+    },
+    decreaseTask (context: ActionContext<ResourceState, ResourceState>) {
+      context.commit('UPDATE_TASK_COUNT', -1)
     }
   }
 }

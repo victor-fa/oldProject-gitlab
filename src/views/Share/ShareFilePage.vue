@@ -53,7 +53,6 @@ export default Vue.extend({
       this.fetchShareFileList()
     },
     overrideOpenFolderAction (item: ResourceItem) {
-      console.log(item.name)
       this.$router.push({
         name: 'main-resource-view',
         query: {

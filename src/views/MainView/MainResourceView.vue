@@ -4,10 +4,10 @@ import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
 import { ResourceItem, OrderType } from '../../api/NasFileModel'
-import NasFileAPI from '../../api/NasFileAPI'
+import NasFileAPI, { TaskMode } from '../../api/NasFileAPI'
 import { BasicResponse, User } from '../../api/UserModel'
-import StringUtility from '../../utils/StringUtility'
 import ResourceHandler from './ResourceHandler'
+import { ClipboardModel } from '../../store/modules/Resource'
 
 export default Vue.extend({
   name: 'main-resource-view',
@@ -18,13 +18,23 @@ export default Vue.extend({
       loading: false,
       currentPath: '',
       dataArray: items,
+      showArray: items,
       page: 1,
       busy: false,
       order: OrderType.byNameDesc
     }
   },
   computed: {
-    ...mapGetters('User', ['user'])
+    ...mapGetters('User', ['user']),
+    ...mapGetters('Resource', ['clipboard']),
+    path: function () {
+      const path = this.$route.query.path as string
+      return path
+    },
+    uuid: function () {
+      const uuid = this.$route.query.uuid as string
+      return uuid
+    }
   },
   watch: {
     $route: {
@@ -55,9 +65,7 @@ export default Vue.extend({
     },
     fetchResourceList () {
       this.loading = true
-      const path = this.$route.query.path as string
-      const uuid = this.$route.query.uuid as string
-      NasFileAPI.fetchResourceList(path, uuid, this.page, 20, this.order).then(response => {
+      NasFileAPI.fetchResourceList(this.path, this.uuid, this.page, 20, this.order).then(response => {
         console.log(response)
         this.loading = false
         if (response.data.code !== 200) return
@@ -72,14 +80,16 @@ export default Vue.extend({
       this.currentPath = this.$route.params.showPath
     },
     parseResponse (data: BasicResponse) {
-      const list = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(list)) this.busy = true
-      list.map(value => {
-        value.name = StringUtility.formatName(value.path)
-        value.showMtime = StringUtility.formatShowMtime(value.mtime)
-        value.showSize = StringUtility.formatShowSize(value.size)
-      })
+      let list = _.get(data.data, 'list') as Array<ResourceItem>
+      if (_.isEmpty(list) || list.length < 20) this.busy = true
+      list = ResourceHandler.formateResponseList(list)
       this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
+    },
+    handlePasteSuccess () {
+      this.$message.info('粘贴任务添加成功')
+      const isClip = (this.clipboard as ClipboardModel).isClip
+      if (isClip) this.$store.dispatch('Resource/updateClipboard', { isClip: false, items: [] })
+      this.$store.dispatch('Resource/increaseTask')
     },
     // 重写父类中的方法
     handleBackAction () {
@@ -129,6 +139,18 @@ export default Vue.extend({
         this.dataArray = ResourceHandler.formateResponseList(list)
       }).catch(error => {
         this.loading = false
+        console.log(error)
+        this.$message.error('网络连接错误，请检测网络')
+      })
+    },
+    overridePasteAction (mode: TaskMode) {
+      const srcItems = ResourceHandler.getSelectItems(this.showArray)
+      const dstItem = { path: this.path, uuid: this.uuid } as ResourceItem
+      NasFileAPI.addMoveTask(srcItems, dstItem, mode).then(response => {
+        console.log(response)
+        if (response.data.code !== 200) return
+        this.handlePasteSuccess()
+      }).catch(error => {
         console.log(error)
         this.$message.error('网络连接错误，请检测网络')
       })

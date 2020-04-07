@@ -32,8 +32,7 @@ export default Vue.extend({
     BasicHeader
   },
   mounted () {
-    // this.$router.replace('disk')
-    this.$router.push('recent')
+    if (this.$route.path !== '/recent') this.$router.push('recent')
   }
 })
 </script>

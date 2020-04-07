@@ -31,6 +31,7 @@ function MediaControl(media, type, fx, slider, e) {
 		};
 		media.currentTime = (media.duration * (e.pageX - slider.getBoundingClientRect().left)) / slider.offsetWidth;
 	}
+	// eslint-disable-next-line no-new-func
 	document.onmouseup = new Function('this.onmousemove=null');
 }
 function secondDeal(time) {

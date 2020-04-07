@@ -5,8 +5,8 @@ import MainView from '../MainView/index.vue'
 import { ResourceItem, OrderType, UploadTimeSort } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse } from '../../api/UserModel'
-import { uploadSortList, sortList } from '../../model/sortList'
-import StringUtility from '../../utils/StringUtility'
+import { uploadSortList } from '../../model/sortList'
+import ResourceHandler from '../MainView/ResourceHandler'
 
 export default Vue.extend({
   name: 'recent',
@@ -42,13 +42,9 @@ export default Vue.extend({
       })
     },
     parseResponse (data: BasicResponse) {
-      const ulist = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(ulist)) this.busy = true
-      ulist.map(value => {
-        value.name = StringUtility.formatName(value.path)
-        value.showMtime = StringUtility.formatShowMtime(value.mtime)
-        value.showSize = StringUtility.formatShowSize(value.size)
-      })
+      let ulist = _.get(data.data, 'list') as Array<ResourceItem>
+      if (_.isEmpty(ulist) || ulist.length < 20) this.busy = true
+      ulist = ResourceHandler.formateResponseList(ulist)
       this.dataArray = this.page === 1 ? ulist : this.dataArray.concat(ulist)
     },
     // 重写父类中的方法

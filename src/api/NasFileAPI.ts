@@ -203,5 +203,59 @@ export default {
       }
     })
     return nasServer.post(nasShareModulePath + '/cancel_shared_files1', { files })
+  },
+  addCopyTask(srcItems: Array<ResourceItem>, dstItem: ResourceItem, mode: TaskMode): Promise<AxiosResponse<BasicResponse>> {
+    const src = srcItems.map(item => {
+      return {
+        path: item.path,
+        uuid: item.uuid
+      }
+    })
+    const dst = {
+      path: dstItem.path,
+      uuid: dstItem.uuid
+    }
+    return nasServer.post(nasTaskModulePath + '/add', {
+      type: 1,
+      data: { mode, src, dst }
+    })
+  },
+  addMoveTask(srcItems: Array<ResourceItem>, dstItem: ResourceItem, mode: TaskMode): Promise<AxiosResponse<BasicResponse>> {
+    const src = srcItems.map(item => {
+      return {
+        path: item.path,
+        uuid: item.uuid
+      }
+    })
+    const dst = {
+      path: dstItem.path,
+      uuid: dstItem.uuid
+    }
+    return nasServer.post(nasTaskModulePath + '/add', {
+      type: 2,
+      data: { mode, src, dst }
+    })
+  },
+  addDeleteTask(srcItems: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+    const files = srcItems.map(item => {
+      return {
+        path: item.path,
+        uuid: item.uuid
+      }
+    })
+    return nasServer.post(nasTaskModulePath + '/add', {
+      type: 4,
+      data: { mode: 1, files }
+    })
   }
+}
+
+enum TaskMode {
+  skip = 1,
+  rename = 2,
+  cover = 3
+}
+
+export {
+  TaskMode
 }

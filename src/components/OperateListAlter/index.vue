@@ -1,23 +1,27 @@
 <template>
   <ul class="operate-list-alter" :style="{ height: listHeight + 'px'}">
-      <li
-        v-for="(item, index) in showItems"
-        :key="index"
-        class="operate-group"
-      >
-        <img :src="item.icon">
-        <ul class="operate-items">
-          <li
-            v-for="(subItem, index) in item.items"
-            :key="index"
-            @click="menuClick(subItem)"
-            v-bind:class="{ operateItemDisable: subItem.disable, operateItem: !subItem.disable }"
-          >
-            {{ subItem.title }}
-          </li>
-        </ul>
-      </li>
-    </ul>
+    <li
+      v-for="(item, index) in showItems"
+      :key="index"
+      class="operate-group"
+    >
+      <img :src="item.icon">
+      <ul class="operate-items">
+        <li
+          v-for="(subItem, index) in item.items"
+          :key="index"
+          @click="menuClick(subItem)"
+          class="operate-item"
+          v-bind:class="{
+            'operate-item-disable': subItem.disable,
+            'operate-item-enable': subItem.enable
+          }"
+        >
+          {{ subItem.title }}
+        </li>
+      </ul>
+    </li>
+  </ul>
 </template>
 
 <script lang="ts">
@@ -70,10 +74,56 @@ export default Vue.extend({
   },
   methods: {
     menuClick (item: OperateItem) {
+      if (item.disable || item.enable) return
+      if (this.isSpecificItem(item)) {
+        this.$emit('didSelectItem', 'unkown') // 用于隐藏右键菜单
+        return
+      }
       this.$emit('didSelectItem', item.command)
+    },
+    isSpecificItem (item: OperateItem) {
+      if (item.command === 'paste') {
+        this.showTaskModeDialog()
+        return true
+      } else if (item.command === 'upload') {
+        this.showOpenDialog()
+      }
+      return false
+    },
+    showTaskModeDialog () {
+      const { dialog } = require('electron').remote
+      dialog.showMessageBox({
+        type: 'none',
+        defaultId: 0,
+        message: '请选择重名文件处理模式',
+        buttons: buttons
+      }).then(data => {
+        const mode = this.converMode(data.response)
+        this.$emit('didSelectItem', 'paste', mode)
+      })
+    },
+    converMode (index: number) {
+      switch (index) {
+        case 0:
+          return 'skip'
+        case 1:
+          return 'rename'
+        case 2:
+          return 'cover'
+      }
+      return 0
+    },
+    showOpenDialog () {
+      const { dialog, BrowserWindow } = require('electron').remote
+      dialog.showOpenDialog(BrowserWindow.getFocusedWindow()!, {
+        properties: ['openFile', 'openDirectory', 'createDirectory']
+      }).then(result => {
+        console.log(result)
+      })
     }
   }
 })
+const buttons = ['跳过', '重命名', '覆盖']
 </script>
 
 <style lang="less" scoped>
@@ -95,7 +145,7 @@ export default Vue.extend({
       padding: 3px 0px;
       border-left: 1px solid #acacac;
       border-bottom: 1px solid #acacb7;
-      .operateItem {
+      .operate-item {
         display: flex;
         flex: 1;
         padding: 0px 8px;
@@ -103,21 +153,15 @@ export default Vue.extend({
         font-size: 10px;
         line-height: 16px;
       }
-      .operateItem:hover {
+      .operate-item:hover {
         background-color: #DEF1EA;
       }
-      .operateItemDisable {
-        display: flex;
-        flex: 1;
-        padding: 0px 8px;
+      .operate-item-disable {
         color: #48484866;
-        font-size: 10px;
-        line-height: 16px;
-        cursor:not-allowed;
       }
-      .operateItemDisable:hover {
-        background-color: #DEF1EA;
-        cursor: not-allowed;
+      .operate-item-enable {
+        color: #48484866;
+        cursor:not-allowed;
       }
     }
   }

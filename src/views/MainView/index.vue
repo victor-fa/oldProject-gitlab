@@ -39,13 +39,13 @@ import processCenter, { EventName } from '../../utils/processCenter'
 import ResourceHandler from './ResourceHandler'
 import { CategoryType } from '../../model/categoryList'
 import OperateListAlter from '../../components/OperateListAlter/index.vue'
-import NasFileAPI from '../../api/NasFileAPI'
+import NasFileAPI, { TaskMode } from '../../api/NasFileAPI'
 import { BasicResponse, User } from '../../api/UserModel'
 import { OperateGroup } from '../../components/OperateListAlter/operateList'
 import { sortList } from '../../model/sortList'
 import { EventBus, EventType } from '../../utils/eventBus'
 import { TRANSFORM_INFO } from '../../common/constants'
-import upload from '../../utils/file/upload';
+import upload from '../../utils/file/upload'
 
 export default Vue.extend({
   name: 'main-view',
@@ -68,7 +68,7 @@ export default Vue.extend({
       alterPosition: { left: '0px', top: '0px' }, // 右键菜单样式
       showAlter: false, // 控制右键菜单的显示与隐藏
       disableAlter: false, // 是否禁用右键菜单
-      showOperateList: list, // 展示的右键菜单选项集合,
+      showOperateList: list, // 展示的右键菜单选项集合
       handleItem: false, // 在处理item(如：收藏、分享)过程中，item将设置为disable状态
       sortList: sortList, // MianHeaderView中排序弹窗列表的数据源
       transformData: []
@@ -118,19 +118,19 @@ export default Vue.extend({
           this.handleTabChange(args[0])
           break;
         case MainHeaderAction.back:
-          this.handleBackAction()
+          this.overrideBackAction()
           break;
         case MainHeaderAction.search:
-          this.handleSearchAction(args[0])
+          this.overrideSearchAction(args[0])
           break;
         case MainHeaderAction.endSearch:
           this.handleEndSerchAction()
           break;
         case MainHeaderAction.refresh:
-          this.handleRefreshAction()
+          this.overrideRefreshAction()
           break;
         case MainHeaderAction.sortWayChange:
-          this.handleSortWayChangeAction(args[0])
+          this.overrideSortWayChangeAction(args[0])
           break;
         case MainHeaderAction.arrangeChange:
           this.handleArrangeChange(args[0])
@@ -140,7 +140,7 @@ export default Vue.extend({
     handleResourceListAction (actionType: ResourceListAction, ...args: any[]) {
       switch (actionType) {
         case ResourceListAction.loadMoreData:
-          this.loadMoreData()
+          this.overrideloadMoreData()
           break;
         case ResourceListAction.openItem:
           this.handleOpenAction()
@@ -165,14 +165,14 @@ export default Vue.extend({
           break;
       }
     },
-    handleAlterAction (command: string) {
+    handleAlterAction (command: string, ...args: any[]) {
       this.showAlter = false
       switch (command) {
         case 'open': 
           this.handleOpenAction()
           break;
-        case 'openMode':
-          
+        case 'jump':
+          this.handleJumpAction()
           break;
         case 'download':
           this.getTransformInfo()
@@ -191,9 +191,11 @@ export default Vue.extend({
           this.handleUnCollectAction()
           break;
         case 'copy': 
+          this.$message.info('文件已复制到剪切板')
           this.handleClipboardAction(false)
           break;
         case 'cut':
+          this.$message.info('文件已剪切到剪切板')
           this.handleClipboardAction()
           break;
         case 'moveto':
@@ -204,6 +206,9 @@ export default Vue.extend({
           break;
         case 'rename':
           this.handleRenameAction()
+          break;
+        case 'encrypt':
+          
           break;
         case 'info':
           this.handleInfoAction()
@@ -218,13 +223,14 @@ export default Vue.extend({
           
           break;
         case 'clearClipboard':
-          
+          this.clearClipboardAction()
           break;
         case 'paste':
-          
+          const mode = ResourceHandler.matchTaskMode(args[0])
+          this.overridePasteAction(mode)
           break;
         case 'refresh':
-          this.handleRefreshAction()
+          this.overrideRefreshAction()
           break;
       }
     },
@@ -232,29 +238,13 @@ export default Vue.extend({
     handleTabChange (categoryType: CategoryType) {
       this.showArray = ResourceHandler.classifyArray(this.dataArray, categoryType)
     },
-    handleBackAction () {
-      this.$router.go(-1)
-    },
-    handleSearchAction (keyword: string) {
-      this.overrideSearchAction(keyword)
-    },
     handleEndSerchAction () {
       this.showArray = this.dataArray
-    },
-    handleRefreshAction () {
-      this.overrideRefreshAction()
-    },
-    handleSortWayChangeAction (sender: OrderType) {
-      if (this.dataArray.length === 0) return
-      this.overrideSortWayChangeAction(sender)
     },
     handleArrangeChange (arrangeWay: ArrangeWay) {
       this.arrangeWay = arrangeWay
     },
     // handle resource list action methods
-    loadMoreData () {
-      this.overrideloadMoreData()
-    },
     handleOpenAction () {
       const item = ResourceHandler.getFirstSelectItem(this.showArray)
       if (item === null) return
@@ -280,8 +270,11 @@ export default Vue.extend({
         this.$message.warning('暂不支持打开该类型文件');
       }
     },
+    handleJumpAction () {
+      // TODO: 调到文件指定位置
+    },
     handleContextMenuAction (event: MouseEvent, index: number) {
-      this.showArray = ResourceHandler.setSelectState(this.showArray, index, true)
+      this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
       const list = ResourceHandler.filterItemOperateList(this.showArray)
       this.showContextMenu(list, event)
     },
@@ -308,9 +301,12 @@ export default Vue.extend({
       this.showArray = ResourceHandler.shiftMultipleSelect(this.showArray, index)
     },
     handleListClickAction () {
-      this.showAlter = false
-      if (this.handleItem) return
-      this.showArray = ResourceHandler.resetSelectState(this.showArray)
+      if (this.showAlter) {
+        this.showAlter = false
+      } else {
+        if (this.handleItem) return
+        this.showArray = ResourceHandler.resetSelectState(this.showArray)
+      }
     },
     getTransformInfo () {
 			const myThis = this as any
@@ -431,12 +427,9 @@ export default Vue.extend({
       this.$message.error('网络连接错误，请检测网络')
       this.showArray = ResourceHandler.resetDisableState(this.showArray)
     },
-    handleClipboardAction (isClipboard: boolean = true) {
+    handleClipboardAction (isClip: boolean = true) {
       const items = ResourceHandler.getSelectItems(this.showArray)
-      this.$store.dispatch('Resource/updateClipboard', {
-        isClipboard: isClipboard,
-        items
-      })
+      this.$store.dispatch('Resource/updateClipboard', { isClip: isClip, items })
     },
     handleDeletAction () {
       const items = ResourceHandler.getSelectItems(this.showArray)
@@ -465,10 +458,17 @@ export default Vue.extend({
         }
       })
     },
+    clearClipboardAction () {
+      this.$store.dispatch('Resource/updateClipboard', { isClip: false, items: [] })
+      this.$message.info('剪切板已清空')
+    },
     // subclass implementation methods
     overrideloadMoreData () {
     },
     overrideRefreshAction () {
+    },
+    overrideBackAction () {
+      this.$router.go(-1)
     },
     overrideOpenFolderAction (item: ResourceItem) {
     },
@@ -477,6 +477,8 @@ export default Vue.extend({
     },
     overrideSearchAction (keyword: string) {
       this.showArray = ResourceHandler.searchShowArray(this.showArray, keyword)
+    },
+    overridePasteAction (mode: TaskMode) {
     }
   }
 })

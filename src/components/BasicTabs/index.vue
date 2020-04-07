@@ -45,7 +45,7 @@ export default Vue.extend({
 
 interface BasicTabItem {
   title: string,
-  isSelected: boolean
+  isSelected?: boolean
 }
 export {
   BasicTabItem

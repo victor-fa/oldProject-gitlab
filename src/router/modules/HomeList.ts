@@ -1,8 +1,7 @@
+import { TransportRouters } from './TransportList'
+
 const HomeRouters = [
   {
-    // path: '/disk',
-    // component: () => import('../../views/Disk/index.vue'),
-    // name: 'disk',
     path: '/recent',
     component: () => import('../../views/Recent/index.vue'),
     name: 'recent',
@@ -88,7 +87,10 @@ const HomeRouters = [
       icon: require('../../assets/transport_icon.png'),
       selectedIcon: require('../../assets/transport_icon_selected.png'),
       isSelected: false
-    }
+    },
+    children: [
+      ...TransportRouters
+    ]
   },
   {
     path: '/main-resource-view',

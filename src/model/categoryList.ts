@@ -16,8 +16,15 @@ enum TaskCategoryType {
   download = 'download',
   upload = 'upload',
   offline = 'offline',
-  backup = 'backup',
+  backup = 'backup-list',
   remote = 'remote'
+}
+
+interface TransportCategory {
+  name: string,
+  type: string,
+  count: number,
+  isSelected: boolean
 }
 
 // 最近使用
@@ -78,10 +85,18 @@ let taskCategorys: Category[] = [
   }
 ]
 
+// 传输条目分类
+const transportCategorys: TransportCategory[] = [
+  { name: '正在下载', type: 'downloading', count: 0, isSelected: true },
+  { name: '下载完成', type: 'downloaded', count: 0, isSelected: false }
+]
+
 export {
   categorys,
   taskCategorys,
   Category,
   CategoryType,
-  TaskCategoryType
+  TaskCategoryType,
+  TransportCategory,
+  transportCategorys
 }

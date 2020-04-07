@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :key="index">
     <div
       v-if="isHorizontalArrange"
       class="horizontal-item"
@@ -27,7 +27,7 @@
         @pressEnter="handleRename"
       />
       <div v-else>
-        <a-tooltip placement="bottom">
+        <!-- <a-tooltip placement="bottom">
           <template slot="title">
             <span>{{ itemModel.name }}</span>
           </template>
@@ -40,7 +40,17 @@
           >
             {{ itemModel.name }}
           </p>
-        </a-tooltip>
+        </a-tooltip> -->
+        <p
+          :title="itemModel.name"
+          @click.stop.exact="singleClick()"
+          @click.meta.stop="multipleClick()"
+          @click.shift.stop="listMultipleClick()"
+          @dblclick="doubleClick()"
+          @contextmenu.prevent="contextMenuClick($event)"
+        >
+          {{ itemModel.name }}
+        </p>
       </div>
     </div>
     <div
@@ -75,6 +85,7 @@ import Vue from 'vue'
 import { ArrangeWay, ResourceItem, ResourceType } from '../../api/NasFileModel'
 import StringUtility from '../../utils/StringUtility'
 import NasFileAPI from '../../api/NasFileAPI'
+import ResourceHandler from '../../views/MainView/ResourceHandler'
 
 export default Vue.extend({
   name: 'resource-item',
@@ -127,21 +138,7 @@ export default Vue.extend({
   },
   methods: {
     searchResourceIcon (type: ResourceType) {
-      switch (type) {
-        case ResourceType.video:
-          return require('../../assets/resource/video_icon.png')
-        case ResourceType.audio:
-          return require('../../assets/resource/audio_icon.png')
-        case ResourceType.image:
-          return require('../../assets/resource/image_icon.png')
-        case ResourceType.document:
-          return require('../../assets/resource/txt_icon.png')
-        case ResourceType.archive:
-          return require('../../assets/resource/pdf_icon.png')
-        case ResourceType.folder:
-          return require('../../assets/resource/folder_icon.png')
-      }
-      return require('../../assets/resource/unkonw_icon.png')
+      return ResourceHandler.searchResourceIcon(type)
     },
     handleRename () {
       // not change
