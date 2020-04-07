@@ -13,6 +13,7 @@
         <transport-item :model="item" :index="index" :status="status"/>
       </template>
     </basic-list>
+    <main-bottom-view/>
   </div>
 </template>
 
@@ -24,13 +25,15 @@ import BasicList from '../../../components/BasicList/index.vue'
 import { transportCategorys } from '../../../model/categoryList'
 import { TransportTask } from '../../../api/NasFileModel'
 import TransportItem from './TransportItem.vue'
+import MainBottomView from '../../MainView/MainBottomView.vue'
 
 export default Vue.extend({
   name: 'transport-main-page',
   components: {
     HeaderView,
     BasicList,
-    TransportItem
+    TransportItem,
+    MainBottomView
   },
   props: {
     dataSource: Array

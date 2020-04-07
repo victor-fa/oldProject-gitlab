@@ -3,7 +3,7 @@ interface OperateItem {
   icon?: any,
   subItems?: any,
   command: string,
-  disable?: boolean, // 根据不同状态确定是否可以
+  disable?: boolean, // 根据不同状态确定是否可用
   enable?: boolean, // 在某些场景下完全禁用该功能
   isHidden?: boolean
 }
