@@ -12,6 +12,7 @@ import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
 import { TRANSFORM_INFO } from '../../../common/constants'
 import { uploadCategorys } from '../../../model/categoryList'
+import { mapGetters } from 'vuex'
 
 export default Vue.extend({
   name: 'upload-list',
@@ -24,6 +25,9 @@ export default Vue.extend({
       category: uploadCategorys,
       state: 'interrupted'
     }
+  },
+  computed: {
+    ...mapGetters('Transform', ['uploadInfo'])
   },
   created () {
     this.getListData()
@@ -39,7 +43,7 @@ export default Vue.extend({
       this.getListData()
     },
     handleOperateAction (command: string) {
-      console.log(command);
+      // console.log(command);
       switch (command) {
         case 'pauseAll':  // 全部暂停
           
@@ -48,7 +52,7 @@ export default Vue.extend({
           
           break;
         case 'clearAll': // 清除所有记录
-          
+          this.clearAllTrans()
           break;
         default:
           break;
@@ -56,15 +60,34 @@ export default Vue.extend({
     },
     // inner private methods
     getListData () {
-      const listJson = localStorage.getItem(TRANSFORM_INFO)
-      if (listJson === null) return
-      const list = JSON.parse(listJson)
+      const list = this.uploadInfo
+      uploadCategorys[0].count = list.filter(item => item.trans_type === 'upload' && item.state === 'interrupted').length  // 正在上传
+      uploadCategorys[1].count = list.filter(item => item.trans_type === 'upload' && item.state === 'completed').length  // 上传完成
       this.dataArray = list.filter(item => {
         return item.trans_type === 'upload' && item.state === this.state
       })
-      uploadCategorys[(this.state === 'interrupted' ? 0 : 1)].count = this.dataArray.length
       console.log(JSON.parse(JSON.stringify(this.dataArray)));
-    }
+    },
+    clearAllTrans() { // 清空所有记录
+      const _this = this as any
+      if (_this.uploadInfo.length === 0) {
+        _this.$message.warning('当前无记录')
+        return
+      }
+      _this.$electron.shell.beep()
+      _this.$confirm({
+        title: '删除',
+        content: '是否将所所有记录清空',
+        okText: '删除',
+        okType: 'danger',
+        cancelText: '取消',
+        onOk() {
+          _this.$store.dispatch('Transform/updateTransUploadInfo', [])
+          _this.$store.dispatch('Transform/saveTransUploadInfo') // 清空后要更新缓存，不然下次进来可能有问题
+          _this.getListData()
+        }
+      });
+    },
   }
 })
 </script>

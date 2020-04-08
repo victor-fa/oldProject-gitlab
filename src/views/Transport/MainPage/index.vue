@@ -40,12 +40,12 @@ export default Vue.extend({
   },
   data () {
     return {
-      status: this.category
+      status: this.category[0]
     }
   },
   methods: {
     handleCategoryChange (index: number) {
-      this.status = this.category
+      this.status = this.category[index]
       this.$emit('categoryChange', index)
     },
     handleBatchAction (command: string) {

@@ -111,7 +111,7 @@ export default {
 	findTheFile(fileName) { //查找上传的文件
 		let files = this.selectUploadFiles, theFile;
 		for (let i = 0, j = files.length; i < j; ++i) {
-			console.log(files[i].name, fileName)
+			// console.log(files[i].name, fileName)
 			if (files[i].name === fileName) {
 				theFile = files[i];
 				break;

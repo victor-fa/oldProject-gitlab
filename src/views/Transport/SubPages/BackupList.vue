@@ -1,10 +1,16 @@
 <template>
-  <main-page
-    :category="category"
-    :dataSource="dataArray"
-    v-on:categoryChange="handleCategoryChange"
-    v-on:transportOperateAction="handleOperateAction"
-  />
+  <div>
+    <main-page
+      :category="category"
+      :dataSource="dataArray"
+      v-on:categoryChange="handleCategoryChange"
+      v-on:transportOperateAction="handleOperateAction"
+    />
+    <!-- 上传所选文件 -->
+    <input ref="FileArea" type="file" multiple directory @change="PrepareUploadFile" mozdirectory hidden />
+    <!-- 上传所选文件夹 -->
+    <input ref="FolderArea" type="file" multiple @change="PrepareUploadFile" webkitdirectory hidden>
+  </div>
 </template>
 
 <script lang="ts">
@@ -12,6 +18,9 @@ import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
 import { TRANSFORM_INFO } from '../../../common/constants'
 import { backupCategorys } from '../../../model/categoryList'
+import uploadBackup from '../../../utils/file/uploadBackup';
+import ClientAPI from '../../../api/ClientAPI'
+import { mapGetters } from 'vuex'
 
 export default Vue.extend({
   name: 'backup-list',
@@ -21,13 +30,16 @@ export default Vue.extend({
   data () {
     return {
       dataArray: [],
+      transBackupData: [],
       category: backupCategorys,
       state: 'interrupted'
     }
   },
+  computed: {
+    ...mapGetters('Transform', ['backupInfo'])
+  },
   created () {
     this.getListData()
-    backupCategorys[(this.state === 'interrupted' ? 0 : 1)].count = this.dataArray.length
   },
   methods: {
     // handle views action
@@ -40,7 +52,8 @@ export default Vue.extend({
       this.getListData()
     },
     handleOperateAction (command: string) {
-      console.log(command);
+      const _this = this as any
+      // console.log(command);
       switch (command) {
         case 'pauseAll':  // 全部暂停
           
@@ -49,13 +62,15 @@ export default Vue.extend({
           
           break;
         case 'clearAll': // 清除所有记录
-          
+          this.clearAllTrans()
           break;
         case 'backupFile': // 上传文件
-          
+          _this.$refs.FileArea.value = '';
+          _this.$refs.FileArea.click();
           break;
         case 'backupFolder': // 上传文件夹
-          
+          _this.$refs.FolderArea.value = '';
+          _this.$refs.FolderArea.click();
           break;
         default:
           break;
@@ -63,14 +78,60 @@ export default Vue.extend({
     },
     // inner private methods
     getListData () {
-      const listJson = localStorage.getItem(TRANSFORM_INFO)
-      if (listJson === null) return
-      const list = JSON.parse(listJson)
+      const list = this.backupInfo
+      backupCategorys[0].count = list.filter(item => item.trans_type === 'backup' && item.state === 'interrupted').length  // 正在上传
+      backupCategorys[1].count = list.filter(item => item.trans_type === 'backup' && item.state === 'completed').length  // 上传完成
       this.dataArray = list.filter(item => {
         return item.trans_type === 'backup' && item.state === this.state
       })
       console.log(JSON.parse(JSON.stringify(this.dataArray)));
-    }
+    },
+		PrepareUploadFile(data: any) {
+      const _this = this as any
+      var hostname = require("os").hostname();  // 获取主机名
+			uploadBackup.prepareFile(data, { // 备份上传
+        data: hostname + ClientAPI.getMac(),
+				add: file => {
+					_this.transBackupData.push(file);
+					_this.$message.info((data.target ? data.target : data).files.length + '个文件已加入上传列队');
+				},
+				success: (file, response) => {
+					const rs = response.data;
+					if (rs.code !== 200) {
+						if (rs.code === '4050') {
+							_this.$message.warning('文件已存在')
+						} else {
+							_this.$message.warning(rs.msg)
+						}
+						return
+					}
+          this.$store.dispatch('Transform/updateTransBackupInfo', _this.transBackupData)
+          this.getListData()
+					_this.$message.success('文件上传成功！')
+          _this.$ipc.send('system', 'popup', file.name + '上传完成');
+				}
+			});
+		},
+    clearAllTrans() { // 清空所有记录
+      const _this = this as any
+      if (_this.transBackupData.length === 0) {
+        _this.$message.warning('当前无记录')
+        return
+      }
+      _this.$electron.shell.beep()
+      _this.$confirm({
+        title: '删除',
+        content: '是否将所所有记录清空',
+        okText: '删除',
+        okType: 'danger',
+        cancelText: '取消',
+        onOk() {
+          _this.$store.dispatch('Transform/updateTransBackupInfo', [])
+          _this.$store.dispatch('Transform/saveTransBackupInfo') // 清空后要更新缓存，不然下次进来可能有问题
+          _this.getListData()
+        }
+      });
+    },
   }
 })
 </script>

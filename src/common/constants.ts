@@ -7,6 +7,9 @@ const ACCOUNT = 'account'
 const NAS_INFO = 'nas_info'
 const NAS_ACCESS = 'nas_token'
 const TRANSFORM_INFO = 'transform_info'
+const TRANS_DOWNLOAD = 'trans_download'
+const TRANS_UPLOAD = 'trans_upload'
+const TRANS_BACKUP = 'trans_backup'
 
 export {
   ACCESS_TOKEN,
@@ -14,5 +17,8 @@ export {
   ACCOUNT,
   NAS_INFO,
   NAS_ACCESS,
-  TRANSFORM_INFO
+  TRANSFORM_INFO,
+  TRANS_DOWNLOAD,
+  TRANS_UPLOAD,
+  TRANS_BACKUP
 }

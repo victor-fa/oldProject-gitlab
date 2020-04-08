@@ -64,19 +64,6 @@ Vue.prototype.$confirm = Modal.confirm
 Vue.path = Vue.prototype.$path = path; //path接口
 Vue.electron = Vue.prototype.$electron = electron; //electron
 Vue.ipc = Vue.prototype.$ipc = ipcRenderer; //ipc接口
-Vue.prototype.$resetSetItem = function (key, newVal) {
-  if (key === 'transform_info') {
-    var newStorageEvent = document.createEvent('StorageEvent');
-    const storage = {
-      setItem: function (k, val) {
-        localStorage.setItem(k, val);
-        newStorageEvent.initStorageEvent('setItem', false, false, k, null, val, null, null);
-        window.dispatchEvent(newStorageEvent)
-      }
-    }
-    return storage.setItem(key, newVal);
-  }
-}
 
 /* v1.1.3+ registration methods */
 Vue.use(Affix)

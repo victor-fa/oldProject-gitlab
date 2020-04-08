@@ -5,7 +5,7 @@
     v-bind:class="{ 'transport-item-odd': isOdd }"
   >
     <a-layout-sider class="icon-wrapper" :width="58">
-      <img :src="searchResourceIcon(model.type)" class="item-icon">
+      <img :src="searchResourceIcon(model)" class="item-icon">
     </a-layout-sider>
     <a-layout-content class="content">
       <div class="content-top">
@@ -28,6 +28,7 @@
             :hoverImage="operateIcon.hoverOpenFolder"
             iconWidth="7px"
             class="operate-item"
+            @click.native="clickMethod('openFolder')"
           />
         </div>
       </div>
@@ -63,9 +64,7 @@ export default Vue.extend({
   props: {
     model: Object,
     index: Number,
-    status: {
-      default: 'downloading'
-    }
+    status: Object
   },
   data () {
     return {
@@ -75,15 +74,52 @@ export default Vue.extend({
   },
   computed: {
     isOdd: function () {
-      return this.index % 2
+      const _this = this as any
+      return _this.index % 2
     },
     isCompleted: function () {
-      return this.status === 'downloaded'
+      const status = this.status as any
+      console.log(status);
+      return status.type === 'downloaded'
     }
   },
   methods: {
-    searchResourceIcon (type: ResourceType) {
-      return ResourceHandler.searchResourceIcon(type)
+    searchResourceIcon (item) {
+      const _this = this as any
+      return ResourceHandler.searchResourceIcon(_this.getTypeNum(item))
+    },
+		getTypeNum (data) {
+      let typeName = 0
+      const name = data.name ? data.name.substring(data.name.lastIndexOf('.')+1, data.name.length) : 'unknow'
+			if (name === 'zip') {
+				typeName = 0;
+			} else if (name === 'pdf') {
+				typeName = 5;
+			} else if (["apng", "png", "jpg", "jpeg", "bmp", "gif"].indexOf(name) > -1) {
+				typeName = 3;
+			} else if (["mp4", "rmvb", "mkv"].indexOf(name) > -1) {
+				typeName = 2;
+			} else if (["m4a", "mp3", "ogg", "flac", "f4a", "wav", "ape"].indexOf(name) > -1) {
+				typeName = 1;
+			} else if (["ini", "txt", "xml", "aspx", "php", "phtml", "js", "c", "htm", "html", "log", "cpp", "java"].indexOf(name) > -1) {
+				typeName = 4;
+			} else {
+        typeName = 0;
+      }
+			return typeName
+    },
+    clickMethod (flag) {
+      const _this = this as any
+      switch (flag) {
+        case 'openFolder':
+          _this.$electron.shell.showItemInFolder(this.model.path)
+          break;
+        case 'openFile':
+          _this.$electron.shell.openItem(this.model.path)
+          break;
+        default:
+          break;
+      }
     }
   }
 })

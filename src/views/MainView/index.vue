@@ -75,22 +75,23 @@ export default Vue.extend({
       showOperateList: list, // 展示的右键菜单选项集合
       handleItem: false, // 在处理item(如：收藏、分享)过程中，item将设置为disable状态
       sortList: sortList, // MianHeaderView中排序弹窗列表的数据源
-      transformData: []
+      transDownloadData: [],
+      transUploadData: [],
     }
   },
   watch: {
     dataArray: function (newValue) {
       this.showArray = newValue
     },
-		transformData: {
+		transDownloadData: {
 			handler() {
 				const myThis = this as any
 				myThis.$nextTick(() => {
-					myThis.transformData.forEach((item, index) => {
+					myThis.transDownloadData.forEach((item, index) => {
 						item.shows = myThis.loadClassify === item.state || (item.trans_type === myThis.loadClassify && item.state !== 'completed');
 					});
 				});
-				localStorage.setItem(TRANSFORM_INFO, JSON.stringify(myThis.transformData))
+        this.$store.dispatch('Transform/updateTransDownloadInfo', myThis.transDownloadData)
 			},
 			deep: true
 		}
@@ -106,13 +107,19 @@ export default Vue.extend({
       const myThis: any = this
       return myThis.showArray.length
     },
-    ...mapGetters('Resource', ['clipboard'])
+    ...mapGetters('Resource', ['clipboard']),
+    ...mapGetters('Transform', ['downloadInfo']),
+    ...mapGetters('Transform', ['uploadInfo']),
+    ...mapGetters('Transform', ['backupInfo'])
   },
 	created() {
     this.Bind();
 	},
   mounted () {
-    this.getTransformInfo()
+    this.transDownloadData = this.downloadInfo
+    this.transUploadData = this.uploadInfo
+  },
+  destroyed() {
   },
   methods: {
     // handle component callback action
@@ -180,7 +187,6 @@ export default Vue.extend({
           this.handleJumpAction()
           break;
         case 'download':
-          this.getTransformInfo()
           this.handleDownloadAction()
           break;
         case 'share':
@@ -219,12 +225,10 @@ export default Vue.extend({
           this.handleInfoAction()
           break;
         case 'uploadFile':
-          myThis.getTransformInfo()
           myThis.$refs.FileArea.value = '';
           myThis.$refs.FileArea.click();
           break;
         case 'uploadFolder':
-          myThis.getTransformInfo()
           myThis.$refs.FolderArea.value = '';
           myThis.$refs.FolderArea.click();
           break;
@@ -317,30 +321,23 @@ export default Vue.extend({
         this.showArray = ResourceHandler.resetSelectState(this.showArray)
       }
     },
-    getTransformInfo () {
-			const myThis = this as any
-      const temp:any = localStorage.getItem(TRANSFORM_INFO)
-      let tempJson = JSON.parse(temp)
-      myThis.transformData = tempJson !== null ? tempJson : []
-      console.log(myThis.transformData);
-    },
 		Bind: function() {
 			const myThis = this as any
 			myThis.$ipc.on('download', (e, file, completed) => {
         completed && myThis.$ipc.send('system', 'popup', file.name + '下载完成');
-        localStorage.setItem(TRANSFORM_INFO, JSON.stringify(myThis.transformData))
-				for (let i = 0; i < myThis.transformData.length; i++) {
-					if (file.name === myThis.transformData[i].name) {
+        this.$store.dispatch('Transform/updateTransDownloadInfo', myThis.transformData)
+				for (let i = 0; i < myThis.transDownloadData.length; i++) {
+					if (file.name === myThis.transDownloadData[i].name) {
 						myThis.$nextTick(() => {
-							for (let name in myThis.transformData[i]) {
-								myThis.transformData[i][name] = file[name];
+							for (let name in myThis.transDownloadData[i]) {
+								myThis.transDownloadData[i][name] = file[name];
 							}
 						});
 						return;
 					}
         }
 				myThis.$nextTick(() => {
-					myThis.transformData.push(file);
+					myThis.transDownloadData.push(file);
 				});
 			});
 		},
@@ -359,7 +356,7 @@ export default Vue.extend({
 				// data: myThis.NowDiskID,
 				add: file => {
 					console.log(file);
-					myThis.transformData.push(file);
+					myThis.transUploadData.push(file);
 					myThis.$message.info((data.target ? data.target : data).files.length + '个文件已加入上传列队');
 				},
 				success: (file, response) => {
@@ -373,8 +370,9 @@ export default Vue.extend({
 							myThis.$message.warning(rs.msg)
 						}
 						return
-					}
-          localStorage.setItem(TRANSFORM_INFO, JSON.stringify(myThis.transformData))
+          }
+          this.$store.dispatch('Transform/updateTransUploadInfo', myThis.transUploadData)
+          console.log(myThis.transUploadData);
           // 刷新
           myThis.handleRefreshAction()
 					myThis.$message.success('文件上传成功！')

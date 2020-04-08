@@ -145,7 +145,8 @@ export default Vue.extend({
           // myThis.$electron.shell.moveItemToTrash(item.path)  // 暂时不把本地文件删除了
           let arr = myThis.TransportList
           arr.splice(index, 1); 
-          localStorage.setItem(TRANSFORM_INFO, JSON.stringify(arr))
+          // localStorage.setItem(TRANSFORM_INFO, JSON.stringify(arr))
+          this.$store.dispatch('Transform/updateTransDownloadInfo', arr)
           myThis.TransportList = arr;
         }
       });

@@ -70,6 +70,7 @@ export default Vue.extend({
     closeAction () {
       const win = BrowserWindow.getFocusedWindow()
       if (win !== null) {
+        this.$store.dispatch('Transform/saveTransInfo') // 关窗口时，对上传下载的store进行保存
         win.close()
       }
     },
