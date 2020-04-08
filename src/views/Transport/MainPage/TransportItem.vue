@@ -9,7 +9,7 @@
     </a-layout-sider>
     <a-layout-content class="content">
       <div class="content-top">
-        <span>{{ model.curr_src_path }}</span>
+        <span>{{ model.name }}</span>
         <div>
           <custom-button
             :image="operateIcon.pause"
@@ -56,7 +56,7 @@ import ResourceHandler from '../../../views/MainView/ResourceHandler'
 import CustomButton from '../../../components/CustomButton/index.vue'
 
 export default Vue.extend({
-  name: 'transporting-item',
+  name: 'transport-item',
   components: {
     CustomButton
   },

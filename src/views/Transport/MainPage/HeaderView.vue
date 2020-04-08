@@ -16,6 +16,13 @@
       </div>
     </div>
     <div v-if="status === 'doing'" class="right-view">
+      <a-dropdown>
+        <a-menu slot="overlay" @click="uploadBack">
+          <a-menu-item key="backupFile">上传文件</a-menu-item>
+          <a-menu-item key="backupFolder">上传文件夹</a-menu-item>
+        </a-menu>
+        <a-button class="right-button" style="margin-left: 8px"> 上传备份 <a-icon type="down" /> </a-button>
+      </a-dropdown>
       <a-button @click="handleBtnClick('pauseAll')">全部暂停</a-button>
       <a-button @click="handleBtnClick('cancelAll')">全部取消</a-button>
     </div>
@@ -54,6 +61,9 @@ export default Vue.extend({
     },
     handleBtnClick (command: string) {
       this.$emit('batchAction', command)
+    },
+    uploadBack (e) {
+      this.$emit('batchAction', e.key) // call parent
     }
   },
   filters: {

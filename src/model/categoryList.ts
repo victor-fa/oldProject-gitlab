@@ -86,9 +86,19 @@ let taskCategorys: Category[] = [
 ]
 
 // 传输条目分类
-const transportCategorys: TransportCategory[] = [
+const downloadCategorys: TransportCategory[] = [
   { name: '正在下载', type: 'downloading', count: 0, isSelected: true },
   { name: '下载完成', type: 'downloaded', count: 0, isSelected: false }
+]
+
+const uploadCategorys: TransportCategory[] = [
+  { name: '正在上传', type: 'uploading', count: 0, isSelected: true },
+  { name: '上传完成', type: 'uploaded', count: 0, isSelected: false }
+]
+
+const backupCategorys: TransportCategory[] = [
+  { name: '正在备份', type: 'backuping', count: 0, isSelected: true },
+  { name: '备份完成', type: 'backuped', count: 0, isSelected: false }
 ]
 
 export {
@@ -98,5 +108,7 @@ export {
   CategoryType,
   TaskCategoryType,
   TransportCategory,
-  transportCategorys
+  downloadCategorys,
+  uploadCategorys,
+  backupCategorys
 }

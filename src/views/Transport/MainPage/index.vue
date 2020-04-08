@@ -1,7 +1,7 @@
 <template>
   <div>
     <header-view
-      :categorys="categorys"
+      :categorys="category"
       v-on:categroyChange="handleCategoryChange"
       v-on:batchAction="handleBatchAction"
     />
@@ -22,7 +22,6 @@ import _ from 'lodash'
 import Vue from 'vue'
 import HeaderView from './HeaderView.vue'
 import BasicList from '../../../components/BasicList/index.vue'
-import { transportCategorys } from '../../../model/categoryList'
 import { TransportTask } from '../../../api/NasFileModel'
 import TransportItem from './TransportItem.vue'
 import MainBottomView from '../../MainView/MainBottomView.vue'
@@ -36,20 +35,21 @@ export default Vue.extend({
     MainBottomView
   },
   props: {
-    dataSource: Array
+    dataSource: Array,
+    category: Array,
   },
   data () {
     return {
-      categorys: _.cloneDeep(transportCategorys),
-      status: transportCategorys[0].type
+      status: this.category
     }
   },
   methods: {
     handleCategoryChange (index: number) {
-      this.status = this.categorys[index].type
+      this.status = this.category
       this.$emit('categoryChange', index)
     },
     handleBatchAction (command: string) {
+      // console.log(command);
       this.$emit('transportOperateAction', command)
     }
   }
