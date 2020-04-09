@@ -3,9 +3,10 @@ import NasFileAPI from '../../api/NasFileAPI'
 import { USER_MODEL } from '../../common/constants'
 export default {
 	name: 'upload',
-	needChunkSize: 1024 * 1024 * 10,	// 规定片段位10M
+	needChunkSize: 1024 * 1024 * 2,	// 规定片段位2M
 	selectUploadFiles: [],
 	uploadHistory: [],
+	uuid: '',
 	getUgreenNo () {
 		const userJson = localStorage.getItem(USER_MODEL)
 		let ugreenNo = '';
@@ -18,6 +19,7 @@ export default {
 		// if (data.target) {
 		// 	data = data.target;
 		// }
+		this.uuid = options.data;
 		for (let k = 0; k < data.files.length; k++) {
 			this.selectUploadFiles.push(data.files[k]);
 		}
@@ -70,7 +72,7 @@ export default {
 		let blobTo = (chunk + 1) * eachSize > totalSize ? totalSize : Math.round((chunk + 1) * eachSize); // 分段结尾
 		item.chunk = blobTo;
 		let data = {	// path
-			uuid: '57f8f4bc-abf4-655f-bf67-946fc0f9f25b',
+			uuid: this.uuid,	// 动态获取uuid
 			path: '/.ugreen_nas/' + this.getUgreenNo() + '/' + fileName,
 			start: blobFrom,
 			end: blobTo-1,

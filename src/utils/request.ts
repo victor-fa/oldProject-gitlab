@@ -10,7 +10,7 @@ import { message } from 'ant-design-vue'
 const CancelToken = axios.CancelToken
 const source = CancelToken.source()
 const nasCloud = axios.create({
-  baseURL: 'http://120.24.182.33',
+  baseURL: 'http://192.168.10.21',
   timeout: 10000,
   withCredentials: false
 })

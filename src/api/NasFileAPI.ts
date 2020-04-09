@@ -15,7 +15,6 @@ const nasTaskModulePath = '/v1/task'
 const nasShareModulePath = '/v1/share'
 const nasFavoriteModulePath = '/v1/favorites'
 const nasMyselfModulePath = '/v1/myself'
-const tempServerUrl = 'http://192.168.10.91:9999'
 
 const host = (() => {
   const nasInfoJson = localStorage.getItem(NAS_INFO)
@@ -29,14 +28,11 @@ const host = (() => {
 nasServer.defaults.baseURL = host!
 
 export default {
-  getServerUrl () {
-    return tempServerUrl
-  },
   storages () {
-    return Vue.axios.get(tempServerUrl + nasFileModulePath + '/storages?' + jsonToParams(null))
+    return Vue.axios.get(host + nasFileModulePath + '/storages?' + jsonToParams(null))
   },
   list (path: string, uuid: string) {
-    return Vue.axios.get(tempServerUrl + nasFileModulePath + '/list?' + jsonToParams({
+    return Vue.axios.get(host + nasFileModulePath + '/list?' + jsonToParams({
       path: path,
       uuid: uuid,
       page: 1,
@@ -44,64 +40,64 @@ export default {
     }))
   },
   ulist (options) {
-    return Vue.axios.get(tempServerUrl + nasFileModulePath + '/ulist?' + jsonToParams(options))
+    return Vue.axios.get(host + nasFileModulePath + '/ulist?' + jsonToParams(options))
   },
   upload (options) {
-    return Vue.axios.post(tempServerUrl + nasFileModulePath + '/upload?' + jsonToParams(options.data), options.body, {
+    return Vue.axios.post(host + nasFileModulePath + '/upload?' + jsonToParams(options.data), options.body, {
       headers: {'Accept': '*/*'}
     })
   },
   uploadBackup (options) {
-    return Vue.axios.post(tempServerUrl + nasFileModulePath + '/backup/upload?' + jsonToParams(options.data), options.body, {
+    return Vue.axios.post(host + nasFileModulePath + '/backup/upload?' + jsonToParams(options.data), options.body, {
       headers: {'Accept': '*/*'}
     })
   },
   addFile (body) {
-    return Vue.axios.post(tempServerUrl + nasFileModulePath + '/add?' + jsonToParams(null), body)
+    return Vue.axios.post(host + nasFileModulePath + '/add?' + jsonToParams(null), body)
   },
   deleteFile (body) {
-    return Vue.axios.post(tempServerUrl + nasTaskModulePath + '/add?' + jsonToParams(null), body)
+    return Vue.axios.post(host + nasTaskModulePath + '/add?' + jsonToParams(null), body)
   },
   userList () {
-    return Vue.axios.post(tempServerUrl + nasShareModulePath + '/get_all_users?' + jsonToParams(null))
+    return Vue.axios.post(host + nasShareModulePath + '/get_all_users?' + jsonToParams(null))
   },
   shareList (body) {
-    return Vue.axios.post(tempServerUrl + nasShareModulePath + '/get_shared_files_of_users?' + jsonToParams(null), body)
+    return Vue.axios.post(host + nasShareModulePath + '/get_shared_files_of_users?' + jsonToParams(null), body)
   },
   shareFile (body) {
-    return Vue.axios.post(tempServerUrl + nasShareModulePath + '/share_files?' + jsonToParams(null), body)
+    return Vue.axios.post(host + nasShareModulePath + '/share_files?' + jsonToParams(null), body)
   },
   cancleShareFile (body) {
-    return Vue.axios.post(tempServerUrl + nasShareModulePath + '/cancel_shared_files1?' + jsonToParams(null), body)
+    return Vue.axios.post(host + nasShareModulePath + '/cancel_shared_files1?' + jsonToParams(null), body)
   },
   favouriteList () {
-    return Vue.axios.post(tempServerUrl + nasFavoriteModulePath + '/get?' + jsonToParams(null))
+    return Vue.axios.post(host + nasFavoriteModulePath + '/get?' + jsonToParams(null))
   },
   favouriteFile (body) {
-    return Vue.axios.post(tempServerUrl + nasFavoriteModulePath + '/set?' + jsonToParams(null), body)
+    return Vue.axios.post(host + nasFavoriteModulePath + '/set?' + jsonToParams(null), body)
   },
   cancelFavouriteFile (body) {
-    return Vue.axios.post(tempServerUrl + nasFavoriteModulePath + '/cancel?' + jsonToParams(null), body)
+    return Vue.axios.post(host + nasFavoriteModulePath + '/cancel?' + jsonToParams(null), body)
   },
   myselfList () {
-    return Vue.axios.post(tempServerUrl + nasMyselfModulePath + '/get_myself_folders?' + jsonToParams(null))
+    return Vue.axios.post(host + nasMyselfModulePath + '/get_myself_folders?' + jsonToParams(null))
   },
   addMyselfFile (body) {
-    return Vue.axios.post(tempServerUrl + nasMyselfModulePath + '/create_myself_folder?' + jsonToParams(null), body)
+    return Vue.axios.post(host + nasMyselfModulePath + '/create_myself_folder?' + jsonToParams(null), body)
   },
   modifyMyselfFile (body) {
-    return Vue.axios.post(tempServerUrl + nasMyselfModulePath + '/update_myself_folder?' + jsonToParams(null), body)
+    return Vue.axios.post(host + nasMyselfModulePath + '/update_myself_folder?' + jsonToParams(null), body)
   },
   deleteMyselfFile (body) {
-    return Vue.axios.post(tempServerUrl + nasMyselfModulePath + '/del_myself_folder?' + jsonToParams(null), body)
+    return Vue.axios.post(host + nasMyselfModulePath + '/del_myself_folder?' + jsonToParams(null), body)
   },
   download (option) {
     const input = { uuid: option.uuid, path: option.path }
-    return tempServerUrl + nasFileModulePath + '/download?' + jsonToParams(input)
+    return host + nasFileModulePath + '/download?' + jsonToParams(input)
   },
   httpDownload (option) { // 针对pdf处理
     const input = { uuid: option.uuid, path: option.path }
-    return tempServerUrl + nasFileModulePath + '/http_download?' + jsonToParamsForPdf(input)
+    return host + nasFileModulePath + '/http_download?' + jsonToParamsForPdf(input)
   },
   fetchStorages (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.get(nasFileModulePath + '/storages')

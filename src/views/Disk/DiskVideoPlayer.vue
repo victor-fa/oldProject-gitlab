@@ -26,7 +26,7 @@
 				@canplay="VideoPlayerCommend('play')"
 				:src="NowPlay.PlayUrl"
 			/>
-			<div :class="'cd-video-fliter ' + PlayButtonState + ' ' + animation" @click="VideoPlayerCommend('play')"></div>
+			<div :class="(PlayButtonState === 'sf-icon-pause' ? '' : ('cd-video-fliter ' + PlayButtonState)) + ' ' + animation" @click="VideoPlayerCommend('play')"></div>
 			<div :class="'cd-video-control ' + BarAnimation" @mouseover="ShowControl" @mouseout="HideControl">
 				<div :class="'cd-video-play ' + PlayButtonState" @click="VideoPlayerCommend('play')"></div>
 				<div class="cd-video-player-slider-container" @mousedown="TimeChange" ref="slider">
@@ -286,12 +286,4 @@ export default {
 
 <style scoped>
 @import url('../../assets/css/player.css');
-.sf-icon-pause {
-    transition: all .1s linear;
-    transform: scale(0);
-}
-.sf-icon-pause:hover {
-    transition: all .6s linear;
-    transform: scale(1);
-}
 </style>

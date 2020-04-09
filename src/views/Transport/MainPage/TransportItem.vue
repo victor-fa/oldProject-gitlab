@@ -79,7 +79,6 @@ export default Vue.extend({
     },
     isCompleted: function () {
       const status = this.status as any
-      console.log(status);
       return status.type === 'downloaded'
     }
   },
@@ -143,7 +142,7 @@ const operateIcon = {
 .transport-item {
   height: 58px;
   width: 100%;
-  background-color: #f6f8fb;
+  background-color: #FCFBFE;
   .icon-wrapper {
     margin-left: 6px;
     background-color: transparent;

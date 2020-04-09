@@ -1,10 +1,13 @@
 <template>
-  <main-page
-    :category="category"
-    :dataSource="dataArray"
-    v-on:categoryChange="handleCategoryChange"
-    v-on:transportOperateAction="handleOperateAction"
-  />
+  <div>
+    <main-page
+      :category="category"
+      :dataSource="dataArray"
+      :currentTab="'upload'"
+      v-on:categoryChange="handleCategoryChange"
+      v-on:transportOperateAction="handleOperateAction"
+    />
+  </div>
 </template>
 
 <script lang="ts">
@@ -30,7 +33,10 @@ export default Vue.extend({
     ...mapGetters('Transform', ['uploadInfo'])
   },
   created () {
+    this.resetSelected()
     this.getListData()
+  },
+  destroyed() {
   },
   methods: {
     // handle views action
@@ -88,6 +94,10 @@ export default Vue.extend({
         }
       });
     },
+    resetSelected() { // 重置默认选项
+      uploadCategorys[0].isSelected = true
+      uploadCategorys[1].isSelected = false
+    }
   }
 })
 </script>

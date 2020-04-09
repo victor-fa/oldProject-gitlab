@@ -3,7 +3,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios'
 import VueAxios from 'vue-axios'
 
 const instance = axios.create({
-  baseURL: 'http://120.24.182.33',
+  baseURL: 'http://192.168.10.21',
   timeout: 10000,
   withCredentials: true
 })

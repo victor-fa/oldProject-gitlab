@@ -5,7 +5,7 @@ import SparkMD5 from 'spark-md5'
 
 export default {
 	name: 'uploadBackup',
-	needChunkSize: 1024 * 1024 * 10,	// 规定片段位10M
+	needChunkSize: 1024 * 1024 * 2,	// 规定片段位2M
 	selectUploadFiles: [],
 	uploadHistory: [],
 	getUgreenNo () {

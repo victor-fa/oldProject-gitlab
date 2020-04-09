@@ -16,7 +16,7 @@
       </div>
     </div>
     <div v-if="status === 'doing'" class="right-view">
-      <a-dropdown>
+      <a-dropdown v-show="currentTab === 'backup'">
         <a-menu slot="overlay" @click="uploadBack">
           <a-menu-item key="backupFile">上传文件</a-menu-item>
           <a-menu-item key="backupFolder">上传文件夹</a-menu-item>
@@ -38,7 +38,8 @@ import { TransportCategory } from '../../../model/categoryList'
 export default Vue.extend({
   name: 'transport-header-view',
   props: {
-    categorys: Array
+    categorys: Array,
+    currentTab: String
   },
   data () {
     let items = this.categorys as TransportCategory[]

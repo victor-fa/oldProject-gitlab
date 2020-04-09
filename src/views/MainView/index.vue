@@ -15,7 +15,6 @@
         v-on:CallbackAction="handleResourceListAction"
       />
     </a-spin>
-    <input type="file" id="FileArea" @change="PrepareUploadFile" hidden ref="FileArea" multiple="multiple" />
     <!-- 上传所选文件 -->
     <input ref="FileArea" type="file" multiple directory @change="PrepareUploadFile" mozdirectory hidden />
     <!-- 上传所选文件夹 -->
@@ -351,9 +350,8 @@ export default Vue.extend({
     },
 		PrepareUploadFile(data: any) {
       const myThis = this as any
-      console.log(data.target);
 			upload.prepareFile(data.target, {
-				// data: myThis.NowDiskID,
+				data: myThis.showArray.length > 0 ? myThis.showArray[0].uuid : '',
 				add: file => {
 					console.log(file);
 					myThis.transUploadData.push(file);

@@ -53,7 +53,7 @@ export default {
       return Promise.reject(Error('not find access_token'))
     }
     const token = JSON.parse(tokenJson) as AccessToken
-    return nasCloud.get(userModulePath + '/logout', {
+    return nasCloud.post(userModulePath + '/logout', {
       headers: { 'Authorization': token.access_token }
     })
   },

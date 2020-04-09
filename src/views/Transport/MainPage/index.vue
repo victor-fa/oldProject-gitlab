@@ -2,6 +2,7 @@
   <div>
     <header-view
       :categorys="category"
+      :currentTab="currentTab"
       v-on:categroyChange="handleCategoryChange"
       v-on:batchAction="handleBatchAction"
     />
@@ -37,6 +38,7 @@ export default Vue.extend({
   props: {
     dataSource: Array,
     category: Array,
+    currentTab: String
   },
   data () {
     return {

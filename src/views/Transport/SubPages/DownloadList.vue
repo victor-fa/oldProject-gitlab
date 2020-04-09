@@ -2,6 +2,7 @@
   <main-page
     :category="category"
     :dataSource="dataArray"
+    :currentTab="'download'"
     v-on:categoryChange="handleCategoryChange"
     v-on:transportOperateAction="handleOperateAction"
   />
@@ -30,6 +31,7 @@ export default Vue.extend({
     ...mapGetters('Transform', ['downloadInfo'])
   },
   created () {
+    this.resetSelected()
     this.getListData()
   },
   methods: {
@@ -60,6 +62,7 @@ export default Vue.extend({
     },
     // inner private methods
     getListData () {
+      console.log(this.state);
       const list = this.downloadInfo
       downloadCategorys[0].count = list.filter(item => item.trans_type === 'download' && item.state === 'interrupted').length  // 正在下载
       downloadCategorys[1].count = list.filter(item => item.trans_type === 'download' && item.state === 'completed').length  // 下载完成
@@ -88,6 +91,10 @@ export default Vue.extend({
         }
       });
     },
+    resetSelected() { // 重置默认选项
+      downloadCategorys[0].isSelected = true
+      downloadCategorys[1].isSelected = false
+    }
   }
 })
 </script>

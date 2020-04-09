@@ -24,6 +24,7 @@
             <li
               v-for="(cell, index) in subItem.children"
               :key="index"
+              class="operate-item"
               @click="menuClick(cell, $event)"
               v-bind:class="{ operateItemDisable: cell.disable, operateItem: !cell.disable }"
             >

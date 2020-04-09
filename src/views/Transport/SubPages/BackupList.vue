@@ -3,6 +3,7 @@
     <main-page
       :category="category"
       :dataSource="dataArray"
+      :currentTab="'backup'"
       v-on:categoryChange="handleCategoryChange"
       v-on:transportOperateAction="handleOperateAction"
     />
@@ -39,6 +40,7 @@ export default Vue.extend({
     ...mapGetters('Transform', ['backupInfo'])
   },
   created () {
+    this.resetSelected()
     this.getListData()
   },
   methods: {
@@ -132,6 +134,10 @@ export default Vue.extend({
         }
       });
     },
+    resetSelected() { // 重置默认选项
+      backupCategorys[0].isSelected = true
+      backupCategorys[1].isSelected = false
+    }
   }
 })
 </script>
