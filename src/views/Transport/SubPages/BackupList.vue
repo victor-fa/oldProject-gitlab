@@ -6,6 +6,7 @@
       :currentTab="'backup'"
       v-on:categoryChange="handleCategoryChange"
       v-on:transportOperateAction="handleOperateAction"
+      v-on:CallbackControl="handleControl"
     />
     <!-- 上传所选文件 -->
     <input ref="FileArea" type="file" multiple directory @change="PrepareUploadFile" mozdirectory hidden />
@@ -137,6 +138,31 @@ export default Vue.extend({
     resetSelected() { // 重置默认选项
       backupCategorys[0].isSelected = true
       backupCategorys[1].isSelected = false
+    },
+    handleControl(model, ...args: any[]) {
+      const _this = this as any
+      switch (args[0]) {
+        case 'deleteFile':
+          _this.$electron.shell.beep()
+          _this.$confirm({
+            title: '删除',
+            content: '是否将所选文件彻底删除',
+            okText: '删除',
+            okType: 'danger',
+            cancelText: '取消',
+            onOk() {
+              // _this.$electron.shell.moveItemToTrash(item.path)  // 暂时不把本地文件删除了
+              const index = _this.uploadInfo.map(o => o.name).indexOf(model.name)
+              _this.uploadInfo.splice(index, 1)
+              _this.getListData()
+            }
+          });
+          break;
+        case 'refresh':
+          break;
+        default:
+          break;
+      }
     }
   }
 })

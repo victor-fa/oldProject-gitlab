@@ -12,16 +12,36 @@
         <span>{{ model.name }}</span>
         <div>
           <custom-button
+            v-show="!isCompleted && model.state === 'progressing'"
             :image="operateIcon.pause"
             :hoverImage="operateIcon.hoverPause"
             iconWidth="7px"
             class="operate-item"
+            @click.native="clickMethod('pause')"
           />
           <custom-button
+            v-show="!isCompleted && model.state === 'interrupted'"
+            :image="operateIcon.resume"
+            :hoverImage="operateIcon.hoverResume"
+            iconWidth="7px"
+            class="operate-item"
+            @click.native="clickMethod('pause')"
+          />
+          <custom-button
+            v-show="!isCompleted"
             :image="operateIcon.cancel"
             :hoverImage="operateIcon.hoverCancel"
             iconWidth="7px"
             class="operate-item"
+            @click.native="clickMethod('cancel')"
+          />
+          <custom-button
+            v-show="isCompleted"
+            :image="operateIcon.open"
+            :hoverImage="operateIcon.hoverOpen"
+            iconWidth="7px"
+            class="operate-item"
+            @click.native="clickMethod('openFile')"
           />
           <custom-button
             :image="operateIcon.openFolder"
@@ -29,6 +49,14 @@
             iconWidth="7px"
             class="operate-item"
             @click.native="clickMethod('openFolder')"
+          />
+          <custom-button
+            v-show="isCompleted"
+            :image="operateIcon.detele"
+            :hoverImage="operateIcon.hoverDelete"
+            iconWidth="7px"
+            class="operate-item"
+            @click.native="clickMethod('deleteFile')"
           />
         </div>
       </div>
@@ -40,11 +68,11 @@
           :strokeColor="'#06B650'"
           :strokeWidth="6"
         />
-        <span class="speed">514Kb/s</span>
-        <span class="progress-value">990K/200MB</span>
+        <span class="speed">{{ MathSpeend(model) }}</span>
+        <span class="progress-value">{{model.chunk | filterSize}}/{{model.size | filterSize}}</span>
       </div>
       <div v-else class="completed-content-bottom">
-        <span>200MB</span>
+        <span>{{model.size | filterSize}}</span>
       </div>
     </a-layout-content>
   </a-layout>
@@ -55,6 +83,7 @@ import Vue from 'vue'
 import { ResourceType } from '../../../api/NasFileModel'
 import ResourceHandler from '../../../views/MainView/ResourceHandler'
 import CustomButton from '../../../components/CustomButton/index.vue'
+import StringUtility from '../../../utils/StringUtility'
 
 export default Vue.extend({
   name: 'transport-item',
@@ -66,10 +95,14 @@ export default Vue.extend({
     index: Number,
     status: Object
   },
+  filters: {
+    filterSize (bytes) {
+      return StringUtility.formatShowSize(bytes)
+    }
+  },
   data () {
     return {
       operateIcon,
-      progress: 50
     }
   },
   computed: {
@@ -79,7 +112,15 @@ export default Vue.extend({
     },
     isCompleted: function () {
       const status = this.status as any
-      return status.type === 'downloaded'
+      return status.type === 'downloaded' || status.type === 'uploaded' || status.type === 'backuped'
+    },
+    progress: function () {
+      const _this = this as any
+      console.log(_this.model.chunk + '====' + _this.model.size);
+      if (_this.model.chunk === _this.model.size) {
+        this.$emit('CallbackControl', null, 'refresh')
+      }
+      return _this.model.chunk / _this.model.size * 100
     }
   },
   methods: {
@@ -116,10 +157,26 @@ export default Vue.extend({
         case 'openFile':
           _this.$electron.shell.openItem(this.model.path)
           break;
+        case 'deleteFile':
+          _this.$emit('CallbackControl', this.model, flag)
+          break;
+        case 'cancel':
+          _this.$emit('CallbackControl', this.model, flag)
+          break;
+        case 'pause':
+          _this.$emit('CallbackControl', this.model, flag)
+          break;
         default:
           break;
       }
-    }
+    },
+		MathSpeend(item) {
+      const myThis = this as any
+			let NowTime = new Date().getTime() / 1000;
+      const res:any = item.chunk / (NowTime - item.time)
+      let speed = parseFloat(res).toFixed(0);
+			return StringUtility.formatShowSize(speed) + '/s';
+		},
   }
 })
 const operateIcon = {

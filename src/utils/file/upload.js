@@ -76,8 +76,7 @@ export default {
 			path: '/.ugreen_nas/' + this.getUgreenNo() + '/' + fileName,
 			start: blobFrom,
 			end: blobTo-1,
-			size: totalSize,
-			action: 'f'
+			size: totalSize
 		}
 		let body = this.findTheFile(fileName).slice(blobFrom, blobTo)
 		return { data, chunk, body };

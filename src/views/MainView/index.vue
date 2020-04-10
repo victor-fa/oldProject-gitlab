@@ -86,10 +86,14 @@ export default Vue.extend({
 			handler() {
 				const myThis = this as any
 				myThis.$nextTick(() => {
-					myThis.transDownloadData.forEach((item, index) => {
-						item.shows = myThis.loadClassify === item.state || (item.trans_type === myThis.loadClassify && item.state !== 'completed');
-					});
+          myThis.transDownloadData.forEach((item, index) => {
+						if (item.state === 'cancelled') {
+							myThis.transDownloadData.splice(index, 1);
+						}
+            item.shows = myThis.loadClassify === item.state || (item.trans_type === myThis.loadClassify && item.state !== 'completed');
+          });
 				});
+        // console.log(JSON.parse(JSON.stringify(myThis.transDownloadData)));
         this.$store.dispatch('Transform/updateTransDownloadInfo', myThis.transDownloadData)
 			},
 			deep: true
@@ -324,19 +328,20 @@ export default Vue.extend({
 			const myThis = this as any
 			myThis.$ipc.on('download', (e, file, completed) => {
         completed && myThis.$ipc.send('system', 'popup', file.name + '下载完成');
-        this.$store.dispatch('Transform/updateTransDownloadInfo', myThis.transformData)
+        // this.$store.dispatch('Transform/updateTransDownloadInfo', myThis.transDownloadData)
 				for (let i = 0; i < myThis.transDownloadData.length; i++) {
 					if (file.name === myThis.transDownloadData[i].name) {
 						myThis.$nextTick(() => {
-							for (let name in myThis.transDownloadData[i]) {
-								myThis.transDownloadData[i][name] = file[name];
-							}
+              for (let name in myThis.transDownloadData[i]) {
+                myThis.transDownloadData[i][name] = file[name];
+              }
 						});
 						return;
 					}
         }
 				myThis.$nextTick(() => {
-					myThis.transDownloadData.push(file);
+          myThis.transDownloadData.push(file);
+          this.$store.dispatch('Transform/updateTransDownloadInfo', myThis.transDownloadData)
 				});
 			});
 		},
@@ -371,8 +376,6 @@ export default Vue.extend({
           }
           this.$store.dispatch('Transform/updateTransUploadInfo', myThis.transUploadData)
           console.log(myThis.transUploadData);
-          // 刷新
-          myThis.handleRefreshAction()
 					myThis.$message.success('文件上传成功！')
           myThis.$ipc.send('system', 'popup', file.name + '上传完成');
 				}

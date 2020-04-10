@@ -23,7 +23,8 @@
         </a-menu>
         <a-button class="right-button" style="margin-left: 8px"> 上传备份 <a-icon type="down" /> </a-button>
       </a-dropdown>
-      <a-button @click="handleBtnClick('pauseAll')">全部暂停</a-button>
+      <a-button v-show="isAllPause" @click="handleBtnClick('pauseAll')">全部暂停</a-button>
+      <a-button v-show="!isAllPause" @click="handleBtnClick('resumeAll')">全部开始</a-button>
       <a-button @click="handleBtnClick('cancelAll')">全部取消</a-button>
     </div>
     <div v-else class="right-view">
@@ -45,7 +46,8 @@ export default Vue.extend({
     let items = this.categorys as TransportCategory[]
     return {
       showItems: items,
-      status: 'doing'
+      status: 'doing',
+      isAllPause: true
     }
   },
   methods: {
@@ -61,6 +63,9 @@ export default Vue.extend({
       this.$emit('categroyChange', index)
     },
     handleBtnClick (command: string) {
+      if (command === 'pauseAll' || command === 'resumeAll') {
+        this.isAllPause = !this.isAllPause
+      }
       this.$emit('batchAction', command)
     },
     uploadBack (e) {

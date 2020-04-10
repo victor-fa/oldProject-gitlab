@@ -11,7 +11,12 @@
       :dataSource="dataSource"
     >
       <template v-slot:renderItem="{ item, index}">
-        <transport-item :model="item" :index="index" :status="status"/>
+        <transport-item
+          :model="item"
+          :index="index"
+          :status="status"
+          v-on:CallbackControl="handleControl"
+        />
       </template>
     </basic-list>
     <main-bottom-view/>
@@ -51,8 +56,10 @@ export default Vue.extend({
       this.$emit('categoryChange', index)
     },
     handleBatchAction (command: string) {
-      // console.log(command);
       this.$emit('transportOperateAction', command)
+    },
+    handleControl (model, ...args: any[]) {
+      this.$emit('CallbackControl', model, args[0])
     }
   }
 })

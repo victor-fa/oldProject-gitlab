@@ -6,6 +6,7 @@
       :currentTab="'upload'"
       v-on:categoryChange="handleCategoryChange"
       v-on:transportOperateAction="handleOperateAction"
+      v-on:CallbackControl="handleControl"
     />
   </div>
 </template>
@@ -26,7 +27,7 @@ export default Vue.extend({
     return {
       dataArray: [],
       category: uploadCategorys,
-      state: 'interrupted'
+      state: 'progressing'
     }
   },
   computed: {
@@ -49,13 +50,42 @@ export default Vue.extend({
       this.getListData()
     },
     handleOperateAction (command: string) {
-      // console.log(command);
+      const _this = this as any
       switch (command) {
         case 'pauseAll':  // 全部暂停
-          
+          let pauseCount = 0
+          this.uploadInfo.forEach(item => {
+            if (item.state === 'progressing') {
+              pauseCount++
+            }
+          })
+          if (pauseCount === 0) {
+            _this.$message.warning('无可暂停任务')
+          }
+          break;
+        case 'resumeAll':  // 全部开始
+          let resumeCount = 0
+          this.uploadInfo.forEach(item => {
+            if (item.state === 'interrupted') {
+              resumeCount++
+            }
+          })
+          if (resumeCount === 0) {
+            _this.$message.warning('无可开始任务')
+          }
           break;
         case 'cancelAll': // 全部取消
-          
+          let cancelCount = 0
+          this.uploadInfo.forEach(item => {
+            if (item.state === 'progressing') {
+              cancelCount++
+            }
+          })
+          if (cancelCount === 0) {
+            _this.$message.warning('无可取消任务')
+          } else {
+            setTimeout(() => { _this.getListData() }, 1000);
+          }
           break;
         case 'clearAll': // 清除所有记录
           this.clearAllTrans()
@@ -67,12 +97,16 @@ export default Vue.extend({
     // inner private methods
     getListData () {
       const list = this.uploadInfo
-      uploadCategorys[0].count = list.filter(item => item.trans_type === 'upload' && item.state === 'interrupted').length  // 正在上传
+      console.log(JSON.parse(JSON.stringify(this.uploadInfo)));
+      uploadCategorys[0].count = list.filter(item => item.trans_type === 'upload' && (item.state === 'progressing' || item.state === 'interrupted')).length  // 正在上传
       uploadCategorys[1].count = list.filter(item => item.trans_type === 'upload' && item.state === 'completed').length  // 上传完成
       this.dataArray = list.filter(item => {
-        return item.trans_type === 'upload' && item.state === this.state
+        if (item.state === 'progressing' || item.state === 'completed') {
+          return item.trans_type === 'upload' && item.state === this.state
+        } else if (item.state === 'interrupted') {
+          return item.trans_type === 'upload' && item.state === 'interrupted'
+        }
       })
-      console.log(JSON.parse(JSON.stringify(this.dataArray)));
     },
     clearAllTrans() { // 清空所有记录
       const _this = this as any
@@ -97,6 +131,42 @@ export default Vue.extend({
     resetSelected() { // 重置默认选项
       uploadCategorys[0].isSelected = true
       uploadCategorys[1].isSelected = false
+    },
+    handleControl(model, ...args: any[]) {
+      const _this = this as any
+      switch (args[0]) {
+        case 'deleteFile':
+          _this.$electron.shell.beep()
+          _this.$confirm({
+            title: '删除',
+            content: '是否将所选文件彻底删除',
+            okText: '删除',
+            okType: 'danger',
+            cancelText: '取消',
+            onOk() {
+              // _this.$electron.shell.moveItemToTrash(item.path)  // 暂时不把本地文件删除了
+              const index = _this.uploadInfo.map(o => o.name).indexOf(model.name)
+              _this.uploadInfo.splice(index, 1)
+              _this.getListData()
+            }
+          });
+          break;
+        case 'refresh':
+          _this.getListData()
+          break;
+        case 'cancel':
+          // _this.$ipc.send('download', 'cancel', model.id)
+          setTimeout(() => {
+            _this.getListData()
+          }, 1000);
+          break;
+        case 'pause':
+          let commend = model.state === 'progressing' ? 'pause' : 'resume';
+          // _this.$ipc.send('download', commend, model.id);
+          break;
+        default:
+          break;
+      }
     }
   }
 })
