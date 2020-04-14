@@ -1,33 +1,31 @@
 <template>
-  <div>
-    <main-page
-      :category="category"
-      :dataSource="dataArray"
-      :currentTab="'backup'"
-      v-on:categoryChange="handleCategoryChange"
-      v-on:transportOperateAction="handleOperateAction"
-      v-on:CallbackControl="handleControl"
-    />
-    <!-- 上传所选文件 -->
-    <input ref="FileArea" type="file" multiple directory @change="PrepareUploadFile" mozdirectory hidden />
-    <!-- 上传所选文件夹 -->
-    <input ref="FolderArea" type="file" multiple @change="PrepareUploadFile" webkitdirectory hidden>
-  </div>
+  <main-page
+    :category="category"
+    :dataSource="dataArray"
+    v-on:categoryChange="handleCategoryChange"
+    v-on:transportOperateAction="handleOperateAction"
+  >
+    <template v-slot:renderItem="{ item, index}">
+      <transport-item :model="item" :index="index"/>
+    </template>
+  </main-page>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
 import MainPage from '../MainPage/index.vue'
 import { TRANSFORM_INFO } from '../../../common/constants'
 import { backupCategorys } from '../../../model/categoryList'
-import uploadBackup from '../../../utils/file/uploadBackup';
+import TransportItem from '../MainPage/TransportItem.vue'
 import ClientAPI from '../../../api/ClientAPI'
-import { mapGetters } from 'vuex'
+import uploadBackup from '../../../utils/file/uploadBackup'
 
 export default Vue.extend({
   name: 'backup-list',
   components: {
-    MainPage
+    MainPage,
+    TransportItem
   },
   data () {
     return {

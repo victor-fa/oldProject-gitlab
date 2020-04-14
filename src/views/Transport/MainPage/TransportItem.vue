@@ -1,6 +1,5 @@
 <template>
   <a-layout
-    :key="index"
     class="transport-item"
     v-bind:class="{ 'transport-item-odd': isOdd }"
   >
@@ -9,81 +8,49 @@
     </a-layout-sider>
     <a-layout-content class="content">
       <div class="content-top">
-        <span>{{ model.name }}</span>
+        <span>{{ model.sourcePath }}</span>
         <div>
           <custom-button
-            v-show="!isCompleted && model.state === 'progressing'"
-            :image="operateIcon.pause"
-            :hoverImage="operateIcon.hoverPause"
-            iconWidth="7px"
+            v-for="(item, index) in showItems"
+            :key="item.command"
+            :image="item.icon"
+            :hoverImage="item.hoverIcon"
+            :highlightImage="item.hoverIcon"
+            :iconWidth="item.iconWidth"
+            :disable="item.disable"
             class="operate-item"
-            @click.native="clickMethod('pause')"
-          />
-          <custom-button
-            v-show="!isCompleted && model.state === 'interrupted'"
-            :image="operateIcon.resume"
-            :hoverImage="operateIcon.hoverResume"
-            iconWidth="7px"
-            class="operate-item"
-            @click.native="clickMethod('pause')"
-          />
-          <custom-button
-            v-show="!isCompleted"
-            :image="operateIcon.cancel"
-            :hoverImage="operateIcon.hoverCancel"
-            iconWidth="7px"
-            class="operate-item"
-            @click.native="clickMethod('cancel')"
-          />
-          <custom-button
-            v-show="isCompleted"
-            :image="operateIcon.open"
-            :hoverImage="operateIcon.hoverOpen"
-            iconWidth="7px"
-            class="operate-item"
-            @click.native="clickMethod('openFile')"
-          />
-          <custom-button
-            :image="operateIcon.openFolder"
-            :hoverImage="operateIcon.hoverOpenFolder"
-            iconWidth="7px"
-            class="operate-item"
-            @click.native="clickMethod('openFolder')"
-          />
-          <custom-button
-            v-show="isCompleted"
-            :image="operateIcon.detele"
-            :hoverImage="operateIcon.hoverDelete"
-            iconWidth="7px"
-            class="operate-item"
-            @click.native="clickMethod('deleteFile')"
+            @click.native="handleOperationAction(index)"
           />
         </div>
       </div>
       <div v-if="!isCompleted" class="content-bottom">
         <a-progress
           class="progress"
-          :percent="progress"
+          :percent="model.progressPercent"
           :showInfo="false"
           :strokeColor="'#06B650'"
           :strokeWidth="6"
+          :title="model.progressPercent + '%'"
         />
-        <span class="speed">{{ MathSpeend(model) }}</span>
-        <span class="progress-value">{{model.chunk | filterSize}}/{{model.size | filterSize}}</span>
+        <span class="speed">{{ model.speed }}</span>
+        <span class="progress-value">{{ model.progress }}</span>
       </div>
       <div v-else class="completed-content-bottom">
-        <span>{{model.size | filterSize}}</span>
+        <span>{{ model.total }}</span>
       </div>
     </a-layout-content>
   </a-layout>
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
 import { ResourceType } from '../../../api/NasFileModel'
 import ResourceHandler from '../../../views/MainView/ResourceHandler'
 import CustomButton from '../../../components/CustomButton/index.vue'
 import StringUtility from '../../../utils/StringUtility'
+import { TransportStatus } from '../../../model/categoryList'
+import { runningOperateItems, completedOperateItems, pauseItem, continueItem, TransportModel } from './TransportModel'
 
 export default Vue.extend({
   name: 'transport-item',
@@ -92,17 +59,12 @@ export default Vue.extend({
   },
   props: {
     model: Object,
-    index: Number,
-    status: Object
-  },
-  filters: {
-    filterSize (bytes) {
-      return StringUtility.formatShowSize(bytes)
-    }
+    index: Number
   },
   data () {
+    let items = this.model.status === TransportStatus.running ? runningOperateItems : completedOperateItems
     return {
-      operateIcon,
+      showItems: _.cloneDeep(items)
     }
   },
   computed: {
@@ -111,88 +73,37 @@ export default Vue.extend({
       return _this.index % 2
     },
     isCompleted: function () {
-      const status = this.status as any
-      return status.type === 'downloaded' || status.type === 'uploaded' || status.type === 'backuped'
-    },
-    progress: function () {
-      const _this = this as any
-      console.log(_this.model.chunk + '====' + _this.model.size);
-      if (_this.model.chunk === _this.model.size) {
-        this.$emit('CallbackControl', null, 'refresh')
-      }
-      return _this.model.chunk / _this.model.size * 100
+      return (this.model as TransportModel).status === TransportStatus.completed
     }
   },
   methods: {
-    searchResourceIcon (item) {
-      const _this = this as any
-      return ResourceHandler.searchResourceIcon(_this.getTypeNum(item))
+    searchResourceIcon (type: ResourceType) {
+      return ResourceHandler.searchResourceIcon(type)
     },
-		getTypeNum (data) {
-      let typeName = 0
-      const name = data.name ? data.name.substring(data.name.lastIndexOf('.')+1, data.name.length) : 'unknow'
-			if (name === 'zip') {
-				typeName = 0;
-			} else if (name === 'pdf') {
-				typeName = 5;
-			} else if (["apng", "png", "jpg", "jpeg", "bmp", "gif"].indexOf(name) > -1) {
-				typeName = 3;
-			} else if (["mp4", "rmvb", "mkv"].indexOf(name) > -1) {
-				typeName = 2;
-			} else if (["m4a", "mp3", "ogg", "flac", "f4a", "wav", "ape"].indexOf(name) > -1) {
-				typeName = 1;
-			} else if (["ini", "txt", "xml", "aspx", "php", "phtml", "js", "c", "htm", "html", "log", "cpp", "java"].indexOf(name) > -1) {
-				typeName = 4;
-			} else {
-        typeName = 0;
-      }
-			return typeName
+    handleOperationAction (index: number) {
+      const item = this.showItems[index]
+      this.$emit('operationAction', item.command, this.index)
     },
-    clickMethod (flag) {
-      const _this = this as any
-      switch (flag) {
-        case 'openFolder':
-          _this.$electron.shell.showItemInFolder(this.model.path)
-          break;
-        case 'openFile':
-          _this.$electron.shell.openItem(this.model.path)
-          break;
-        case 'deleteFile':
-          _this.$emit('CallbackControl', this.model, flag)
-          break;
-        case 'cancel':
-          _this.$emit('CallbackControl', this.model, flag)
-          break;
-        case 'pause':
-          _this.$emit('CallbackControl', this.model, flag)
-          break;
-        default:
-          break;
-      }
+    updatePauseItem () {
+      this.showItems = this.showItems.map(item => {
+        item.disable = false
+        return item.command === 'pause' ? continueItem : item
+      })
     },
-		MathSpeend(item) {
-      const myThis = this as any
-			let NowTime = new Date().getTime() / 1000;
-      const res:any = item.chunk / (NowTime - item.time)
-      let speed = parseFloat(res).toFixed(0);
-			return StringUtility.formatShowSize(speed) + '/s';
-		},
+    updateContinueItem () {
+      this.showItems = this.showItems.map(item => {
+        item.disable = false
+        return item.command === 'continue' ? pauseItem : item
+      })
+    },
+    setOperateItemDisable (command: string, disable: boolean) {
+      this.showItems = this.showItems.map(item => {
+        if (item.command === command) item.disable = disable
+        return item
+      })
+    }
   }
 })
-const operateIcon = {
-  pause: require('../../../assets/pause_icon.png'),
-  hoverPause: require('../../../assets/pause_icon_selected.png'),
-  resume: require('../../../assets/start_icon.png'),
-  hoverResume: require('../../../assets/start_icon_selected.png'),
-  cancel: require('../../../assets/cancle_icon.png'),
-  hoverCancel: require('../../../assets/cancle_icon_selected.png'),
-  openFolder: require('../../../assets/file_icon.png'),
-  hoverOpenFolder: require('../../../assets/file_icon_selected.png'),
-  detele: require('../../../assets/delete_icon.png'),
-  hoverDelete: require('../../../assets/delete_icon_selected.png'),
-  open: require('../../../assets/text_icon.png'),
-  hoverOpen: require('../../../assets/text_icon_selected.png')
-}
 </script>
 
 <style lang="less" scoped>
@@ -221,7 +132,8 @@ const operateIcon = {
         color: #484848;
       }
       .operate-item {
-        width: 20px;
+        width: 19px;
+        height: 19px;
         margin-left: 20px;
       }
     }

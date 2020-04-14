@@ -6,19 +6,21 @@
       v-on:categroyChange="handleCategoryChange"
       v-on:batchAction="handleBatchAction"
     />
-    <basic-list
-      :adjust="122"
-      :dataSource="dataSource"
-    >
-      <template v-slot:renderItem="{ item, index}">
-        <transport-item
-          :model="item"
-          :index="index"
-          :status="status"
-          v-on:CallbackControl="handleControl"
-        />
-      </template>
-    </basic-list>
+    <a-spin :spinning="loading">
+      <basic-list
+        :adjust="122"
+        :dataSource="dataSource"
+      >
+        <template v-slot:renderItem="{ item, index}">
+          <slot name="renderItem"
+            :item="item"
+            :index="index"
+            :status="status"
+            v-on:CallbackControl="handleControl"
+          />
+        </template>
+      </basic-list>
+    </a-spin>
     <main-bottom-view/>
   </div>
 </template>
@@ -29,15 +31,14 @@ import Vue from 'vue'
 import HeaderView from './HeaderView.vue'
 import BasicList from '../../../components/BasicList/index.vue'
 import { TransportTask } from '../../../api/NasFileModel'
-import TransportItem from './TransportItem.vue'
 import MainBottomView from '../../MainView/MainBottomView.vue'
+import { TransportCategory } from '../../../model/categoryList'
 
 export default Vue.extend({
   name: 'transport-main-page',
   components: {
     HeaderView,
     BasicList,
-    TransportItem,
     MainBottomView
   },
   props: {
@@ -47,7 +48,8 @@ export default Vue.extend({
   },
   data () {
     return {
-      status: this.category[0]
+      status: this.category[0],
+      loading: false
     }
   },
   methods: {
@@ -64,7 +66,3 @@ export default Vue.extend({
   }
 })
 </script>
-
-<style lang="less" scoped>
-
-</style>

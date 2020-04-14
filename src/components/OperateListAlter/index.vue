@@ -1,5 +1,5 @@
 <template>
-  <ul class="operate-list-alter" ref="operateListAlter" :style="{ height: listHeight + 'px'}">
+  <ul class="operate-list-alter" :style="{ height: listHeight + 'px'}">
     <li
       v-for="(item, index) in showItems"
       :key="index"
@@ -10,23 +10,27 @@
         <li
           v-for="(subItem, index) in item.items"
           :key="index"
-          @click="menuClick(subItem, $event)"
           class="operate-item"
           v-bind:class="{
             'operate-item-disable': subItem.disable,
             'operate-item-enable': subItem.enable
           }"
+          @click="menuClick(subItem)"
+          @mouseenter="handleMouseEnter(subItem)"
         >
           {{ subItem.title }}
-          <img v-show="subItem.children" src="../../assets/operate_icon.png">
-          <ul v-show="subItem.children && showChildren" class="operate-children"
+          <img v-show="subItem.childrens" src="../../assets/operate_icon.png">
+          <ul v-show="subItem.childrens && showChildren" class="operate-children"
             :style="{ 'left': (isChildPosLeft ? '100' : '-79') + 'px', 'border-left': (isChildPosLeft ? 'none' : '1px solid #acacb7') }">
             <li
-              v-for="(cell, index) in subItem.children"
+              v-for="(cell, index) in subItem.childrens"
               :key="index"
+              @click="menuClick(cell)"
               class="operate-item"
-              @click="menuClick(cell, $event)"
-              v-bind:class="{ operateItemDisable: cell.disable, operateItem: !cell.disable }"
+              v-bind:class="{
+                'operate-item-disable': subItem.disable,
+                'operate-item-enable': subItem.enable
+              }"
             >
               {{ cell.title }}
             </li>
@@ -38,6 +42,7 @@
 </template>
 
 <script lang="ts">
+import _ from 'lodash' 
 import Vue from 'vue'
 import { OperateItem, OperateGroup } from './operateList'
 
@@ -52,6 +57,7 @@ export default Vue.extend({
       showItems: items,
       showChildren: false, // 默认children不展示
       isChildPosLeft: false // 二级菜单是否展示在左侧
+
     }
   },
   watch: {
@@ -89,20 +95,14 @@ export default Vue.extend({
     }
   },
   methods: {
-    childClick (event) {
-      const alter:any = this.$refs.operateListAlter
-      this.isChildPosLeft = false
-      if (document.body.clientWidth - alter.clientWidth - 30 > event.clientX) {
-        this.isChildPosLeft = true
-      }
-      this.showChildren = true  // 仅当点击了上传，才会展示children
+    handleMouseEnter (item: OperateItem) {
+      this.showChildren = !_.isEmpty(item.childrens)
+      if (!this.showChildren) return
+      const rightPadding = 10; const secondListWidth = 79
+      this.isChildPosLeft = (this.$el as HTMLElement).offsetLeft + this.listWidth + rightPadding + secondListWidth <= document.body.clientWidth
     },
-    menuClick (item: OperateItem, event) {
-      if (item.disable || item.enable) return
-      if (item.command === 'upload') {
-        this.childClick(event)
-        return
-      }
+    menuClick (item: OperateItem) {
+      if (item.disable || item.enable || !_.isEmpty(item.childrens)) return
       if (this.isSpecificItem(item)) {
         this.$emit('didSelectItem', 'unkown') // 用于隐藏右键菜单
         return
@@ -113,8 +113,9 @@ export default Vue.extend({
       if (item.command === 'paste') {
         this.showTaskModeDialog()
         return true
-      } else if (item.command === 'upload') {
-        this.showOpenDialog()
+      } else if (dialogCommands.indexOf(item.command) !== -1) {
+        this.showOpenDialog(item.command)
+        return true
       }
       return false
     },
@@ -126,11 +127,11 @@ export default Vue.extend({
         message: '请选择重名文件处理模式',
         buttons: buttons
       }).then(data => {
-        const mode = this.converMode(data.response)
+        const mode = this.convertMode(data.response)
         this.$emit('didSelectItem', 'paste', mode)
       })
     },
-    converMode (index: number) {
+    convertMode (index: number) {
       switch (index) {
         case 0:
           return 'skip'
@@ -141,17 +142,27 @@ export default Vue.extend({
       }
       return 0
     },
-    showOpenDialog () {
+    showOpenDialog (command: string) {
       const { dialog, BrowserWindow } = require('electron').remote
+      let list = ['openDirectory', 'createDirectory']
+      const supportMultiSeclections = command !== 'download'
+      supportMultiSeclections && list.push('multiSelections')
+      const supportOpenFile = command === 'upload' || command === 'uploadFile'
+      supportOpenFile && list.push('openFile')
       dialog.showOpenDialog(BrowserWindow.getFocusedWindow()!, {
-        properties: ['openFile', 'openDirectory', 'createDirectory']
+        buttonLabel: '选择',
+        properties: (list as any)
       }).then(result => {
-        console.log(result)
+        const newCommand = command === 'download' ? 'download' : 'upload'
+        // filter cancel action
+        if (_.isEmpty(result.filePaths)) return
+        this.$emit('didSelectItem', newCommand, result.filePaths)
       })
     }
   }
 })
 const buttons = ['跳过', '重命名', '覆盖']
+const dialogCommands = ['download', 'upload', 'uploadFile', 'uploadFolder']
 </script>
 
 <style lang="less" scoped>
@@ -190,7 +201,7 @@ const buttons = ['跳过', '重命名', '覆盖']
       .operate-item-enable {
         color: #48484866;
         cursor:not-allowed;
-      }      
+      }
       img {
         height: 10px;
         width: 9px;

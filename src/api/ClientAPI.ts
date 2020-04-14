@@ -1,4 +1,4 @@
-import { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, Canceler } from 'axios';
 import _ from 'lodash'
 import { nasServer, source } from '../utils/request'
 import { User, BasicResponse } from './UserModel'
@@ -12,6 +12,9 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzblv4FL7IukDs1m8bvw7wsIU5R1rUmq7RUMH
 -----END PUBLIC KEY-----`
 
 let client: any
+const CancelToken = axios.CancelToken
+let cancel: Canceler | null = null
+
 export default {
   setBaseUrl (url: string) {
     nasServer.defaults.baseURL = url
@@ -46,11 +49,15 @@ export default {
       auth_code: authCode
     }
     return nasServer.post(userModulePath + '/attach', params, {
-      cancelToken: source.token
+      cancelToken: new CancelToken(function executor(c) {
+        cancel = c
+      })
     })
   },
   cancelBindRequest () {
-    source.cancel('Request canceled')
+    if (cancel !== null) {
+      cancel()
+    }
   },
   setOfflineAccount (account: string, password: string, apiToken: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/offline/account/set', {

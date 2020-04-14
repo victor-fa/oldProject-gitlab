@@ -95,7 +95,7 @@ export default Vue.extend({
       .ant-btn {
         max-width: 100px;
         border: none;
-        height: 30px;
+        height: 20px;
         color: #484848;
         font-size: 14px;
         line-height: 14px;

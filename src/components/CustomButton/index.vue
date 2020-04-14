@@ -7,11 +7,11 @@
       ghost
       block
       :disabled="disable"
-      v-on:click.native="clickAction"
-      v-on:mousedown="mousedownAction"
-      v-on:mouseup="mouseupAction"
-      v-on:onmouseenter="handleMouseEnter"
-      v-on:onmouseleave="handleMouseLeave"
+      @click.native="clickAction"
+      @mousedown="mousedownAction"
+      @mouseup="mouseupAction"
+      @mouseenter="handleMouseEnter"
+      @mouseleave="handleMouseLeave"
     >
       <label class="button-title" v-if="isShowLabel">
         {{ currentTitle }}
@@ -57,7 +57,8 @@ export default Vue.extend({
       currentImage: this.image,
       currentBackgroundImage: this.backgroundImage,
       isSelected: false,
-      isHover: false
+      isHover: false,
+      isHighlight: false
     }
   },
   computed: {
@@ -77,8 +78,13 @@ export default Vue.extend({
   },
   watch: {
     isSelected: function (value: boolean) {
-      this.isSelected = value
       value ? this.changeSelectStyle() : this.changeNormalStyle()
+    },
+    isHover: function (value: boolean) {
+      value ? this.changeHoverStyle() : this.changeNormalStyle()
+    },
+    isHighlight: function (value: boolean) {
+      value ? this.changeHighlightStyle() : this.changeNormalStyle()
     }
   },
   methods: {
@@ -86,16 +92,16 @@ export default Vue.extend({
       this.isSelected = !this.isSelected
     },
     mousedownAction () {
-      this.changeHighlightStyle()
+      this.isHighlight = true
     },
     mouseupAction () {
-      this.changeNormalStyle()
+      this.isHighlight = false
     },
     handleMouseEnter () {
-      this.changeHoverStyle()
+      this.isHover = true
     },
     handleMouseLeave () {
-      this.changeNormalStyle()
+      this.isHover = false
     },
     changeNormalStyle () {
       this.currentTitle = this.title
@@ -132,6 +138,9 @@ export default Vue.extend({
     padding: 0px;
     border: none;
     box-shadow: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 }
 </style>
