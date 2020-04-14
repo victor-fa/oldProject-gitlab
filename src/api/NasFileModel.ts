@@ -151,6 +151,38 @@ interface TransportTask {
   curr_dst_path: string // (当前操作的目的文件）
 }
 
+enum RemoteTaskStatus {
+  prerunning = 1,
+  running = 2,
+  error = 3,
+  pause = 4,
+  completed = 5
+}
+
+interface RemoteTask {
+  id: number,
+  type: ResourceType,
+  uid: number,
+  status: RemoteTaskStatus,
+  errmsg: string,
+  total_num: number,
+  total_size: number,
+  curr_num: number,
+  curr_size: number,
+  speed: number,
+  curr_src_path: string,
+  curr_dst_path: string
+}
+
+interface UploadParams {
+  uuid: string,
+  path: string,
+  start: number, 
+  end: number, 
+  size: number, 
+  md5?: number
+}
+
 export {
   ResourceItem,
   ResourceStatus,
@@ -167,5 +199,8 @@ export {
   FileDeatil,
   ShareUser,
   ShareItem,
-  TransportTask
+  TransportTask,
+  RemoteTask,
+  RemoteTaskStatus,
+  UploadParams
 }

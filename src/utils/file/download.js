@@ -31,7 +31,7 @@ export default {
 			const paramsStr = item.getURL();
 			const str = paramsStr.substring(paramsStr.indexOf('?')+1, paramsStr.indexOf('&api_token'))
 			let filePath = decodeURIComponent(str.substring(str.indexOf('&path=') + 6))
-			let name = StringUtility.formatName(filePath).replace(new RegExp("\\+","g"), ' ')
+			let name = StringUtility.formatName(filePath).replace(new RegExp("\\+", "g"), ' ')
 			item.uuid = str.substring(str.indexOf('uuid='), str.indexOf('&'))
 			item.name = name
 			item.filePath = filePath

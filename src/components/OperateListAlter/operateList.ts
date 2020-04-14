@@ -1,12 +1,13 @@
+import deviceMgr from '../../utils/deviceMgr'
+
 interface OperateItem {
   title: string,
   icon?: any,
-  subItems?: any,
   command: string,
   disable?: boolean, // 根据不同状态确定是否可用
   enable?: boolean, // 在某些场景下完全禁用该功能
   isHidden?: boolean,
-  children?: any
+  childrens?: OperateItem[]
 }
 
 interface OperateGroup {
@@ -50,17 +51,12 @@ const itemOperateList: Array<OperateGroup> = [
   }
 ]
 
-const operateList: Array<OperateGroup> = [
+let operateList: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
       { title: '上传',
-        command: 'upload',
-        children: [{
-          title: '上传文件', command: 'uploadFile'
-        }, {
-          title: '上传文件夹', command: 'uploadFolder'
-        }]
+        command: 'upload'
       },
       { title: '新建文件夹', command: 'newFolder' }
     ]
@@ -74,6 +70,13 @@ const operateList: Array<OperateGroup> = [
     ]
   }
 ]
+
+if (deviceMgr.getPlatform() === '0') {
+  operateList[0].items[0].childrens = [
+    { title: '上传文件', command: 'uploadFile' },
+    { title: '上传文件夹', command: 'uploadFolder' }
+  ]
+}
 
 export {
   itemOperateList,

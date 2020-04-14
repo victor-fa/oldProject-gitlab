@@ -8,6 +8,8 @@ import NasFileAPI, { TaskMode } from '../../api/NasFileAPI'
 import { BasicResponse, User } from '../../api/UserModel'
 import ResourceHandler from './ResourceHandler'
 import { ClipboardModel } from '../../store/modules/Resource'
+import { uploadQueue } from '../../api/TransportQueue'
+import { UploadTask } from '../../api/UploadTask'
 
 export default Vue.extend({
   name: 'main-resource-view',
@@ -96,6 +98,15 @@ export default Vue.extend({
       this.$router.go(-1)
       const length = this.currentPath.lastIndexOf('/')
       this.currentPath = this.currentPath.substring(0, length)
+    },
+    handleUploadAction (filePaths: string[]) {
+      filePaths.forEach(path => {
+        const task = new UploadTask(path, this.path, this.uuid)
+        uploadQueue.addTask(task)
+      })
+    },
+    handleNewFolderAction () {
+
     },
     overrideloadMoreData () {
       if (this.busy) return

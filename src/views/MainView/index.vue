@@ -15,10 +15,6 @@
         v-on:CallbackAction="handleResourceListAction"
       />
     </a-spin>
-    <!-- 上传所选文件 -->
-    <input ref="FileArea" type="file" multiple directory @change="PrepareUploadFile" mozdirectory hidden />
-    <!-- 上传所选文件夹 -->
-    <input ref="FolderArea" type="file" multiple @change="PrepareUploadFile" webkitdirectory hidden>
     <main-bottom-view :itemCount="itemCount"/>
     <operate-list-alter
       v-show="showAlter"
@@ -46,7 +42,6 @@ import NasFileAPI, { TaskMode } from '../../api/NasFileAPI'
 import { BasicResponse, User } from '../../api/UserModel'
 import { OperateGroup } from '../../components/OperateListAlter/operateList'
 import { sortList } from '../../model/sortList'
-import { EventBus, EventType } from '../../utils/eventBus'
 import { TRANSFORM_INFO } from '../../common/constants'
 import upload from '../../utils/file/upload'
 
@@ -190,7 +185,10 @@ export default Vue.extend({
           this.handleJumpAction()
           break;
         case 'download':
-          this.handleDownloadAction()
+          this.handleDownloadAction((args[0] as string[])[0])
+          break;
+        case 'upload':
+          this.handleUploadAction(args[0])
           break;
         case 'share':
           this.handleShareAction()
@@ -205,11 +203,9 @@ export default Vue.extend({
           this.handleUnCollectAction()
           break;
         case 'copy': 
-          this.$message.info('文件已复制到剪切板')
           this.handleClipboardAction(false)
           break;
         case 'cut':
-          this.$message.info('文件已剪切到剪切板')
           this.handleClipboardAction()
           break;
         case 'moveto':
@@ -227,16 +223,8 @@ export default Vue.extend({
         case 'info':
           this.handleInfoAction()
           break;
-        case 'uploadFile':
-          myThis.$refs.FileArea.value = '';
-          myThis.$refs.FileArea.click();
-          break;
-        case 'uploadFolder':
-          myThis.$refs.FolderArea.value = '';
-          myThis.$refs.FolderArea.click();
-          break;
         case 'newFolder':
-          
+          this.handleNewFolderAction()
           break;
         case 'clearClipboard':
           this.clearClipboardAction()
@@ -287,7 +275,7 @@ export default Vue.extend({
       }
     },
     handleJumpAction () {
-      // TODO: 调到文件指定位置
+      // TODO: 跳到文件指定位置
     },
     handleContextMenuAction (event: MouseEvent, index: number) {
       this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
@@ -346,12 +334,15 @@ export default Vue.extend({
 			});
 		},
     // handle operate list component action methods
-    handleDownloadAction () {
+    handleDownloadAction (directory: string) {
+      console.log(directory)
       const myThis = this as any
       const items = ResourceHandler.getSelectItems(this.showArray)
       items.forEach(item => {
         myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(NasFileAPI.download(item));
       });
+    },
+    handleUploadAction (filePaths: string[]) {
     },
 		PrepareUploadFile(data: any) {
       const myThis = this as any
@@ -385,10 +376,10 @@ export default Vue.extend({
       this.handleItem = true
       const items = ResourceHandler.disableSelectItems(this.showArray)
       NasFileAPI.shareResource(items).then(response => {
-        this.handleItem = false
+        this.resetHandleItem()
         if (response.data.code !== 200) return
         this.$message.info('分享成功')
-        this.showArray = ResourceHandler.resetShareState(this.showArray)
+        ResourceHandler.setShareState(this.showArray, ShareStatus.has)
       }).catch(error => {
         this.handleItemError(error)
       })
@@ -397,10 +388,10 @@ export default Vue.extend({
       this.handleItem = true
       const items = ResourceHandler.disableSelectItems(this.showArray)
       NasFileAPI.cancelShare(items).then(response => {
-        this.handleItem = false
+        this.resetHandleItem()
         if (response.data.code !== 200) return
         this.$message.info('取消分享')
-        this.showArray = ResourceHandler.resetShareState(this.showArray, ShareStatus.not)
+        ResourceHandler.setShareState(this.showArray, ShareStatus.not)
       }).catch(error => {
         this.handleItemError(error)
       })
@@ -409,10 +400,10 @@ export default Vue.extend({
       this.handleItem = true
       const items = ResourceHandler.disableSelectItems(this.showArray)
       NasFileAPI.collectFile(items).then(response => {
-        this.handleItem = false
+        this.resetHandleItem()
         if (response.data.code !== 200) return
         this.$message.info('收藏成功')
-        this.showArray = ResourceHandler.resetCollectState(this.showArray)
+        ResourceHandler.setCollectState(this.showArray, CollectStatus.has)
       }).catch(error => {
         this.handleItemError(error)
       })
@@ -421,21 +412,26 @@ export default Vue.extend({
       this.handleItem = true
       const items = ResourceHandler.disableSelectItems(this.showArray)
       NasFileAPI.cancelCollect(items).then(response => {
-        this.handleItem = false
+        this.resetHandleItem()
         if (response.data.code !== 200) return
         this.$message.info('取消成功')
-        this.showArray = ResourceHandler.resetCollectState(this.showArray, CollectStatus.not)
+        ResourceHandler.setCollectState(this.showArray, CollectStatus.not)
       }).catch(error => {
         this.handleItemError(error)
       })
     },
     handleItemError (error: any) {
       console.log(error)
-      this.handleItem = false
+      this.resetHandleItem()
       this.$message.error('网络连接错误，请检测网络')
+    },
+    resetHandleItem () {
+      this.handleItem = false
       this.showArray = ResourceHandler.resetDisableState(this.showArray)
     },
     handleClipboardAction (isClip: boolean = true) {
+      const info = isClip ? '文件已剪切到剪切板' : '文件已复制到剪切板'
+      this.$message.info(info)
       const items = ResourceHandler.getSelectItems(this.showArray)
       this.$store.dispatch('Resource/updateClipboard', { isClip: isClip, items })
     },
@@ -465,6 +461,8 @@ export default Vue.extend({
           path: item.path
         }
       })
+    },
+    handleNewFolderAction () {
     },
     clearClipboardAction () {
       this.$store.dispatch('Resource/updateClipboard', { isClip: false, items: [] })

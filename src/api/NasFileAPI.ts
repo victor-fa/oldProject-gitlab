@@ -1,8 +1,8 @@
-import { ResourceItem } from '@/api/NasFileModel';
+import { ResourceItem, UploadParams } from '@/api/NasFileModel';
 import { BasicResponse } from '@/api/UserModel';
 import Vue from 'vue'
 import { jsonToParams, jsonToParamsForPdf } from '../utils/request'
-import axios, { AxiosResponse } from 'axios/index';
+import axios, { AxiosResponse, Canceler } from 'axios/index';
 import { NAS_ACCESS, NAS_INFO } from '@/common/constants'
 import { nasServer } from '@/utils/request';
 import { NasInfo } from './ClientModel';
@@ -16,6 +16,7 @@ const nasShareModulePath = '/v1/share'
 const nasFavoriteModulePath = '/v1/favorites'
 const nasMyselfModulePath = '/v1/myself'
 
+const CancelToken = axios.CancelToken
 const host = (() => {
   const nasInfoJson = localStorage.getItem(NAS_INFO)
     if (nasInfoJson === null) {
@@ -205,15 +206,9 @@ export default {
   },
   addCopyTask(srcItems: Array<ResourceItem>, dstItem: ResourceItem, mode: TaskMode): Promise<AxiosResponse<BasicResponse>> {
     const src = srcItems.map(item => {
-      return {
-        path: item.path,
-        uuid: item.uuid
-      }
+      return { path: item.path, uuid: item.uuid }
     })
-    const dst = {
-      path: dstItem.path,
-      uuid: dstItem.uuid
-    }
+    const dst = { path: dstItem.path, uuid: dstItem.uuid }
     return nasServer.post(nasTaskModulePath + '/add', {
       type: 1,
       data: { mode, src, dst }
@@ -221,15 +216,9 @@ export default {
   },
   addMoveTask(srcItems: Array<ResourceItem>, dstItem: ResourceItem, mode: TaskMode): Promise<AxiosResponse<BasicResponse>> {
     const src = srcItems.map(item => {
-      return {
-        path: item.path,
-        uuid: item.uuid
-      }
+      return { path: item.path, uuid: item.uuid }
     })
-    const dst = {
-      path: dstItem.path,
-      uuid: dstItem.uuid
-    }
+    const dst = { path: dstItem.path, uuid: dstItem.uuid }
     return nasServer.post(nasTaskModulePath + '/add', {
       type: 2,
       data: { mode, src, dst }
@@ -237,14 +226,45 @@ export default {
   },
   addDeleteTask(srcItems: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
     const files = srcItems.map(item => {
-      return {
-        path: item.path,
-        uuid: item.uuid
-      }
+      return { path: item.path, uuid: item.uuid }
     })
     return nasServer.post(nasTaskModulePath + '/add', {
       type: 4,
       data: { mode: 1, files }
+    })
+  },
+  fetchRemoteTaskList (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.get(nasTaskModulePath + '/list')
+  },
+  pauseRemoteTask (id: number): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.get(nasTaskModulePath + '/pause', {
+      params: { task_id: id }
+    })
+  },
+  continueRemoteTask (id: number): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.get(nasTaskModulePath + '/continue', {
+      params: { task_id: id }
+    })
+  },
+  removeRemoteTask (id: number): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.get(nasTaskModulePath + '/remove', {
+      params: { task_id: id }
+    })
+  },
+  uploadData (params: UploadParams, data: Buffer, cancel?: Canceler): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasFileModulePath + '/upload', data, { 
+      params,
+      cancelToken: new CancelToken(function executor(c) {
+        cancel = c
+      })
+    })
+  },
+  newFolder (directory: string, uuid: string, name: string): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasFileModulePath + '/add', {
+      uuid,
+      path: directory,
+      type: 2,
+      alias: name
     })
   }
 }

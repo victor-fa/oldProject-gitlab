@@ -1,14 +1,16 @@
 <template>
-  <div>
-    <main-page
-      :category="category"
-      :dataSource="dataArray"
-      :currentTab="'upload'"
-      v-on:categoryChange="handleCategoryChange"
-      v-on:transportOperateAction="handleOperateAction"
-      v-on:CallbackControl="handleControl"
-    />
-  </div>
+  <main-page
+    :category="category"
+    :dataSource="dataArray"
+    :currentTab="'upload'"
+    v-on:categoryChange="handleCategoryChange"
+    v-on:transportOperateAction="handleOperateAction"
+    v-on:CallbackControl="handleControl"
+  >
+    <template v-slot:renderItem="{ item, index}">
+      <transport-item :model="item" :index="index"/>
+    </template>
+  </main-page>
 </template>
 
 <script lang="ts">
@@ -17,11 +19,13 @@ import MainPage from '../MainPage/index.vue'
 import { TRANSFORM_INFO } from '../../../common/constants'
 import { uploadCategorys } from '../../../model/categoryList'
 import { mapGetters } from 'vuex'
+import TransportItem from '../MainPage/TransportItem.vue'
 
 export default Vue.extend({
   name: 'upload-list',
   components: {
-    MainPage
+    MainPage,
+    TransportItem
   },
   data () {
     return {

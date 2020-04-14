@@ -1,10 +1,9 @@
 import _ from 'lodash'
 import { ResourceItem, ResourceType, ShareStatus, CollectStatus, OrderType, CollectItem, ShareItem } from '@/api/NasFileModel'
 import { CategoryType } from '../../model/categoryList'
-import { OperateGroup, OperateItem, operateList, itemOperateList } from '@/components/OperateListAlter/operateList'
+import { operateList, itemOperateList } from '@/components/OperateListAlter/operateList'
 import { ClipboardModel } from '@/store/modules/Resource'
 import StringUtility from '@/utils/StringUtility'
-import { NasUser } from '@/api/ClientModel'
 import { TaskMode } from '@/api/NasFileAPI'
 
 export default {
@@ -101,22 +100,16 @@ export default {
       return item
     })
   },
-  // 重置收藏状态, 收藏成功时应该重置item的disable和select状态，并设置当前item的收藏状态
-  resetCollectState (showArray: Array<ResourceItem>, status: CollectStatus = CollectStatus.has) {
-    return showArray.map(item => {
+  // 设置当前选中item的收藏状态
+  setCollectState (showArray: Array<ResourceItem>, status: CollectStatus) {
+    showArray.forEach(item => {
       if (item.isSelected) item.collected = status
-      item.disable = false
-      item.isSelected = false
-      return item
     })
   },
-  // 重置分享状态，分享成功时应该重置item的disable和select状态，并设置当前item的收藏状态
-  resetShareState (showArray: Array<ResourceItem>, status: ShareStatus = ShareStatus.has) {
-    return showArray.map(item => {
+  // 设置当前选中item的分享状态
+  setShareState (showArray: Array<ResourceItem>, status: ShareStatus) {
+    showArray.forEach(item => {
       if (item.isSelected) item.shared = status
-      item.disable = false
-      item.isSelected = false
-      return item
     })
   },
   // 获取第一个选中的item
