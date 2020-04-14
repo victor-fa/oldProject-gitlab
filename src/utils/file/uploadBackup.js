@@ -17,9 +17,20 @@ export default {
 		return ugreenNo
 	},
 	async prepareFile(data, options) {	// 处理成同步
-		if (data.target) {
-			data = data.target;
+		if (data.name) {
+			console.log(JSON.parse(JSON.stringify(data)));
+			console.log(JSON.parse(JSON.stringify(this.selectUploadFiles)));
+			console.log(JSON.parse(JSON.stringify(this.uploadHistory)));
+			if (data.state === 'interrupted') {
+				// 进行中 转 暂停
+			} else if (data.state === 'progressing') {
+				this.postUploadData(data, null, options.success);
+			}
+			return;
 		}
+		// if (data.target) {
+		// 	data = data.target;
+		// }
 		for (let k = 0; k < data.files.length; k++) {
 			this.selectUploadFiles.push(data.files[k]);
 		}
@@ -44,7 +55,6 @@ export default {
 					mac: options.data,
 					md5: callbackMd5
 				}
-				console.log(OneFile);
 				this.handleUpload(OneFile, options).then().catch(err => {	// 处理过程切换成同步
 					console.log(err)
 				})
@@ -161,10 +171,7 @@ export default {
 			const chunks = Math.ceil(fileSize / chunkSize); // 获取切片个数
 			const fileReader = new FileReader();
 			const spark = new SparkMD5.ArrayBuffer();
-			const bolbSlice =
-				File.prototype.slice ||
-				File.prototype.mozSlice ||
-				File.prototype.webkitSlice;
+			const bolbSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
 			let currentChunk = 0;
 			let md5 = '';
 			fileReader.onload = e => {

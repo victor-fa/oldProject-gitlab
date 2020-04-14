@@ -86,6 +86,39 @@ function createWindow () {
 		win.webContents.openDevTools()
   }
 
+	let appTrayLogin:any = null;
+	appTrayLogin = new Tray(path.join(__filename, '../../public/logo.ico'));
+	let trayMenuTemplateLogin = [
+		{
+			label: 'Nas-uGreen',
+			click: function() {
+				if (win) {
+					win.show();
+					win.restore();
+					win.focus();
+				}
+			}
+		},
+		{
+			label: '退出',
+			click: function() {
+				if (win) {
+					win.show();
+					win.focus();
+					win.close();
+				}
+			}
+		}
+	];
+	const contextMenuLogin = Menu.buildFromTemplate(trayMenuTemplateLogin);
+	appTrayLogin.setToolTip('uGgreen-Nas');  // 设置此托盘图标的悬停提示内容
+	appTrayLogin.setContextMenu(contextMenuLogin);  // 设置此图标的上下文菜单
+	appTrayLogin.on('click', function() {
+		if (win) {
+			win.isVisible() ? win.hide() : win.show();
+		}
+	});
+
   win.on('closed', () => {
     win = null
   })
@@ -180,53 +213,6 @@ let DiskSystem = {
 		if (MainWindow) {
 			return windowControl.active(MainWindow, data);
 		}
-		appTray = new Tray(path.join(__filename, '../../public/logo.ico'));
-		//图标的上下文菜单
-		let trayMenuTemplate = [
-			//托盘菜单
-			{
-				label: '我的网盘', //菜单显示文本项
-				click: function() {
-					MainWindow.show(); //显示
-					MainWindow.restore(); //窗口欢迎
-					MainWindow.focus(); //窗口聚焦
-				}
-			},
-			{
-				label: '系统设置', //菜单显示文本项
-				click: function() {
-					DiskSystem.SettingWindow();
-				}
-			},
-			{
-				label: '反馈', //菜单显示文本项
-				click: function() {
-					DiskSystem.FeedBackWindow();
-				}
-			},
-			{
-				label: '关于', //菜单显示文本项
-				click: function() {
-					DiskSystem.AboutWindow();
-				}
-			},
-			{
-				label: '退出',
-				click: function() {
-					MainWindow.show();
-					MainWindow.focus();
-					MainWindow.webContents.send('exit');
-				}
-			}
-		];
-		const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
-		//设置此托盘图标的悬停提示内容
-		appTray.setToolTip('uGgreen-Nas');
-		//设置此图标的上下文菜单
-		appTray.setContextMenu(contextMenu);
-		appTray.on('click', function() {
-			MainWindow.isVisible() ? MainWindow.hide() : MainWindow.show();
-		});
 	},
 	AboutWindow: () => {
 		if (AboutWindow) {
@@ -496,6 +482,7 @@ function bindIpc() {
 				});
 				break;
 			case 'exit':
+				// console.log('退出');
 				break;
 		}
 	});

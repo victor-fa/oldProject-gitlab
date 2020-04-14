@@ -16,6 +16,17 @@ export default {
 		return ugreenNo
 	},
 	prepareFile(data, options) {
+		if (data.name) {
+			console.log(JSON.parse(JSON.stringify(data)));
+			console.log(JSON.parse(JSON.stringify(this.selectUploadFiles)));
+			console.log(JSON.parse(JSON.stringify(this.uploadHistory)));
+			if (data.state === 'interrupted') {
+				// 进行中 转 暂停
+			} else if (data.state === 'progressing') {
+				this.postUploadData(data, null, options.success);
+			}
+			return;
+		}
 		// if (data.target) {
 		// 	data = data.target;
 		// }

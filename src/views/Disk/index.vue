@@ -89,6 +89,7 @@ import processCenter, { EventName } from '../../utils/processCenter'
 import upload from '../../utils/file/upload';
 import StringUtility from '../../utils/StringUtility'
 import { isResponsePass } from '../../utils/request'
+import _ from 'lodash'
 
 export default {
   name: 'disk',
@@ -893,7 +894,7 @@ export default {
 						}
 					}
 				}
-				myThis.UserDiskData = myThis.deepCopy(tempArr);
+				myThis.UserDiskData = _.cloneDeep(tempArr);
 			};
     },
 		ClearSelect() {
@@ -1195,18 +1196,6 @@ export default {
 				myThis.DiskData.NowSelect = item;
 			}
 		},
-		// 深拷贝
-		deepCopy (obj) {
-			let result = [];
-			for (let key in obj) {
-				if (typeof obj[key] === 'object') {
-					result[key] = this.deepCopy(obj[key])
-				} else {
-					result[key] = obj[key]
-				}
-			} 
-			return result
-    }
   },
   destroyed () {
     const myThis = this as any

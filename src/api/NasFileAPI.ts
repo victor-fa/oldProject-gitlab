@@ -28,6 +28,9 @@ const host = (() => {
 nasServer.defaults.baseURL = host!
 
 export default {
+  getServerUrl () {
+    return host
+  },
   storages () {
     return Vue.axios.get(host + nasFileModulePath + '/storages?' + jsonToParams(null))
   },

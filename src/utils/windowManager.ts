@@ -1,5 +1,5 @@
 import processCenter, { MainEventName } from '@/utils/processCenter'
-import { BrowserWindow, Menu } from 'electron'
+import { BrowserWindow, Menu, Tray } from 'electron'
 
 interface WindowOptions extends Electron.BrowserWindowConstructorOptions {
   path: string
@@ -9,6 +9,7 @@ let loginWindow: BrowserWindow | null = null
 let homeWindow: BrowserWindow | null = null
 let mediaWindow: BrowserWindow | null = null
 const packageInfo = require('../../package.json')
+const path = require('path');
 
 export default {
   createWindow (options: WindowOptions): BrowserWindow {
@@ -104,6 +105,58 @@ export default {
       this.activeWindow(homeWindow!)
       this.closeOtherWindow(homeWindow!)
     })
+
+    let appTray:any = null;
+    appTray = new Tray(path.join(__filename, '../../public/logo.ico'));
+    let trayMenuTemplate = [
+      {
+        label: '我的网盘',
+        click: function() {
+          if (homeWindow) {
+            homeWindow.show();
+            homeWindow.restore();
+            homeWindow.focus();
+          }
+        }
+      },
+      {
+        label: '系统设置',
+        click: function() {
+          console.log('系统设置')
+        }
+      },
+      {
+        label: '反馈',
+        click: function() {
+          console.log('反馈')
+        }
+      },
+      {
+        label: '关于',
+        click: function() {
+          console.log('关于')
+        }
+      },
+      {
+        label: '退出',
+        click: function() {
+          if (homeWindow) {
+            homeWindow.show();
+            homeWindow.focus();
+            homeWindow.close();
+          }
+        }
+      }
+    ];
+    const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
+    appTray.setToolTip('uGgreen-Nas');  // 设置此托盘图标的悬停提示内容
+    appTray.setContextMenu(contextMenu);  // 设置此图标的上下文菜单
+    appTray.on('click', function() {
+      if (homeWindow) {
+        homeWindow.isVisible() ? homeWindow.hide() : homeWindow.show();
+      }
+    });
+
     return homeWindow
   },
   presentMediaWindow (data: any) { // mediawindow 他应该是homewindow的子窗口
