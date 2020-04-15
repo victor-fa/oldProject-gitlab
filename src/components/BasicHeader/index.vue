@@ -61,8 +61,15 @@ export default Vue.extend({
   },
   methods: {
     didSettingItemClick (sender: Setting) {
+      const _this = this as any
       this.visible = false
       switch (sender.type) {
+        case SettingType.about:
+          _this.$ipc.send('system', 'about', '');
+          break
+        case SettingType.feedback:
+          _this.$ipc.send('system', 'feedback', '');
+          break
         case SettingType.logout:
           this.switchUser()
           break

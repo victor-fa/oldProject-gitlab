@@ -3,7 +3,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios'
 import VueAxios from 'vue-axios'
 
 const instance = axios.create({
-  baseURL: 'http://192.168.10.21',
+  baseURL: 'http://cloud2.ugreengroup.com',
   timeout: 10000,
   withCredentials: true
 })

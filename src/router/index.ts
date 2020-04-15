@@ -81,6 +81,16 @@ const routes = [
     name: 'MessageWindow',
     component: () => import('../views/Disk/MessageWindow.vue')
   },
+  {
+    path: '/disk-about',
+    name: 'DiskAbout',
+    component: () => import('../views/Disk/DiskAbout.vue')
+  },
+  {
+    path: '/disk-feedback',
+    name: 'DiskFeedBack',
+    component: () => import('../views/Disk/DiskFeedBack.vue')
+  },
 ]
 
 const router = new VueRouter({

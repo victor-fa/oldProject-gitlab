@@ -1,7 +1,7 @@
 import { nasCloud } from '../utils/request'
 import { AxiosResponse } from 'axios'
-import { ACCESS_TOKEN } from '../common/constants'
-import { SmsType, AccessToken, BasicResponse } from './UserModel'
+import { ACCESS_TOKEN, USER_MODEL } from '../common/constants'
+import { SmsType, AccessToken, BasicResponse, User } from './UserModel'
 import deviceMgr from '../utils/deviceMgr'
 
 const userModulePath = '/api/user/v1'
@@ -70,5 +70,27 @@ export default {
         refreshToken
       }
     })
-  }
+  },
+  feedback (title: string, context: string, linkUrl: string): Promise<AxiosResponse<BasicResponse>> {
+    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
+    const userJson = localStorage.getItem(USER_MODEL)
+    if (tokenJson === null) {
+      return Promise.reject(Error('not find access_token'))
+    }
+    if (userJson === null) {
+      return Promise.reject(Error('not find user_info'))
+    }
+    const token = JSON.parse(tokenJson) as AccessToken
+    const user = JSON.parse(userJson) as User
+    return nasCloud.post(userModulePath + '/feedback/feedbacks', {
+      ugreenNo: user.ugreenNo,
+      title,
+      linkUrl,
+      contAddr: user.phoneNo,
+      type: 1,
+      context
+    }, {
+      headers: { 'Authorization': token.access_token }
+    })
+  },
 }

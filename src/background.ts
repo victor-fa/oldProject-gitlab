@@ -219,7 +219,7 @@ let DiskSystem = {
 			return windowControl.active(AboutWindow);
 		}
 		AboutWindow = windowControl.create({
-			url: 'about',
+			url: 'disk-about',
 			icon: './src/assets/logo.png',
 			title: '关于uGgreen-Nas',
 			width: 600,
