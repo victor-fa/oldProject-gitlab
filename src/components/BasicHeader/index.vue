@@ -40,6 +40,7 @@ import processCenter, { EventName } from '../../utils/processCenter'
 import { User } from '../../api/UserModel'
 import WindowMenu from '../WindowMenu/index.vue'
 import UserAPI from '../../api/UserAPI'
+import ClientAPI from '../../api/ClientAPI'
 
 export default Vue.extend({
   name: 'basic-header',
@@ -73,6 +74,9 @@ export default Vue.extend({
         case SettingType.logout:
           this.switchUser()
           break
+        case SettingType.quit:
+          _this.$electron.remote.getCurrentWindow().close();
+          break
         default:
           break
       }
@@ -82,6 +86,14 @@ export default Vue.extend({
       UserAPI.logout().then(response => {
         if (response.data.code !== 200) return
         processCenter.renderSend(EventName.login)
+        // 调接口同步注销Nas操作，下次登录进来不会直接连当前机子
+        ClientAPI.detach().then(response => {
+          console.log(response)
+          if (response.data.code !== 200) return
+          this.$message.success('切换成功！')
+        }).catch(error => {
+          console.log(error)
+        })
         // 清除缓存的用户相关信息
         this.$store.dispatch('User/clearCacheUserInfo')
         this.$store.dispatch('NasServer/clearCacheNas')

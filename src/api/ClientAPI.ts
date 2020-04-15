@@ -1,10 +1,11 @@
 import axios, { AxiosResponse, Canceler } from 'axios';
 import _ from 'lodash'
 import { nasServer, source } from '../utils/request'
-import { User, BasicResponse } from './UserModel'
+import { User, BasicResponse, AccessToken } from './UserModel'
 import deviceMgr from '../utils/deviceMgr'
 import JSEncrypt from 'jsencrypt'
 import { NasInfo } from './ClientModel'
+import { ACCESS_TOKEN } from '../common/constants'
 
 const userModulePath = '/v1/user'
 const tmpSecretKey = `-----BEGIN PUBLIC KEY-----
@@ -120,6 +121,20 @@ export default {
   },
   fetchBindUserList (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/list')
+  },
+  detach (): Promise<AxiosResponse<BasicResponse>> {
+    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
+    if (tokenJson === null) {
+      return Promise.reject(Error('not find access_token'))
+    }
+    const token = JSON.parse(tokenJson) as AccessToken
+    return nasServer.post(userModulePath + '/common/detach', {
+      clear_disk_files: 0,
+    }, {
+      params: {
+        api_token: token.access_token
+      }
+    })
   },
   getMac () {
     return getIPAddress('mac')
