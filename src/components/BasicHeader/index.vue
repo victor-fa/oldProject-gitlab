@@ -24,9 +24,10 @@
         <img class="arrow-icon" src="../../assets/arrow_down.png">
       </div>
     </a-popover>
-    <div class="profile">
-      <a-avatar class="avatar" icon="user" size="small"/>
-      <label class="nick-name">{{ this.nickname }}</label>
+    <div class="profile" @click="showAccount()">
+      <img class="avatar" :src="imageUrl" alt="" v-if="imageUrl">
+      <a-avatar v-else class="avatar" icon="user" size="small"/>
+      <label class="nick-name">{{ this.nickName ? this.nickName : this.userName }}</label>
     </div>
   </div>
 </template>
@@ -54,9 +55,18 @@ export default Vue.extend({
     }
   },
   computed: {
-    nickname: function () {
+    nickName: function () {
+      const myThis: any = this
+      return _.get(myThis.user, 'nicName', '')
+    },
+    userName: function () {
       const myThis: any = this
       return _.get(myThis.user, 'userName', '')
+    },
+    imageUrl: function () {
+      const myThis: any = this
+      console.log('321231');
+      return myThis.user.image
     },
     ...mapGetters('User', ['user'])
   },
@@ -80,6 +90,10 @@ export default Vue.extend({
         default:
           break
       }
+    },
+    showAccount () {
+      const _this = this as any
+      _this.$ipc.send('system', 'account', '');
     },
     switchUser () {
       // const myThis
@@ -145,11 +159,14 @@ export default Vue.extend({
       width: 20px;
       height: 20px;
       margin-right: 4px;
+      border-radius: 50%;
+      cursor: pointer;
     }
     .nick-name {
       line-height: 17px;
       font-size: 12px;
       color: #484848;
+      cursor: pointer;
     }
   }
 }

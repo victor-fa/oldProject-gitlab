@@ -91,6 +91,11 @@ const routes = [
     name: 'DiskFeedBack',
     component: () => import('../views/Disk/DiskFeedBack.vue')
   },
+  {
+    path: '/disk-account',
+    name: 'DiskAccount',
+    component: () => import('../views/Disk/DiskAccount.vue')
+  },
 ]
 
 const router = new VueRouter({

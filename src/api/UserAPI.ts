@@ -93,4 +93,34 @@ export default {
       headers: { 'Authorization': token.access_token }
     })
   },
+  updateInfo (data) {
+    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
+    if (tokenJson === null) {
+      return Promise.reject(Error('not find access_token'))
+    }
+    const token = JSON.parse(tokenJson) as AccessToken
+    return nasCloud.put(userModulePath + '/update/info', {
+      sex: data.sex,
+      nicName: data.nicName,
+      userSay: data.userSay,
+      birthday: data.birthday,
+      phoneNo: data.phoneNo,
+      image: data.image,
+      code: data.code
+    }, {
+      headers: { 'Authorization': token.access_token }
+    })
+  },
+  uploadPhoto (file) {
+    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
+    if (tokenJson === null) {
+      return Promise.reject(Error('not find access_token'))
+    }
+    const token = JSON.parse(tokenJson) as AccessToken
+    const fd = new FormData()
+    fd.append('image', file)
+    return nasCloud.post(userModulePath + '/head/upload', fd, {
+      headers: { 'Authorization': token.access_token }
+    })
+  },
 }
