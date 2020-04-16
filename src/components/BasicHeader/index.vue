@@ -65,7 +65,6 @@ export default Vue.extend({
     },
     imageUrl: function () {
       const myThis: any = this
-      console.log('321231');
       return myThis.user.image
     },
     ...mapGetters('User', ['user'])
@@ -75,6 +74,9 @@ export default Vue.extend({
       const _this = this as any
       this.visible = false
       switch (sender.type) {
+        case SettingType.system:
+          _this.$ipc.send('system', 'setting', '');
+          break
         case SettingType.about:
           _this.$ipc.send('system', 'about', '');
           break

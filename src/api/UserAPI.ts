@@ -123,4 +123,38 @@ export default {
       headers: { 'Authorization': token.access_token }
     })
   },
+  changePass (data) {
+    return nasCloud.post(userModulePath + '/resetPwd', {
+      userName: data.userName,
+      password: data.password,
+      code: data.code
+    })
+  },
+  emailCode (email) {
+    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
+    if (tokenJson === null) {
+      return Promise.reject(Error('not find access_token'))
+    }
+    const token = JSON.parse(tokenJson) as AccessToken
+    return nasCloud.get(userModulePath + '/send/email/vcode', {
+      params: {
+        email,
+        emailType: 'bindEmail'
+      },
+      headers: { 'Authorization': token.access_token }
+    })
+  },
+  changeEmail (data) {
+    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
+    if (tokenJson === null) {
+      return Promise.reject(Error('not find access_token'))
+    }
+    const token = JSON.parse(tokenJson) as AccessToken
+    return nasCloud.put(userModulePath + '/update/info', {
+      email: data.email,
+      code: data.code
+    }, {
+      headers: { 'Authorization': token.access_token }
+    })
+  },
 }

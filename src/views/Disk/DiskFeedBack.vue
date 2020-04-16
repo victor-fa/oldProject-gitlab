@@ -65,9 +65,6 @@ export default {
         this.$message.error('网络连接错误,请检测网络')
       })
 		},
-		// close() {
-		// 	this.$electron.remote.getCurrentWindow().close();
-		// }
 	}
 };
 </script>
@@ -96,9 +93,6 @@ export default {
 	color: #4c4c4c;
 	font-family: 'Mistral';
 	font-weight: bold;
-	/* background: url(../../assets/big_logo.png);
-	background-size: contain;
-	background-repeat: no-repeat; */
 }
 .app-version span {
 	display: inline-block;
