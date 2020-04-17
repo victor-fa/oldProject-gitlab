@@ -2,10 +2,10 @@ import {app} from "electron";
 <template>
 	<div class="cd-setting-win">
 		<div class="cd-drag-head-big">
-			<a-icon type="setting" theme="twoTone" twoToneColor="#06B650" spin />
+			<a-icon type="setting" theme="twoTone" twoToneColor="#007934" spin />
 			<p style="color: #06B650">设置</p>
-			<a-button icon="close" style="color: #ddd" @click="close" />
-			<a-button icon="minus" style="color: #ddd" @click="mini" />
+			<a-button icon="close" style="color: #007934" @click="close" />
+			<a-button icon="minus" style="color: #007934" @click="mini" />
 		</div>
 		<div class="cd-setting-main">
 			<SettingMenu :data="SettingMenuData" @change="change" />
@@ -388,7 +388,7 @@ p {
 	width: 100%;
 	height: 50px;
 	background: url("../../assets/logo_bg.png");
-	background-size: cover;
+	background-size: auto;
 	background-position: -160px 58px;
 	background-repeat: repeat-y;
 	-webkit-app-region: drag;
@@ -430,6 +430,7 @@ p {
 	color: #fff;
 	margin: 9px 6px 9px 0;
 	border-radius:5px;
+	border-color: #06B650;
 }
 .cd-drag-head-big button:hover{
 	background: rgba(255,255,255,.1);

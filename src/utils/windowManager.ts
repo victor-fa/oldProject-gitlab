@@ -1,5 +1,6 @@
 import processCenter, { MainEventName } from '@/utils/processCenter'
 import { BrowserWindow, Menu, Tray } from 'electron'
+import windowControl from './windowControl'
 
 interface WindowOptions extends Electron.BrowserWindowConstructorOptions {
   path: string
@@ -8,6 +9,8 @@ interface WindowOptions extends Electron.BrowserWindowConstructorOptions {
 let loginWindow: BrowserWindow | null = null
 let homeWindow: BrowserWindow | null = null
 let mediaWindow: BrowserWindow | null = null
+let aboutWindow, feedBackWindow, settingWindow
+let appTray:any = null;
 const packageInfo = require('../../package.json')
 const path = require('path');
 
@@ -105,8 +108,6 @@ export default {
       this.activeWindow(homeWindow!)
       this.closeOtherWindow(homeWindow!)
     })
-
-    let appTray:any = null;
     appTray = new Tray(path.join(__filename, '../../public/logo.ico'));
     let trayMenuTemplate = [
       {
@@ -122,19 +123,65 @@ export default {
       {
         label: '系统设置',
         click: function() {
-          console.log('系统设置')
+          if (settingWindow) {
+            return windowControl.active(settingWindow);
+          }
+          settingWindow = windowControl.create({
+            url: 'disk-setting',
+            icon: './src/assets/logo.png',
+            title: '系统设置',
+            width: 600,
+            height: 400,
+            minHeight: 350,
+            minWidth: 500,
+            maximizable: false,
+            resizable: false,
+            onclose: () => {
+              settingWindow = null;
+            }
+          });
         }
       },
       {
         label: '反馈',
         click: function() {
-          console.log('反馈')
+          if (feedBackWindow) {
+            return windowControl.active(feedBackWindow);
+          }
+          feedBackWindow = windowControl.create({
+            url: 'disk-feedback',
+            icon: './src/assets/logo.png',
+            title: '问题反馈',
+            width: 450,
+            height: 320,
+            maximizable: false,
+            minimizable: false,
+            resizable: false,
+            onclose: () => {
+              feedBackWindow = null;
+            }
+          });
         }
       },
       {
         label: '关于',
         click: function() {
-          console.log('关于')
+          if (aboutWindow) {
+            return windowControl.active(aboutWindow);
+          }
+          aboutWindow = windowControl.create({
+            url: 'disk-about',
+            icon: './src/assets/logo.png',
+            title: '关于uGgreen-Nas',
+            width: 600,
+            height: 330,
+            maximizable: false,
+            minimizable: false,
+            resizable: false,
+            onclose: () => {
+              aboutWindow = null;
+            }
+          });
         }
       },
       {
