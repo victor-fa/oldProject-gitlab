@@ -75,10 +75,8 @@ export default Vue.extend({
     handleOpenFolderAction (item: ResourceItem) {
       this.$router.push({
         name: 'share-file-page',
-        params: {
-          ugreenNo: item.path,
-          showPath: `${this.currentPath}/${item.name}`
-        }
+        query: { ugreenNo: item.path },
+        params: { showPath: `${this.currentPath}/${item.name}` }
       })
     }
   }
