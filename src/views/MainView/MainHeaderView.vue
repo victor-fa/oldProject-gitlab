@@ -75,7 +75,7 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import BasicTabs from '../../components/BasicTabs/index.vue'
-import { categorys, taskCategorys, Category } from '../../model/categoryList'
+import { categorys, taskCategorys, Category, CategoryType } from '../../model/categoryList'
 import { EventBus, EventType } from '../../utils/eventBus'
 import CustomButton from '../../components/CustomButton/index.vue'
 import SortPopoverList from '../../components/SortPopoverList/index.vue'
@@ -101,6 +101,10 @@ export default Vue.extend({
       }
     }
   },
+  model: {
+    prop: 'categoryType',
+    event: 'handleTabChange'
+  },
   components: {
     BasicTabs,
     CustomButton,
@@ -111,7 +115,10 @@ export default Vue.extend({
       type: String,
       default: ''
     },
-    popoverList: Object
+    popoverList: Object,
+    categoryType: {
+      default: CategoryType.all
+    }
   },
   data () {
     return {
@@ -131,13 +138,14 @@ export default Vue.extend({
     handleTabChange (index: number) {
       this.hideSearchInput()
       const item = categorys[index]
-      this.$emit('CallbackAction', MainHeaderAction.tabChange, item.type)
+      this.$emit('CallbackAction', 'tabChange', item.type)
+      this.$emit('handleTabChange', item.type)
     },
     sortWayChange (sender: SortWay) {
       // hide popover
       this.visible = false
       const orderType = this.convertSortWay(sender)
-      this.$emit('CallbackAction', MainHeaderAction.sortWayChange, orderType)
+      this.$emit('CallbackAction', 'sortWayChange', orderType)
     },
     convertSortWay (way: SortWay) {
       switch (way.kind) {
@@ -157,7 +165,7 @@ export default Vue.extend({
     },
     backAction () {
       this.hideSearchInput()
-      this.$emit('CallbackAction', MainHeaderAction.back)
+      this.$emit('CallbackAction', 'back')
     },
     searchAction () {
       this.showSearch = true
@@ -180,12 +188,12 @@ export default Vue.extend({
         this.endSearch()
         return
       }
-      this.$emit('CallbackAction', MainHeaderAction.search, this.keyword)
+      this.$emit('CallbackAction', 'search', this.keyword)
     },
     endSearch () {
       if (!this.showSearch) return
       this.hideSearchInput()
-      this.$emit('CallbackAction', MainHeaderAction.endSearch)
+      this.$emit('CallbackAction', 'endSearch')
     },
     hideSearchInput () {
       this.showSearch = false
@@ -193,29 +201,17 @@ export default Vue.extend({
     },
     refreshAction() {
       this.hideSearchInput()
-      this.$emit('CallbackAction', MainHeaderAction.refresh)
+      this.$emit('CallbackAction', 'refresh')
     },
     arrangeBtnClick () {
       this.hideSearchInput()
       const arrangeBtn: any = this.$refs.arrangeBtn
       const selected: boolean = arrangeBtn.isSelected
       const arrangeWay = selected ? ArrangeWay.vertical : ArrangeWay.horizontal
-      this.$emit('CallbackAction', MainHeaderAction.arrangeChange, arrangeWay)
+      this.$emit('CallbackAction', 'arrangeChange', arrangeWay)
     }
   }
 })
-enum MainHeaderAction {
-  tabChange = 'tab_change',
-  back = 'back',
-  search = 'search',
-  refresh = 'refresh',
-  sortWayChange = 'sort_way_change',
-  arrangeChange = 'arrange_change',
-  endSearch = 'end_search'
-}
-export {
-  MainHeaderAction
-}
 </script>
 
 <style lang="less" scoped>
@@ -254,7 +250,7 @@ export {
       }
     }
     .right-bar {
-      line-height: 15px;
+      height: 22px;
       margin-right: 2px;
       .right-item {
         height: 22px;

@@ -50,8 +50,9 @@ interface ResourceItem {
   showMtime: string,
   showSize: string,
   // custom property
-  isSelected: boolean, // 当前item是否是选中状态
-  disable: boolean // 当前item是否是禁用状态
+  isSelected?: boolean, // 当前item是否是选中状态
+  disable?: boolean, // 当前item是否是禁用状态
+  renaming?: boolean // 重命名当前item
 }
 
 interface CollectItem {
@@ -111,7 +112,14 @@ interface PartitionInfo {
   mount: string,  // mount directory
   fs: string, // file system type,
   size: number, // curr partition space
-  used: number // curr partition used spac
+  used: number, // curr partition used spac
+  // custom property
+  showName: string,
+  showSize: string,
+  showProgress: number,
+  showIcon: any,
+  isInternal: boolean,
+  isSelected?: boolean
 }
 
 interface StorageInfo {
@@ -123,7 +131,14 @@ interface StorageInfo {
   temp: number // current temperature
   bad: number,  // bad sector
   invalid: number, // 磁盘是否不符合单分区ext格式（1不符合，0符合）
-  partitions: Array<PartitionInfo>
+  partitions: Array<PartitionInfo>,
+  // custom property
+  showName: string,
+  showSize: string,
+  showProgress: number,
+  showIcon: any,
+  isInternal: boolean,
+  isSelected?: boolean
 }
 
 // 文件上传历史排序规则
@@ -133,7 +148,7 @@ enum UploadTimeSort {
 }
 
 interface ShareUser {
-  ugreen_no: string,
+  ugreen_no: number,
   nick_name: string
 }
 

@@ -1,6 +1,8 @@
 <template>
   <div>
-    <resource-header v-if="isShowHeader"/>
+    <slot name="resourceHeader">
+      <resource-header v-if="isShowHeader"/>
+    </slot>
     <div
       class="resource-list"
       v-bind:class="{ horizontalResourceList: !isShowHeader }"
@@ -20,18 +22,11 @@
           slot="renderItem"
           slot-scope="item, index"
         >
-          <resource-list-item
-            :ref="item.name"
-            :model="item"
+          <slot
+            name="resourceItem"
+            :item="item"
             :index="index"
             :arrangeWay="arrangeWay"
-            :isSelected="item.isSelected"
-            :disable="item.disable"
-            v-on:singleSelectClick="singleSelectItem"
-            v-on:multipleSelectClick="multipleSelectItem"
-            v-on:listMultipleSelectClick="listMultipleSelectItem"
-            v-on:doubleClick="doubleClickItem"
-            v-on:contextMenuClick="handleContextMenu"
           />
         </a-list-item>
       </a-list>
@@ -47,7 +42,6 @@ import { EventBus, EventType } from '../../utils/eventBus'
 import processCenter, { EventName } from '../../utils/processCenter'
 import { ArrangeWay, ResourceType, ResourceItem } from '../../api/NasFileModel'
 import { CategoryType } from '../../model/categoryList'
-import ResourceListItem from './ResourceListItem.vue'
 import ResourceHeader from './ResourceHeader.vue'
 import { SortWay } from '../../model/sortList'
 
@@ -55,23 +49,16 @@ export default Vue.extend({
   name: 'resource-list',
   directives: { infiniteScroll },
   components: {
-    ResourceListItem,
     ResourceHeader
   },
   props: {
+    customGrid: Object,
     dataSource: Array,
-    busy: {
-      type: Boolean,
-      default: false
+    busy: { // 是否处理加载更多回调
+      default: true
     },
     arrangeWay: {
-      type: Number,
-      validator: function (value) {
-        return [ArrangeWay.horizontal, ArrangeWay.vertical].indexOf(value) !== -1
-      }
-    },
-    disableContextMenu: { // 禁用list的右键菜单
-      default: false
+      default: ArrangeWay.horizontal
     }
   },
   data () {
@@ -83,10 +70,12 @@ export default Vue.extend({
     arrangeWay: function (newValue) {
       const asjust = newValue === ArrangeWay.horizontal ? 28 : -28
       this.scrollHeight += asjust
-    } 
+    }
   },
   computed: {
     grid: function () {
+      const grid = this.customGrid as object
+      if (!_.isEmpty(grid)) return grid
       if (this.arrangeWay === ArrangeWay.horizontal) {
         return { gutter: 16, xs: 2, sm: 4, md: 6, lg: 8, xl: 12, xxl: 24 }
       }
@@ -115,56 +104,19 @@ export default Vue.extend({
     },
     handleInfiniteOnLoad () {
       if (_.isEmpty(this.dataSource)) return
-      this.$emit('CallbackAction', ResourceListAction.loadMoreData)
-    },
-    singleSelectItem (aIndex: number) {
-      this.$emit('CallbackAction', ResourceListAction.singleSelectItem, aIndex)
-    },
-    multipleSelectItem (index: number) {
-      this.$emit('CallbackAction', ResourceListAction.multipleSelectItem, index)
-    },
-    listMultipleSelectItem (index: number) {
-      this.$emit('CallbackAction', ResourceListAction.listMultipleSelectItem, index)
-    },
-    doubleClickItem (index: number) {
-      const item = this.dataSource[index] as ResourceItem
-      this.$emit('CallbackAction', ResourceListAction.openItem, index)
-      item.isSelected = false
-      this.dataSource.splice(index, 1, item)
-    },
-    handleContextMenu (event: MouseEvent, aIndex: number) {
-      if (this.disableContextMenu) return
-      this.$emit('CallbackAction', ResourceListAction.contextMenu, event, aIndex)
+      this.$emit('callbackAction', 'loadmore')
     },
     handleListContextMenu (event: MouseEvent) {
       event.preventDefault()
       event.stopPropagation()
-      if (this.disableContextMenu) return
-      this.$emit('CallbackAction', ResourceListAction.listContextMenu, event)
+      this.$emit('callbackAction', 'contextMenu', event)
     },
     handleListClick (event: MouseEvent) {
       event.stopPropagation()
-      this.$emit('CallbackAction', ResourceListAction.listClick)
-    },
-    handleRenameAction (item: ResourceItem) {
-      const listItem: any = this.$refs[item.name]
-      listItem.beginRenaming()
+      this.$emit('callbackAction', 'click')
     }
   }
 })
-enum ResourceListAction {
-  loadMoreData = 'load_more_data',
-  openItem = 'open_item',
-  contextMenu = 'context_menu',
-  listContextMenu = 'list_context_menu',
-  singleSelectItem = 'single_select_item',
-  multipleSelectItem = 'multiple_select_item',
-  listMultipleSelectItem = 'list_multiple_select_item',
-  listClick = 'list_click'
-}
-export {
-  ResourceListAction
-}
 </script>
 
 <style lang="less" scoped>

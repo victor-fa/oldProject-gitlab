@@ -15,7 +15,7 @@ interface OperateGroup {
   items: Array<OperateItem>
 }
 
-const itemOperateList: Array<OperateGroup> = [
+const resourceContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
@@ -28,9 +28,7 @@ const itemOperateList: Array<OperateGroup> = [
     items: [
       { title: '下载', command: 'download' },
       { title: '分享', command: 'share' },
-      { title: '取消分享', command: 'unshare', isHidden: true },
-      { title: '收藏', command: 'collect' },
-      { title: '取消收藏', command: 'uncollect', isHidden: true }
+      { title: '收藏', command: 'collect' }
     ]
   },
   {
@@ -51,7 +49,65 @@ const itemOperateList: Array<OperateGroup> = [
   }
 ]
 
-let operateList: Array<OperateGroup> = [
+const storageContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '打开', command: 'open' },
+      { title: '重命名', command: 'rename' }
+    ]
+  },
+  {
+    items: [
+      { title: '卸载', command: 'unload' },
+      { title: '格式化', command: 'format' },
+      { title: '属性', command: 'info' }
+    ]
+  }
+]
+
+const collectContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '打开', command: 'open' },
+      { title: '删除', command: 'delete' },
+      { title: '重命名', command: 'rename' },
+      { title: '下载', command: 'download' }
+    ]
+  },
+  {
+    icon: require('../../assets/delet_accessory.png'),
+    items: [
+      { title: '取消收藏', command: 'uncollect' },
+      { title: '属性', command: 'info' },
+      { title: '到文件位置', command: 'jump' }
+    ]
+  }
+]
+
+const shareContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '打开', command: 'open' },
+      { title: '复制', command: 'copy' },
+      { title: '删除', command: 'delete' },
+      { title: '重命名', command: 'rename' },
+      { title: '下载', command: 'download' }
+    ]
+  },
+  {
+    icon: require('../../assets/delet_accessory.png'),
+    items: [
+      { title: '取消分享', command: 'unshare' },
+      { title: '属性', command: 'info' },
+      { title: '到文件位置', command: 'jump' }
+    ]
+  }
+]
+
+let listContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
@@ -72,15 +128,18 @@ let operateList: Array<OperateGroup> = [
 ]
 
 if (deviceMgr.getPlatform() === '0') {
-  operateList[0].items[0].childrens = [
+  listContextMenu[0].items[0].childrens = [
     { title: '上传文件', command: 'uploadFile' },
     { title: '上传文件夹', command: 'uploadFolder' }
   ]
 }
 
 export {
-  itemOperateList,
-  operateList,
+  resourceContextMenu,
+  storageContextMenu,
+  collectContextMenu,
+  shareContextMenu,
+  listContextMenu,
   OperateItem,
   OperateGroup
 }
