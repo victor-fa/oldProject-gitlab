@@ -36,19 +36,35 @@ export default Vue.extend({
       shareContextMenu // item的右键菜单列表数据
     }
   },
+  computed: {
+    showPath: function () {
+      return this.$route.params.showPath
+    },
+    ugreenNo: function () {
+      return this.$route.query.ugreenNo as string
+    }
+  },
   created () {
-    this.fetchShareFileList()
-    this.currentPath = this.$route.params.showPath
+    this.checkQuery() && this.fetchShareFileList()
+    this.checkParams() && this.updateView()
   },
   methods: {
-    fetchShareFileList () {
-      const ugreenNo = this.$route.query.ugreenNo as string
-      if (_.isEmpty(ugreenNo)) {
-        this.$message.error('缺少ugreenNo参数')
-        return
+    checkQuery () {
+      if (_.isEmpty(this.ugreenNo)) {
+        this.$message.error(`缺少ugreenNo参数`)
+        return false
       }
+      return true
+    },
+    checkParams () {
+      return !_.isEmpty(this.showPath)
+    },
+    updateView () {
+      this.currentPath = this.$route.params.showPath
+    },
+    fetchShareFileList () {
       this.loading = true
-      NasFileAPI.fetchShareFileList(ugreenNo).then(response => {
+      NasFileAPI.fetchShareFileList(this.ugreenNo).then(response => {
         this.loading = false
         console.log(response)
         if (response.data.code !== 200) return
