@@ -125,7 +125,7 @@ export default {
 			};
 		},
 		checkUpdate() {
-			this.$ipc.send('system', 'check-for-update', this.$Api.Public.updateServer());
+			this.$ipc.send('system', 'check-for-update', 'https://update.zjinh.cn/c-disk');
 			this.loading = true;
 		},
 		OpenLink() {

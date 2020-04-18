@@ -86,38 +86,38 @@ function createWindow () {
 		win.webContents.openDevTools()
   }
 
-	let appTrayLogin:any = null;
-	appTrayLogin = new Tray(path.join(__filename, '../../public/logo.ico'));
-	let trayMenuTemplateLogin = [
-		{
-			label: 'Nas-uGreen',
-			click: function() {
-				if (win) {
-					win.show();
-					win.restore();
-					win.focus();
-				}
-			}
-		},
-		{
-			label: '退出',
-			click: function() {
-				if (win) {
-					win.show();
-					win.focus();
-					win.close();
-				}
-			}
-		}
-	];
-	const contextMenuLogin = Menu.buildFromTemplate(trayMenuTemplateLogin);
-	appTrayLogin.setToolTip('uGgreen-Nas');  // 设置此托盘图标的悬停提示内容
-	appTrayLogin.setContextMenu(contextMenuLogin);  // 设置此图标的上下文菜单
-	appTrayLogin.on('click', function() {
-		if (win) {
-			win.isVisible() ? win.hide() : win.show();
-		}
-	});
+	// let appTrayLogin:any = null;
+	// appTrayLogin = new Tray(path.join(__filename, '../../public/logo.ico'));
+	// let trayMenuTemplateLogin = [
+	// 	{
+	// 		label: 'Nas-uGreen',
+	// 		click: function() {
+	// 			if (win) {
+	// 				win.show();
+	// 				win.restore();
+	// 				win.focus();
+	// 			}
+	// 		}
+	// 	},
+	// 	{
+	// 		label: '退出',
+	// 		click: function() {
+	// 			if (win) {
+	// 				win.show();
+	// 				win.focus();
+	// 				win.close();
+	// 			}
+	// 		}
+	// 	}
+	// ];
+	// const contextMenuLogin = Menu.buildFromTemplate(trayMenuTemplateLogin);
+	// appTrayLogin.setToolTip('uGgreen-Nas');  // 设置此托盘图标的悬停提示内容
+	// appTrayLogin.setContextMenu(contextMenuLogin);  // 设置此图标的上下文菜单
+	// appTrayLogin.on('click', function() {
+	// 	if (win) {
+	// 		win.isVisible() ? win.hide() : win.show();
+	// 	}
+	// });
 
   win.on('closed', () => {
     win = null

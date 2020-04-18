@@ -187,6 +187,6 @@ export default Vue.extend({
   line-height: 24px;
 }
 .settingPopover .setting-item:hover {
-  background-color: gray;
+  background-color: #F3F3F3;
 }
 </style>

@@ -138,6 +138,7 @@ export default {
 	font-size: 12px;
 	-webkit-app-region: no-drag;
 	cursor: pointer;
+	color: #06B650;
 }
 .window-actions li:hover {
 	background: rgba(0, 0, 0, 0.1);
