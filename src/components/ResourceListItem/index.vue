@@ -1,13 +1,16 @@
 <template>
-  <div :key="index">
+  <div>
     <div
       v-if="isHorizontalArrange"
       class="horizontal-item"
-      v-bind:class="{ horizontalSelectedItem: isSelected, disableItem: disable }"
+      v-bind:class="{
+        horizontalSelectedItem: isSelected,
+        disableItem: isDisable
+      }"
     >
       <div class="icon-wrapper">
         <img
-          :src="searchResourceIcon(itemModel.type)"
+          :src="searchResourceIcon(model.type)"
           @click.stop.exact="singleClick()"
           @click.meta.stop="multipleClick()"
           @click.shift.stop="listMultipleClick()"
@@ -16,47 +19,36 @@
         />
       </div>
       <a-input
-        v-if="renaming"
+        v-if="isRenaming"
         v-focus
         ref="nameInput"
         type="text"
-        :disabled="loading"
         v-model="inputName"
         @blur="handleRename"
         @focus="handleFocus($event)"
         @pressEnter="handleRename"
       />
       <div v-else>
-        <!-- <a-tooltip placement="bottom">
-          <template slot="title">
-            <span>{{ itemModel.name }}</span>
-          </template>
-          <p
-            @click.stop.exact="singleClick()"
-            @click.meta.stop="multipleClick()"
-            @click.shift.stop="listMultipleClick()"
-            @dblclick="doubleClick()"
-            @contextmenu.prevent="contextMenuClick($event)"
-          >
-            {{ itemModel.name }}
-          </p>
-        </a-tooltip> -->
         <p
-          :title="itemModel.name"
+          :title="model.name"
           @click.stop.exact="singleClick()"
           @click.meta.stop="multipleClick()"
           @click.shift.stop="listMultipleClick()"
           @dblclick="doubleClick()"
           @contextmenu.prevent="contextMenuClick($event)"
         >
-          {{ itemModel.name }}
+          {{ model.name }}
         </p>
       </div>
     </div>
     <div
       v-else
       class="vertical-item"
-      v-bind:class="{ oddVerticalItem: isOddStyle, verticalSelectedItem: isSelected, disableItem: disable }"
+      v-bind:class="{
+        oddVerticalItem: isOddStyle,
+        verticalSelectedItem: isSelected, 
+        disableItem: model.disable 
+      }"
     >
       <a-row
         type="flex"
@@ -69,11 +61,11 @@
         @contextmenu.prevent.stop="contextMenuClick($event)"
       >
         <a-col :span="13">
-          <img :src="searchResourceIcon(itemModel.type)">
-          {{ itemModel.name }}
+          <img :src="searchResourceIcon(model.type)">
+          {{ model.name }}
         </a-col>
-        <a-col :span="6">{{ itemModel.showMtime }}</a-col>
-        <a-col :span="5">{{ itemModel.showSize }}</a-col>
+        <a-col :span="6">{{ model.showMtime }}</a-col>
+        <a-col :span="5">{{ model.showSize }}</a-col>
       </a-row>
     </div>
   </div>
@@ -97,34 +89,24 @@ export default Vue.extend({
     }
   },
   props: {
-    model: Object,
-    index: Number,
-    isSelected: {
+    model: Object, // 数据模型
+    index: Number, // item的标识符
+    arrangeWay: { // 排列方式
+      default: ArrangeWay.horizontal
+    },
+    isSelected: { // 如果单独在model中修改isSelected状态，是不会触发界面更新的
       default: false
     },
-    disable: { // 禁用item的交互
+    isDisable: {
       default: false
     },
-    arrangeWay: {
-      required: true,
-      type: Number,
-      validator: (value) => {
-        return [ArrangeWay.horizontal, ArrangeWay.vertical].indexOf(value) !== -1
-      }
+    isRenaming: {
+      default: false
     }
   },
   data () {
-    let item = this.model as ResourceItem
     return {
-      itemModel: item,
-      renaming: false,
-      inputName: item.name,
-      loading: false
-    }
-  },
-  watch: {
-    model: function (newValue) {
-      this.itemModel = newValue
+      inputName: (this.model as ResourceItem).name
     }
   },
   computed: {
@@ -142,28 +124,15 @@ export default Vue.extend({
     },
     handleRename () {
       // not change
-      if (this.itemModel.name === this.inputName) { 
-        this.renaming = false
-        return
-      }
-      this.loading = true
+      if (this.model.name === this.inputName) return
       // TODO: 当前没有对文件名合法性进行校验
-      const newPath = StringUtility.renamePath(this.itemModel.path, this.inputName)
-      NasFileAPI.renameResource(this.itemModel.path, newPath, this.itemModel.uuid).then(response => {
-        this.loading = false
-        console.log(response)
-        if (response.data.code !== 200) return
-        this.renaming = false
-      }).catch(error => {
-        this.loading = false
-        this.$message.error('网络连接错误，请检测网络')
-        console.log(error)
-      })
+      const newPath = StringUtility.renamePath(this.model.path, this.inputName)
+      this.$emit('callbackAction', 'rename', this.index, newPath)
     },
     handleFocus (event: FocusEvent) {
       // 输入框聚焦，选中名称字段
       const target = event.currentTarget as any
-      if (this.itemModel.type === ResourceType.folder) {
+      if (this.model.type === ResourceType.folder) {
         target.select()
       } else {
         const offset = this.inputName.lastIndexOf('.')
@@ -171,30 +140,27 @@ export default Vue.extend({
         target.selectionEnd = offset
       }
     },
-    beginRenaming () {
-      this.renaming = true
-    },
     singleClick () {
-      if (this.itemModel.disable) return
-      this.$emit('singleSelectClick', this.index)
+      if (this.model.disable) return
+      this.$emit('callbackAction', 'singleSelection', this.index)
     },
     multipleClick () {
-      if (this.itemModel.disable) return
-      this.$emit('multipleSelectClick', this.index)
+      if (this.model.disable) return
+      this.$emit('callbackAction', 'commandSelection', this.index)
     },
     shiftMultipleClick () {
-      if (this.itemModel.disable) return
-      this.$emit('listMultipleSelectClick', this.index)
+      if (this.model.disable) return
+      this.$emit('callbackAction', 'shiftSelection', this.index)
     },
     doubleClick () {
-      if (this.itemModel.disable) return
-      this.$emit('doubleClick', this.index)
+      if (this.model.disable) return
+      this.$emit('callbackAction', 'doubleClick', this.index)
     },
     contextMenuClick (event: MouseEvent) {
       event.preventDefault()
       event.stopPropagation()
-      if (this.itemModel.disable) return
-      this.$emit('contextMenuClick', event, this.index)
+      if (this.model.disable) return
+      this.$emit('callbackAction', 'contextMenu', this.index, event)
     }
   }
 })

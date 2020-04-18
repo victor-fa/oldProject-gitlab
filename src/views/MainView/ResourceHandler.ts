@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { ResourceItem, ResourceType, ShareStatus, CollectStatus, OrderType, CollectItem, ShareItem } from '@/api/NasFileModel'
 import { CategoryType } from '../../model/categoryList'
-import { operateList, itemOperateList } from '@/components/OperateListAlter/operateList'
+import { OperateGroup } from '@/components/OperateListAlter/operateList'
 import { ClipboardModel } from '@/store/modules/Resource'
 import StringUtility from '@/utils/StringUtility'
 import { TaskMode } from '@/api/NasFileAPI'
@@ -9,6 +9,7 @@ import { TaskMode } from '@/api/NasFileAPI'
 export default {
   // 对资源列表进行分类
   classifyArray (dataSource: Array<ResourceItem>, type: CategoryType) {
+    if (type === CategoryType.all) return dataSource
     let newArray: Array<ResourceItem> = []
     for (let index = 0; index < dataSource.length; index++) {
       const element = dataSource[index] as ResourceItem
@@ -63,10 +64,14 @@ export default {
       return item
     })
   },
+  // command多选
+  commandMultipleSelection (showList: Array<ResourceItem>, index: number) {
+
+  },
   // shift多选规则: 
   // 1. 如果当前有选中：取第一个已选中item的下标bIndex，将aIndex与bIndex之间的所有item全部选中
   // 2. 如果当前没有选中， 直接选中当前的item
-  shiftMultipleSelect (showList: Array<ResourceItem>, aIndex: number) {
+  shiftMultipleSelection (showList: Array<ResourceItem>, aIndex: number) {
     const firstIndex = this.getFirstSelectItemIndex(showList)
     if (firstIndex === -1) {
       return this.setSelectState(showList, aIndex, true)
@@ -79,9 +84,11 @@ export default {
     })
   },
   // 重置选中状态
+  // 在item不可交互的时候，不能重置掉item的状态
   resetSelectState (currentShowList: Array<ResourceItem>) {
     return currentShowList.map(item => {
-      item.isSelected = false
+      item.disable !== true && (item.isSelected = false)
+      item.disable !== true && (item.renaming = false)
       return item
     })
   },
@@ -149,6 +156,23 @@ export default {
     }
     return items
   },
+  // 禁用第一个选中的item
+  disableFirstSelectItem (showArray: Array<ResourceItem>) {
+    for (let index = 0; index < showArray.length; index++) {
+      const element = showArray[index]
+      if (element.isSelected === true) {
+        element.disable = true
+        showArray.splice(index, 1, element)
+        return element
+      }
+    }
+    return undefined
+  },
+  removeSelectedItems (showArray: Array<ResourceItem>) {
+    return showArray.filter(item => {
+      return item.isSelected !== true
+    })
+  },
   // 格式化返回的数据，用于界面展示
   formateResponseList (list: Array<ResourceItem>) {
     return list.map(value => {
@@ -192,25 +216,25 @@ export default {
   // 1. 已分享的显示取消分享，已收藏的显示取消收藏
   // 2. 多选情况下，打开、到文件位置、属性、重命名不可用
   // 3. 多选情况下，如果既包含已分享(收藏)和未分享(收藏)，就展示成不可用的分享(收藏)
-  filterItemOperateList (showArray: Array<ResourceItem>) {
+  filterItemOperateList (groups: OperateGroup[], showArray: Array<ResourceItem>) {
+    if (_.isEmpty(groups)) return null 
     const selectItems = this.getSelectItems(showArray)
     const state = this.calculateOperateItemState(selectItems)
     const multipleDisableItem = ['open', 'jump', 'info', 'rename']
-    const list = _.cloneDeep(itemOperateList)
-    return list.map(group => {
+    return groups.map(group => {
       group.items.map(item => {
         if (item.command === 'share') {
           item.disable = state.disableShare
-          item.isHidden = !state.showShare
+          // item.isHidden = !state.showShare
         } else if (item.command === 'unshare') {
           item.disable = state.disableShare
-          item.isHidden = state.showShare
+          // item.isHidden = state.showShare
         } else if (item.command === 'collect') {
           item.disable = state.disableCollect
-          item.isHidden = !state.showCollect
+          // item.isHidden = !state.showCollect
         } else if (item.command === 'uncollect') {
           item.disable = state.disableCollect
-          item.isHidden = state.showCollect
+          // item.isHidden = state.showCollect
         } else if (multipleDisableItem.indexOf(item.command) !== -1) {
           item.disable = state.disable
         }
@@ -243,10 +267,10 @@ export default {
   },
   // list的右键菜单显示规则
   // 1. 如果剪切板为空，就禁用清空剪切板和粘贴
-  filterOperateList (clipboard: ClipboardModel) {
+  filterOperateList (groups: OperateGroup[], clipboard: ClipboardModel) {
+    if (_.isEmpty(groups)) return null 
     const disable = _.isEmpty(clipboard.items)
-    const list = _.cloneDeep(operateList)
-    return list.map(group => {
+    return groups.map(group => {
       group.items.map(item => {
         if (item.command === 'clearClipboard') {
           item.disable = disable

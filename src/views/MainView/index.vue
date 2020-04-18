@@ -1,21 +1,43 @@
 <template>
   <div class="main-view">
-    <main-header-view
+    <slot 
+      name="header"
       :directory="currentPath"
-      :popoverList="sortList"
-      v-on:CallbackAction="handleHeaderViewAction"
-    />
+      :popoverList="popoverList"
+    >
+      <main-header-view
+        :directory="currentPath"
+        :popoverList="popoverList"
+        v-model="categoryType"
+        v-on:CallbackAction="handleHeaderViewAction"
+      />
+    </slot>
     <a-spin :spinning="loading">
       <resource-list
-        ref="resourceList"
+        :customGrid="listGrid"
         :dataSource="showArray"
         :busy="busy"
         :arrangeWay="arrangeWay"
-        :disableContextMenu="disableAlter"
-        v-on:CallbackAction="handleResourceListAction"
-      />
+        v-on:callbackAction="handleResourceListAction"
+      >
+        <template v-slot:resourceItem="{ item, index, arrangeWay }">
+          <slot name="resourceItem" :item="item" :index="index" :arrangeWay="arrangeWay">
+            <resource-list-item
+              :model="item"
+              :index="index"
+              :isSelected="item.isSelected"
+              :isDisable="item.disable"
+              :isRenaming="item.renaming"
+              :arrangeWay="arrangeWay"
+              v-on:callbackAction="handleResourceItemAction"
+            />
+          </slot>
+        </template>
+      </resource-list>
     </a-spin>
-    <main-bottom-view :itemCount="itemCount"/>
+    <slot name="footer" :itemCount="itemCount">
+      <main-bottom-view :itemCount="itemCount"/>
+    </slot>
     <operate-list-alter
       v-show="showAlter"
       ref="operateListAlter"
@@ -30,20 +52,18 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import MainHeaderView, { MainHeaderAction } from './MainHeaderView.vue'
+import MainHeaderView from './MainHeaderView.vue'
 import MainBottomView from './MainBottomView.vue'
-import ResourceList, { ResourceListAction } from '../../components/ResourceList/index.vue'
-import { ResourceItem, ArrangeWay, OrderType, CollectStatus, ShareStatus, ResourceType } from '../../api/NasFileModel'
+import ResourceList from '../../components/ResourceList/index.vue'
+import ResourceListItem from '../../components/ResourceListItem/index.vue'
+import { ResourceItem, ArrangeWay, OrderType, ResourceType } from '../../api/NasFileModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 import ResourceHandler from './ResourceHandler'
 import { CategoryType } from '../../model/categoryList'
 import OperateListAlter from '../../components/OperateListAlter/index.vue'
 import NasFileAPI, { TaskMode } from '../../api/NasFileAPI'
-import { BasicResponse, User } from '../../api/UserModel'
 import { OperateGroup } from '../../components/OperateListAlter/operateList'
 import { sortList } from '../../model/sortList'
-import { TRANSFORM_INFO } from '../../common/constants'
-import upload from '../../utils/file/upload'
 
 export default Vue.extend({
   name: 'main-view',
@@ -51,48 +71,38 @@ export default Vue.extend({
     MainHeaderView,
     MainBottomView,
     ResourceList,
-    OperateListAlter
+    OperateListAlter,
+    ResourceListItem
+  },
+  props: {
+    currentPath: { // header中展示的当前路径
+      default: ''
+    },
+    loading: {
+      default: false
+    },
+    busy: { // 是否处理加载更多事件
+      default: true
+    },
+    dataSource: Array,
+    popoverList: { // header中排序弹窗列表数据
+      default: () => {
+        return sortList
+      }
+    },
+    listGrid: Object, // 列表视图的布局
+    contextListMenu: Array, // 右键list菜单数据   
+    contextItemMenu: Array // 右键item菜单数据
   },
   data () {
-    let items: Array<ResourceItem> = []
-    let list: Array<OperateGroup> = []
     return {
-      loading: false,
-      dataArray: items, // 当前页的全部数据
-      showArray: items, // 当前页展示的数据
-      currentPath: '', // 当前页的路径
-      busy: false, // 控制是否响应加载更多方法
-      arrangeWay: ArrangeWay.horizontal, // list的排序方式
+      categoryType: CategoryType.all, // 当前数据分类 
+      showArray: this.dataSource as ResourceItem[], // 当前页展示的数据
+      arrangeWay: ArrangeWay.horizontal, // list的排列方式
       alterPosition: { left: '0px', top: '0px' }, // 右键菜单样式
       showAlter: false, // 控制右键菜单的显示与隐藏
-      disableAlter: false, // 是否禁用右键菜单
-      showOperateList: list, // 展示的右键菜单选项集合
-      handleItem: false, // 在处理item(如：收藏、分享)过程中，item将设置为disable状态
-      sortList: sortList, // MianHeaderView中排序弹窗列表的数据源
-      transDownloadData: [],
-      transUploadData: [],
+      showOperateList: [] as OperateGroup[] // 展示的右键菜单数据
     }
-  },
-  watch: {
-    dataArray: function (newValue) {
-      this.showArray = newValue
-    },
-		transDownloadData: {
-			handler() {
-				const myThis = this as any
-				myThis.$nextTick(() => {
-          myThis.transDownloadData.forEach((item, index) => {
-						if (item.state === 'cancelled') {
-							myThis.transDownloadData.splice(index, 1);
-						}
-            item.shows = myThis.loadClassify === item.state || (item.trans_type === myThis.loadClassify && item.state !== 'completed');
-          });
-				});
-        // console.log(JSON.parse(JSON.stringify(myThis.transDownloadData)));
-        this.$store.dispatch('Transform/updateTransDownloadInfo', myThis.transDownloadData)
-			},
-			deep: true
-		}
   },
   computed: {
     alterStyle: function (): object {
@@ -102,191 +112,63 @@ export default Vue.extend({
       }
     },
     itemCount: function () {
-      const myThis: any = this
-      return myThis.showArray.length
+      const count = this.showArray.length as number
+      return count
     },
-    ...mapGetters('Resource', ['clipboard']),
-    ...mapGetters('Transform', ['downloadInfo']),
-    ...mapGetters('Transform', ['uploadInfo']),
-    ...mapGetters('Transform', ['backupInfo'])
+    ...mapGetters('Resource', ['clipboard'])
   },
-	created() {
-    this.Bind();
-	},
-  mounted () {
-    this.transDownloadData = this.downloadInfo
-    this.transUploadData = this.uploadInfo
-  },
-  destroyed() {
+  watch: {
+    dataSource: function (newValue: Array<ResourceItem>) {
+      this.showArray = ResourceHandler.classifyArray(newValue, this.categoryType)
+    }
   },
   methods: {
-    // handle component callback action
-    handleHeaderViewAction (actionType: MainHeaderAction, ...args: any[]) {
-      switch (actionType) {
-        case MainHeaderAction.tabChange:
+    // handle header view callback actions
+    handleHeaderViewAction (action: string, ...args: any[]) {
+      this.$emit('headerCallbackActions', action, ...args)
+      switch (action) {
+        case 'tabChange': 
           this.handleTabChange(args[0])
           break;
-        case MainHeaderAction.back:
-          this.overrideBackAction()
-          break;
-        case MainHeaderAction.search:
-          this.overrideSearchAction(args[0])
-          break;
-        case MainHeaderAction.endSearch:
+        case 'endSearch':
           this.handleEndSerchAction()
           break;
-        case MainHeaderAction.refresh:
-          this.overrideRefreshAction()
-          break;
-        case MainHeaderAction.sortWayChange:
-          this.overrideSortWayChangeAction(args[0])
-          break;
-        case MainHeaderAction.arrangeChange:
+        case 'arrangeChange':
           this.handleArrangeChange(args[0])
           break;
-      }
-    },
-    handleResourceListAction (actionType: ResourceListAction, ...args: any[]) {
-      switch (actionType) {
-        case ResourceListAction.loadMoreData:
-          this.overrideloadMoreData()
-          break;
-        case ResourceListAction.openItem:
-          this.handleOpenAction()
-          break;
-        case ResourceListAction.contextMenu:
-          this.handleContextMenuAction(args[0], args[1])
-          break;
-        case ResourceListAction.listContextMenu:
-          this.handleListContextMenuAction(args[0])
-          break;
-        case ResourceListAction.singleSelectItem:
-          this.handleSingleAction(args[0])
-          break;
-        case ResourceListAction.multipleSelectItem:
-          this.handleMultipleAction(args[0])
-          break;
-        case ResourceListAction.listMultipleSelectItem:
-          this.handleListMultipleAction(args[0])
-          break;
-        case ResourceListAction.listClick:
-          this.handleListClickAction()
+        default:
           break;
       }
     },
-    handleAlterAction (command: string, ...args: any[]) {
-      this.showAlter = false
-      const myThis = this as any
-      switch (command) {
-        case 'open': 
-          this.handleOpenAction()
-          break;
-        case 'jump':
-          this.handleJumpAction()
-          break;
-        case 'download':
-          this.handleDownloadAction((args[0] as string[])[0])
-          break;
-        case 'upload':
-          this.handleUploadAction(args[0])
-          break;
-        case 'share':
-          this.handleShareAction()
-          break;
-        case 'unshare':
-          this.handleUnshareAction()
-          break;
-        case 'collect':
-          this.handleCollection()
-          break;
-        case 'uncollect':
-          this.handleUnCollectAction()
-          break;
-        case 'copy': 
-          this.handleClipboardAction(false)
-          break;
-        case 'cut':
-          this.handleClipboardAction()
-          break;
-        case 'moveto':
-          
-          break;
-        case 'delete':
-          this.handleDeletAction()
-          break;
-        case 'rename':
-          this.handleRenameAction()
-          break;
-        case 'encrypt':
-          
-          break;
-        case 'info':
-          this.handleInfoAction()
-          break;
-        case 'newFolder':
-          this.handleNewFolderAction()
-          break;
-        case 'clearClipboard':
-          this.clearClipboardAction()
-          break;
-        case 'paste':
-          const mode = ResourceHandler.matchTaskMode(args[0])
-          this.overridePasteAction(mode)
-          break;
-        case 'refresh':
-          this.overrideRefreshAction()
-          break;
-      }
-    },
-    // handle main header view compoennt action methods
-    handleTabChange (categoryType: CategoryType) {
-      this.showArray = ResourceHandler.classifyArray(this.dataArray, categoryType)
+    handleTabChange (type: CategoryType) {
+      this.showArray = ResourceHandler.classifyArray(this.dataSource as ResourceItem[], type)
     },
     handleEndSerchAction () {
-      this.showArray = this.dataArray
+      this.showArray = this.dataSource as ResourceItem[]
     },
     handleArrangeChange (arrangeWay: ArrangeWay) {
       this.arrangeWay = arrangeWay
     },
-    // handle resource list action methods
-    handleOpenAction () {
-      const item = ResourceHandler.getFirstSelectItem(this.showArray)
-      if (item === null) return
-      item.type === ResourceType.folder ? this.overrideOpenFolderAction(item) : this.handleOpenFileAction(item)
-    },
-    handleOpenFileAction (item: ResourceItem) {
-      const myThis: any = this
-      let OpenType = item.type;
-      const filterArr = [1, 2, 3, 4]; // 0: Unknown 1: Video, 2: Audio, 3:Image, 4:Document, 5:Archive, 6:Folder
-      if (filterArr.indexOf(OpenType) > -1) {
-        let data:any = []
-        data.push(item)
-        myThis.$ipc.send('file-control', OpenType, data);
-      } else if (OpenType === 5) {	// 包含zip
-        let data:any = []
-        data.push(item)
-        const filterCompress = ['.zip', '.rar', '.7z', '.ZIP', '.RAR', '.7Z']
-        const compressRes = filterCompress.filter(item => data[0].path.indexOf(item) > -1)
-        if (compressRes.length === 0) {	// pdf
-          myThis.$ipc.send('file-control', OpenType, data);
-        }
-      } else {
-        this.$message.warning('暂不支持打开该类型文件');
+    // handle resource list view callback actions
+    handleResourceListAction (action: string, ...args: any[]) {
+      this.$emit('listCallbackActions', action, ...args)
+      switch (action) {
+        case 'contextMenu':
+          this.handleListContextMenuAction(args[0])
+          break;
+        case 'click':
+          this.handleListClickAction()
+          break;
+        default:
+          break;
       }
     },
-    handleJumpAction () {
-      // TODO: 跳到文件指定位置
-    },
-    handleContextMenuAction (event: MouseEvent, index: number) {
-      this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
-      const list = ResourceHandler.filterItemOperateList(this.showArray)
-      this.showContextMenu(list, event)
-    },
     handleListContextMenuAction (event: MouseEvent) {
-      const list = ResourceHandler.filterOperateList(this.clipboard)
+      const list = ResourceHandler.filterOperateList(this.contextListMenu as OperateGroup[], this.clipboard)
       this.showContextMenu(list, event)
     },
-    showContextMenu (list: Array<OperateGroup>, event: MouseEvent) {
+    showContextMenu (list: Array<OperateGroup> | null, event: MouseEvent) {
+      if (list === null) return
       this.showOperateList = list
       this.showAlter = true
       this.$nextTick(() => {
@@ -294,197 +176,59 @@ export default Vue.extend({
         this.alterPosition = ResourceHandler.calculateSafePositionOnWindow(event.clientX, event.clientY, alter)
       })
     },
-    handleSingleAction (index: number) {
-      this.showAlter = false
-      this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
-    },
-    handleMultipleAction (index: number) {
-      this.showArray = ResourceHandler.setSelectState(this.showArray, index, true)
-    },
-    handleListMultipleAction (index: number) {
-      this.showArray = ResourceHandler.shiftMultipleSelect(this.showArray, index)
-    },
     handleListClickAction () {
       if (this.showAlter) {
         this.showAlter = false
       } else {
-        if (this.handleItem) return
+        // 没有选中的item，就不更新界面
+        if (ResourceHandler.getFirstSelectItem(this.showArray) === null) return
         this.showArray = ResourceHandler.resetSelectState(this.showArray)
       }
     },
-		Bind: function() {
-			const myThis = this as any
-			myThis.$ipc.on('download', (e, file, completed) => {
-        completed && myThis.$ipc.send('system', 'popup', file.name + '下载完成');
-        // this.$store.dispatch('Transform/updateTransDownloadInfo', myThis.transDownloadData)
-				for (let i = 0; i < myThis.transDownloadData.length; i++) {
-					if (file.name === myThis.transDownloadData[i].name) {
-						myThis.$nextTick(() => {
-              for (let name in myThis.transDownloadData[i]) {
-                myThis.transDownloadData[i][name] = file[name];
-              }
-						});
-						return;
-					}
-        }
-				myThis.$nextTick(() => {
-          myThis.transDownloadData.push(file);
-          this.$store.dispatch('Transform/updateTransDownloadInfo', myThis.transDownloadData)
-				});
-			});
-		},
-    // handle operate list component action methods
-    handleDownloadAction (directory: string) {
-      console.log(directory)
-      const myThis = this as any
-      const items = ResourceHandler.getSelectItems(this.showArray)
-      items.forEach(item => {
-        myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(NasFileAPI.download(item));
-      });
+    // handle resource list view item callback actions
+    handleResourceItemAction (action: string, index: number, ...args: any[]) {
+      this.$emit('itemCallbackActions', action, index, ...args)
+      switch (action) {
+        case 'doubleClick':
+          const item = this.showArray[index]
+          this.$emit('contextMenuCallbackActions', 'open', item)
+          break;
+        case 'singleSelection':
+          this.handleSingleSelection(index)
+          break;
+        case 'commandSelection':
+          this.handleCommandSelection(index)
+          break;
+        case 'shiftSelection':
+          this.handleShiftSelection(index)
+          break;
+        case 'contextMenu':
+          this.handleItemContextMenu(index, args[0])
+          break;
+        default:
+          break;
+      }
     },
-    handleUploadAction (filePaths: string[]) {
+    handleSingleSelection (index: number) {
+      const select = this.showArray[index].isSelected === true
+      this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, !select)
     },
-		PrepareUploadFile(data: any) {
-      const myThis = this as any
-			upload.prepareFile(data.target, {
-				data: myThis.showArray.length > 0 ? myThis.showArray[0].uuid : '',
-				add: file => {
-					console.log(file);
-					myThis.transUploadData.push(file);
-					myThis.$message.info((data.target ? data.target : data).files.length + '个文件已加入上传列队');
-				},
-				success: (file, response) => {
-					console.log(response);
-					// const _this = myThis as any
-					const rs = response.data;
-					if (rs.code !== 200) {
-						if (rs.code === '4050') {
-							myThis.$message.warning('文件已存在')
-						} else {
-							myThis.$message.warning(rs.msg)
-						}
-						return
-          }
-          this.$store.dispatch('Transform/updateTransUploadInfo', myThis.transUploadData)
-          console.log(myThis.transUploadData);
-					myThis.$message.success('文件上传成功！')
-          myThis.$ipc.send('system', 'popup', file.name + '上传完成');
-				}
-			});
-		},
-    handleShareAction () {
-      this.handleItem = true
-      const items = ResourceHandler.disableSelectItems(this.showArray)
-      NasFileAPI.shareResource(items).then(response => {
-        this.resetHandleItem()
-        if (response.data.code !== 200) return
-        this.$message.info('分享成功')
-        ResourceHandler.setShareState(this.showArray, ShareStatus.has)
-      }).catch(error => {
-        this.handleItemError(error)
-      })
+    handleCommandSelection (index: number) {
+      const select = this.showArray[index].isSelected === true
+      this.showArray = ResourceHandler.setSelectState(this.showArray, index, !select)
     },
-    handleUnshareAction () {
-      this.handleItem = true
-      const items = ResourceHandler.disableSelectItems(this.showArray)
-      NasFileAPI.cancelShare(items).then(response => {
-        this.resetHandleItem()
-        if (response.data.code !== 200) return
-        this.$message.info('取消分享')
-        ResourceHandler.setShareState(this.showArray, ShareStatus.not)
-      }).catch(error => {
-        this.handleItemError(error)
-      })
+    handleShiftSelection (index: number) {
+      this.showArray = ResourceHandler.shiftMultipleSelection(this.showArray, index)
     },
-    handleCollection () {
-      this.handleItem = true
-      const items = ResourceHandler.disableSelectItems(this.showArray)
-      NasFileAPI.collectFile(items).then(response => {
-        this.resetHandleItem()
-        if (response.data.code !== 200) return
-        this.$message.info('收藏成功')
-        ResourceHandler.setCollectState(this.showArray, CollectStatus.has)
-      }).catch(error => {
-        this.handleItemError(error)
-      })
+    handleItemContextMenu (index: number, event: MouseEvent) {
+      this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
+      const list = ResourceHandler.filterItemOperateList(this.contextItemMenu as OperateGroup[], this.showArray)
+      this.showContextMenu(list, event)
     },
-    handleUnCollectAction () {
-      this.handleItem = true
-      const items = ResourceHandler.disableSelectItems(this.showArray)
-      NasFileAPI.cancelCollect(items).then(response => {
-        this.resetHandleItem()
-        if (response.data.code !== 200) return
-        this.$message.info('取消成功')
-        ResourceHandler.setCollectState(this.showArray, CollectStatus.not)
-      }).catch(error => {
-        this.handleItemError(error)
-      })
-    },
-    handleItemError (error: any) {
-      console.log(error)
-      this.resetHandleItem()
-      this.$message.error('网络连接错误，请检测网络')
-    },
-    resetHandleItem () {
-      this.handleItem = false
-      this.showArray = ResourceHandler.resetDisableState(this.showArray)
-    },
-    handleClipboardAction (isClip: boolean = true) {
-      const info = isClip ? '文件已剪切到剪切板' : '文件已复制到剪切板'
-      this.$message.info(info)
-      const items = ResourceHandler.getSelectItems(this.showArray)
-      this.$store.dispatch('Resource/updateClipboard', { isClip: isClip, items })
-    },
-    handleDeletAction () {
-      const items = ResourceHandler.getSelectItems(this.showArray)
-      if (_.isEmpty(items)) return
-      console.log(items)
-      // TODO: 删除文件
-    },
-    handleRenameAction () {
-      const items = ResourceHandler.getSelectItems(this.showArray)
-      if (_.isEmpty(items)) return
-      if (items.length > 1) return
-      const item = items[0]
-      const list: any = this.$refs.resourceList
-      list.handleRenameAction(item)
-    },
-    handleInfoAction () {
-      const items = ResourceHandler.getSelectItems(this.showArray)
-      if (_.isEmpty(items)) return
-      if (items.length > 1) return
-      const item = items[0]
-      processCenter.renderSend(EventName.mediaInfo, {
-        path: 'media-info',
-        params: {
-          uuid: item.uuid,
-          path: item.path
-        }
-      })
-    },
-    handleNewFolderAction () {
-    },
-    clearClipboardAction () {
-      this.$store.dispatch('Resource/updateClipboard', { isClip: false, items: [] })
-      this.$message.info('剪切板已清空')
-    },
-    // subclass implementation methods
-    overrideloadMoreData () {
-    },
-    overrideRefreshAction () {
-    },
-    overrideBackAction () {
-      this.$router.go(-1)
-    },
-    overrideOpenFolderAction (item: ResourceItem) {
-    },
-    overrideSortWayChangeAction (order: OrderType) {
-      this.showArray = ResourceHandler.orderShowArray(this.showArray, order)
-    },
-    overrideSearchAction (keyword: string) {
-      this.showArray = ResourceHandler.searchShowArray(this.showArray, keyword)
-    },
-    overridePasteAction (mode: TaskMode) {
+    // handle main view context menu actions
+    handleAlterAction (command: string, ...args: any[]) {
+      this.$emit('contextMenuCallbackActions', command, ...args)
+      this.showAlter = false
     }
   }
 })

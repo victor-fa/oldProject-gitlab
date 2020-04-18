@@ -1,3 +1,18 @@
+<template>
+  <main-view
+    currentPath="最近"
+    :loading="loading"
+    :dataSource="dataArray"
+    :busy="busy"
+    :popoverList="uploadSortList"
+    :contextItemMenu="resourceContextMenu"
+    v-on:headerCallbackActions="handleHeaderActions"
+    v-on:listCallbackActions="handleListActions"
+    v-on:itemCallbackActions="handleItemActions"
+    v-on:contextMenuCallbackActions="handleContextMenuActions"
+  />
+</template>
+
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
@@ -7,25 +22,28 @@ import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse } from '../../api/UserModel'
 import { uploadSortList } from '../../model/sortList'
 import ResourceHandler from '../MainView/ResourceHandler'
+import MainViewMixin from '../MainView/MainViewMixin'
+import { resourceContextMenu } from '../../components/OperateListAlter/operateList'
 
 export default Vue.extend({
   name: 'recent',
-  extends: MainView,
+  components: {
+    MainView
+  },
+  mixins: [MainViewMixin],
   data () {
-    let items: Array<ResourceItem> = []
     return {
       loading: false,
-      currentPath: '最近',
-      dataArray: items,
+      dataArray: [] as ResourceItem[],
       page: 1,
       busy: false,
-      sortList: uploadSortList,
+      uploadSortList,
       uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
-      order: OrderType.byNameDesc // 目录列表的排序方式
+      resourceContextMenu // item右键菜单
     }
   },
-  created () {
-    this.fetchUlist()
+  mounted () {
+    this.handleRefreshAction()
   },
   methods: {
     fetchUlist () {
@@ -33,7 +51,6 @@ export default Vue.extend({
       NasFileAPI.fetchUlist(this.page, this.uploadOrder).then(response => {
         this.loading = false
         if (response.data.code !== 200) return
-        console.log(response)
         this.parseResponse(response.data)
       }).catch(error => {
         this.loading = false
@@ -48,32 +65,19 @@ export default Vue.extend({
       this.dataArray = this.page === 1 ? ulist : this.dataArray.concat(ulist)
     },
     // 重写父类中的方法
-    overrideloadMoreData () {
-      if (this.busy) return
-      this.page++
-      this.fetchUlist()
-    },
-    overrideRefreshAction () {
+    handleRefreshAction () {
       this.page = 1
       this.busy = false
       this.fetchUlist()
     },
-    overrideOpenFolderAction (item: ResourceItem) {
-      this.$router.push({
-        name: 'main-resource-view',
-        query: {
-          path: item.path,
-          uuid: item.uuid
-        },
-        params: {
-          showPath: `${this.currentPath}/${item.name}`
-        }
-      })
+    handleLoadmoreAction () {
+      this.page++
+      this.fetchUlist()
     },
-    overrideSortWayChangeAction (type: OrderType) {
-      if (type === OrderType.ByUploadDesc) {
+    handleSortWayChangeAction (order: OrderType) {
+      if (order === OrderType.ByUploadDesc) {
         this.uploadOrder = UploadTimeSort.descend
-      } else if (type === OrderType.ByUploadAsc) {
+      } else if (order === OrderType.ByUploadAsc) {
         this.uploadOrder = UploadTimeSort.ascend
       }
       this.page = 1

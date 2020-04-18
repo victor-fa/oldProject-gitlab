@@ -101,6 +101,11 @@ const HomeRouters = [
     path: '/share-file-page',
     name: 'share-file-page',
     component: () => import('../../views/Share/ShareFilePage.vue')
+  },
+  {
+    path: '/storage-partitions',
+    name: 'storage-partitions',
+    component: () => import('../../views/Storage/StoragePartitions.vue')
   }
 ]
 

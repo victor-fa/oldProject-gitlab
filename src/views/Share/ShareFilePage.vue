@@ -1,30 +1,39 @@
+<template>
+  <main-view
+    :currentPath="currentPath"
+    :loading="loading"
+    :dataSource="dataArray"
+    :contextItemMenu="shareContextMenu"
+    v-on:headerCallbackActions="handleHeaderActions"
+    v-on:listCallbackActions="handleListActions"
+    v-on:itemCallbackActions="handleItemActions"
+    v-on:contextMenuCallbackActions="handleContextMenuActions"
+  />
+</template>
+
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
 import MainView from '../MainView/index.vue'
+import MainViewMixin from '../MainView/MainViewMixin'
 import { ResourceItem, ShareItem } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import ResourceHandler from '../MainView/ResourceHandler'
+import { shareContextMenu } from '../../components/OperateListAlter/operateList'
 
 export default Vue.extend({
   name: 'share-file-page',
-  extends: MainView,
+  components: {
+    MainView
+  },
+  mixins: [MainViewMixin],
   data () {
     let items: Array<ResourceItem> = []
     return {
       loading: false,
       currentPath: '',
       dataArray: items,
-    }
-  },
-  watch: {
-    $route: {
-      handler: function () {
-        if (_.isEmpty(this.$route.params.ugreenNo)) return
-        this.fetchShareFileList()
-        this.currentPath = this.$route.params.showPath
-      },
-      deep: true
+      shareContextMenu // item的右键菜单列表数据
     }
   },
   created () {
@@ -48,20 +57,26 @@ export default Vue.extend({
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    // 重写父类中的方法
-    overrideRefreshAction () {
+    // 移除取消的item
+    removeItems (items: ResourceItem[]) {
+      this.dataArray = this.dataArray.filter(item => {
+        return !item.isSelected
+      })
+    },
+    // 覆盖混入中的方法
+    handleRefreshAction () {
       this.fetchShareFileList()
     },
-    overrideOpenFolderAction (item: ResourceItem) {
-      this.$router.push({
-        name: 'main-resource-view',
-        query: {
-          path: item.path,
-          uuid: item.uuid
-        },
-        params: {
-          showPath: `${this.currentPath}/${item.name}`
-        }
+    handleUnshareAction () {
+      const items = ResourceHandler.disableSelectItems(this.dataArray)
+      NasFileAPI.cancelShare(items).then(response => {
+        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+        if (response.data.code !== 200) return
+        this.$message.info('取消成功')
+        this.removeItems(items)
+      }).catch(_ => {
+        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+        this.$message.error('取消失败')
       })
     }
   }

@@ -1,25 +1,41 @@
+<template>
+  <main-view
+    :currentPath="currentPath"
+    :loading="loading"
+    :dataSource="dataArray"
+    :contextItemMenu="collectContextMenu"
+    v-on:headerCallbackActions="handleHeaderActions"
+    v-on:listCallbackActions="handleListActions"
+    v-on:itemCallbackActions="handleItemActions"
+    v-on:contextMenuCallbackActions="handleContextMenuActions"
+  />
+</template>
+
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
 import MainView from '../MainView/index.vue'
-import { ResourceItem, OrderType, CollectItem, ResourceStatus } from '../../api/NasFileModel'
+import MainViewMixin from '../MainView/MainViewMixin'
+import { CollectItem, ResourceItem } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
-import { BasicResponse } from '../../api/UserModel'
 import ResourceHandler from '../MainView/ResourceHandler'
+import { collectContextMenu } from '../../components/OperateListAlter/operateList'
 
 export default Vue.extend({
   name: 'collect',
-  extends: MainView,
+  components: {
+    MainView
+  },
+  mixins: [MainViewMixin],
   data () {
-    let items: Array<ResourceItem> = []
     return {
       loading: false,
       currentPath: '收藏',
-      dataArray: items,
-      order: OrderType.byNameDesc // 当前选择的排序规则
+      dataArray: [] as ResourceItem[],
+      collectContextMenu // item的右键菜单列表数据
     }
   },
-  created () {
+  mounted () {
     this.fetchCollectList()
   },
   methods: {
@@ -29,33 +45,34 @@ export default Vue.extend({
         this.loading = false
         if (response.data.code !== 200) return
         console.log(response)
-        this.parseResponse(response.data)
+        this.dataArray = _.get(response.data.data, 'files')
       }).catch(error => {
         this.loading = false
         console.log(error)
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    parseResponse (data: BasicResponse) {
-      const ulist = _.get(data.data, 'files') as Array<CollectItem>
-      this.dataArray = ulist.map(item => {
-        return ResourceHandler.convertResourceItem(item) as ResourceItem
+    // 移除取消的item
+    removeItems (items: ResourceItem[]) {
+      this.dataArray = this.dataArray.filter(item => {
+        return !item.isSelected
       })
     },
     // 重写父类中的方法
-    overrideRefreshAction () {
+    handleRefreshAction () {
       this.fetchCollectList()
     },
-    overrideOpenFolderAction (item: ResourceItem) {
-      this.$router.push({
-        name: 'main-resource-view',
-        query: {
-          path: item.path,
-          uuid: item.uuid
-        },
-        params: {
-          showPath: `${this.currentPath}/${item.name}`
-        }
+    handleUncollectAction () {
+      const items = ResourceHandler.disableSelectItems(this.dataArray)
+      NasFileAPI.cancelShare(items).then(response => {
+        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+        if (response.data.code !== 200) return
+        this.$message.info('取消成功')
+        this.removeItems(items)
+      }).catch(error => {
+        console.log(error)
+        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+        this.$message.error('取消失败')
       })
     }
   }

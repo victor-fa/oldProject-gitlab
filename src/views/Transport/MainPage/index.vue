@@ -11,7 +11,7 @@
         :adjust="122"
         :dataSource="dataSource"
       >
-        <template v-slot:renderItem="{ item, index}">
+        <template v-slot:renderItem="{ item, index }">
           <slot name="renderItem"
             :item="item"
             :index="index"

@@ -9,9 +9,7 @@
           <basic-header/>
         </a-layout-header>
         <a-layout-content>
-          <keep-alive>
-            <router-view/>
-          </keep-alive>
+          <router-view/>
         </a-layout-content>
       </a-layout>
     </a-layout>

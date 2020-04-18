@@ -266,6 +266,11 @@ export default {
       type: 2,
       alias: name
     })
+  },
+  newCustomFolder (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasMyselfModulePath + '/create_myself_folder', {
+      uuid: ''
+    })
   }
 }
 

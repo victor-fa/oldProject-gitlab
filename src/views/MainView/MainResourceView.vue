@@ -1,8 +1,24 @@
+<template>
+  <main-view
+    ref="mainView"
+    :currentPath="currentPath"
+    :loading="loading"
+    :dataSource="dataArray"
+    :busy="busy"
+    :contextItemMenu="resourceContextMenu"
+    v-on:headerCallbackActions="handleHeaderActions"
+    v-on:listCallbackActions="handleListActions"
+    v-on:itemCallbackActions="handleItemActions"
+    v-on:contextMenuCallbackActions="handleContextMenuActions"
+  />
+</template>
+
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
+import MainViewMixin from '../MainView/MainViewMixin'
 import { ResourceItem, OrderType } from '../../api/NasFileModel'
 import NasFileAPI, { TaskMode } from '../../api/NasFileAPI'
 import { BasicResponse, User } from '../../api/UserModel'
@@ -10,10 +26,14 @@ import ResourceHandler from './ResourceHandler'
 import { ClipboardModel } from '../../store/modules/Resource'
 import { uploadQueue } from '../../api/TransportQueue'
 import { UploadTask } from '../../api/UploadTask'
+import { resourceContextMenu } from '../../components/OperateListAlter/operateList'
 
 export default Vue.extend({
   name: 'main-resource-view',
-  extends: MainView,
+  components: {
+    MainView
+  },
+  mixins: [MainViewMixin],
   data () {
     let items: Array<ResourceItem> = []
     return {
@@ -23,7 +43,8 @@ export default Vue.extend({
       showArray: items,
       page: 1,
       busy: false,
-      order: OrderType.byNameDesc
+      order: OrderType.byNameDesc, // 当前选择的排序规则
+      resourceContextMenu, // item的右键菜单数据
     }
   },
   computed: {
@@ -40,29 +61,29 @@ export default Vue.extend({
   },
   watch: {
     $route: {
-      handler: function(value) {
-        if (!_.isEmpty(this.$route.query)) this.fetchResourceList()
-        if (!_.isEmpty(this.$route.params)) this.updateShowPath()
-      },
-      deep: true
+      handler: function () {
+        if (this.$route.name !== 'main-resource-view') return
+        this.updateView()
+      }
     }
   },
   created () {
-    if (this.checkQuery()) this.fetchResourceList()
-    if (this.checkParams()) this.updateShowPath()
+    this.updateView()
   },
   methods: {
+    updateView () {
+      if (this.checkParams()) this.updateShowPath()
+      if (this.checkQuery()) this.fetchResourceList()
+    },
     checkQuery () {
       const path = this.$route.query.path
       const uuid = this.$route.query.uuid
-      const result = !_.isEmpty(path) && !_.isEmpty(uuid)
-      if (!result) console.log(`Incorrect parameters: path: ${path}, uuid: ${uuid}`)
-      return result
+      const result = _.isEmpty(path) && !_.isEmpty(uuid)
+      return !result
     },
     checkParams () {
       const showPath = this.$route.params.showPath
       const result = _.isEmpty(showPath)
-      if (!result) console.log(`Incorrect parameters: showPath: ${showPath}`)
       return !result
     },
     fetchResourceList () {
@@ -93,11 +114,23 @@ export default Vue.extend({
       if (isClip) this.$store.dispatch('Resource/updateClipboard', { isClip: false, items: [] })
       this.$store.dispatch('Resource/increaseTask')
     },
-    // 重写父类中的方法
+    // 覆盖混入中的方法
     handleBackAction () {
       this.$router.go(-1)
-      const length = this.currentPath.lastIndexOf('/')
-      this.currentPath = this.currentPath.substring(0, length)
+      // update current path
+      const index = this.currentPath.lastIndexOf('/')
+      this.currentPath = this.currentPath.slice(0, index)
+      // TODO: 还没有初始化分类栏
+    },
+    handleloadMoreData () {
+      if (this.busy) return
+      this.page++
+      this.fetchResourceList()
+    },
+    handleRefreshAction () {
+      this.page = 1
+      this.busy = false
+      this.fetchResourceList()
     },
     handleUploadAction (filePaths: string[]) {
       filePaths.forEach(path => {
@@ -108,35 +141,13 @@ export default Vue.extend({
     handleNewFolderAction () {
 
     },
-    overrideloadMoreData () {
-      if (this.busy) return
-      this.page++
-      this.fetchResourceList()
-    },
-    overrideRefreshAction () {
-      this.page = 1
-      this.busy = false
-      this.fetchResourceList()
-    },
-    overrideOpenFolderAction (item: ResourceItem) {
-      this.$router.push({
-        name: 'main-resource-view',
-        query: {
-          path: item.path,
-          uuid: item.uuid
-        },
-        params: {
-          showPath: `${this.currentPath}/${item.name}`
-        }
-      })
-    },
-    overrideSortWayChangeAction (order: OrderType) {
+    handleSortWayChangeAction (order: OrderType) {
       this.page = 1
       this.busy = false
       this.order = order
       this.fetchResourceList()
     },
-    overrideSearchAction (keyword: string) {
+    handleSearchAction (keyword: string) {
       this.loading = true
       const prefix = `/.ugreen_nas/${(this.user as User).ugreenNo}`
       const uuid = this.$route.query.uuid as string
@@ -154,7 +165,7 @@ export default Vue.extend({
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    overridePasteAction (mode: TaskMode) {
+    handlePasteAction (mode: TaskMode) {
       const srcItems = ResourceHandler.getSelectItems(this.showArray)
       const dstItem = { path: this.path, uuid: this.uuid } as ResourceItem
       NasFileAPI.addMoveTask(srcItems, dstItem, mode).then(response => {
