@@ -42,8 +42,13 @@ export default Vue.extend({
   },
   methods: {
     fetchShareFileList () {
+      const ugreenNo = this.$route.query.ugreenNo as string
+      if (_.isEmpty(ugreenNo)) {
+        this.$message.error('缺少ugreenNo参数')
+        return
+      }
       this.loading = true
-      NasFileAPI.fetchShareFileList(this.$route.params.ugreenNo).then(response => {
+      NasFileAPI.fetchShareFileList(ugreenNo).then(response => {
         this.loading = false
         console.log(response)
         if (response.data.code !== 200) return
