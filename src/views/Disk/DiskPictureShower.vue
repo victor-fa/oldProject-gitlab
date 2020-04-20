@@ -1,10 +1,10 @@
 <template>
 	<div class="cd-image-container" @mousewheel="MouseZoom" tabindex="-1" @keydown.left="Prev" @keydown.right="Next">
 		<WindowsHeader :data="header" />
-		<p class="ImageShowTips">
+		<!-- <p class="ImageShowTips">
 			<span class="cd-image-zoom" :style="{ opacity: ZoomWin }">{{ ZoomPercent }}</span
 			>{{ NowShow.count + 1 }}/{{ PhotoList.length }}
-		</p>
+		</p> -->
 		<img :class="'cd-image-show ' + (!Control ? 'cd-image-animated' : '')" :src="NowShow.URL" ref="imageShow" @load="onload" @mousedown="Drag" alt="" />
 		<Spin v-show="loaded">
 			<Icon type="ios-loading" size="26" class="loading" />
@@ -12,9 +12,9 @@
 		<ul class="cd-image-control">
 			<li class="sf-icon-search-plus" @click="Zoom(1)" />
 			<li class="sf-icon-search-minus" @click="Zoom(-1)" />
-			<li class="sf-icon-angle-left" @click="Prev" />
+			<!-- <li class="sf-icon-angle-left" @click="Prev" /> -->
 			<li @click="orginz">1:1</li>
-			<li class="sf-icon-angle-right" @click="Next" />
+			<!-- <li class="sf-icon-angle-right" @click="Next" /> -->
 			<li class="sf-icon-undo" @click="roate(-90)" />
 			<li class="sf-icon-redo" @click="roate(90)" />
 		</ul>
@@ -70,6 +70,7 @@ export default {
 	},
 	created() {
 		this.$ipc.on('win-data', (event, data) => {
+			console.log(data);
 			//接收打开图片文件的数据
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
@@ -320,7 +321,7 @@ export default {
 	margin: 0 auto;
 	bottom: 30px;
 	height: 42px;
-	left: calc(50% - 147px);
+	left: calc(50% - 106px);
 	border-radius: 3px;
 	-webkit-border-radius: 3px;
 	-moz-border-radius: 3px;

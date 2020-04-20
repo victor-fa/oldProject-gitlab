@@ -30,6 +30,14 @@
 			<span>唯一标识:</span>
 			<div>{{ DiskData.uuid }}</div>
 		</div>
+		<div class="cd-disk-info-item">
+			<span>文件分享:</span>
+			<div>{{ DiskData.shared === 0 ? '未分享' : '已分享' }}</div>
+		</div>
+		<div class="cd-disk-info-item">
+			<span>文件收藏:</span>
+			<div>{{ DiskData.collected === 0 ? '未收藏' : '已收藏' }}</div>
+		</div>
 		<div class="cd-disk-info-item" style="position: absolute;bottom: 15px;right:-30px;">
 			<a-button class="cd-cancel-button" @click="close">关闭</a-button>
 		</div>
@@ -173,11 +181,9 @@ export default {
 		line-height: 30px;
 		padding: 0 10px;
 		-webkit-app-region: no-drag;
-		color: #5b5bea;
 	}
 }
 .cd-disk-info-item input::selection {
-	color: #5b5bea !important;
 	background-color: #eaecf0;
 }
 .cd-disk-info-line {

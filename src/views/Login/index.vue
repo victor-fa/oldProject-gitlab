@@ -11,6 +11,7 @@
           v-on:change="accountChangeAction"
           v-on:select="accountSelectAction"
           v-on:delete="accountDeleteAction"
+          @keyup.enter.native="loginAction"
         />
       </li>
       <li class="password-from">

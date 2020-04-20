@@ -280,7 +280,7 @@ export default {
         return item
       })
       return group
-    })
+    }) 
   },
   // 对当前展示的数据源根据type进行排序
   orderShowArray (showArray: Array<ResourceItem>, type: OrderType) {

@@ -273,17 +273,19 @@ export default Vue.extend({
       // TODO: 文件加密
     },
     handleInfoAction () {
+      const _this = this as any
       const items = ResourceHandler.getSelectItems(this.dataArray)
       if (_.isEmpty(items)) return
       if (items.length > 1) return
       const item = items[0]
-      processCenter.renderSend(EventName.mediaInfo, {
-        path: 'media-info',
-        params: {
-          uuid: item.uuid,
-          path: item.path
-        }
-      })
+      _this.$ipc.send('file-control', 0, item);
+      // processCenter.renderSend(EventName.mediaInfo, {
+      //   path: 'media-info',
+      //   params: {
+      //     uuid: item.uuid,
+      //     path: item.path
+      //   }
+      // })
     },
     clearClipboardAction () {
       this.$store.dispatch('Resource/updateClipboard', { isClip: false, items: [] })

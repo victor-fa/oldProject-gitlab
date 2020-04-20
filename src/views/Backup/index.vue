@@ -11,23 +11,72 @@
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
+import { BasicResponse } from '../../api/UserModel'
+import { ResourceItem, OrderType, UploadTimeSort } from '../../api/NasFileModel'
+import ResourceHandler from '../MainView/ResourceHandler'
+import NasFileAPI from '../../api/NasFileAPI'
 
 export default Vue.extend({
   name: 'backup',
   components: {
     MainView
   },
+  mounted () {
+    this.fetchBackupList()
+  },
   mixins: [MainViewMixin],
   data () {
     return {
       loading: false,
       currentPath: '备份',
-      dataArray: [],
+      dataArray: [] as ResourceItem[],
       page: 1,
+      uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
       busy: false
+    }
+  },
+  methods: {
+    fetchBackupList () {
+      this.loading = true
+      NasFileAPI.fetchBackuplist().then(response => {
+        this.loading = false
+        if (response.data.code !== 200) return
+        this.parseResponse(response.data)
+      }).catch(error => {
+        console.log(error)
+        this.loading = false
+        this.$message.error('网络连接错误，请检测网络')
+      })
+    },
+    parseResponse (data: BasicResponse) {
+      let list = _.get(data.data, 'list') as Array<ResourceItem>
+      if (_.isEmpty(list) || list.length < 20) this.busy = true
+      list = ResourceHandler.formateResponseList(list)
+      this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
+    },
+    // 重写父类中的方法
+    handleRefreshAction () {
+      this.page = 1
+      this.busy = false
+      this.fetchBackupList()
+    },
+    handleLoadmoreAction () {
+      this.page++
+      this.fetchBackupList()
+    },
+    handleSortWayChangeAction (order: OrderType) {
+      if (order === OrderType.ByUploadDesc) {
+        this.uploadOrder = UploadTimeSort.descend
+      } else if (order === OrderType.ByUploadAsc) {
+        this.uploadOrder = UploadTimeSort.ascend
+      }
+      this.page = 1
+      this.busy = false
+      this.fetchBackupList()
     }
   }
 })

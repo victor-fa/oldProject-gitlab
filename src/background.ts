@@ -327,7 +327,7 @@ let FileViewer = {
 			icon: './src/assets/logo.png',
 			title: '音乐播放器',
 			width: 350,
-			height: 535,
+			height: 180,
 			maximizable: false,
 			minimizable: false,
 			resizable: false,
