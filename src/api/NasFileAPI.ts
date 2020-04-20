@@ -183,7 +183,7 @@ export default {
   },
   fetchShareFileList (ugreenNo: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasShareModulePath + '/get_shared_files_of_users', {
-      nas_users: [ { ugreen_no: ugreenNo } ]
+      nas_users: [ { ugreen_no: Number(ugreenNo) } ]
     })
   },
   shareResource (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
