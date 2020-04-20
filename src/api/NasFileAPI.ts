@@ -15,6 +15,7 @@ const nasTaskModulePath = '/v1/task'
 const nasShareModulePath = '/v1/share'
 const nasFavoriteModulePath = '/v1/favorites'
 const nasMyselfModulePath = '/v1/myself'
+const nasUserModulePath = '/v1/user'
 
 const CancelToken = axios.CancelToken
 const host = (() => {
@@ -271,7 +272,25 @@ export default {
     return nasServer.post(nasMyselfModulePath + '/create_myself_folder', {
       uuid: ''
     })
-  }
+  },
+  setOfflineAccount (data): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasUserModulePath + '/offline/account/set', {
+      offline_username: data.offline_username,
+      offline_password: data.offline_password
+    })
+  },
+  modifyOfflineAccount (data): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasUserModulePath + '/offline/account/update', {
+      offline_password: data.offline_password,
+      offline_password_new: data.offline_password_new
+    })
+  },
+  deleteOfflineAccount (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasUserModulePath + '/offline/account/delete')
+  },
+  getOfflineName (data): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasUserModulePath + '/getOfflineName')
+  },
 }
 
 enum TaskMode {

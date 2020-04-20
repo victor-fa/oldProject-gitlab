@@ -29,6 +29,8 @@ export default {
 	height: 100%;
 	float: left;
 	overflow: unset !important;
+	z-index: 1;
+	overflow-y: scroll;
 }
 .cd-setting-menu li {
 	width: 100%;

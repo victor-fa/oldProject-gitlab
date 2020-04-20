@@ -16,11 +16,26 @@ import {app} from "electron";
 					<p class="cd-setting-info">最近登录时间：{{ LoginTime }}<Time :time="LoginTime" :interval="1" /></p> -->
 					<p class="cd-setting-sec-title">修改账号密码</p>
 					<div class="cd-setting-form">
-						<a-input type="password" v-model="ChangePass.oldpass" placeholder="当前账号密码" clearable style="width: 100%;margin-bottom: 10px;" />
+						<a-input type="password" v-model="ChangePass.oldpass" placeholder="当前密码" clearable style="width: 100%;margin-bottom: 10px;" />
 						<a-input type="password" v-model="ChangePass.newpass" placeholder="新密码" clearable style="width: 100%;margin-bottom: 10px;" />
 						<a-input type="password" v-model="ChangePass.againPass" placeholder="再次输入密码" clearable style="width: 100%;margin-bottom: 10px;" />
 						<a-button class="cd-purple-button" @click="ChangePassword">修改</a-button>
 					</div>
+					<p class="cd-setting-title"><br></p>
+					<p class="cd-setting-title">用户离线设置</p>
+					<p class="cd-setting-title"><a-switch v-model="offlinePass.isUsed" defaultChecked @change="onOfflineChange"/></p>
+					<template v-if="offlinePass.isUsed">
+						<p class="cd-setting-sec-title">{{offlinePass.already_set ? '修改' : '添加'}}账号密码</p>
+						<div class="cd-setting-form">
+							<a-input v-if="!offlinePass.already_set" type="text" v-model="offlinePass.offline_username" placeholder="离线账号" clearable style="width: 100%;margin-bottom: 10px;" />
+							<p v-if="offlinePass.already_set" class="cd-setting-info">当前离线账号：{{ offlinePass.offline_username }}</p>
+							<a-input v-if="!offlinePass.already_set" type="password" v-model="offlinePass.offline_password" placeholder="离线密码" clearable style="width: 100%;margin-bottom: 10px;" />
+							<a-button v-if="offlinePass.already_set" class="cd-purple-button" @click="showModifyOffline">修改密码</a-button>
+							<a-button v-if="!offlinePass.already_set" class="cd-purple-button" @click="setOfflineAccount">保存</a-button>
+						</div>
+						<p class="cd-setting-title"><br></p>
+					</template>
+					<p class="cd-setting-title"><br></p>
 				</div>
 				<div class="cd-setting-container" v-show="SettingMenuData.System.active">
 					<p class="cd-setting-title">系统设置</p>
@@ -98,12 +113,26 @@ import {app} from "electron";
 			okText="确定" cancelText="取消" @ok="ChangeEmail" @cancel="codeEmailVisiable = false">
 			<p>验证码：</p><a-input placeholder="请输入邮箱验证码" v-model="ChangeEmailData.code" />
 		</a-modal>
+		<a-modal
+			:title="'阿萨德'"
+			:visible="offlinePass.offline_modify_visiable" :mask="false" :closable="false" :maskClosable="false" width="350px" style="top: 50px;" 
+			okText="确定" cancelText="取消" @ok="modifyOfflineAccount" @cancel="offlinePass.offline_modify_visiable = false">
+			<div style="display: flex;justify-content: space-between;margin-bottom: 15px;">
+				<p>离线密码(旧)：</p>
+				<a-input type="password" placeholder="请输入旧离线密码" v-model="offlinePass.offline_password" style="flex: 1;" />
+			</div>
+			<div style="display: flex;justify-content: space-between;">
+				<p>离线密码(新)：</p>
+				<a-input type="password" placeholder="请输入新离线密码" v-model="offlinePass.offline_password_new" style="flex: 1;" />
+			</div>
+		</a-modal>
 	</div>
 </template>
 
 <script>
 import SettingMenu from '../../components/Disk/SettingMenu.vue'
 import UserAPI from '../../api/UserAPI'
+import NasFileAPI from '../../api/NasFileAPI'
 import StringUtility from '../../utils/StringUtility'
 import { mapGetters } from 'vuex'
 export default {
@@ -156,6 +185,14 @@ export default {
 				againPass: '',
 				code: ''
 			},
+			offlinePass: {
+				isUsed: false,
+				offline_username: '',
+				offline_password: '',
+				offline_password_new: '',
+				offline_modify_visiable: false,
+				already_set: false
+			},
 			ChangeEmailData: {
 				email: '',
 				code: ''
@@ -184,7 +221,7 @@ export default {
 	created() {
 		this.defaultFolder = (this.$electron.remote ? this.$electron.remote : this.$electron).app.getPath('downloads');
 		this.LoginTime = localStorage.LoginTime;
-		this.GetLocalSetting();
+		this.getOfflineName()
 		console.log(JSON.parse(JSON.stringify(this.user)));
 		this.SettingData.Email = this.user.email
 	},
@@ -194,33 +231,6 @@ export default {
 				this.SettingMenuData[i].active = '';
 			}
 			this.SettingMenuData[index].active = 'active';
-		},
-		GetLocalSetting() {
-			// this.$Api.LocalFile.read('setting', data => {
-			// 	console.log(data);
-			// 	if (data.Email !== undefined) {
-			// 		this.$nextTick(() => {
-			// 			this.SettingData = data;
-			// 		});
-			// 	} else {
-			// 		this.SettingData.TransDownFolder = this.defaultFolder;
-			// 		this.$Api.LocalFile.write('setting', this.SettingData);
-			// 	}
-			// 	switch (this.SettingData.NoticeVoice.substr(-5)) {
-			// 		case '1.wav':
-			// 			this.SettingData.NoticeVoice = '音效一';
-			// 			break;
-			// 		case '2.wav':
-			// 			this.SettingData.NoticeVoice = '音效二';
-			// 			break;
-			// 		case '3.wav':
-			// 			this.SettingData.NoticeVoice = '音效三';
-			// 			break;
-			// 		case '4.wav':
-			// 			this.SettingData.NoticeVoice = '音效四';
-			// 			break;
-			// 	}
-			// });
 		},
 		ChangePassword() {
 			if (this.loading) {
@@ -373,7 +383,94 @@ export default {
 		},
 		mini() {
 			this.$electron.remote.getCurrentWindow().minimize();
-		}
+		},
+		getOfflineName () {
+			NasFileAPI.getOfflineName().then(response => {
+				if (response.data.code !== 200) return
+				if (response.data.data.offline_username !== '') {
+					this.offlinePass.isUsed = true
+					this.offlinePass.already_set = true
+					this.offlinePass.offline_username = response.data.data.offline_username
+				} else {
+					this.offlinePass.isUsed = false
+					this.offlinePass.already_set = false
+				}
+			}).catch(error => {
+				console.log(error)
+				this.$message.error('网络连接错误,请检测网络')
+			})
+		},
+		onOfflineChange(e) {
+			const _this = this
+			if (!this.offlinePass.isUsed && this.offlinePass.already_set) {
+				this.offlinePass.isUsed = true
+				this.$confirm({
+					title: '删除',
+					content: '是否删除离线账号？',
+					okText: '删除',
+					okType: 'danger',
+					cancelText: '取消',
+					onOk() {
+						NasFileAPI.deleteOfflineAccount().then(response => {
+							if (response.data.code !== 200) return
+							_this.$message.success('离线账号删除成功')
+							_this.getOfflineName()
+						}).catch(error => {
+							console.log(error)
+							_this.$message.error('网络连接错误,请检测网络')
+						})
+					}
+				});
+			} else {
+				this.offlinePass.offline_username = ''
+				this.offlinePass.offline_password = ''
+			}
+		},
+		setOfflineAccount () {
+			if (!this.offlinePass.offline_username.length) {
+				this.$message.warning('请输入离线账号');
+				return
+			}
+			if (!this.offlinePass.offline_password.length) {
+				this.$message.warning('请输入离线密码');
+				return
+			}
+			const input = {
+				offline_username: this.offlinePass.offline_username,
+				offline_password: StringUtility.encryptPassword(this.offlinePass.offline_password)
+			}
+			NasFileAPI.setOfflineAccount(input).then(response => {
+				if (response.data.code !== 200) return
+				this.$message.success('添加离线账号成功')
+				this.offlinePass.offline_password = ''
+				this.getOfflineName()
+			}).catch(error => {
+				console.log(error)
+				this.$message.error('网络连接错误,请检测网络')
+			})
+		},
+		showModifyOffline () {
+			this.offlinePass.offline_password = ''
+			this.offlinePass.offline_password_new = ''
+			this.offlinePass.offline_modify_visiable = true
+		},
+		modifyOfflineAccount () {
+			const input = {
+				offline_password: StringUtility.encryptPassword(this.offlinePass.offline_password),
+				offline_password_new: StringUtility.encryptPassword(this.offlinePass.offline_password_new)
+			}
+			NasFileAPI.modifyOfflineAccount(input).then(response => {
+				if (response.data.code !== 200) return
+				this.offlinePass.offline_password = ''
+				this.offlinePass.offline_password_new = ''
+				this.offlinePass.offline_modify_visiable = false
+				this.$message.success('修改离线密码成功')
+				this.getOfflineName()
+			}).catch(error => {
+				console.log(error)
+				this.$message.error('网络连接错误,请检测网络')
+			})
+		},
 	}
 };
 </script>
@@ -458,6 +555,7 @@ p {
 	border: 1px solid #eee;
 	padding-left: 20px;
 	float: left;
+	overflow-y: scroll;
 }
 .cd-setting-container {
 	width: 100%;
