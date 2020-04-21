@@ -44,25 +44,33 @@ export default Vue.extend({
       NasFileAPI.fetchCollectList().then(response => {
         this.loading = false
         if (response.data.code !== 200) return
-        console.log(response)
-        this.dataArray = _.get(response.data.data, 'files')
+        const list = _.get(response.data.data, 'files')
+        this.dataArray = list.map(item => {
+          return ResourceHandler.convertResourceItem(item) as ResourceItem
+        })
       }).catch(error => {
         this.loading = false
         console.log(error)
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    // 移除取消的item
-    removeItems (items: ResourceItem[]) {
-      this.dataArray = this.dataArray.filter(item => {
-        return !item.isSelected
+    // 重写父类中的方法
+    handleOpenFolderAction (item: ResourceItem) {
+      this.$router.push({
+        name: 'collect-reasource-view',
+        query: {
+          path: item.path,
+          uuid: item.uuid
+        },
+        params: {
+          showPath: `${this.currentPath}/${item.name}`
+        }
       })
     },
-    // 重写父类中的方法
     handleRefreshAction () {
       this.fetchCollectList()
     },
-    handleUncollectAction () {
+    handleUnCollectAction () {
       const items = ResourceHandler.disableSelectItems(this.dataArray)
       NasFileAPI.cancelShare(items).then(response => {
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
@@ -73,6 +81,12 @@ export default Vue.extend({
         console.log(error)
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         this.$message.error('取消失败')
+      })
+    },
+    // 移除取消的item
+    removeItems (items: ResourceItem[]) {
+      this.dataArray = this.dataArray.filter(item => {
+        return !item.isSelected
       })
     }
   }

@@ -39,7 +39,7 @@ export default {
         }
         break
       case CategoryType.document:
-        if (rtype !== ResourceType.image && rtype !== ResourceType.video && rtype !== ResourceType.audio && rtype !== ResourceType.folder) {
+        if (rtype !== ResourceType.image && rtype !== ResourceType.video && rtype !== ResourceType.audio) {
           return true
         }
         break
@@ -135,7 +135,7 @@ export default {
     }
     return -1
   },
-  // 获取选中的item
+  // 获取选中的items
   getSelectItems (showArray: Array<ResourceItem>) {
     let items: Array<ResourceItem> = []
     for (let index = 0; index < showArray.length; index++) {
@@ -143,6 +143,15 @@ export default {
       if (element.isSelected) items.push(element) 
     }
     return items
+  },
+  // 获取选中items对应下标
+  getSelectItemIndexs (showArray: Array<ResourceItem>) {
+    let indexs: number[] = []
+    for (let index = 0; index < showArray.length; index++) {
+      const element = showArray[index]
+      if (element.isSelected === true) indexs.push(index)
+    }
+    return indexs
   },
   // 禁用选中的item，在item发生请求期间都应该调用此接口
   disableSelectItems (showArray: Array<ResourceItem>) {
@@ -168,6 +177,19 @@ export default {
     }
     return undefined
   },
+  // 禁用命名中的item
+  disableRenamingItem (showArray: Array<ResourceItem>) {
+    for (let index = 0; index < showArray.length; index++) {
+      const element = showArray[index]
+      if (element.renaming === true) {
+        element.disable = true
+        showArray.splice(index, 1, element)
+        return element
+      }
+    }
+    return undefined
+  },
+  // 移除选中的items
   removeSelectedItems (showArray: Array<ResourceItem>) {
     return showArray.filter(item => {
       return item.isSelected !== true
@@ -180,6 +202,17 @@ export default {
       value.showMtime = StringUtility.formatShowMtime(value.mtime)
       value.showSize = StringUtility.formatShowSize(value.size)
       return value
+    })
+  },
+  // 格式化资源列表，用于界面展示
+  formatResourceList (list: ResourceItem[], selectedPath: string) {
+    const path = _.isEmpty(selectedPath) ? '' : selectedPath
+    return list.map(item => {
+      item.name = StringUtility.formatName(item.path)
+      item.showMtime = StringUtility.formatShowMtime(item.mtime)
+      item.showSize = StringUtility.formatShowSize(item.size)
+      item.isSelected = item.path === path
+      return item
     })
   },
   // 计算在window内的安全点
@@ -219,24 +252,16 @@ export default {
   filterItemOperateList (groups: OperateGroup[], showArray: Array<ResourceItem>) {
     if (_.isEmpty(groups)) return null 
     const selectItems = this.getSelectItems(showArray)
-    const state = this.calculateOperateItemState(selectItems)
+    const states = this.calculateOperateItemState(selectItems)
     const multipleDisableItem = ['open', 'jump', 'info', 'rename']
     return groups.map(group => {
       group.items.map(item => {
         if (item.command === 'share') {
-          item.disable = state.disableShare
-          // item.isHidden = !state.showShare
-        } else if (item.command === 'unshare') {
-          item.disable = state.disableShare
-          // item.isHidden = state.showShare
+          item.disable = states.disableShare
         } else if (item.command === 'collect') {
-          item.disable = state.disableCollect
-          // item.isHidden = !state.showCollect
-        } else if (item.command === 'uncollect') {
-          item.disable = state.disableCollect
-          // item.isHidden = state.showCollect
+          item.disable = states.disableCollect
         } else if (multipleDisableItem.indexOf(item.command) !== -1) {
-          item.disable = state.disable
+          item.disable = states.disable
         }
         return item
       })
@@ -246,21 +271,19 @@ export default {
   // 计算item的右键菜单列表的显示、隐藏、禁用状态
   calculateOperateItemState (selectItems: Array<ResourceItem>) {
     const disable = selectItems.length > 1
-    const showShare = selectItems[0].shared === ShareStatus.not
-    const showCollect = selectItems[0].collected === CollectStatus.not
     let disableShare = false
     let disableCollect = false
-    for (let index = 1; index < selectItems.length; index++) {
+    for (let index = 0; index < selectItems.length; index++) {
       const element = selectItems[index]
-      const elShare = element.shared === ShareStatus.not
-      const elCollect = element.collected === CollectStatus.not
-      if (showShare !== elShare) disableShare = true
-      if (showCollect !== elCollect) disableCollect = true
+      if (!disableShare && element.shared === ShareStatus.has) {
+        disableShare = true
+      }
+      if (!disableCollect && element.collected === CollectStatus.has) {
+        disableCollect = true
+      }
     }
     return {
       disable, // 是否禁用打开、属性、重命名菜单项
-      showShare, // 是否显示分享菜单项
-      showCollect, // 是否显示收藏菜单项
       disableShare, // 是否禁用分享菜单项
       disableCollect // 是否禁用收藏菜单项
     }

@@ -90,9 +90,17 @@ export default Vue.extend({
   },
   mounted () {
     window.addEventListener('resize', this.observerWindowResize)
+    document.onkeyup = (event) => {
+      if (event.keyCode === 13) { // enter
+        this.$emit('callbackAction', 'enterRenaming')
+      } else if (event.keyCode === 8) {
+        this.$emit('callbackAction', 'deleteItems')
+      }
+    }
   },
   destroyed () {
     window.removeEventListener('resize', this.observerWindowResize)
+    document.onkeyup = null
   },
   methods: {
     observerWindowResize () {

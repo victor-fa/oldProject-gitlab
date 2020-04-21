@@ -260,12 +260,12 @@ export default {
       })
     })
   },
-  newFolder (directory: string, uuid: string, name: string): Promise<AxiosResponse<BasicResponse>> {
+  newFolder (path: string, uuid: string, newName: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasFileModulePath + '/add', {
       uuid,
-      path: directory,
+      path,
       type: 2,
-      alias: name
+      alias: newName
     })
   },
   newCustomFolder (): Promise<AxiosResponse<BasicResponse>> {

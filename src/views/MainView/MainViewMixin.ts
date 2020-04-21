@@ -6,6 +6,8 @@ import ResourceHandler from './ResourceHandler'
 import { ResourceItem, OrderType, ResourceType, ShareStatus, CollectStatus } from '@/api/NasFileModel'
 import NasFileAPI, { TaskMode } from '@/api/NasFileAPI'
 import processCenter, { EventName } from '@/utils/processCenter'
+import { EventBus } from '@/utils/eventBus'
+import StringUtility from '@/utils/StringUtility'
 
 // declare module 'vue/types/vue' {
 //   interface Vue {
@@ -23,7 +25,8 @@ export default Vue.extend({
     }
   },
   computed: {
-    ...mapGetters('Resource', ['clipboard'])
+    ...mapGetters('Resource', ['clipboard']),
+    ...mapGetters('Resource', ['itemCount'])
   },
   methods: {
     // handle header view callback actions
@@ -62,35 +65,70 @@ export default Vue.extend({
         case 'loadmore':
           this.handleLoadmoreAction()
           break;
+        case 'enterRenaming':
+          this.handleEnterRenaming()
+          break;
+        case 'deleteItems':
+          this.handleDeleteItemsAction()
+          break;
         default:
           break;
       }
     },
     handleLoadmoreAction () {
     },
+    handleEnterRenaming () {
+      const indexs = ResourceHandler.getSelectItemIndexs(this.dataArray)
+      if (indexs.length === 1) {
+        const item = this.dataArray[indexs[0]]
+        item.renaming = item.renaming === true ? false : true
+        this.dataArray.splice(indexs[0], 1, item)
+      }
+    },
+    handleDeleteItemsAction () {
+      let canDelete = true
+      for (let index = 0; index < this.dataArray.length; index++) {
+        const element = this.dataArray[index]
+        if (element.renaming === true || element.disable === true) {
+          canDelete = false
+          break 
+        }
+      }
+      if (!canDelete) return
+      this.handleDeletAction()
+    },
     handleItemActions (action: string, index: number, ...args: any[]) {
       switch (action) {
-        case 'rename':
+        case 'renameRequest':
           this.handleRenameRequestAction(index, args[0])
+          break;
+        case 'newFolderRequest':
+          this.handleNewFolderRequestAction(index, args[0])
           break;
         default:
           break;
       }
     },
-    handleRenameRequestAction (index: number, newPath: string) {
+    handleRenameRequestAction (index: number, newName: string) {
+      // TODO: 当前没有对文件名合法性进行校验
       const item = ResourceHandler.disableFirstSelectItem(this.dataArray)
       if (item === undefined) return
+      const newPath = StringUtility.renamePath(item.path, newName)
       NasFileAPI.renameResource(item.path, newPath, item.uuid).then(response => {
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         if (response.data.code !== 200) return
         this.$message.info('重命名成功')
         item.renaming = false
+        item.path = newPath
+        item.name = newName
         this.dataArray.splice(index, 1, item)
       }).catch(error => {
         console.log(error)
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         this.$message.error('重命名失败')
       })
+    },
+    handleNewFolderRequestAction (index: number, newName: string) {
     },
     // handle main view context menu actions
     handleContextMenuActions (command: string, ...args: any[]) {
@@ -153,6 +191,9 @@ export default Vue.extend({
         case 'refresh':
           this.handleRefreshAction()
           break;
+        case 'directoryInfo':
+          this.handleDireactoryInfoAction()
+          break;
         default:
           break;
       }
@@ -199,7 +240,8 @@ export default Vue.extend({
       }
     },
     handleJumpAction () {
-      // TODO: 跳到文件指定位置
+      const item = ResourceHandler.getFirstSelectItem(this.dataArray)
+      EventBus.$emit(EventName.jump, item)
     },
     handleDownloadAction (directory: string[]) {
       console.log(directory)
@@ -251,16 +293,39 @@ export default Vue.extend({
       // TODO: 移动文件位置
     },
     handleDeletAction () {
-      const items = ResourceHandler.disableSelectItems(this.dataArray)
+      const items = ResourceHandler.getSelectItems(this.dataArray)
       if (_.isEmpty(items)) return
-      NasFileAPI.addDeleteTask(items).then(response => {
-        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
-        if (response.data.code !== 200) return
-        this.dataArray = ResourceHandler.removeSelectedItems(this.dataArray)
-      }).catch(error => {
-        console.log(error)
-        this.$message.error('删除失败')
-        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+      this.showDeleteDialog(items).then(result => {
+        if (result === 1) return // filter cancel action
+        ResourceHandler.disableSelectItems(this.dataArray)
+        NasFileAPI.addDeleteTask(items).then(response => {
+          this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+          if (response.data.code !== 200) return
+          this.dataArray = ResourceHandler.removeSelectedItems(this.dataArray)
+          this.$message.info('任务添加成功')
+          this.$store.dispatch('Resource/increaseTask')
+        }).catch(_ => {
+          this.$message.error('删除失败')
+          this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+        })
+      })
+    },
+    showDeleteDialog (items: ResourceItem[]): Promise<number> {
+      return new Promise((resolve, reject) => {
+        const { dialog } = require('electron').remote
+        const message = items.length > 1 ? `你确定要删除所选的${items.length}个项目吗？` : `你确定要删除”${items[0].name}“吗？`
+        setTimeout(() => {
+          dialog.showMessageBox({
+            type: 'info',
+            message,
+            buttons: ['删除', '取消'],
+            cancelId: 1
+          }).then(result => {
+            resolve(result.response)
+          }).catch(error => {
+            reject(error)
+          })
+        }, 100);
       })
     },
     handleRenameAction () {
@@ -275,8 +340,7 @@ export default Vue.extend({
     handleInfoAction () {
       const _this = this as any
       const items = ResourceHandler.getSelectItems(this.dataArray)
-      if (_.isEmpty(items)) return
-      if (items.length > 1) return
+      if (_.isEmpty(items) || items.length > 1) return
       const item = items[0]
       _this.$ipc.send('file-control', 0, item);
       // processCenter.renderSend(EventName.mediaInfo, {
@@ -296,6 +360,8 @@ export default Vue.extend({
     handleNewFolderAction () {
     },
     handlePasteAction (mode: TaskMode) {
+    },
+    handleDireactoryInfoAction () {
     }
   }
 })

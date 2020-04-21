@@ -27,6 +27,7 @@ import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import { HomeRouters, FuncListItem } from '../../router/modules/HomeList'
 import { EventBus, EventType } from '../../utils/eventBus'
+import { EventName } from '../../utils/processCenter'
 
 export default Vue.extend({
   name: 'sider-menu',
@@ -40,6 +41,27 @@ export default Vue.extend({
   },
   computed: {
     ...mapGetters('Resource', ['taskCount'])
+  },
+  mounted () {
+    EventBus.$on(EventName.jump, aItem => {
+      // 更新界面
+      this.showItems = this.showItems.map((item, index) => {
+        item.meta!.isSelected = index === 1
+        return item
+      })
+      // 跳转到存储
+      const item = this.showItems[1]
+      if (this.$route.path !== item.path) {
+        const json = JSON.stringify(aItem)
+        this.$router.replace({
+          name: item.name,
+          params: { selectedItem: json }
+        })
+      }
+    })
+  },
+  destroyed () {
+    EventBus.$off(EventName.jump)
   },
   methods: {
     onSelectAction: function (item: FuncListItem, path: string) {

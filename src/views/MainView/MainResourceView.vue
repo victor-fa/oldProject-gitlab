@@ -5,7 +5,8 @@
     :loading="loading"
     :dataSource="dataArray"
     :busy="busy"
-    :contextItemMenu="resourceContextMenu"
+    :contextItemMenu="itemContextMenu"
+    :contextListMenu="listContextMenu"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
     v-on:itemCallbackActions="handleItemActions"
@@ -19,14 +20,16 @@ import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
-import { ResourceItem, OrderType } from '../../api/NasFileModel'
+import { ResourceItem, OrderType, ResourceType } from '../../api/NasFileModel'
 import NasFileAPI, { TaskMode } from '../../api/NasFileAPI'
 import { BasicResponse, User } from '../../api/UserModel'
 import ResourceHandler from './ResourceHandler'
 import { ClipboardModel } from '../../store/modules/Resource'
 import { uploadQueue } from '../../api/TransportQueue'
 import { UploadTask } from '../../api/UploadTask'
-import { resourceContextMenu } from '../../components/OperateListAlter/operateList'
+import { resourceContextMenu, listContextMenu } from '../../components/OperateListAlter/operateList'
+import StringUtility from '../../utils/StringUtility'
+import processCenter, { EventName } from '../../utils/processCenter'
 
 export default Vue.extend({
   name: 'main-resource-view',
@@ -44,7 +47,8 @@ export default Vue.extend({
       page: 1,
       busy: false,
       order: OrderType.byNameDesc, // 当前选择的排序规则
-      resourceContextMenu, // item的右键菜单数据
+      itemContextMenu: resourceContextMenu, // item的右键菜单
+      listContextMenu // list的右键菜单
     }
   },
   computed: {
@@ -57,12 +61,16 @@ export default Vue.extend({
     uuid: function () {
       const uuid = this.$route.query.uuid as string
       return uuid
+    },
+    selectedPath: function () { // 标记选中的item(用于跳转到文件的功能)
+      const selectedPath = this.$route.params.selectedPath as string
+      return selectedPath
     }
   },
   watch: {
     $route: {
       handler: function () {
-        if (this.$route.name !== 'main-resource-view') return
+        if (!this.handleRouteChange()) return
         this.updateView()
       }
     }
@@ -71,6 +79,10 @@ export default Vue.extend({
     this.updateView()
   },
   methods: {
+    // 处理路由改变，判断当前是否需要更新界面
+    handleRouteChange () {
+      return this.$route.name === 'main-resource-view'
+    },
     updateView () {
       if (this.checkParams()) this.updateShowPath()
       if (this.checkQuery()) this.fetchResourceList()
@@ -105,7 +117,7 @@ export default Vue.extend({
     parseResponse (data: BasicResponse) {
       let list = _.get(data.data, 'list') as Array<ResourceItem>
       if (_.isEmpty(list) || list.length < 20) this.busy = true
-      list = ResourceHandler.formateResponseList(list)
+      list = ResourceHandler.formatResourceList(list, this.selectedPath)
       this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
     },
     handlePasteSuccess () {
@@ -118,8 +130,7 @@ export default Vue.extend({
     handleBackAction () {
       this.$router.go(-1)
       // update current path
-      const index = this.currentPath.lastIndexOf('/')
-      this.currentPath = this.currentPath.slice(0, index)
+      this.currentPath = StringUtility.pathDirectory(this.currentPath)
       // TODO: 还没有初始化分类栏
     },
     handleloadMoreData () {
@@ -139,7 +150,60 @@ export default Vue.extend({
       })
     },
     handleNewFolderAction () {
-
+      const newName = this.newFolderName()
+      const newItem = {
+        type: ResourceType.folder,
+        name: newName,
+        renaming: true
+      } as ResourceItem
+      this.dataArray.unshift(newItem)
+    },
+    // 计算新建文件夹名称
+    newFolderName (name: string = '新建文件夹') {
+      for (let index = 0; index < this.dataArray.length; index++) {
+        const element = this.dataArray[index]
+        if (element.name === name) {
+          let count = Number(name.substring(5, name.length))
+          count = count === 0 ? 2 : count + 1
+          return this.newFolderName(`新建文件夹${count}`)
+        }
+      }
+      return name
+    },
+    handleNewFolderRequestAction (index: number, newName: string) {
+      // TODO: 当前没有对目录名合法性进行校验
+      const item = ResourceHandler.disableRenamingItem(this.dataArray)
+      if (item === undefined) return
+      const directory = `${this.path}/${newName}`
+      NasFileAPI.newFolder(directory, this.uuid, newName).then(response => {
+        this.handleNewFolderSuccess(response.data.code, item, newName)
+      }).catch(error => {
+        console.log(error)
+        this.$message.error('创建失败')
+        this.dataArray.splice(0, 1)
+      })
+    },
+    handleNewFolderSuccess (code: number, item: ResourceItem, newName: string) {
+      if (code !== 200) {
+        this.dataArray.splice(0, 1)
+      } else {
+        item.disable = false
+        item.renaming = false
+        item.uuid = this.uuid
+        item.name = newName
+        item.path = `${this.path}/${newName}`
+        this.dataArray.splice(0, 1, item)
+        this.$message.info('新建成功')
+      }
+    },
+    handleDireactoryInfoAction () {
+      processCenter.renderSend(EventName.mediaInfo, {
+        path: 'media-info',
+        params: {
+          uuid: this.uuid,
+          path: this.path
+        }
+      })
     },
     handleSortWayChangeAction (order: OrderType) {
       this.page = 1

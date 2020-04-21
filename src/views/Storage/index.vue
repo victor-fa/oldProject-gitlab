@@ -36,12 +36,13 @@ import MainView from '../MainView/index.vue'
 import MainHeaderView from '../MainView/MainHeaderView.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
 import StorageListItem from './StorageListItem.vue'
-import { StorageInfo, PartitionInfo, ArrangeWay, StorageType } from '../../api/NasFileModel'
+import { StorageInfo, PartitionInfo, ArrangeWay, StorageType, ResourceItem } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import StorageHandler from './StorageHandler'
 import { storageContextMenu } from '../../components/OperateListAlter/operateList'
 import { CategoryType } from '../../model/categoryList'
 import { User } from '../../api/UserModel'
+import StringUtility from '../../utils/StringUtility'
 
 export default Vue.extend({
   name: 'storage',
@@ -63,7 +64,13 @@ export default Vue.extend({
     ...mapGetters('User', ['user'])
   },
   mounted () {
-    this.fetchStorages()
+    const json = this.$route.params.selectedItem
+    if (_.isEmpty(json)) {
+      this.fetchStorages()
+    } else { 
+      const item = JSON.parse(json) as ResourceItem
+      this.pushAssignResourceListPage(item)
+    }
   },
   methods: {
     fetchStorages () {
@@ -74,6 +81,7 @@ export default Vue.extend({
         if (response.data.code !== 200) return
         const storages = _.get(response.data.data, 'storages')
         this.dataArray = this.formatStorages(storages)
+        this.$store.dispatch('Resource/updateStorages', this.dataArray)
       }).catch(error => {
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
@@ -125,12 +133,10 @@ export default Vue.extend({
     },
     // 跳转分区列表界面
     pushPartitionListPage (item: StorageInfo) {
+      item.isSelected = true
       this.$router.push({
         name: 'storage-partitions',
-        params: {
-          showPath: `${this.currentPath}/${item.showName}`,
-          dataSource: JSON.stringify(item.partitions)
-        }
+        query: { showPath: `${this.currentPath}/${item.showName}` }
       })
     },
     // 跳转资源列表界面
@@ -140,6 +146,26 @@ export default Vue.extend({
         query: { path, uuid },
         params: {
           showPath: `${this.currentPath}/${name}`
+        }
+      })
+    },
+    // 跳转到指定位置的文件列表页(用于跳转到文件指定位置)
+    pushAssignResourceListPage (item: ResourceItem) {
+      const path = StringUtility.pathDirectory(item.path)
+      const uuid = item.uuid
+      const ugreenNo = (this.user as User).ugreenNo
+      const internalPrefix = `/.ugreen_nas/${ugreenNo}/`
+      const extendPrefix = `/${(ugreenNo)}/`
+      const isInternal = path.indexOf(internalPrefix) !== -1
+      const start = isInternal ? internalPrefix.length : extendPrefix.length
+      let showPath = isInternal ? `${this.currentPath}/内置硬盘` : `${this.currentPath}/扩展硬盘`
+      if (start < path.length) showPath += `/${path.substring(start, path.length)}`
+      this.$router.push({
+        name: 'main-resource-view',
+        query: { path, uuid },
+        params: {
+          showPath,
+          selectedPath: item.path
         }
       })
     },

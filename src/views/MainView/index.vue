@@ -28,6 +28,7 @@
               :isSelected="item.isSelected"
               :isDisable="item.disable"
               :isRenaming="item.renaming"
+              :showName="item.name"
               :arrangeWay="arrangeWay"
               v-on:callbackAction="handleResourceItemAction"
             />
@@ -164,6 +165,7 @@ export default Vue.extend({
       }
     },
     handleListContextMenuAction (event: MouseEvent) {
+      this.showArray = ResourceHandler.resetSelectState(this.showArray)
       const list = ResourceHandler.filterOperateList(this.contextListMenu as OperateGroup[], this.clipboard)
       this.showContextMenu(list, event)
     },
@@ -180,8 +182,6 @@ export default Vue.extend({
       if (this.showAlter) {
         this.showAlter = false
       } else {
-        // 没有选中的item，就不更新界面
-        if (ResourceHandler.getFirstSelectItem(this.showArray) === null) return
         this.showArray = ResourceHandler.resetSelectState(this.showArray)
       }
     },
@@ -210,8 +210,8 @@ export default Vue.extend({
       }
     },
     handleSingleSelection (index: number) {
-      const select = this.showArray[index].isSelected === true
-      this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, !select)
+      if (this.showArray[index].isSelected === true) return
+      this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
     },
     handleCommandSelection (index: number) {
       const select = this.showArray[index].isSelected === true
@@ -221,7 +221,10 @@ export default Vue.extend({
       this.showArray = ResourceHandler.shiftMultipleSelection(this.showArray, index)
     },
     handleItemContextMenu (index: number, event: MouseEvent) {
-      this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
+      const item = this.showArray[index]
+      if (item.isSelected !== true) {
+        this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
+      }
       const list = ResourceHandler.filterItemOperateList(this.contextItemMenu as OperateGroup[], this.showArray)
       this.showContextMenu(list, event)
     },

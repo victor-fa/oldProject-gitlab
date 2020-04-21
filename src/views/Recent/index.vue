@@ -1,11 +1,11 @@
 <template>
   <main-view
-    currentPath="最近"
+    :currentPath="currentPath"
     :loading="loading"
     :dataSource="dataArray"
     :busy="busy"
     :popoverList="uploadSortList"
-    :contextItemMenu="resourceContextMenu"
+    :contextItemMenu="recentContextMenu"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
     v-on:itemCallbackActions="handleItemActions"
@@ -23,7 +23,7 @@ import { BasicResponse } from '../../api/UserModel'
 import { uploadSortList } from '../../model/sortList'
 import ResourceHandler from '../MainView/ResourceHandler'
 import MainViewMixin from '../MainView/MainViewMixin'
-import { resourceContextMenu } from '../../components/OperateListAlter/operateList'
+import { recentContextMenu } from '../../components/OperateListAlter/operateList'
 
 export default Vue.extend({
   name: 'recent',
@@ -33,13 +33,14 @@ export default Vue.extend({
   mixins: [MainViewMixin],
   data () {
     return {
+      currentPath: '最近',
       loading: false,
       dataArray: [] as ResourceItem[],
       page: 1,
       busy: false,
       uploadSortList,
       uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
-      resourceContextMenu // item右键菜单
+      recentContextMenu // item右键菜单
     }
   },
   mounted () {
@@ -65,6 +66,18 @@ export default Vue.extend({
       this.dataArray = this.page === 1 ? ulist : this.dataArray.concat(ulist)
     },
     // 重写父类中的方法
+    handleOpenFolderAction (item: ResourceItem) {
+      this.$router.push({
+        name: 'recent-reasource-view',
+        query: {
+          path: item.path,
+          uuid: item.uuid
+        },
+        params: {
+          showPath: `${this.currentPath}/${item.name}`
+        }
+      })
+    },
     handleRefreshAction () {
       this.page = 1
       this.busy = false

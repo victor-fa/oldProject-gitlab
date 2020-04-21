@@ -37,16 +37,18 @@ export default Vue.extend({
     }
   },
   computed: {
-    showPath: function () {
-      return this.$route.params.showPath
-    },
     ugreenNo: function () {
       return this.$route.query.ugreenNo as string
+    },
+    showPath: function () {
+      return this.$route.query.showPath as string
     }
   },
-  created () {
-    this.checkQuery() && this.fetchShareFileList()
-    this.checkParams() && this.updateView()
+  mounted () {
+    if (this.checkQuery()) {
+      this.fetchShareFileList()
+    }
+    this.currentPath = this.showPath
   },
   methods: {
     checkQuery () {
@@ -54,13 +56,11 @@ export default Vue.extend({
         this.$message.error(`缺少ugreenNo参数`)
         return false
       }
+      if (_.isEmpty(this.showPath)) {
+        this.$message.error(`缺少showPath参数`)
+        return false
+      }
       return true
-    },
-    checkParams () {
-      return !_.isEmpty(this.showPath)
-    },
-    updateView () {
-      this.currentPath = this.$route.params.showPath
     },
     fetchShareFileList () {
       this.loading = true
@@ -85,6 +85,18 @@ export default Vue.extend({
       })
     },
     // 覆盖混入中的方法
+    handleOpenFolderAction (item: ResourceItem) {
+      this.$router.push({
+        name: 'share-reasource-view',
+        query: {
+          path: item.path,
+          uuid: item.uuid
+        },
+        params: {
+          showPath: `${this.currentPath}/${item.name}`
+        }
+      })
+    },
     handleRefreshAction () {
       this.fetchShareFileList()
     },

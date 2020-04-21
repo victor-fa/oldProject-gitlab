@@ -13,7 +13,8 @@ enum EventName {
   login = 'present_login',
   home = 'present_home',
   file = 'present_file',
-  mediaInfo = 'media_info'
+  mediaInfo = 'media_info',
+  jump = 'jump_to_localtion'
 }
 
 // use in main process
