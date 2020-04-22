@@ -17,7 +17,7 @@ export default {
 		return ugreenNo
 	},
 	async prepareFile(data, options) {	// 处理成同步
-		if (data.name) {
+		if (data.name || data.sourcePath) {
 			console.log(JSON.parse(JSON.stringify(data)));
 			console.log(JSON.parse(JSON.stringify(this.selectUploadFiles)));
 			console.log(JSON.parse(JSON.stringify(this.uploadHistory)));

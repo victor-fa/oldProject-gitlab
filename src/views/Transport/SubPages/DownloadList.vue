@@ -92,7 +92,7 @@ export default Vue.extend({
         case 'cancelAll': // 全部取消
           let cancelCount = 0
           this.downloadInfo.forEach(item => {
-            if (item.state === 'progressing') {
+            if (item.state === 'progressing' || item.state === 'interrupted') {
               cancelCount++
               _this.$ipc.send('download', 'cancel', item.id)
             }
@@ -112,11 +112,10 @@ export default Vue.extend({
     },
     // inner private methods
     getListData () {
-      const list = this.downloadInfo
       console.log(JSON.parse(JSON.stringify(this.downloadInfo)));
-      downloadCategorys[0].count = list.filter(item => item.trans_type === 'download' && (item.state === 'progressing' || item.state === 'interrupted')).length  // 正在下载
-      downloadCategorys[1].count = list.filter(item => item.trans_type === 'download' && item.state === 'completed').length  // 下载完成
-      this.dataArray = list.filter(item => {
+      downloadCategorys[0].count = this.downloadInfo.filter(item => item.trans_type === 'download' && (item.state === 'progressing' || item.state === 'interrupted')).length  // 正在下载
+      downloadCategorys[1].count = this.downloadInfo.filter(item => item.trans_type === 'download' && item.state === 'completed').length  // 下载完成
+      this.dataArray = this.downloadInfo.filter(item => {
         if (item.state === 'progressing' || item.state === 'completed') {
           return item.trans_type === 'download' && item.state === this.state
         } else if (item.state === 'interrupted') {

@@ -4,8 +4,8 @@ import {app} from "electron";
 		<div class="cd-drag-head-big">
 			<a-icon type="setting" theme="twoTone" twoToneColor="#06b650" spin />
 			<p style="color: #06B650">设置</p>
-			<a-button icon="close" style="color: #06b650" @click="close" />
-			<a-button icon="minus" style="color: #06b650" @click="mini" />
+			<a-button icon="close" style="color: #d9d9d9" @click="close" />
+			<a-button icon="minus" style="color: #d9d9d9" @click="mini" />
 		</div>
 		<div class="cd-setting-main">
 			<SettingMenu :data="SettingMenuData" @change="change" />
@@ -484,12 +484,11 @@ p {
 .cd-drag-head-big{
 	width: 100%;
 	height: 50px;
-	background: url("../../assets/logo_bg.png");
 	background-size: auto;
 	background-position: -160px 58px;
 	background-repeat: repeat-y;
 	-webkit-app-region: drag;
-	background-color: #AFD9E6;
+	border-bottom: 1px solid #eee;
 }
 .cd-drag-head-big *{
 	float: left;
@@ -504,7 +503,7 @@ p {
 	float: left;
 	font-size: 30px;
 	color: #fff;
-	line-height: 50px;
+	line-height: 55px;
 	margin: 0 15px;
 	margin-right: 10px;
 }
@@ -527,7 +526,6 @@ p {
 	color: #fff;
 	margin: 9px 6px 9px 0;
 	border-radius:5px;
-	border-color: #06b650;
 }
 .cd-drag-head-big button:hover{
 	background: rgba(255,255,255,.1);
@@ -591,6 +589,7 @@ p {
 	font-size: 14px;
 	padding-left: 5px;
 	line-height: 30px;
+	color: #000;
 }
 .cd-setting-info span {
 	background: #06B650;
@@ -602,7 +601,6 @@ p {
 }
 .cd-setting-info button {
 	background: none;
-	color: #06B650;
 	font-size: 14px;
 	margin-left: 10px;
 }

@@ -11,7 +11,7 @@
 		<ul class="window-actions">
 			<li class="sf-icon-minus" v-show="data.mini === undefined ? true : data.mini" @click="mini" />
 			<li :class="ButtonState" v-show="data.resize === undefined ? true : data.resize" @click="restore" />
-			<li class="sf-icon-times" style="font-size:16px" @click="close" />
+			<li class="sf-icon-times" :style="{ 'color': data.actionColor === undefined ? '#06B650' : data.actionColor }"  style="font-size:16px" @click="close" />
 		</ul>
 	</div>
 </template>

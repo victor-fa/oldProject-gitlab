@@ -16,13 +16,7 @@
       </div>
     </div>
     <div v-if="status === 'doing'" class="right-view">
-      <a-dropdown v-show="currentTab === 'backup'">
-        <a-menu slot="overlay" @click="uploadBack">
-          <a-menu-item key="backupFile">上传文件</a-menu-item>
-          <a-menu-item key="backupFolder">上传文件夹</a-menu-item>
-        </a-menu>
-        <a-button class="right-button" style="margin-left: 8px"> 上传备份 <a-icon type="down" /> </a-button>
-      </a-dropdown>
+      <a-button v-show="currentTab === 'backup'" @click="handleBtnClick('backupFolder')">添加备份目录</a-button>
       <a-button v-show="isAllPause" @click="handleBtnClick('pauseAll')">全部暂停</a-button>
       <a-button v-show="!isAllPause" @click="handleBtnClick('resumeAll')">全部开始</a-button>
       <a-button @click="handleBtnClick('cancelAll')">全部取消</a-button>
@@ -68,9 +62,6 @@ export default Vue.extend({
       }
       this.$emit('batchAction', command)
     },
-    uploadBack (e) {
-      this.$emit('batchAction', e.key) // call parent
-    }
   },
   filters: {
     formateName: function (value: string, count: number) {
@@ -95,7 +86,7 @@ export default Vue.extend({
       .ant-btn {
         max-width: 100px;
         border: none;
-        height: 20px;
+        height: 30px;
         color: #484848;
         font-size: 14px;
         line-height: 14px;

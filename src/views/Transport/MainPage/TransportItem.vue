@@ -4,7 +4,7 @@
     v-bind:class="{ 'transport-item-odd': isOdd }"
   >
     <a-layout-sider class="icon-wrapper" :width="58">
-      <img :src="searchResourceIcon(model)" class="item-icon">
+      <img :src="searchResourceIcon(model.type)" class="item-icon">
     </a-layout-sider>
     <a-layout-content class="content">
       <div class="content-top">

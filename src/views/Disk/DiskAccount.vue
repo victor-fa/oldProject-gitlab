@@ -5,7 +5,7 @@
 			<div class="cd-user-right-info">
 				<img draggable="false" :src="UploadSrc ? UploadSrc : User.image" alt="" />
 				<p class="name">{{ User.nicName }}</p>
-				<p class="age">{{ User.sex === 0 ? '女' : '男' }}{{ User.age }}</p>
+				<p class="age">{{ User.sex === 0 ? '男' : '女' }}{{ User.age }}</p>
 			</div>
 		</div>
 		<div class="cd-user-right">

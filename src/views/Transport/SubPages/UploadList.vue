@@ -19,6 +19,7 @@ import MainPage from '../MainPage/index.vue'
 import { TRANSFORM_INFO } from '../../../common/constants'
 import { uploadCategorys } from '../../../model/categoryList'
 import { mapGetters } from 'vuex'
+import upload from '../../../utils/file/upload'
 import TransportItem from '../MainPage/TransportItem.vue'
 
 export default Vue.extend({
@@ -41,8 +42,6 @@ export default Vue.extend({
     this.resetSelected()
     this.getListData()
   },
-  destroyed() {
-  },
   methods: {
     // handle views action
     handleCategoryChange (index: number) {  // 切换"正在上传"、"上传完成"
@@ -61,6 +60,8 @@ export default Vue.extend({
           this.uploadInfo.forEach(item => {
             if (item.state === 'progressing') {
               pauseCount++
+              item.state = 'interrupted'
+              upload.prepareFile(item, { data: '', add: file => {}, success: (file, rs) => {} });
             }
           })
           if (pauseCount === 0) {
@@ -72,6 +73,8 @@ export default Vue.extend({
           this.uploadInfo.forEach(item => {
             if (item.state === 'interrupted') {
               resumeCount++
+              item.state = 'progressing'
+              upload.prepareFile(item, { data: '', add: file => {}, success: (file, rs) => {} });
             }
           })
           if (resumeCount === 0) {
@@ -80,9 +83,10 @@ export default Vue.extend({
           break;
         case 'cancelAll': // 全部取消
           let cancelCount = 0
-          this.uploadInfo.forEach(item => {
-            if (item.state === 'progressing') {
+          this.uploadInfo.forEach((item, index, self) => {
+            if (item.state === 'progressing' || item.state === 'interrupted') {
               cancelCount++
+              self.splice(index, 1)
             }
           })
           if (cancelCount === 0) {
@@ -99,18 +103,33 @@ export default Vue.extend({
       }
     },
     // inner private methods
-    getListData () {
-      const list = this.uploadInfo
-      console.log(JSON.parse(JSON.stringify(this.uploadInfo)));
-      uploadCategorys[0].count = list.filter(item => item.trans_type === 'upload' && (item.state === 'progressing' || item.state === 'interrupted')).length  // 正在上传
-      uploadCategorys[1].count = list.filter(item => item.trans_type === 'upload' && item.state === 'completed').length  // 上传完成
-      this.dataArray = list.filter(item => {
-        if (item.state === 'progressing' || item.state === 'completed') {
-          return item.trans_type === 'upload' && item.state === this.state
-        } else if (item.state === 'interrupted') {
-          return item.trans_type === 'upload' && item.state === 'interrupted'
-        }
-      })
+    resetSelected() { // 重置默认选项
+      uploadCategorys[0].isSelected = true
+      uploadCategorys[1].isSelected = false
+    },
+    handleControl(model, ...args: any[]) {
+      const _this = this as any
+      switch (args[0]) {
+        case 'deleteFile':  // 删除文件
+          _this.deleteFile(model)
+          break;
+        case 'refresh': // 刷新
+          _this.getListData()
+          break;
+        case 'cancel':  // 取消
+          const index = _this.uploadInfo.map(o => o.name).indexOf(model.name)
+          _this.uploadInfo.splice(index, 1)
+          setTimeout(() => {
+            _this.getListData()
+          }, 1000);
+          break;
+        case 'pause': // 暂停 开始
+          model.state = model.state === 'interrupted' ? 'progressing' : 'interrupted';
+          upload.prepareFile(model, { data: '', add: file => {}, success: (file, rs) => {} });
+          break;
+        default:
+          break;
+      }
     },
     clearAllTrans() { // 清空所有记录
       const _this = this as any
@@ -132,46 +151,19 @@ export default Vue.extend({
         }
       });
     },
-    resetSelected() { // 重置默认选项
-      uploadCategorys[0].isSelected = true
-      uploadCategorys[1].isSelected = false
+    getListData () {
+      const list = this.uploadInfo
+      console.log(JSON.parse(JSON.stringify(this.uploadInfo)));
+      uploadCategorys[0].count = list.filter(item => item.trans_type === 'upload' && (item.state === 'progressing' || item.state === 'interrupted')).length  // 正在上传
+      uploadCategorys[1].count = list.filter(item => item.trans_type === 'upload' && item.state === 'completed').length  // 上传完成
+      this.dataArray = list.filter(item => {
+        if (item.state === 'progressing' || item.state === 'completed') {
+          return item.trans_type === 'upload' && item.state === this.state
+        } else if (item.state === 'interrupted') {
+          return item.trans_type === 'upload' && item.state === 'interrupted'
+        }
+      })
     },
-    handleControl(model, ...args: any[]) {
-      const _this = this as any
-      switch (args[0]) {
-        case 'deleteFile':
-          _this.$electron.shell.beep()
-          _this.$confirm({
-            title: '删除',
-            content: '是否将所选文件彻底删除',
-            okText: '删除',
-            okType: 'danger',
-            cancelText: '取消',
-            onOk() {
-              // _this.$electron.shell.moveItemToTrash(item.path)  // 暂时不把本地文件删除了
-              const index = _this.uploadInfo.map(o => o.name).indexOf(model.name)
-              _this.uploadInfo.splice(index, 1)
-              _this.getListData()
-            }
-          });
-          break;
-        case 'refresh':
-          _this.getListData()
-          break;
-        case 'cancel':
-          // _this.$ipc.send('download', 'cancel', model.id)
-          setTimeout(() => {
-            _this.getListData()
-          }, 1000);
-          break;
-        case 'pause':
-          let commend = model.state === 'progressing' ? 'pause' : 'resume';
-          // _this.$ipc.send('download', commend, model.id);
-          break;
-        default:
-          break;
-      }
-    }
   }
 })
 </script>

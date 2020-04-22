@@ -7,28 +7,28 @@
 		</div>
 		<div class="cd-disk-info-item">
 			<span>文件类型:</span>
-			<div>{{ DiskData.path | filterNameType }}</div>
+			<div :title="DiskData.path | filterNameType">{{ DiskData.path | filterNameType }}</div>
 		</div>
 		<div class="cd-disk-info-item">
 			<span>文件位置:</span>
-			<div ref="address">{{ DiskData.path }}</div>
+			<div ref="address" :title="DiskData.path">{{ DiskData.path }}</div>
 		</div>
 		<div class="cd-disk-info-item">
 			<span>文件大小:</span>
-			<div>{{ DiskData.size | filterSize }}</div>
+			<div :title="DiskData.size | filterSize">{{ DiskData.size | filterSize }}</div>
 		</div>
 		<div class="cd-disk-info-item">
 			<span>创建时间:</span>
-			<div>{{ DiskData.ctime | filterTime }}</div>
+			<div :title="DiskData.ctime | filterTime">{{ DiskData.ctime | filterTime }}</div>
 		</div>
 		<div class="cd-disk-info-item">
 			<span>修改时间:</span>
 			<div v-if="DiskData.mtime === 0">未修改</div>
-			<div v-else>{{ DiskData.mtime | filterTime }}</div>
+			<div v-else :title="DiskData.mtime | filterTime">{{ DiskData.mtime | filterTime }}</div>
 		</div>
 		<div class="cd-disk-info-item">
 			<span>唯一标识:</span>
-			<div>{{ DiskData.uuid }}</div>
+			<div :title="DiskData.uuid">{{ DiskData.uuid }}</div>
 		</div>
 		<div class="cd-disk-info-item">
 			<span>文件分享:</span>
@@ -116,7 +116,7 @@ export default {
 	height: 100%;
 	background: #fff;
 	color: #000;
-	-webkit-app-region: drag;
+	// -webkit-app-region: drag;
 	box-shadow: 0 3px 3px 0 rgba(0, 0, 0, 0.14), 0 1px 7px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -1px rgba(0, 0, 0, 0.2);
 	border: 1px solid #efefef;
 }
@@ -166,13 +166,18 @@ export default {
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
 		-webkit-line-clamp: 1;
+		display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+		cursor: pointer;
 	}
 	input {
 		width: calc(100% - 160px);
 		height: 29px;
 		border-radius: 0;
 		margin-left: 10px;
-		-webkit-app-region: no-drag;
+		// -webkit-app-region: no-drag;
 	}
 	button {
 		float: right;
@@ -180,7 +185,7 @@ export default {
 		height: 30px;
 		line-height: 30px;
 		padding: 0 10px;
-		-webkit-app-region: no-drag;
+		// -webkit-app-region: no-drag;
 	}
 }
 .cd-disk-info-item input::selection {

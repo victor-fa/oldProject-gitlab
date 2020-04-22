@@ -102,8 +102,7 @@ const uploadCategorys: TransportCategory[] = [
 ]
 
 const backupCategorys: TransportCategory[] = [
-  { name: '正在备份', status: TransportStatus.running, count: 0, isSelected: true },
-  { name: '备份完成', status: TransportStatus.completed, count: 0, isSelected: false }
+  { name: '正在备份', status: TransportStatus.running, count: 0, isSelected: true }
 ]
 
 const remoteCategorys: TransportCategory[] = [
