@@ -122,7 +122,7 @@ export default Vue.extend({
     showTaskModeDialog () {
       const { dialog } = require('electron').remote
       dialog.showMessageBox({
-        type: 'none',
+        type: 'info',
         defaultId: 0,
         message: '请选择重名文件处理模式',
         buttons: buttons

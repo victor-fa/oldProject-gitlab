@@ -78,8 +78,8 @@ export default {
     updatePath (context: ActionContext<ResourceState, ResourceState>, path: string) {
       context.commit('UPDATE_PATH', path)
     },
-    updateStorages (context: ActionContext<ResourceState, ResourceState>) {
-      context.commit('UPDATE_STORAGES')
+    updateStorages (context: ActionContext<ResourceState, ResourceState>, storages: StorageInfo[]) {
+      context.commit('UPDATE_STORAGES', storages)
     },
     updateShowItemCount (context: ActionContext<ResourceState, ResourceState>, count: number) {
       context.commit('UPDATE_SHOW_ITEM_COUNT', count)

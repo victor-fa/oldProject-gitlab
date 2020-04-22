@@ -19,6 +19,39 @@ const resourceContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
+      { title: '打开', command: 'open' }
+    ]
+  },
+  {
+    icon: require('../../assets/down_accessory.png'),
+    items: [
+      { title: '下载', command: 'download' },
+      { title: '分享', command: 'share' },
+      { title: '收藏', command: 'collect' }
+    ]
+  },
+  {
+    items: [
+      { title: '复制', command: 'copy' },
+      { title: '剪切', command: 'cut' },
+      { title: '移动到', command: 'moveto' }
+    ]
+  },
+  {
+    icon: require('../../assets/delet_accessory.png'),
+    items: [
+      { title: '删除', command: 'delete' },
+      { title: '重命名', command: 'rename' },
+      { title: '加密', command: 'encrypt' },
+      { title: '属性', command: 'info' }
+    ]
+  }
+]
+
+const recentContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
       { title: '打开', command: 'open' },
       { title: '到文件位置', command: 'jump' }
     ]
@@ -86,6 +119,25 @@ const collectContextMenu: Array<OperateGroup> = [
   }
 ]
 
+const collectResourceContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '打开', command: 'open' },
+      { title: '删除', command: 'delete' },
+      { title: '重命名', command: 'rename' },
+      { title: '下载', command: 'download' }
+    ]
+  },
+  {
+    icon: require('../../assets/delet_accessory.png'),
+    items: [
+      { title: '属性', command: 'info' },
+      { title: '到文件位置', command: 'jump' }
+    ]
+  }
+]
+
 const shareContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
@@ -107,6 +159,26 @@ const shareContextMenu: Array<OperateGroup> = [
   }
 ]
 
+const shareResourceContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '打开', command: 'open' },
+      { title: '复制', command: 'copy' },
+      { title: '删除', command: 'delete' },
+      { title: '重命名', command: 'rename' },
+      { title: '下载', command: 'download' }
+    ]
+  },
+  {
+    icon: require('../../assets/delet_accessory.png'),
+    items: [
+      { title: '属性', command: 'info' },
+      { title: '到文件位置', command: 'jump' }
+    ]
+  }
+]
+
 let listContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
@@ -122,7 +194,8 @@ let listContextMenu: Array<OperateGroup> = [
     items: [
       { title: '清空剪切板', command: 'clearClipboard' },
       { title: '粘贴', command: 'paste' },
-      { title: '刷新', command: 'refresh' }
+      { title: '刷新', command: 'refresh' },
+      { title: '属性', command: 'directoryInfo' }
     ]
   }
 ]
@@ -136,9 +209,12 @@ if (deviceMgr.getPlatform() === '0') {
 
 export {
   resourceContextMenu,
+  recentContextMenu,
   storageContextMenu,
   collectContextMenu,
+  collectResourceContextMenu,
   shareContextMenu,
+  shareResourceContextMenu,
   listContextMenu,
   OperateItem,
   OperateGroup

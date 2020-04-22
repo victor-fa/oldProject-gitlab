@@ -18,26 +18,26 @@
           @contextmenu.prevent="contextMenuClick($event)"
         />
       </div>
-      <a-input
-        v-if="isRenaming"
-        v-focus
-        ref="nameInput"
-        type="text"
-        v-model="inputName"
-        @blur="handleRename"
-        @focus="handleFocus($event)"
-        @pressEnter="handleRename"
-      />
-      <div v-else>
+      <div class="name-wrapper">
+        <a-input
+          v-if="isRenaming"
+          v-focus
+          type="text"
+          v-model="inputName"
+          @blur="handleRename($event)"
+          @focus="handleFocus($event)"
+          v-on:pressEnter="handleRename($event)"
+        />
         <p
-          :title="model.name"
+          v-else
+          :title="showName"
           @click.stop.exact="singleClick()"
           @click.meta.stop="multipleClick()"
           @click.shift.stop="listMultipleClick()"
           @dblclick="doubleClick()"
           @contextmenu.prevent="contextMenuClick($event)"
         >
-          {{ model.name }}
+          {{ showName }}
         </p>
       </div>
     </div>
@@ -62,7 +62,7 @@
       >
         <a-col :span="13">
           <img :src="searchResourceIcon(model.type)">
-          {{ model.name }}
+          {{ showName }}
         </a-col>
         <a-col :span="6">{{ model.showMtime }}</a-col>
         <a-col :span="5">{{ model.showSize }}</a-col>
@@ -75,7 +75,6 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import { ArrangeWay, ResourceItem, ResourceType } from '../../api/NasFileModel'
-import StringUtility from '../../utils/StringUtility'
 import NasFileAPI from '../../api/NasFileAPI'
 import ResourceHandler from '../../views/MainView/ResourceHandler'
 
@@ -102,11 +101,22 @@ export default Vue.extend({
     },
     isRenaming: {
       default: false
+    },
+    showName: {
+      default: ''
     }
   },
   data () {
     return {
       inputName: (this.model as ResourceItem).name
+    }
+  },
+  watch: {
+    showName: function (newValue: string) {
+      this.inputName = newValue
+    },
+    model: function (newValue: ResourceItem) {
+      this.inputName = newValue.name
     }
   },
   computed: {
@@ -122,12 +132,23 @@ export default Vue.extend({
     searchResourceIcon (type: ResourceType) {
       return ResourceHandler.searchResourceIcon(type)
     },
-    handleRename () {
-      // not change
-      if (this.model.name === this.inputName) return
-      // TODO: 当前没有对文件名合法性进行校验
-      const newPath = StringUtility.renamePath(this.model.path, this.inputName)
-      this.$emit('callbackAction', 'rename', this.index, newPath)
+    handleRename (event: MouseEvent) {
+      if (_.isEmpty(this.inputName)) {
+        const item = this.model as ResourceItem
+        const isDirectory = item.type === ResourceType.folder
+        const tip = isDirectory ? '目录名不能为空' : '文件名不能为空'
+        this.$message.error(tip)
+        this.inputName = item.name
+        return
+      }
+      const model = this.model as ResourceItem
+      if (_.isEmpty(model.uuid)) {
+        this.$emit('callbackAction', 'newFolderRequest', this.index, this.inputName)
+      } else {
+        // not change
+        if (this.model.name === this.inputName) return
+        this.$emit('callbackAction', 'renameRequest', this.index, this.inputName)
+      }
     },
     handleFocus (event: FocusEvent) {
       // 输入框聚焦，选中名称字段
@@ -184,23 +205,31 @@ export default Vue.extend({
       margin: auto;
     }
   }
-  p {
-    margin-top: 6px;
-    line-height: 14px;
-    font-size: 12px;
-    padding: 0px 3px;
-    border-radius: 4px;
-    color: #484848;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  input {
-    margin: auto;
-    height: 20px;
-    font-size: 12px;
-    color: #484848;
-    text-align: center;
+  .name-wrapper {
+    height: 25px;
+    display: flex;
+    align-items: center;
+    p {
+      width: 100%;
+      line-height: 12px;
+      font-size: 12px;
+      padding: 0px 3px;
+      margin-bottom: 0px;
+      border-radius: 4px;
+      color: #484848;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    input {
+      width: 100%;
+      height: 20px;
+      font-size: 12px;
+      color: #484848;
+      text-align: center;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
   }
 }
 .horizontalSelectedItem {

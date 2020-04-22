@@ -99,5 +99,10 @@ export default {
       { path: 'share', name: '分享' },  { path: 'transport', name: '任务' }
     ]
     return toolJson.filter(o => o.path === path)[0].name
+  },
+  // 获取路径目录
+  pathDirectory (path: string) {
+    const index = path.lastIndexOf('/')
+    return path.slice(0, index)
   }
 }
