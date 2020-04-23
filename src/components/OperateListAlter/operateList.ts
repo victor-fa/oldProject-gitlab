@@ -99,6 +99,37 @@ const storageContextMenu: Array<OperateGroup> = [
   }
 ]
 
+const encryptResourceContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '打开', command: 'open' },
+      { title: '删除', command: 'delete' },
+      { title: '重命名', command: 'rename' },
+      { title: '下载', command: 'download' }
+    ]
+  },
+  {
+    icon: require('../../assets/delet_accessory.png'),
+    items: [
+      { title: '移出空间', command: 'remove' },
+      { title: '属性', command: 'info' }
+    ]
+  }
+]
+
+const encryptContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '上传', command: 'upload' },
+      { title: '刷新', command: 'refresh' },
+      { title: '修改密码', command: 'modifyPass' },
+      { title: '重置空间', command: 'reset' }
+    ]
+  }
+]
+
 const collectContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
@@ -211,6 +242,8 @@ export {
   resourceContextMenu,
   recentContextMenu,
   storageContextMenu,
+  encryptResourceContextMenu,
+  encryptContextMenu,
   collectContextMenu,
   collectResourceContextMenu,
   shareContextMenu,

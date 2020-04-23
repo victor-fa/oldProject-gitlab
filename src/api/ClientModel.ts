@@ -27,6 +27,10 @@ interface NasInfo {
   softversion: string
 }
 
+interface CryptoInfo {
+  crypto_token: string,
+}
+
 interface NasUser {
   // eslint-disable-next-line camelcase
   ugreen_no: number,
@@ -47,6 +51,7 @@ interface NasUser {
 export {
   NasAccessInfo,
   NasInfo,
+  CryptoInfo,
   NasActive,
   NasUser
 }

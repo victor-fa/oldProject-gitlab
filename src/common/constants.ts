@@ -6,6 +6,7 @@ const USER_MODEL = 'user_info'
 const ACCOUNT = 'account'
 const NAS_INFO = 'nas_info'
 const NAS_ACCESS = 'nas_token'
+const CRYPTO_INFO = 'crypto_info'
 const TRANSFORM_INFO = 'transform_info'
 const TRANS_DOWNLOAD = 'trans_download'
 const TRANS_UPLOAD = 'trans_upload'
@@ -18,6 +19,7 @@ export {
   ACCOUNT,
   NAS_INFO,
   NAS_ACCESS,
+  CRYPTO_INFO,
   TRANSFORM_INFO,
   TRANS_DOWNLOAD,
   TRANS_UPLOAD,

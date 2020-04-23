@@ -3,9 +3,9 @@ import { BasicResponse } from '@/api/UserModel';
 import Vue from 'vue'
 import { jsonToParams, jsonToParamsForPdf } from '../utils/request'
 import axios, { AxiosResponse, Canceler } from 'axios/index';
-import { NAS_ACCESS, NAS_INFO } from '@/common/constants'
+import { NAS_ACCESS, NAS_INFO, CRYPTO_INFO } from '@/common/constants'
 import { nasServer } from '@/utils/request';
-import { NasInfo } from './ClientModel';
+import { NasInfo, CryptoInfo } from './ClientModel';
 import { OrderType, UploadTimeSort } from './NasFileModel';
 
 axios.defaults.withCredentials = true;
@@ -16,6 +16,7 @@ const nasShareModulePath = '/v1/share'
 const nasFavoriteModulePath = '/v1/favorites'
 const nasMyselfModulePath = '/v1/myself'
 const nasUserModulePath = '/v1/user'
+const nasCryptoModulePath = '/v1/crypto'
 
 const CancelToken = axios.CancelToken
 const host = (() => {
@@ -288,8 +289,51 @@ export default {
   deleteOfflineAccount (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasUserModulePath + '/offline/account/delete')
   },
-  getOfflineName (data): Promise<AxiosResponse<BasicResponse>> {
+  getOfflineName (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasUserModulePath + '/getOfflineName')
+  },
+  getEncryptStatus (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasUserModulePath + '/security/statusquery')
+  },
+  setEncrypt (security_user_password): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasUserModulePath + '/security/enable', {
+      security_user_password
+    })
+  },
+  loginEncrypt (security_password): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasUserModulePath + '/security/login', {
+      security_password
+    })
+  },
+  getEncryptList (): Promise<AxiosResponse<BasicResponse>> {
+    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
+    if (cryptoJson === null) {
+      return Promise.reject(Error('not find crypto_info'))
+    }
+    const token = JSON.parse(cryptoJson) as CryptoInfo
+    return nasServer.get(nasCryptoModulePath + '/list', {
+      params: {
+        crypto_token: token.crypto_token
+      }
+    })
+  },
+  modifyEncrypt (data): Promise<AxiosResponse<BasicResponse>> {
+    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
+    if (cryptoJson === null) {
+      return Promise.reject(Error('not find crypto_info'))
+    }
+    const token = JSON.parse(cryptoJson) as CryptoInfo
+    return nasServer.post(nasUserModulePath + '/security/password', {
+      security_user_password: data.security_user_password,
+      security_user_password_new: data.security_user_password_new
+    }, {
+      params: {
+        crypto_token: token.crypto_token
+      }
+    })
+  },
+  resetEncrypt (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasUserModulePath + '/security/reset')
   },
 }
 
