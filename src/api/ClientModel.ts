@@ -28,7 +28,8 @@ interface NasInfo {
 }
 
 interface CryptoInfo {
-  crypto_token: string,
+  security_password: string,
+  crypto_token: string
 }
 
 interface NasUser {

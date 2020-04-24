@@ -4,7 +4,6 @@
       :category="category"
       :dataSource="dataArray"
       :currentTab="'backup'"
-      v-on:categoryChange="handleCategoryChange"
       v-on:transportOperateAction="handleOperateAction"
     >
       <template v-slot:renderItem="{ item, index}">
@@ -30,6 +29,7 @@ import { backupCategorys, TransportStatus } from '../../../model/categoryList'
 import uploadBackup from '../../../utils/file/uploadBackup';
 import StringUtility from '../../../utils/StringUtility'
 import ClientAPI from '../../../api/ClientAPI'
+import TransportHandler from '../TransportHandler'
 import { mapGetters } from 'vuex'
 import _ from 'lodash'
 
@@ -53,7 +53,7 @@ export default Vue.extend({
     ...mapGetters('Transform', ['backupInfo'])
   },
   created () {
-    this.getListData()
+    // this.getListData()
     this.hostname = require("os").hostname();  // 获取主机名
   },
   mounted () {
@@ -62,19 +62,17 @@ export default Vue.extend({
   watch: {
 		transBackupData: {
 			handler() {
-				const _this = this as any
-				_this.$nextTick(() => {
-          _this.fnThrottle(this.getListData, 300, 600)() // 节流
-        });
+        const _this = this as any
+        this.getListData()
+				// _this.$nextTick(() => {
+        //   _this.fnThrottle(this.getListData, 300, 600)() // 节流
+        // });
 			},
 			deep: true
 		}
   },
   methods: {
     // handle views action
-    handleCategoryChange (index: number) {
-      this.getListData()
-    },
     handleOperateAction (command: string) {
       const _this = this as any
       switch (command) {
@@ -180,35 +178,48 @@ export default Vue.extend({
       });
     },
     getListData () {
-      console.log(JSON.parse(JSON.stringify(this.backupInfo)));
-      backupCategorys[0].count = this.backupInfo.filter(item => item.trans_type === 'backup' && (item.state === 'progressing' || item.state === 'interrupted')).length  // 正在上传
-      if (this.backupInfo.length === 0) {
-        return
-      }
+      // console.log(JSON.parse(JSON.stringify(this.backupInfo)));
+      if (this.backupInfo.length === 0) return
       this.$nextTick(() => {
-        let allChunk = 0
-        let allSize = this.backupInfo[0].size
-        let allCount = 0
-        let allName = this.backupInfo[0].foldName
-        let allFilePath = this.backupInfo[0].files[0].filePath.split('/')
-        allFilePath.pop()
-        this.backupInfo[0].files.forEach(item => {
-          allChunk += item.chunk
+        let filesArr:any = [];
+        let arr = this.backupInfo
+        arr.forEach(item => {
+          if (filesArr.length > 0) {
+            filesArr.forEach((cell, index) => {
+              if (StringUtility.pathDirectory(item.path.replace(new RegExp("\\\\", "g"), '/')) === cell.path) {
+                cell.files.forEach((unit, index2, self) => {
+                  if (unit.path === item.path) {
+                    unit = item
+                  } else {
+                    self.push(item)
+                  }
+                })
+                cell.files = StringUtility.filterRepeatPath(cell.files)	// 去重
+              } else {
+                let temp = { files: [] as any, path: '' }
+                temp.files.push(item)
+                temp.path = StringUtility.pathDirectory(item.path.replace(new RegExp("\\\\", "g"), '/'))
+                filesArr.push(temp)
+                filesArr = StringUtility.filterRepeatPath(filesArr)	// 去重
+              }
+            })
+          } else {
+            let temp = { files: [] as any, path: '' }
+            temp.files.push(item)
+            temp.path = StringUtility.pathDirectory(item.path.replace(new RegExp("\\\\", "g"), '/'))
+            filesArr.push(temp)
+          }
         })
-        let finalArr:any = []
-        let fileItem:any = {
-          destinationPath: allFilePath.join('/'),
-          id: 0,
-          progress: (StringUtility.formatShowSize(allChunk) + "/" + StringUtility.formatShowSize(allSize)),
-          progressPercent: allChunk / allSize * 100,
-          sourcePath: allName,
-          speed: this.MathSpeend(this.backupInfo[0].files[0]),
-          status: (allChunk / allSize * 100 === 100 ? TransportStatus.completed : TransportStatus.running),
-          total: StringUtility.formatShowSize(allSize),
-          type: 6
-        }
-        finalArr.push(fileItem)
-        this.dataArray = finalArr
+        // console.log(JSON.parse(JSON.stringify(filesArr)));
+        this.dataArray = filesArr.map(item => {
+          return TransportHandler.convertBackupTask(item)
+        })
+        backupCategorys[0].count = 0
+        this.dataArray.forEach((item:any) => {
+          if (item.status === TransportStatus.running) {
+            backupCategorys[0].count += 1
+          }
+        })
         console.log(JSON.parse(JSON.stringify(this.dataArray)));
       })
     },
@@ -224,31 +235,14 @@ export default Vue.extend({
       // finalPath.pop()
       // console.log(finalPath.join('/'));
       // this.checkFile(finalPath.join('/'))
+
       const _this = this as any
-      _this.transBackupData.push({
-        foldName: '',
-        size: 0,
-        trans_type: 'backup',
-        files: []
-      });
-      const backupLength = _this.transBackupData.length
 			uploadBackup.prepareFile(data.target, { // 备份上传
         data: _this.hostname + ClientAPI.getMac(),
 				add: file => {
-          // _this.transBackupData.push(file);
+          _this.transBackupData.push(file);
           console.log(JSON.parse(JSON.stringify(file)));
           console.log(_this.transBackupData);
-          console.log(backupLength);
-          let foldName = file.path.split('\\')
-          foldName.pop()
-          let allSize = 0
-          data.target.files.forEach(item => {
-            allSize += item.size
-          });
-          _this.transBackupData[backupLength-1].foldName = foldName.join('\\')
-          _this.transBackupData[backupLength-1].size = allSize
-          _this.transBackupData[backupLength-1].files.push(file)
-          console.log(JSON.parse(JSON.stringify(_this.transBackupData)));
           // // 删除重复元素
           // let repeatFlag = false
           // _this.transBackupData.forEach((item, index) => {

@@ -1,4 +1,3 @@
-// import Disk from '../api/Disk';
 import NasFileAPI from '../../api/NasFileAPI'
 import { USER_MODEL } from '../../common/constants'
 import SparkMD5 from 'spark-md5'

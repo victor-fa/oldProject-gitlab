@@ -7,7 +7,7 @@
 		</div>
 		<div class="cd-disk-info-item">
 			<span>文件类型:</span>
-			<div :title="DiskData.path | filterNameType">{{ DiskData.path | filterNameType }}</div>
+			<div :title="DiskData.type | filterNameType">{{ DiskData.type | filterNameType }}</div>
 		</div>
 		<div class="cd-disk-info-item">
 			<span>文件位置:</span>
@@ -57,7 +57,8 @@ export default {
 			return StringUtility.formatName(data)
 		},
 		filterNameType (data) {
-			return StringUtility.formatSuffix(data)
+			console.log(StringUtility.fileTypeToName(data));
+			return StringUtility.fileTypeToName(data)
 		},
 		filterTime (data) {
 			return StringUtility.formatShowMtime(data)

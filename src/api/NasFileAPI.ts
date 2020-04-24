@@ -335,6 +335,20 @@ export default {
   resetEncrypt (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasUserModulePath + '/security/reset')
   },
+  logoutEncrypt (): Promise<AxiosResponse<BasicResponse>> {
+    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
+    if (cryptoJson === null) {
+      return Promise.reject(Error('not find crypto_info'))
+    }
+    const token = JSON.parse(cryptoJson) as CryptoInfo
+    return nasServer.post(nasUserModulePath + '/security/logout', {
+      security_password: token.security_password
+    }, {
+      params: {
+        crypto_token: token.crypto_token
+      }
+    })
+  }
 }
 
 enum TaskMode {

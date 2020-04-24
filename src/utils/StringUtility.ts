@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import { ResourceType } from '../api/NasFileModel'
 
 //  字串处理工具类
 export default {
@@ -104,5 +105,40 @@ export default {
   pathDirectory (path: string) {
     const index = path.lastIndexOf('/')
     return path.slice(0, index)
+  },
+  // 文件类型转中文
+  fileTypeToName (type: number) {
+    let res = ''
+    switch (type) {
+      case ResourceType.unknown:
+        res = '未知类型'
+        break;
+      case ResourceType.video:
+        res = '视频类型'
+        break;
+      case ResourceType.audio:
+        res = '音频类型'
+        break;
+      case ResourceType.image:
+        res = '图片类型'
+        break;
+      case ResourceType.document:
+        res = '文本类型'
+        break;
+      case ResourceType.archive:
+        res = '档案类型'
+        break;
+      case ResourceType.folder:
+        res = '文件夹类型'
+        break;
+      default:
+        break;
+    }
+    return res
+  },
+  // 去重相同path
+  filterRepeatPath(arr) {
+    const res = new Map()
+    return arr.filter(item => !res.has(item.path) && res.set(item.path, 1))
   }
 }

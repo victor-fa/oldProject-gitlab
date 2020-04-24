@@ -71,6 +71,9 @@ export default Vue.extend({
   created() {
     this.checkEncryptStatus()
   },
+  destroyed() {
+    this.logout()
+  },
   data () {
     return {
       loading: false,
@@ -197,6 +200,7 @@ export default Vue.extend({
           this.cancleEncryptModify()
         }
         const crypto_token = _.get(response.data, 'data')
+        crypto_token.security_password = security_password
         this.$store.dispatch('NasServer/updateCryptoInfo', crypto_token)
         this.getEncryptList()
       }).catch(error => {
@@ -272,25 +276,39 @@ export default Vue.extend({
         this.encryptLogin.isVisiable = true
       })
     },
-    handleContextMenuActions (command: string, ...args: any[]) {
-      console.log(command)
-      switch (command) {
-        case 'upload': 
-
-          break;
-        case 'refresh':
-          this.getEncryptList()
-          break;
-        case 'modifyPass':
-          this.encryptModify.isVisiable = true
-          break;
-        case 'reset':
-          this.encryptReset.isVisiable = true
-          break;
-        default:
-          break;
-      }
+    logout () {
+      NasFileAPI.logoutEncrypt().then(response => {
+        this.loading = false
+        if (response.data.code !== 200) return
+        console.log(response);
+      }).catch(error => {
+        this.loading = false
+        this.$message.error('网络连接错误，请检测网络')
+        console.log(error)
+      })
     },
+    // 重写父类中的方法
+    handleRefreshAction () {  // 刷新
+      this.getEncryptList()
+    },
+    handleModifyPassAction () { //  修改加密空间密码
+      this.encryptModify.isVisiable = true
+    },
+    handleResetAction () {  // 重置加密空间
+      this.encryptReset.isVisiable = true
+    },
+    
+    // handleContextMenuActions (command: string, ...args: any[]) {
+    //   switch (command) {
+    //     case 'upload': 
+    //     case 'open': 
+    //     case 'delete': 
+    //     case 'rename': 
+    //     case 'remove': 
+    //     case 'info': 
+    //     default:
+    //   }
+    // }
   }
 })
 </script>

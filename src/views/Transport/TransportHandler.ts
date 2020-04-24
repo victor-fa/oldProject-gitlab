@@ -1,6 +1,7 @@
 import { RemoteTask, RemoteTaskStatus } from '@/api/NasFileModel';
 import { TransportModel } from './MainPage/TransportModel';
 import { TransportStatus } from '@/model/categoryList';
+import { ResourceType } from '../../api/NasFileModel'
 
 export default {
   convertRemoteTask (model: RemoteTask): TransportModel {
@@ -22,31 +23,56 @@ export default {
     }
     return TransportStatus.running
   },
+  convertBackupTask (model): TransportModel {
+    let total_size = 0
+    let total_chunk = 0
+    let total_speed = 0
+    let NowTime = new Date().getTime() / 1000;
+    model.files.forEach(item => {
+      total_size += item.size
+      total_chunk += item.chunk
+      total_speed = Number(parseFloat((item.chunk / (NowTime - item.time)).toString()).toFixed(0))
+    });
+    return {
+      id: model.id,
+      status: this.convertBackupTaskStatus(total_chunk, total_size),
+      type: ResourceType.folder,
+      speed: this.formatSpeed(total_speed),
+      total: this.formatMemory(total_size),
+      progress: this.formatProgress(total_chunk, total_size),
+      progressPercent: this.caculatePercent(total_chunk, total_size),
+      sourcePath: model.path,
+      destinationPath: model.path
+    }
+  },
+  convertBackupTaskStatus (total_chunk: number, total_size: number): TransportStatus {
+    return total_chunk / total_size === 1 ? TransportStatus.completed : TransportStatus.running
+  },
   formatSpeed (speed: number) {
     const kByte = 1024
     const mByte = kByte * 1024
     const gByte = mByte * 1024
     if (speed < kByte) {
-      return `${speed}B/s`
+      return `${(speed).toFixed(2)}B/s`
     } else if (speed < mByte) {
-      return `${speed / kByte}K/s`
+      return `${(speed / kByte).toFixed(2)}K/s`
     } else if (speed < gByte) {
-      return `${speed / mByte}M/s`
+      return `${(speed / mByte).toFixed(2)}M/s`
     } 
-    return `${speed / gByte}G/s`
+    return `${(speed / gByte).toFixed(2)}G/s`
   },
   formatMemory (memory: number) {
     const kByte = 1024
     const mByte = kByte * 1024
     const gByte = mByte * 1024
     if (memory < kByte) {
-      return `${memory}B`
+      return `${(memory).toFixed(2)}B`
     } else if (memory < mByte) {
-      return `${memory / kByte}KB`
+      return `${(memory / kByte).toFixed(2)}KB`
     } else if (memory < gByte) {
-      return `${memory / mByte}MB`
+      return `${(memory / mByte).toFixed(2)}MB`
     } 
-    return `${memory / gByte}GB`
+    return `${(memory / gByte).toFixed(2)}GB`
   },
   formatProgress (size: number, totalSize: number) {
     const formatSize = this.formatMemory(size)

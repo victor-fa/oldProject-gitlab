@@ -194,6 +194,12 @@ export default Vue.extend({
         case 'directoryInfo':
           this.handleDireactoryInfoAction()
           break;
+        case 'modifyPass':
+          this.handleModifyPassAction()
+          break;
+        case 'reset':
+          this.handleResetAction()
+          break;
         default:
           break;
       }
@@ -362,6 +368,10 @@ export default Vue.extend({
     handlePasteAction (mode: TaskMode) {
     },
     handleDireactoryInfoAction () {
+    },
+    handleModifyPassAction () {
+    },
+    handleResetAction () {
     }
   }
 })
