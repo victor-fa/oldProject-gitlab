@@ -11,7 +11,6 @@ export {
 }
 
 interface ResourceState {
-  directory: string,
   storages: Array<StorageInfo>,
   showItemCount: number,
   clipboard: ClipboardModel,
@@ -21,16 +20,12 @@ interface ResourceState {
 export default {
   namespaced: true,
   state: {
-    directory: '最近',
     storages: [],
     showItemCount: 0,
     clipboard: [], // TODO: 目前没有对剪切板进行缓存
     taskCount: 0
   },
   getters: {
-    directory: (state: ResourceState) => {
-      return state.directory
-    },
     storages: (state: ResourceState) => {
       return state.storages
     },
@@ -45,16 +40,6 @@ export default {
     } 
   },
   mutations: {
-    PUSH_PATH (state: ResourceState, path: string) {
-      state.directory += `/${path}`
-    },
-    POP_PATH (state: ResourceState) {
-      const length = state.directory.lastIndexOf('/')
-      state.directory = state.directory.substring(0, length)
-    },
-    UPDATE_PATH (state: ResourceState, path: string) {
-      state.directory = path
-    },
     UPDATE_STORAGES (state: ResourceState, storages: Array<StorageInfo>) {
       state.storages = storages
     },
@@ -69,15 +54,6 @@ export default {
     }
   },
   actions: {
-    pushPath (context: ActionContext<ResourceState, ResourceState>, path: string) {
-      context.commit('PUSH_PATH', path)
-    },
-    popPath (context: ActionContext<ResourceState, ResourceState>) {
-      context.commit('POP_PATH')
-    },
-    updatePath (context: ActionContext<ResourceState, ResourceState>, path: string) {
-      context.commit('UPDATE_PATH', path)
-    },
     updateStorages (context: ActionContext<ResourceState, ResourceState>, storages: StorageInfo[]) {
       context.commit('UPDATE_STORAGES', storages)
     },

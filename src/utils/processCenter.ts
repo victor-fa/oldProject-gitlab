@@ -27,18 +27,17 @@ enum MainEventName {
 export default {
   // on main process observing
   mainObserverChannel () {
-    ipcMain.on(ChannelName.async, (event, eventName: EventName, data: any) => {
+    ipcMain.on(ChannelName.async, (event, eventName: EventName, ...args: any[]) => {
       event.reply(ChannelName.replay)
       switch (eventName) {
         case EventName.login:
-          const msg = data as string
-          windowManager.presentLoginWindow(msg)
+          windowManager.presentLoginWindow(args[0])
           break
         case EventName.home:
           windowManager.presentHomeWindow()
           break
         case EventName.mediaInfo:
-          windowManager.presentMediaWindow(data)
+          windowManager.presentMediaWindow(args[0])
           break
         default:
           break

@@ -43,8 +43,7 @@ interface AccessToken {
   // eslint-disable-next-line camelcase
   refresh_token: string,
   // eslint-disable-next-line camelcase
-  expires_time: number,
-  localExpiresTime: number
+  expires_time: number
 }
 
 interface LoginResponse {
@@ -73,6 +72,8 @@ interface DeviceInfo {
   role: DeviceRole,
   sn: string,
   mac: string,
+  name: string,
+  model: string,
   firmware: string,
   hareware: string,
   status: DeviceStatus,

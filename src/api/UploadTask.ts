@@ -206,7 +206,6 @@ class UploadTask {
         completionHandler(undefined, new UploadError(UploadErrorCode.uploadInnerError))
         return
       }
-      console.log(this.cancelTask)
       file.uploadedSize += chunkLength
       completionHandler(chunkLength)
       const isCompleted = file.uploadedSize >= file.totalSize

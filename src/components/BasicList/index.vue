@@ -1,6 +1,6 @@
 <template>
   <div
-    class="transport-list"
+    class="basic-list"
     :style="{ height: scrollHeight + 'px' }"
   >
     <a-list
@@ -22,7 +22,14 @@ export default Vue.extend({
   name: 'basic-list',
   props: {
     dataSource: Array,
-    adjust: Number
+    adjust: {
+      default: 0
+    }
+  },
+  watch: {
+    adjust: function (newValue: number) {
+      this.scrollHeight = document.body.clientHeight - newValue
+    }
   },
   data () {
     return {
@@ -47,17 +54,17 @@ export default Vue.extend({
 </script>
 
 <style lang="less" scoped>
-.transport-list {
+.basic-list {
   background-color: white;
   overflow: hidden;
 }
 </style>
 
 <style>
-.transport-list .ant-list-header {
+.basic-list .ant-list-header {
   padding: 0px;
 }
-.transport-list .ant-list-item {
+.basic-list .ant-list-item {
   margin: 0px;
   padding: 0px;
 }

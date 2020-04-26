@@ -1,10 +1,37 @@
-import { nasCloud } from '../utils/request'
-import { AxiosResponse } from 'axios'
-import { ACCESS_TOKEN, USER_MODEL } from '../common/constants'
+import _ from 'lodash'
+import axios, { AxiosResponse, Canceler } from 'axios'
 import { SmsType, AccessToken, BasicResponse, User } from './UserModel'
 import deviceMgr from '../utils/deviceMgr'
+import store from '@/store'
+import { nasCloud } from './CloudServer'
 
 const userModulePath = '/api/user/v1'
+const CancelToken = axios.CancelToken
+let cancel: Canceler | null = null
+const getAccessToken = () => {
+  const userAccess = _.get(store.getters, 'User/accessToken') as AccessToken
+  const accessToken = userAccess.access_token
+  if (_.isEmpty(accessToken)) return null
+  return accessToken
+}
+const getUserInfo = () => {
+  const user = _.get(store.getters, 'User/user') as User
+  if (_.isEmpty(user)) return null
+  return user
+}
+const customError = (error: string): AxiosResponse<BasicResponse> => {
+  return {
+    status: 200,
+    statusText: '',
+    headers: null,
+    config: {},
+    data: {
+      code: 9904, // 尚未登录
+      msg: error,
+      data: null
+    }
+  }
+}
 
 export default {
   ping () {
@@ -31,15 +58,18 @@ export default {
       platform
     })
   },
-  getBindDevices (): Promise<AxiosResponse<BasicResponse>> {
-    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
-    if (tokenJson === null) {
-      return Promise.reject(Error('not find access_token'))
-    }
-    const token = JSON.parse(tokenJson) as AccessToken
+  fetchBindDevices (): Promise<AxiosResponse<BasicResponse>> {
+    const accessToken = getAccessToken()
+    if (accessToken === null) return Promise.reject(customError('not find access_token'))
     return nasCloud.get(userModulePath + '/bind/device', {
-      headers: { 'Authorization': token.access_token }
+      headers: { 'Authorization': accessToken },
+      cancelToken: new CancelToken(function executor(c) {
+        cancel = c
+      })
     })
+  },
+  cancelFetchBindDevices () {
+    if (cancel !== null) cancel()
   },
   loginBySmscode (phoneNo: string, vcode: string) {
     return nasCloud.post(userModulePath + '/login/byCode', {
@@ -48,13 +78,10 @@ export default {
     })
   },
   logout (): Promise<AxiosResponse<BasicResponse>> {
-    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
-    if (tokenJson === null) {
-      return Promise.reject(Error('not find access_token'))
-    }
-    const token = JSON.parse(tokenJson) as AccessToken
+    const accessToken = getAccessToken()
+    if (accessToken === null) return Promise.reject(customError('not find access_token'))
     return nasCloud.post(userModulePath + '/logout', {}, {
-      headers: { 'Authorization': token.access_token }
+      headers: { 'Authorization': accessToken }
     })
   },
   resetPassword (userName: string, password: string, code: string) {
@@ -64,7 +91,7 @@ export default {
       code
     })
   },
-  refreshToken (refreshToken: string): Promise<AxiosResponse<AccessToken>> {
+  refreshToken (refreshToken: string): Promise<AxiosResponse<BasicResponse>> {
     return nasCloud.get(userModulePath + '/token/refresh', {
       params: {
         refreshToken
@@ -72,16 +99,10 @@ export default {
     })
   },
   feedback (title: string, context: string, linkUrl: string): Promise<AxiosResponse<BasicResponse>> {
-    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
-    const userJson = localStorage.getItem(USER_MODEL)
-    if (tokenJson === null) {
-      return Promise.reject(Error('not find access_token'))
-    }
-    if (userJson === null) {
-      return Promise.reject(Error('not find user_info'))
-    }
-    const token = JSON.parse(tokenJson) as AccessToken
-    const user = JSON.parse(userJson) as User
+    const user = getUserInfo()
+    if (user === null)  return Promise.reject(customError('not find user_info'))
+    const accessToken = getAccessToken()
+    if (accessToken === null) return Promise.reject(customError('not find access_token'))
     return nasCloud.post(userModulePath + '/feedback/feedbacks', {
       ugreenNo: user.ugreenNo,
       title,
@@ -90,15 +111,12 @@ export default {
       type: 1,
       context
     }, {
-      headers: { 'Authorization': token.access_token }
+      headers: { 'Authorization': accessToken }
     })
   },
   updateInfo (data) {
-    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
-    if (tokenJson === null) {
-      return Promise.reject(Error('not find access_token'))
-    }
-    const token = JSON.parse(tokenJson) as AccessToken
+    const accessToken = getAccessToken()
+    if (accessToken === null) return Promise.reject(customError('not find access_token'))
     return nasCloud.put(userModulePath + '/update/info', {
       sex: data.sex,
       nicName: data.nicName,
@@ -108,19 +126,16 @@ export default {
       image: data.image,
       code: data.code
     }, {
-      headers: { 'Authorization': token.access_token }
+      headers: { 'Authorization': accessToken }
     })
   },
   uploadPhoto (file) {
-    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
-    if (tokenJson === null) {
-      return Promise.reject(Error('not find access_token'))
-    }
-    const token = JSON.parse(tokenJson) as AccessToken
+    const accessToken = getAccessToken()
+    if (accessToken === null) return Promise.reject(customError('not find access_token'))
     const fd = new FormData()
     fd.append('image', file)
     return nasCloud.post(userModulePath + '/head/upload', fd, {
-      headers: { 'Authorization': token.access_token }
+      headers: { 'Authorization': accessToken }
     })
   },
   changePass (data) {
@@ -131,30 +146,24 @@ export default {
     })
   },
   emailCode (email) {
-    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
-    if (tokenJson === null) {
-      return Promise.reject(Error('not find access_token'))
-    }
-    const token = JSON.parse(tokenJson) as AccessToken
+    const accessToken = getAccessToken()
+    if (accessToken === null) return Promise.reject(customError('not find access_token'))
     return nasCloud.get(userModulePath + '/send/email/vcode', {
       params: {
         email,
         emailType: 'bindEmail'
       },
-      headers: { 'Authorization': token.access_token }
+      headers: { 'Authorization': accessToken }
     })
   },
   changeEmail (data) {
-    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
-    if (tokenJson === null) {
-      return Promise.reject(Error('not find access_token'))
-    }
-    const token = JSON.parse(tokenJson) as AccessToken
+    const accessToken = getAccessToken()
+    if (accessToken === null) return Promise.reject(customError('not find access_token'))
     return nasCloud.put(userModulePath + '/update/info', {
       email: data.email,
       code: data.code
     }, {
-      headers: { 'Authorization': token.access_token }
+      headers: { 'Authorization': accessToken }
     })
   },
 }

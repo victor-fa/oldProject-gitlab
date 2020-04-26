@@ -1,5 +1,9 @@
 <template>
-  <div class="connecting-content">设备连接中...</div>
+  <div class="connecting-content">
+    <img src="../../assets/connecting_device_icon.png" class="connecting-icon">
+    <img src="../../assets/connecting_gif.gif" class="connecting-gif">
+    <label>正在连接设备...</label>
+  </div>
 </template>
 
 <script lang="ts">
@@ -26,48 +30,66 @@ export default Vue.extend({
   },
   computed: {
     ...mapGetters('User', ['user']),
-    ...mapGetters('NasServer', ['nasInfo'])
+    ...mapGetters('NasServer', ['nasInfo']),
+    ...mapGetters('Login', ['connectionErrorCount'])
   },
   mounted () {
-    this.searchNasInLAN()
+    if (this.checkParams()) this.searchNasInLAN()
   },
   destroyed () {
     if (timerId !== null) window.clearTimeout(timerId as any)
     ClientAPI.closeBoardcast()
   },
   methods: {
+    checkParams () {
+      if (_.isEmpty(this.sn)) {
+        console.log(`sn paramter is undefined`)
+        return false
+      }
+      if (_.isEmpty(this.mac)) {
+        console.log(`mac paramter is undefined`)
+        return false
+      }
+      if (_.isEmpty(this.secretKey)) {
+        console.log(`secretKey paramter is undefined`)
+        return false
+      }
+      return true
+    },
     searchNasInLAN () {
       timerId = this.beginTimer()
       this.loading = true
-      // ClientAPI.searchNas(this.sn, this.mac, data => {
-      //   if (data.sn === this.sn && data.mac === this.mac) {
-      //     window.clearTimeout(timerId as any)
-      //     this.onlineConnectNas(data)
-      //   } 
-      // }, error => {
-      //   this.loading = false
-      //   // TODO: 扫描当前设备失败，界面如何展示
-      //   console.log(error)
-      // })
-      console.log(`begin connecting: sn=${this.sn}, mac=${this.mac}`)
-      ClientAPI.scanNas(data => {
-        if (data.sn === this.sn && data.mac === this.mac) {
-          this.loading = false
-          window.clearTimeout(timerId as any)
-          ClientAPI.closeBoardcast()
-          this.onlineConnectNas(data)
-        }
+      ClientAPI.searchNas(this.sn, this.mac, data => {
+        timerId !== null && clearTimeout(timerId)
+        ClientAPI.closeBoardcast()
+        this.onlineConnectNas(data)
       }, error => {
+        timerId !== null && clearTimeout(timerId)
         this.loading = false
-        // TODO: 扫描当前设备失败，界面如何展示
+        ClientAPI.closeBoardcast()
+        this.pushFailedPage(ConnectionErrorType.scanFailed)
         console.log(error)
       })
+      
+      // ClientAPI.scanNas(data => {
+      //   if (data.sn === this.sn && data.mac === this.mac) {
+      //     this.loading = false
+      //     window.clearTimeout(timerId as any)
+      //     ClientAPI.closeBoardcast()
+      //     this.onlineConnectNas(data)
+      //   }
+      // }, error => {
+      //   this.loading = false
+      //   ClientAPI.closeBoardcast()
+      //   this.pushFailedPage(ConnectionErrorType.scanFailed)
+      //   console.log(error)
+      // })
     },
     beginTimer () {
       return setTimeout(() => {
         ClientAPI.closeBoardcast()
         this.loading = false
-        // TODO: 未扫描到当前设备，界面如何展示
+        this.pushFailedPage(ConnectionErrorType.notFound)
       }, 10000)
     },
     onlineConnectNas (nasInfo: NasInfo) {
@@ -76,8 +98,10 @@ export default Vue.extend({
         console.log(response)
         this.loading = false
         if (response.data.code !== 200) {
-          console.log(response.data.msg)
-          // TODO: 设备连接失败
+          const count = this.connectionErrorCount + 1
+          this.$store.dispatch('Login/updateErrorCount', count)
+          const type = count > 2 ? ConnectionErrorType.timesError : ConnectionErrorType.apiError
+          this.pushFailedPage(type)
           return
         }
         const accessInfo = response.data.data as NasAccessInfo
@@ -87,17 +111,54 @@ export default Vue.extend({
         this.$store.dispatch('NasServer/updateNasInfo', nasInfo)
         processCenter.renderSend(EventName.home)
       }).catch(error => {
-        this.loading = false
         console.log(error)
-        // TODO: 设备连接失败
+        this.loading = false
+        const count = this.connectionErrorCount + 1
+        this.$store.dispatch('Login/updateErrorCount', count)
+        const type = count > 2 ? ConnectionErrorType.timesError : ConnectionErrorType.networkError
+        this.pushFailedPage(type)
+      })
+    },
+    pushFailedPage (type: ConnectionErrorType) {
+      this.$router.push({
+        name: 'connection-failed',
+        params: { errorType: type }
       })
     }
   }
 })
+enum ConnectionErrorType {
+  scanFailed = '1',
+  notFound = '2',
+  apiError = '3',
+  networkError = '4',
+  timesError = '5' // 出现多次网络连接错误
+}
+export {
+  ConnectionErrorType
+}
 </script>
 
 <style lang="less" scoped>
 .connecting-content {
-  color: black;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  background-color: white;
+  .connecting-icon {
+    width: 104px;
+    margin-top: 85px;
+  }
+  .connecting-gif {
+    width: 140px;
+    margin-top: 20px;
+  }
+  label {
+    color: #666262;
+    font-size: 18px;
+    margin-top: 40px;
+  }
 }
 </style>

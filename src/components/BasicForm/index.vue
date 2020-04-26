@@ -87,7 +87,10 @@ export default Vue.extend({
     },
     handleBlur () {
       setTimeout(() => {
-        if (this.autoFocus) return
+        if (this.autoFocus) {
+          this.autoFocus = false
+          return
+        }
         this.autoFocus = false
         this.showDropdown = false
       }, 100)

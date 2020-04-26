@@ -73,6 +73,11 @@ export default Vue.extend({
       loading: false
     }
   },
+  watch: {
+    account: function (newValue: string) {
+      if (_.isEmpty(newValue)) this.password = ''
+    }
+  },
   computed: {
     ...mapGetters('User', ['cacheAccounts', 'user']),
     ...mapGetters('NasServer', ['nasInfo']),
@@ -108,11 +113,26 @@ export default Vue.extend({
         if (response.data.code !== 200) return
         const loginResponse = response.data.data as LoginResponse
         this.cacheUserInfo(loginResponse)
-        this.getBindDevices()
+        this.$router.push('bind-device-list')
       }).catch((error: any) => {
         console.log(error)
         this.loading = false
-        this.$message.error('网络连接错误，请检测网络')
+        this.showOfflineDialog()
+      })
+    },
+    showOfflineDialog () {
+      const { dialog } = require('electron').remote
+      dialog.showMessageBox({
+        message: '连接不上云账号\n是否用本地账号登录？',
+        buttons: ['确定', '取消'],
+        defaultId: 0,
+        cancelId: 1
+      }).then(result => {
+        if (result.response !== 0) return
+        this.$router.push({
+          name: 'scan-nas',
+          params: { type: 'offlineLogin' }
+        })
       })
     },
     checkInputFrom () {
@@ -124,42 +144,6 @@ export default Vue.extend({
         return false
       }
       return true
-    },
-    getBindDevices () {
-      UserAPI.getBindDevices().then(response => {
-          this.loading = false
-        if (response.data.code !== 200) return
-        const userDevices = _.get(response.data.data, 'userDevices') as DeviceInfo[]
-        if (_.isEmpty(userDevices)) {
-          this.$router.push('scan-nas')
-        } else {
-          const recentNas = this.getRecentlyNas(userDevices)
-          const secretKey = StringUtility.filterPublicKey(recentNas.publicKey)
-          this.$router.replace({
-            name: 'connecting',
-            params: {
-              sn: recentNas.sn,
-              mac: recentNas.mac,
-              secretKey: secretKey
-            }
-          })
-        }
-      }).catch((error: any) => {
-        console.log(error)
-        this.loading = false
-        this.$message.error('网络连接错误，请检测网络')
-      })
-    },
-    getRecentlyNas (bindList: DeviceInfo[]) {
-      if (!_.isEmpty(this.nasInfo)) {
-        for (let index = 0; index < bindList.length; index++) {
-          const element = bindList[index]
-          if (element.sn === this.nasInfo.sn) {
-            return element
-          }
-        }
-      }
-      return bindList[0]
     },
     cacheUserInfo (response: LoginResponse) {
       this.$store.dispatch('User/updateUser', response.user)
@@ -200,30 +184,30 @@ export default Vue.extend({
 <style lang="less" scoped>
 .login {
   height: 100%;
-  padding: 0px 30px;
   background-color: #fdffff;
   display: flex;
   justify-content: center;
   .content-wrapper {
-    width: 285px;
+    width: 100%;
+    padding: 0px 59px 0px 52px;
     li {
       text-align: left;
     }
     .tip {
-      padding-top: 6.5vh;
-      font-size: 19px;
+      padding-top: 40px;
+      font-size: 23px;
       font-weight: bold;
       color: #7d7e7e;
     }
     .account-form {
-      padding-top: 10vh;
+      padding-top: 65px;
     }
     .password-from {
-      padding-top: 1.5vh;
+      padding-top: 18px;
     }
     .password-checkbox {
       height: 22px;
-      margin-top: 3.3vh;
+      margin-top: 25px;
       display: flex;
       justify-content: space-between;
       .ant-checkbox-wrapper {
@@ -245,7 +229,7 @@ export default Vue.extend({
       }
     }
     .login-button {
-      padding: 6vh 20px 0px 10px;
+      padding: 40px 12px 0px 25px;
       .ant-btn {
         height: 40px;
         color: white;
@@ -259,7 +243,7 @@ export default Vue.extend({
     .register-button {
       display: flex;
       justify-content: center;
-      padding-top: 13vh;
+      padding-top: 96px;
       .ant-btn {
         border: none;
         box-shadow: none;

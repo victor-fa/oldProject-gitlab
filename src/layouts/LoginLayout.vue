@@ -1,16 +1,10 @@
 <template>
   <div class="login-layout">
-    <div class="left">
-      <div class="left-content">
-        <img src="../assets/big_logo.png">
-        <span>绿联云</span>
-      </div>
+    <div class="nav">
+      <login-status-bar/>
     </div>
-    <div class="right">
-      <window-menu class="window-menu"/>
-      <keep-alive>
-        <router-view></router-view>
-      </keep-alive>
+    <div class="content">
+      <router-view/>
     </div>
   </div>
 </template>
@@ -18,57 +12,33 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import WindowMenu from '../components/WindowMenu/index.vue'
+import LoginStatusBar from '../components/LoginStatusBar/index.vue'
 
 export default Vue.extend({
-  name: 'login-layout',
+  name: 'login',
   components: {
-    WindowMenu
+    LoginStatusBar
   },
   mounted () {
-    const secondPath = this.$route.params.secondPath
-    const loadPath = _.isEmpty(secondPath) ? 'login' : secondPath 
-    this.$router.push(loadPath)
+    if (this.$route.name === 'login-layout') this.$router.push('launch')
   }
 })
 </script>
 
 <style lang="less" scoped>
 .login-layout {
-  display: flex;
-  justify-content: space-between;
-  background-color: #fdffff;
-  .left {
-    height: 100vh;
-    width: 55vw;
-    background-image: url('../assets/logo_bg.png');
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    .left-content {
-      position: absolute;
-      left: 60px;
-      top: 45px;
-      img {
-        height: 60px;
-      }
-      span {
-        font-size: 18px;
-        font-weight: bold;
-        color: white;
-        margin-left: 18px;
-      }
-    }
+  height: 100%;
+  background-color: white;
+  .nav {
+    width: 100%;
+    height: 55px;
   }
-  .right {
-    height: 100vh;
-    width: 45vw;
-    background-color: #fdffff;
-    .window-menu {
-      -webkit-user-drag: drag;
-      height: 40px;
-      margin-right: 30px;
-      background-color: #fdffff;
-    }
+  .content {
+    width: 100%;
+    position: absolute;
+    top: 55px;
+    left: 0px;
+    bottom: 0px;
   }
 }
 </style>

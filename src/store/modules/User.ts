@@ -1,12 +1,13 @@
 import _ from 'lodash'
-import { AccessToken, User, Account } from '../../api/UserModel'
+import { AccessToken, User, Account, DeviceInfo } from '../../api/UserModel'
 import { ActionContext } from 'vuex'
-import { USER_MODEL, ACCESS_TOKEN, ACCOUNT } from '../../common/constants'
+import { USER_MODEL, ACCESS_TOKEN, ACCOUNT, NAS_DEVICES } from '../../common/constants'
 
 interface UserState {
   user?: User,
   accessToken?: AccessToken,
-  cacheAccounts: Array<Account>
+  cacheAccounts: Array<Account>,
+  nasDevices: DeviceInfo[]
 }
 
 export default {
@@ -14,7 +15,8 @@ export default {
   state: {
     user: {},
     accessToken: {},
-    cacheAccounts: []
+    cacheAccounts: [],
+    nasDevices: []
   },
   getters: {
     user: (state: UserState) => {
@@ -49,6 +51,17 @@ export default {
         return state.cacheAccounts
       }
       return []
+    },
+    nasDevices: (state: UserState) => {
+      if (!_.isEmpty(state.nasDevices)) {
+        return state.nasDevices
+      }
+      const json = localStorage.getItem(NAS_DEVICES)
+      if (!_.isEmpty(json)) {
+        state.nasDevices = JSON.parse(json!)
+        return state.nasDevices
+      }
+      return []
     }
   },
   mutations: {
@@ -65,6 +78,7 @@ export default {
       localStorage.removeItem(USER_MODEL)
       state.accessToken = undefined
       localStorage.removeItem(ACCESS_TOKEN)
+      localStorage.removeItem(NAS_DEVICES)
     },
     ADD_ACCOUNT (state: UserState, account: Account) {
       state.cacheAccounts.push(account)
@@ -83,6 +97,18 @@ export default {
           break
         }
       }
+    },
+    UPDATE_NAS_DEVICES (state: UserState, devices: DeviceInfo[]) {
+      state.nasDevices = devices
+      const json = JSON.stringify(devices)
+      localStorage.setItem(NAS_DEVICES, json)
+    },
+    ADD_NAS_DEVICE (state: UserState, device: DeviceInfo) {
+      state.nasDevices.push(device)
+      // 数组去重
+      state.nasDevices = _.uniqBy(state.nasDevices, 'mac')
+      const json = JSON.stringify(state.nasDevices)
+      localStorage.setItem(NAS_DEVICES, json)
     }
   },
   actions: {
@@ -90,7 +116,6 @@ export default {
       context.commit('UPDATE_USER', user)
     },
     async updateAccessToken (context: ActionContext<UserState, UserState>, token: AccessToken) {
-      token.localExpiresTime = new Date().getDate() + token.expires_time * 1000
       context.commit('UPDATE_ACCESS_TOKEN', token)
     },
     async clearCacheUserInfo (context: ActionContext<UserState, UserState>) {
@@ -101,6 +126,12 @@ export default {
     },
     async removeAccount (context: ActionContext<UserState, UserState>, account: string) {
       context.commit('REMOVE_ACCOUNT', account)
+    },
+    async updateNasDevices (context: ActionContext<UserState, UserState>, devices: DeviceInfo[]) {
+      context.commit('UPDATE_NAS_DEVICES', devices)
+    },
+    async addNasDevice (context: ActionContext<UserState, UserState>, device: DeviceInfo) {
+      context.commit('ADD_NAS_DEVICE', device)
     }
   }
 }

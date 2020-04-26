@@ -1,33 +1,33 @@
 <template>
   <div class="scan-nas">
-    <h3>scan-nas</h3>
-    <p>你还没有绑定设备，局域网扫描中</p>
-    <ul>
-      <li
-        v-for="(item, index) in nasList"
-        :key="index"
-        @click="didSelectItem(item)"
-      >
-        {{ item.name }}:{{ item.ip }}
-      </li>
-    </ul>
-    <a-modal
-      :visible="visible"
-      :mask="false"
-      :closable="false"
-      :maskClosable="false"
-      okText="连接"
-      cancelText="取消"
-      @ok="handleOk"
-      :confirmLoading="bindLoading"
-      @cancel="handleCancel"
+    <div v-if="scanLoading" class="scan-animation">
+      <img src="../../assets/scan_animation.gif">
+      <span>正在扫描...</span>
+    </div>
+    <div
+      v-else
+      class="nas-content"
+      @click="handleContentClick"
     >
-      邀请码:
-      <a-input
-        placeholder="请输入邀请码"
-        v-model="authCode"
+      <span class="nas-title">扫描设备列表</span>
+      <a-spin :spinning="connectLoading">
+        <nas-device-list
+          ref="nasDeviceList"
+          :dataSource="nasList"
+          :listHeight="380"
+          v-on:didSelectItem="didSelectItem"
+        />
+      </a-spin>
+      <a-button @click="handleBackAction">{{ backBtnTitle }}</a-button>
+      <auth-code-modal
+        ref="authCodeModal"
+        v-on:connectCallback="handleBindAction"
       />
-    </a-modal>
+      <account-modal
+        ref="accountModal"
+        v-on:offlienLogin="handleOfflineLogin"
+      />
+    </div>
   </div>
 </template>
 
@@ -35,86 +35,154 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
+import NasDeviceList from './NasDeviceList.vue'
+import AuthCodeModal from './AuthCodeModal.vue'
+import AccountModal from './AccountModal.vue'
 import ClientAPI from '../../api/ClientAPI'
 import { NasInfo, NasActive, NasAccessInfo } from '../../api/ClientModel'
 import processCenter, { EventName } from '../../utils/processCenter'
-import { User, BasicResponse, DeviceRole } from '../../api/UserModel'
+import { User, BasicResponse, DeviceRole, DeviceInfo } from '../../api/UserModel'
 import router from '../../router'
 import axios, { AxiosResponse } from 'axios'
 import StringUtility from '../../utils/StringUtility'
+import { ConnectionErrorType } from '../Connecting/index.vue'
 
 export default Vue.extend({
   name: 'scan-nas',
+  components: {
+    NasDeviceList,
+    AuthCodeModal,
+    AccountModal
+  },
   data () {
-    let list: Array<NasInfo> = []
-    let item: any = null
     return {
-      nasList: list,
-      bindLoading: false,
-      visible: false,
-      authCode: 'UGREEN',
-      selectNas: item
+      scanLoading: true,
+      nasList: [] as NasInfo[],
+      selectNas: {} as NasInfo,
+      connectLoading: false,
+      type: this.$route.params.type
     }
   },
   computed: {
-    ...mapGetters('User', ['user'])
+    ...mapGetters('User', ['user', 'nasDevices']),
+    backBtnTitle: function () {
+      if (this.type === 'offlineLogin') {
+        return 'Cloud账号登录'
+      }
+      return '绑定设备列表'
+    }
   },
   mounted () {
-    console.log('begin scan')
-    ClientAPI.scanNas(data => {
-      this.nasList.push(data)
-    }, error => {
-      console.log(error)
-    })
+    this.scanNasInLan()
   },
   destroyed () {
     ClientAPI.closeBoardcast()
   },
   methods: {
-    didSelectItem (item: NasInfo) {
-      this.selectNas = item
-      const basrUrl = `http://${item.ip}:${item.port}`
-      this.bindConnect(basrUrl)
+    scanNasInLan () {
+      this.scanLoading = true
+      ClientAPI.scanNas(data => {
+        this.scanLoading = false
+        this.nasList.push(data)
+      }, error => {
+        this.scanLoading = false
+        console.log(error)
+        this.$router.push({
+          name: 'connection-failed',
+          params: {
+            errorType: ConnectionErrorType.scanFailed
+          }
+        })
+      })
     },
-    bindConnect (url: string) {
-      ClientAPI.setBaseUrl(url)
-      const active = (this.selectNas as NasInfo).active
-      if (active === NasActive.notBind) {
+    didSelectItem (index: number) {
+      const item = this.nasList[index]
+      this.selectNas = item
+      const deviceInfo = this.isBindDevice(item)
+      if (deviceInfo === null) { // 当前设备未绑定
+        this.notBindConnect(item)
+      } else { // 当前设备已绑定
+        if (this.type === 'offlineLogin') { // 离线登录
+          const accountModal = this.$refs.accountModal as any
+          accountModal.show()
+        } else { // 在线登录
+          this.boundContent(deviceInfo)
+        }
+      }
+    },
+    /** 判断当前设备用户是否已绑定 */
+    isBindDevice (nas: NasInfo) {
+      const boundDevices = this.nasDevices as DeviceInfo[]
+      for (let index = 0; index < boundDevices.length; index++) {
+        const item = boundDevices[index]
+        if (item.sn === nas.sn && item.mac === nas.mac) return item
+      }
+      return null
+    },
+    // 已绑定设备连接
+    boundContent (nas: DeviceInfo) {
+      const basrUrl = `http://${this.selectNas.ip}:${this.selectNas.port}`
+      ClientAPI.setBaseUrl(basrUrl)
+      const user = this.user as User
+      const secretKey = StringUtility.filterPublicKey(nas.publicKey)
+      this.connectLoading = true
+      ClientAPI.login(user, secretKey).then(response => {
+        this.connectLoading = false
+        if (response.data.code !== 200) return
+        const accessInfo = response.data.data as NasAccessInfo
+        accessInfo.key = secretKey
+        // caceh nas info and token
+        this.$store.dispatch('NasServer/updateNasAccess', accessInfo)
+        this.$store.dispatch('NasServer/updateNasInfo', this.selectNas)
+        processCenter.renderSend(EventName.home)
+      }).catch(error => {
+        this.handleConnectFailure(error)
+      })
+    },
+    // 未绑定设备连接
+    notBindConnect (nas: NasInfo) {
+      const basrUrl = `http://${nas.ip}:${nas.port}`
+      ClientAPI.setBaseUrl(basrUrl)
+      if (nas.active === NasActive.notBind) {
         // adminstrator bind
         this.bindUserToNas()
       } else {
         // normal user bind
-        this.visible = true
+        const authCodeModal = this.$refs.authCodeModal as any
+        !_.isEmpty(authCodeModal) && authCodeModal.show()
       }
     },
-    handleOk () {
-      const authCode = this.authCode
-      this.bindUserToNas(authCode)
+    handleBindAction (code: string) {
+      this.bindUserToNas(code)
     },
-    handleCancel () {
-      ClientAPI.cancelBindRequest()
-      this.visible = false
-      this.bindLoading = false
+    handleOfflineLogin (account: string, password: string) {
+      const basrUrl = `http://${this.selectNas.ip}:${this.selectNas.port}`
+      ClientAPI.setBaseUrl(basrUrl)
+      this.offlineLogin(account, password)
     },
-    bindUserToNas (authCode: string = '') {
+    handleBackAction () {
+      if (this.type === 'addDevice') {
+        this.$router.replace('bind-device-list')
+      } else if (this.type === 'offlineLogin') {
+        this.$router.replace('login')
+      }
+    },
+    bindUserToNas (authCode?: string) {
       if (!this.checkCacheUser()) return
       console.log('begin bind user to nas')
-      this.bindLoading = true
+      this.connectLoading = true
       ClientAPI.bindUser(this.user, authCode).then(response => {
         this.handleConnectSuccess(response)
       }).catch(error => {
         this.handleConnectFailure(error)
       })
     },
-    accountContent (url: string) {
-      if (!this.checkCacheUser()) return
+    // 离线账号登录接口
+    offlineLogin (account: string, password: string) {
       console.log('begin offline login to nas')
-      ClientAPI.setBaseUrl(url)
-      this.bindLoading = true
-      const account = ''
-      const password = StringUtility.encryptPassword('password')
-      ClientAPI.offlineLogin(account, password).then(response => {
-        // TODO: 离线登录应该返回公钥，如果用户在其它设备上进行了离线登录，此时是没法获取到设备公钥的
+      const encryptPsd = StringUtility.encryptPassword('password')
+      this.connectLoading = true
+      ClientAPI.offlineLogin(account, encryptPsd).then(response => {
         this.handleConnectSuccess(response)
       }).catch(error => {
         this.handleConnectFailure(error)
@@ -130,7 +198,7 @@ export default Vue.extend({
     },
     handleConnectSuccess (response: AxiosResponse<BasicResponse>) {
       console.log(response)
-      this.bindLoading = false
+      this.connectLoading = false
       if (response.data.code !== 200) return
       const data = response.data.data as NasAccessInfo
       // cache nas access info
@@ -138,19 +206,20 @@ export default Vue.extend({
       this.$store.dispatch('NasServer/updateNasAccess', data)
       // cache nas info 
       this.$store.dispatch('NasServer/updateNasInfo', this.selectNas)
-      if (data.role === DeviceRole.admin) {
-        // push Account page
-        router.push('account')
-      } else {
-        // switch home window
-        processCenter.renderSend(EventName.home)
-      }
+      // cache new bind nas device
+      this.$store.dispatch('User/addNasDevice', this.selectNas)
+      // switch home window
+      processCenter.renderSend(EventName.home)
     },
     handleConnectFailure (error) {
       console.log(error)
       if (axios.isCancel(error)) return
-      this.bindLoading = false
+      this.connectLoading = false
       this.$message.error('网络连接错误，请检测网络')
+    },
+    handleContentClick () {
+      const list = this.$refs.nasDeviceList as any
+      !_.isEmpty(list) && list.resetSelectedItem()
     }
   }
 })
@@ -158,6 +227,42 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .scan-nas {
-  color: black;
+  height: 100%;
+  .scan-animation {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    img {
+      margin-top: 80px;
+      width: 346px;
+    }
+    span {
+      margin-top: 36px;
+      color: #666262;
+      font-size: 19px;
+    }
+  }
+  .nas-content {
+    display: flex;
+    flex-direction: column;
+    .nas-title {
+      width: 100%;
+      text-align: left;
+      font-size: 23px;
+      color: #353535;
+      font-weight: bold;
+      margin: 40px 0px 35px 40px;
+    }
+    .ant-btn {
+      align-self: center;
+      margin-top: 10px;
+      width: 130px;
+      border: none;
+      box-shadow: none;
+      background-color: white;
+      color: #06b650;
+    }
+  }
 }
 </style>

@@ -1,18 +1,16 @@
 import axios, { AxiosResponse, Canceler } from 'axios';
 import _ from 'lodash'
-import { nasServer, source } from '../utils/request'
 import { User, BasicResponse, AccessToken } from './UserModel'
 import deviceMgr from '../utils/deviceMgr'
 import JSEncrypt from 'jsencrypt'
 import { NasInfo } from './ClientModel'
 import { ACCESS_TOKEN } from '../common/constants'
+import dgram from 'dgram'
+import { nasServer } from './NasServer';
 
 const userModulePath = '/v1/user'
-const tmpSecretKey = `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzblv4FL7IukDs1m8bvw7wsIU5R1rUmq7RUMHroroY80zOSJZRn1eh8oW6fcrIZhZH+R7vWxvnKBe/h3cEJcUIRIKmQ26la5mAUuedghv1G38n3jZAXZ9yzslEQBBaKOYsvZz2F4KLhi2DlDLr/QOLpppH6HL7CDWaSyieXOmOVt/wmgHMl2SF1ko+bb/svVHz/7xTwoYJiyikVfSw1R+MlID+FLB/UkAPzopkadAUErPLZPMbXQrMelaUYbRQUTauh1dTg9g4nP72zMbW/06slpnswyAxCvxon8/E6U7pcsoBvOHCKyCmK0KO6keHr8ddgMjtV/+ZKmmPDkES51lKQIDAQAB
------END PUBLIC KEY-----`
 
-let client: any
+let client: dgram.Socket | null = null
 const CancelToken = axios.CancelToken
 let cancel: Canceler | null = null
 
@@ -24,12 +22,16 @@ export default {
   login (user: User, secretKey: string): Promise<AxiosResponse<BasicResponse>> {
     const userBasic = convertNasUser(user)
     const sign = encryptSign(userBasic, secretKey)
-    console.log(sign);
     if (sign === null) return Promise.reject(Error('rsa encrypt error'))
     return nasServer.post(userModulePath + '/login', {
       platform: parseInt(deviceMgr.getPlatform()),
       user_basic: userBasic,
       sign
+    })
+  },
+  refreshAccessToken (refreshToken: string): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(userModulePath + '/login/refresh', undefined, {
+      params: { refresh_token: refreshToken }
     })
   },
   offlineLogin (account: string, password: string): Promise<AxiosResponse<BasicResponse>> {
@@ -39,9 +41,9 @@ export default {
       offline_password: password
     })
   },
-  bindUser (user: User, authCode: string): Promise<AxiosResponse<BasicResponse>> {
+  bindUser (user: User, authCode?: string): Promise<AxiosResponse<BasicResponse>> {
     const userBasic = convertNasUser(user)
-    const params = authCode.length === 0 ? {
+    const params = authCode === undefined ? {
       platform: parseInt(deviceMgr.getPlatform()),
       user_basic: userBasic
     } : {
@@ -81,15 +83,14 @@ export default {
       failure('not found IP address')
       return
     }
-    const dgram = require('dgram')
     client = dgram.createSocket('udp4')
     const msg = generateBoardcastPacket(sn, mac)
     console.log(`start boardcast: sn=${sn}, mac=${mac}`);
     const port = 60000
     client.bind(() => {
-      client.setBroadcast(true)
-      client.setTTL(128)
-      client.send(msg, 0, msg.length, port, host, function(err) {
+      client!.setBroadcast(true)
+      client!.setTTL(128)
+      client!.send(msg, 0, msg.length, port, host, function(err) {
         if (_.isEmpty(err)) return
         console.log(err)
         // TODO: 广播报文发送失败，是否考虑重新发送
@@ -98,7 +99,6 @@ export default {
     })
     client.on('error', (error) => {
       console.log('socket error: ' + error)
-      client.close()
       failure('socket error')
     })
     client.on('message', (msg: Buffer, rinfo) => {
@@ -114,7 +114,7 @@ export default {
     })
   },
   closeBoardcast () {
-    if (!_.isEmpty(client)) {
+    if (client !== null) {
       client.close()
       client = null
     }
@@ -172,13 +172,10 @@ const encryptSign = (nasUser: any, secretKey: string) => {
       }
     }
   }
-  console.log(queryUser);
-  console.log(secretKey);
   if (!_.isElement(queryUser)) {
     // 利用crypto模块实现RSA加密
     const jse = new JSEncrypt()
     queryUser = _.trimEnd(queryUser, '&')
-    console.log(queryUser)
     jse.setPublicKey(secretKey)
     return jse.encrypt(queryUser) as string
   }

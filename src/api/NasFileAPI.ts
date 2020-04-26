@@ -1,12 +1,14 @@
+import _ from 'lodash'
 import { ResourceItem, UploadParams } from '@/api/NasFileModel';
 import { BasicResponse } from '@/api/UserModel';
 import Vue from 'vue'
 import { jsonToParams, jsonToParamsForPdf } from '../utils/request'
-import axios, { AxiosResponse, Canceler } from 'axios/index';
-import { NAS_ACCESS, NAS_INFO, CRYPTO_INFO } from '@/common/constants'
-import { nasServer } from '@/utils/request';
+import { CRYPTO_INFO } from '@/common/constants'
 import { NasInfo, CryptoInfo } from './ClientModel';
-import { OrderType, UploadTimeSort } from './NasFileModel';
+import axios, { AxiosResponse, Canceler } from 'axios/index'
+import { OrderType, UploadTimeSort } from './NasFileModel'
+import { nasServer } from './NasServer';
+import store from '@/store';
 
 axios.defaults.withCredentials = true;
 
@@ -20,15 +22,10 @@ const nasCryptoModulePath = '/v1/crypto'
 
 const CancelToken = axios.CancelToken
 const host = (() => {
-  const nasInfoJson = localStorage.getItem(NAS_INFO)
-    if (nasInfoJson === null) {
-      console.log('not find access_token in localStorage')
-      return null
-    }
-    const nasInfo = JSON.parse(nasInfoJson) as NasInfo
+    const nasInfo = _.get(store.getters, 'NasServer/nasInfo') as NasInfo
     return `http://${nasInfo.ip}:${nasInfo.port}`
 })()
-nasServer.defaults.baseURL = host!
+nasServer.defaults.baseURL = host
 
 export default {
   getServerUrl () {

@@ -62,11 +62,12 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { secure: tru
 
 function createWindow () {
 	// Create the browser window.
-  win = new BrowserWindow({ width: 800,
+  win = new BrowserWindow({ 
+		width: 900,
+    height: 610,
     icon: './src/assets/logo.png',
-    height: 600,
     frame: false,
-    resizable: false,
+    resizable: true,
     backgroundColor: '#f6f8fb',
     webPreferences: {
       nodeIntegration: true,
@@ -162,10 +163,10 @@ app.on('ready', async () => {
     //   console.error('Vue Devtools failed to install:', e.toString())
     // }
 
-  }
+	}
   bindIpc(); //初始化ipc
 	download.init();
-  createWindow()
+	createWindow()
 	processCenter.mainObserverChannel()
 	DiskSystem.MainWindow({})
 })

@@ -232,7 +232,6 @@ export default {
     const width = list.clientWidth
     const height = list.clientHeight
     const padding = 3
-    // TODO: 目前alter的宽高是写死的，后面应该获取实时宽高
     const alterWidth = 100 + padding
     const alterHeight = 189 + padding
     let left = point.x + alterWidth < width ? point.x : width - alterWidth

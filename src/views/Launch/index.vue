@@ -31,12 +31,11 @@ export default Vue.extend({
       if (_.isEmpty(this.user) || _.isEmpty(this.accessToken)) {
         return ValidatorResult.notLogin
       }
-      const timestamp = new Date().getDate()
-      const localExpiresTime = (this.accessToken as AccessToken).localExpiresTime
-      if (timestamp > localExpiresTime) {
-        return ValidatorResult.couldTokenExpires
-      }
-      // TODO: 有用户信息，没有nas信息，可能是上次连接nas失败，或者是绑定nas失败
+      // const timestamp = new Date().valueOf()
+      // const localExpiresTime = (this.accessToken as AccessToken).localExpiresTime
+      // if (timestamp > localExpiresTime) {
+      //   return ValidatorResult.couldTokenExpires
+      // }
       if (_.isEmpty(this.nasInfo) || _.isEmpty(this.accessInfo)) {
         return ValidatorResult.notBind
       }
@@ -45,16 +44,16 @@ export default Vue.extend({
     handleValidatorResult (result: ValidatorResult) {
       switch (result) {
         case ValidatorResult.notLogin:
-          this.loadLoginPage()
+          this.$router.replace('login')
           break
         case ValidatorResult.couldTokenExpires:
           this.$store.dispatch('User/clearCacheUserInfo')
-          this.loadLoginPage().then(() => {
+          this.$router.replace('login').then(() => {
             this.$message.error('token过期，请重新登录')
           })
           break
         case ValidatorResult.notBind:
-          this.loadLoginPage('scan-nas')
+          this.$router.replace('bind-device-list')
           break
         case ValidatorResult.pass:
           this.$router.replace({
@@ -68,16 +67,6 @@ export default Vue.extend({
           break
       }
     },
-    loadLoginPage (secondPath: string = 'login') {
-      // temporary code
-      this.getCurrentWindow().resizable = true
-      return this.$router.replace({
-        name: 'login-layout',
-        params: {
-          secondPath: secondPath
-        }
-      })
-    },
     getCurrentWindow () {
       const { BrowserWindow } = require('electron').remote
       return BrowserWindow.getAllWindows()[0]
@@ -88,7 +77,7 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .launch {
-  height: 100vh;
-  background-color: #f6f8fb;
+  height: 100%;
+  background-color: white;
 }
 </style>

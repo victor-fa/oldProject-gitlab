@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Launch from '../views/Launch/index.vue'
+import LoginLayout from '../layouts/LoginLayout.vue'
 import { HomeRouters } from './modules/HomeList'
 import { LoginRouters } from './modules/LoginList'
 import { MediaRouters } from './modules/MediaList'
@@ -11,31 +11,18 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/',
-    name: 'launch',
-    component: Launch
+    name: 'login-layout',
+    component: LoginLayout,
+    children: [
+      ...LoginRouters
+    ]
   },
   {
-    path: '/connecting',
-    name: 'connecting',
-    component: () => import('../views/Connecting/index.vue')
-  },
-  {
-    // path: '/disk',
-    // name: 'disk',
-    // component: () => import('../views/Disk/index.vue'),
     path: '/home',
     name: 'home',
     component: () => import('../layouts/BaseLayout.vue'),
     children: [
       ...HomeRouters
-    ]
-  },
-  {
-    path: '/login-layout',
-    component: () => import('../layouts/LoginLayout.vue'),
-    name: 'login-layout',
-    children: [
-      ...LoginRouters
     ]
   },
   {
