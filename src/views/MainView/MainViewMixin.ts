@@ -250,11 +250,14 @@ export default Vue.extend({
       EventBus.$emit(EventName.jump, item)
     },
     handleDownloadAction (directory: string[]) {
-      console.log(directory)
       const myThis = this as any
       const items = ResourceHandler.getSelectItems(this.dataArray)
       items.forEach(item => {
-        myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(NasFileAPI.download(item));
+        if (item.path.indexOf('.ugreen_nas') === -1) {
+          myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(NasFileAPI.httpEncryptDownload(item))
+        } else {
+          myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(NasFileAPI.download(item))
+        }
       });
     },
     handleShareAction () {

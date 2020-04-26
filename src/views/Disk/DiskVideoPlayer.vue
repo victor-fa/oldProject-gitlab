@@ -134,14 +134,18 @@ export default {
 		playCallBack(item, index) {
 			this.NowPlay = item;
 			this.NowPlay.count = index;
-			console.log(NasFileAPI.download({
-				uuid: item.uuid,
-				path: item.path
-			}));
-			this.NowPlay.PlayUrl = NasFileAPI.download({
-				uuid: item.uuid,
-				path: item.path
-			});
+			if (item.path.indexOf('.ugreen_nas') === -1) {
+				this.NowPlay.PlayUrl = NasFileAPI.encryptDownload({
+					uuid: item.uuid,
+					path: item.path
+				});
+			} else {
+				this.NowPlay.PlayUrl = NasFileAPI.download({
+					uuid: item.uuid,
+					path: item.path
+				});
+			}
+			console.log(this.NowPlay.PlayUrl);
 		},
 		ChangeTime(state) {
 			let media = this.$refs.video;

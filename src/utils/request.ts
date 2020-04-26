@@ -13,14 +13,14 @@ const jsonToParams = (options) => {
       params.append(item, options[item]);
     }
   }
-  params.append('api_token', getToken()); // 每个url都添加token
+  params.append('api_token', apiToken); // 每个url都添加token
   return params
 }
 
 // json对象转url参数
 const jsonToParamsForPdf = (options) => {
   let params = '';
-  params += 'api_token=' + getToken();
+  params += 'api_token=' + apiToken;
   if (options !== null) {
     for (let item in options) {
       params += '&' + item + '=' + options[item];
@@ -28,15 +28,6 @@ const jsonToParamsForPdf = (options) => {
   }
   console.log(params);
   return params
-}
-
-// 获取token
-const getToken = () => {
-  const tokenJson = localStorage.getItem(NAS_ACCESS)
-  if (tokenJson === null) {
-    return Promise.reject(Error('not find access_token'))
-  }
-  return JSON.parse(tokenJson).api_token
 }
 
 const isResponsePass = (rs) => {

@@ -33,14 +33,18 @@ export default {
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
 					this.NowPlay.path = item.path;
-					console.log(NasFileAPI.httpDownload({
-						uuid: item.uuid,
-						path: item.path
-					}));
-					this.src = this.$path.join(__static, 'plugins/pdfjs/web/viewer.html?file=') + encodeURIComponent(NasFileAPI.httpDownload({
-						uuid: item.uuid,
-						path: item.path
-					}))
+					if (item.path.indexOf('.ugreen_nas') === -1) {
+						this.src = this.$path.join(__static, 'plugins/pdfjs/web/viewer.html?file=') + encodeURIComponent(NasFileAPI.httpEncryptDownload({
+							uuid: item.uuid,
+							path: item.path
+						}))
+					} else {
+						this.src = this.$path.join(__static, 'plugins/pdfjs/web/viewer.html?file=') + encodeURIComponent(NasFileAPI.httpDownload({
+							uuid: item.uuid,
+							path: item.path
+						}))
+					}
+					console.log(this.src);
 					this.header.title = StringUtility.formatName(item.path) + '-PDF阅读器';
 				});
 			});

@@ -7,7 +7,7 @@
 		</p> -->
 		<img :class="'cd-image-show ' + (!Control ? 'cd-image-animated' : '')" :src="NowShow.URL" ref="imageShow" @load="onload" @mousedown="Drag" alt="" />
 		<Spin v-show="loaded">
-			<Icon type="ios-loading" size="26" class="loading" />
+			<a-icon type="ios-loading" size="26" class="loading" />
 		</Spin>
 		<ul class="cd-image-control">
 			<li class="sf-icon-search-plus" @click="Zoom(1)" />
@@ -114,14 +114,18 @@ export default {
 		ShowPicture(item, index) {
 			this.NowShow = item;
 			this.NowShow.count = index;
-			console.log(NasFileAPI.download({
-				uuid: item.uuid,
-				path: item.path
-			}));
-			this.NowShow.URL = NasFileAPI.download({
-				uuid: item.uuid,
-				path: item.path
-			});
+			if (item.path.indexOf('.ugreen_nas') === -1) {
+				this.NowShow.URL = NasFileAPI.encryptDownload({
+					uuid: item.uuid,
+					path: item.path
+				});
+			} else {
+				this.NowShow.URL = NasFileAPI.download({
+					uuid: item.uuid,
+					path: item.path
+				});
+			}
+			console.log(this.NowShow.URL);
 			this.header.title = StringUtility.formatName(item.path) + '-图片查看';
 		},
 		orginz() {

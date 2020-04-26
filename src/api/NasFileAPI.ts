@@ -102,6 +102,24 @@ export default {
     const input = { uuid: option.uuid, path: option.path }
     return host + nasFileModulePath + '/http_download?' + jsonToParamsForPdf(input)
   },
+  encryptDownload (option) {
+    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
+    if (cryptoJson === null) {
+      return Promise.reject(Error('not find crypto_info'))
+    }
+    const token = JSON.parse(cryptoJson) as CryptoInfo
+    const input = { uuid: option.uuid, path: option.path, crypto_token: token.crypto_token }
+    return host + nasCryptoModulePath + '/download?' + jsonToParams(input)
+  },
+  httpEncryptDownload (option) {
+    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
+    if (cryptoJson === null) {
+      return Promise.reject(Error('not find crypto_info'))
+    }
+    const token = JSON.parse(cryptoJson) as CryptoInfo
+    const input = { uuid: option.uuid, path: option.path, crypto_token: token.crypto_token }
+    return host + nasCryptoModulePath + '/http_download?' + jsonToParams(input)
+  },
   fetchStorages (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.get(nasFileModulePath + '/storages')
   },
@@ -345,7 +363,7 @@ export default {
         crypto_token: token.crypto_token
       }
     })
-  }
+  },
 }
 
 enum TaskMode {

@@ -4,15 +4,24 @@ import { User, BasicResponse, AccessToken } from './UserModel'
 import deviceMgr from '../utils/deviceMgr'
 import JSEncrypt from 'jsencrypt'
 import { NasInfo } from './ClientModel'
-import { ACCESS_TOKEN } from '../common/constants'
 import dgram from 'dgram'
 import { nasServer } from './NasServer';
+import { NAS_ACCESS } from '../common/constants'
 
 const userModulePath = '/v1/user'
 
 let client: dgram.Socket | null = null
 const CancelToken = axios.CancelToken
 let cancel: Canceler | null = null
+const apiToken = (() => {
+  const tokenJson = localStorage.getItem(NAS_ACCESS)
+    if (tokenJson === null) {
+      console.log('not find access_token in localStorage')
+      return null
+    }
+    return JSON.parse(tokenJson).api_token
+})()
+
 
 export default {
   setBaseUrl (url: string) {
@@ -123,16 +132,11 @@ export default {
     return nasServer.post(userModulePath + '/list')
   },
   detach (): Promise<AxiosResponse<BasicResponse>> {
-    const tokenJson = localStorage.getItem(ACCESS_TOKEN)
-    if (tokenJson === null) {
-      return Promise.reject(Error('not find access_token'))
-    }
-    const token = JSON.parse(tokenJson) as AccessToken
     return nasServer.post(userModulePath + '/common/detach', {
       clear_disk_files: 0,
     }, {
       params: {
-        api_token: token.access_token
+        api_token: apiToken
       }
     })
   },

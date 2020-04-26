@@ -30,18 +30,29 @@ export default {
 	created() {
 		this.$ipc.on('win-data', (event, data) => {
 			const nasJson = localStorage.getItem(NAS_ACCESS)
-			let token = '';
+			let token = NasFileAPI.getServerUrl;
 			if (nasJson !== null) {
 				token = JSON.parse(nasJson).api_token
 			}
+			const cryptoJson = localStorage.getItem(CRYPTO_INFO)
+			if (cryptoJson === null) {
+				return Promise.reject(Error('not find crypto_info'))
+			}
+			const cryptoToken = JSON.parse(cryptoJson).crypto_token
 			//接收打开文本文件的数据
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
 					this.NowLoad = item;
 					this.header.title = StringUtility.formatName(item.path) + ' 文件查看';
-					this.LoadUrl =
-						this.$path.join(__static, 'plugins/syntaxhighlighter/index.html?url=') + 
-						`${NasFileAPI.getServerUrl()}/v1/file/http_download?uuid=${item.uuid}&path=${item.path}&api_token=${token}`;
+					if (item.path.indexOf('.ugreen_nas') === -1) {
+						this.LoadUrl =
+							this.$path.join(__static, 'plugins/syntaxhighlighter/index.html?url=') + 
+							`${NasFileAPI.getServerUrl()}/v1/file/httpEncryptDownload?uuid=${item.uuid}&path=${item.path}&crypto_token=${cryptoToken}`;
+					} else {
+						this.LoadUrl =
+							this.$path.join(__static, 'plugins/syntaxhighlighter/index.html?url=') + 
+							`${NasFileAPI.getServerUrl()}/v1/file/http_download?uuid=${item.uuid}&path=${item.path}&api_token=${token}`;
+					}
 					console.log(this.LoadUrl);
 				});
 			});

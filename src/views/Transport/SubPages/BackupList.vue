@@ -142,13 +142,13 @@ export default Vue.extend({
           uploadBackup.prepareFile(item, { data: this.hostname + ClientAPI.getMac(), add: file => {}, success: (file, rs) => { _this.getListData() } });
           break;
         case 'jump': // 打开所在文件夹
-          _this.$electron.shell.showItemInFolder(item.sourcePath)
+          _this.$electron.shell.showItemInFolder(item.sourcePath.replace(/\//g, '\\'))
           break;
         case 'open': // 打开文件
-          _this.$electron.shell.openItem(item.sourcePath)
+          _this.$electron.shell.openItem(item.sourcePath.replace(/\//g, '\\'))
           break;
         case 'openInFinder': // 打开所在文件夹
-          _this.$electron.shell.showItemInFolder(item.sourcePath)
+          _this.$electron.shell.showItemInFolder(item.sourcePath.replace(/\//g, '\\'))
           break;
         case 'delete': // 删除
           _this.deleteFile(item)

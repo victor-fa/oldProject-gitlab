@@ -55,7 +55,9 @@ import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
+import ResourceHandler from '../MainView/ResourceHandler'
 import NasFileAPI from '../../api/NasFileAPI'
+import { ResourceItem, OrderType, UploadTimeSort } from '../../api/NasFileModel'
 import StringUtility from '../../utils/StringUtility'
 import { encryptContextMenu, encryptResourceContextMenu } from '../../components/OperateListAlter/operateList'
 
@@ -81,6 +83,7 @@ export default Vue.extend({
       dataArray: [],
       page: 1,
       busy: false,
+      uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
       encryptSet: {
         isVisiable: false,
         alreadyKnow: false,
@@ -107,6 +110,7 @@ export default Vue.extend({
   },
   methods: {
     checkEncryptStatus() {
+      this.loading = true
       NasFileAPI.getEncryptStatus().then(response => {
         this.loading = false
         if (response.data.code !== 200) return
@@ -139,6 +143,7 @@ export default Vue.extend({
         this.$message.warning('两次输入的密码不一样，请检查')
         return false
       }
+      this.loading = true
       NasFileAPI.setEncrypt(StringUtility.encryptPassword(this.encryptSet.securityUserPassword)).then(response => {
         this.loading = false
         if (response.data.code !== 200) return
@@ -186,6 +191,7 @@ export default Vue.extend({
       } else if (this.encryptModify.isVisiable) {
         security_password = StringUtility.encryptPassword(this.encryptModify.newPassword)
       }
+      this.loading = true
       NasFileAPI.loginEncrypt(security_password).then(response => {
         this.loading = false
         if (response.data.code !== 200) return
@@ -230,6 +236,7 @@ export default Vue.extend({
         security_user_password: StringUtility.encryptPassword(this.encryptModify.oldPassword),
         security_user_password_new: StringUtility.encryptPassword(this.encryptModify.newPassword)
       }
+      this.loading = true
       NasFileAPI.modifyEncrypt(input).then(response => {
         this.loading = false
         if (response.data.code !== 200) return
@@ -245,6 +252,7 @@ export default Vue.extend({
         this.$message.warning('请先勾选已了解')
         return false
       }
+      this.loading = true
       NasFileAPI.resetEncrypt().then(response => {
         this.loading = false
         if (response.data.code !== 200) return
@@ -268,7 +276,10 @@ export default Vue.extend({
           this.encryptLogin.isVisiable = true // 弹出登录窗口
           return
         }
-        this.dataArray = _.get(response.data.data, 'list')
+        let list = _.get(response.data.data, 'list')
+        if (_.isEmpty(list) || list.length < 20) this.busy = true
+        list = ResourceHandler.formateResponseList(list)
+        this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
       }).catch(error => {
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
@@ -289,6 +300,22 @@ export default Vue.extend({
     },
     // 重写父类中的方法
     handleRefreshAction () {  // 刷新
+      this.page = 1
+      this.busy = false
+      this.getEncryptList()
+    },
+    handleLoadmoreAction () {
+      this.page++
+      this.getEncryptList()
+    },
+    handleSortWayChangeAction (order: OrderType) {
+      if (order === OrderType.ByUploadDesc) {
+        this.uploadOrder = UploadTimeSort.descend
+      } else if (order === OrderType.ByUploadAsc) {
+        this.uploadOrder = UploadTimeSort.ascend
+      }
+      this.page = 1
+      this.busy = false
       this.getEncryptList()
     },
     handleModifyPassAction () { //  修改加密空间密码
@@ -297,11 +324,29 @@ export default Vue.extend({
     handleResetAction () {  // 重置加密空间
       this.encryptReset.isVisiable = true
     },
-    
+    handleOpenFileAction (item: ResourceItem) {
+      const myThis: any = this
+      let OpenType = item.type
+      const filterArr = [1, 2, 3, 4]; // 0: Unknown 1: Video, 2: Audio, 3:Image, 4:Document, 5:Archive, 6:Folder
+      if (filterArr.indexOf(OpenType) > -1) {
+        let data:any = []
+        data.push(item)
+        myThis.$ipc.send('file-control', OpenType, data);
+      } else if (OpenType === 5) {	// 包含zip
+        let data:any = []
+        data.push(item)
+        const filterCompress = ['.zip', '.rar', '.7z', '.ZIP', '.RAR', '.7Z']
+        const compressRes = filterCompress.filter(item => data[0].path.indexOf(item) > -1)
+        if (compressRes.length === 0) {	// pdf
+          myThis.$ipc.send('file-control', OpenType, data);
+        }
+      } else {
+        this.$message.warning('暂不支持打开该类型文件');
+      }
+    },
     // handleContextMenuActions (command: string, ...args: any[]) {
     //   switch (command) {
     //     case 'upload': 
-    //     case 'open': 
     //     case 'delete': 
     //     case 'rename': 
     //     case 'remove': 
