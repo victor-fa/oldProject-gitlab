@@ -68,14 +68,13 @@ export default {
       if (win !== window) win.close()
     }
   },
-  presentLoginWindow (msg: string): BrowserWindow {
+  presentLoginWindow (path: string, msg?: string): BrowserWindow {
     if (loginWindow !== null) {
       this.activeWindow(loginWindow)
     } else {
-      const path = msg === 'connecting' ? 'connecting' : 'login'
       loginWindow = this.createWindow({
         path,
-        width: 900,
+        width: 450,
         height: 610,
         title: '登录',
         resizable: true
@@ -87,7 +86,7 @@ export default {
     loginWindow.on('ready-to-show', () => {
       this.activeWindow(loginWindow!)
       this.closeOtherWindow(loginWindow!)
-      path === 'login' && processCenter.mainSend(loginWindow!, MainEventName.toast, msg)
+      msg !== undefined && processCenter.mainSend(loginWindow!, MainEventName.toast, msg)
     })
     return loginWindow
   },

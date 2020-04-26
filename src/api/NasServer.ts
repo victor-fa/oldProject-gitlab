@@ -42,8 +42,7 @@ nasServer.interceptors.request.use((config) => {
 
 nasServer.interceptors.response.use((response: AxiosResponse) => {
   // handle response exception scene
-  handleExceptionSence(response)
-  return response
+  return handleExceptionSence(response)
 }, (error: AxiosError) => {
   // Do something with response error
   return Promise.reject(error)
@@ -51,13 +50,16 @@ nasServer.interceptors.response.use((response: AxiosResponse) => {
 
 const refreshTokenCodes = [8024, 8013]
 const reconnectCodes = [8044, 8045]
+const reLoginCodes = [8052]
 const handleExceptionSence = (response: AxiosResponse) => {
   if (response.status === 200) {
     const basicData = response.data as BasicResponse
     if (refreshTokenCodes.indexOf(basicData.code) !== -1) {
       return handleTokenExpiredSence(response)
     } else if (reconnectCodes.indexOf(basicData.code) !== -1) {
-      handleReconnectSence(basicData)
+      handleReconnectSence(basicData, false)
+    } else if (reLoginCodes.indexOf(basicData.code) !== -1) {
+      handleReconnectSence(basicData, true)
     } else if (basicData.code !== 200) {
       EventBus.$emit(EventType.showToast, basicData.msg)
     }
@@ -69,7 +71,10 @@ const handleExceptionSence = (response: AxiosResponse) => {
 }
 const handleTokenExpiredSence = (aResponse: AxiosResponse) => {
   const refreshToken = getRefreshToken()
-  if (refreshToken === null) return aResponse
+  if (refreshToken === null) {
+    handleReconnectSence(aResponse.data, false)
+    return aResponse
+  }
   return ClientAPI.refreshAccessToken(refreshToken).then(response => {
     if (response.data.code !== 200) return Promise.resolve(response)
      // update nasToken cache
@@ -79,11 +84,11 @@ const handleTokenExpiredSence = (aResponse: AxiosResponse) => {
      newNasToken.refresh_token = _.get(response.data.data, 'refresh_token')
      store.dispatch('NasServer/updateNasAccess', newNasToken)
      // update config header
-     _.set(aResponse.config.headers, 'Authorization', `${newNasToken.api_token}`)
+     _.set(aResponse.config.params, 'api_token', `${newNasToken.api_token}`)
      return axios.request(aResponse.config)
   })
 }
-const handleReconnectSence = (data: BasicResponse) => {
+const handleReconnectSence = (data: BasicResponse, isLogin: boolean) => {
   const matched = router.currentRoute.matched
   let isLoginWindow = false
   for (let index = 0; index < matched.length; index++) {
@@ -98,8 +103,10 @@ const handleReconnectSence = (data: BasicResponse) => {
       router.replace('connecting')
     }
     EventBus.$emit(EventType.showToast, data.msg)
+  } else if (isLogin === true) {
+    processCenter.renderSend(EventName.login, data.msg)
   } else {
-    processCenter.renderSend(EventName.login, 'connecting')
+    processCenter.renderSend(EventName.connecting)
   }
 }
 

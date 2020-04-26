@@ -89,6 +89,7 @@ export default Vue.extend({
   mounted () {
     this.observerToastNotify()
     this.dropdownItems = _.cloneDeep(this.cacheAccounts)
+    this.clearCache()
   },
   destroyed () {
     processCenter.removeRenderObserver(MainEventName.toast)
@@ -97,9 +98,15 @@ export default Vue.extend({
     checkboxChange() {
       this.rememberPassword = !this.rememberPassword
     },
+    clearCache () {
+      // clear user cache
+      this.$store.dispatch('User/clearCacheUserInfo')
+      // clear nas cache
+      this.$store.dispatch('NasServer/clearCacheNas')
+    },
     observerToastNotify () {
       processCenter.renderObserver(MainEventName.toast, (event, message: string) => {
-        this.$message.warning(message)
+        this.$message.error(message)
       })
     },
     codeLoginBtnClick () {

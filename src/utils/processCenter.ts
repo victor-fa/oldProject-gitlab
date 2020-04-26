@@ -11,6 +11,7 @@ enum ChannelName {
 // use in render process
 enum EventName {
   login = 'present_login',
+  connecting = 'present_connecting',
   home = 'present_home',
   file = 'present_file',
   mediaInfo = 'media_info',
@@ -31,7 +32,10 @@ export default {
       event.reply(ChannelName.replay)
       switch (eventName) {
         case EventName.login:
-          windowManager.presentLoginWindow(args[0])
+          windowManager.presentLoginWindow('login', args[0])
+          break
+        case EventName.connecting:
+          windowManager.presentLoginWindow('connecting')
           break
         case EventName.home:
           windowManager.presentHomeWindow()

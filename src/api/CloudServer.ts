@@ -50,7 +50,10 @@ const handleInterceptResponse =  (response: AxiosResponse<BasicResponse>) => {
 
 const handleTokenExpiredSence = (aResponse: AxiosResponse) => {
   const refreshToken = getRefreshToken()
-  if (refreshToken === null) return aResponse
+  if (refreshToken === null) {
+    handleReloginSence(aResponse.data)
+    return aResponse
+  }
   return UserAPI.refreshToken(refreshToken).then(response => {
     if (response.data.code !== 200) return Promise.resolve(response)
     // update accessToken cache

@@ -31,9 +31,8 @@ export default Vue.extend({
         case ConnectionErrorType.notFound:
           return '未找到设备'
         default:
-          break
+          return '连接失败'
       }
-      return '连接失败'
     },
     buttonTitle: function () {
       if (this.errorType === ConnectionErrorType.apiError || this.errorType === ConnectionErrorType.networkError) {

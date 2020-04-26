@@ -22,19 +22,35 @@ export default Vue.extend({
   name: 'connecting',
   data () {
     return {
-      loading: false,
-      sn: this.$route.params.sn,
-      mac: this.$route.params.mac,
-      secretKey: this.$route.params.secretKey
+      loading: false
     }
   },
   computed: {
     ...mapGetters('User', ['user']),
-    ...mapGetters('NasServer', ['nasInfo']),
-    ...mapGetters('Login', ['connectionErrorCount'])
+    ...mapGetters('NasServer', ['nasInfo', 'accessInfo']),
+    ...mapGetters('Login', ['connectionErrorCount']),
+    sn: function () {
+      let sn: string = this.$route.params.sn
+      if (_.isEmpty(sn)) sn = (this.nasInfo as NasInfo).sn
+      return sn
+    },
+    mac: function () {
+      let mac: string = this.$route.params.mac
+      if (_.isEmpty(mac)) mac = (this.nasInfo as NasInfo).mac
+      return mac
+    },
+    secretKey: function () {
+      let secretKey: string = this.$route.params.secretKey
+      if (_.isEmpty(secretKey)) secretKey = (this.accessInfo as NasAccessInfo).key
+      return secretKey
+    }
   },
   mounted () {
-    if (this.checkParams()) this.searchNasInLAN()
+    if (this.checkParams()) {
+      this.searchNasInLAN()
+    } else {
+      this.pushFailedPage(ConnectionErrorType.missParams)
+    }
   },
   destroyed () {
     if (timerId !== null) window.clearTimeout(timerId as any)
@@ -128,6 +144,7 @@ export default Vue.extend({
   }
 })
 enum ConnectionErrorType {
+  missParams = '0',
   scanFailed = '1',
   notFound = '2',
   apiError = '3',
