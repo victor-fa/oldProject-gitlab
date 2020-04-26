@@ -74,7 +74,9 @@ export default Vue.extend({
     this.checkEncryptStatus()
   },
   destroyed() {
-    this.logout()
+    if (this.alreadyLogin === true) { // 已登录情况下才需要登录
+      this.logout()
+    }
   },
   data () {
     return {
@@ -84,6 +86,7 @@ export default Vue.extend({
       page: 1,
       busy: false,
       uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
+      alreadyLogin: false,  // 是否已登录
       encryptSet: {
         isVisiable: false,
         alreadyKnow: false,
@@ -280,6 +283,7 @@ export default Vue.extend({
         if (_.isEmpty(list) || list.length < 20) this.busy = true
         list = ResourceHandler.formateResponseList(list)
         this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
+        this.alreadyLogin = true
       }).catch(error => {
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
