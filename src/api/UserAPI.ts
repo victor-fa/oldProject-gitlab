@@ -166,4 +166,14 @@ export default {
       headers: { 'Authorization': accessToken }
     })
   },
+  fetchQrCode (): Promise<AxiosResponse<BasicResponse>> {
+    return nasCloud.get(userModulePath + '/generate/qrcode', {
+      params: {
+        deviceType: deviceMgr.getPlatform()
+      }
+    })
+  },
+  fetchQrCodeLogin (qrCode: string): Promise<AxiosResponse<BasicResponse>> {
+    return nasCloud.post(userModulePath + '/basic/qrCode/login', { qrCode })
+  }
 }

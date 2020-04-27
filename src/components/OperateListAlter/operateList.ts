@@ -231,7 +231,7 @@ let listContextMenu: Array<OperateGroup> = [
   }
 ]
 
-if (deviceMgr.getPlatform() === '0') {
+if (process.platform === 'win32') {
   listContextMenu[0].items[0].childrens = [
     { title: '上传文件', command: 'uploadFile' },
     { title: '上传文件夹', command: 'uploadFolder' }

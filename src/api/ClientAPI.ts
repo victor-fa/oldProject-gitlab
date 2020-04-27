@@ -33,7 +33,7 @@ export default {
     const sign = encryptSign(userBasic, secretKey)
     if (sign === null) return Promise.reject(Error('rsa encrypt error'))
     return nasServer.post(userModulePath + '/login', {
-      platform: parseInt(deviceMgr.getPlatform()),
+      platform: deviceMgr.getPlatform(),
       user_basic: userBasic,
       sign
     })
@@ -45,7 +45,7 @@ export default {
   },
   offlineLogin (account: string, password: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/offline/login', {
-      platform: parseInt(deviceMgr.getPlatform()),
+      platform: deviceMgr.getPlatform(),
       offline_username: account,
       offline_password: password
     })
@@ -53,10 +53,10 @@ export default {
   bindUser (user: User, authCode?: string): Promise<AxiosResponse<BasicResponse>> {
     const userBasic = convertNasUser(user)
     const params = authCode === undefined ? {
-      platform: parseInt(deviceMgr.getPlatform()),
+      platform: deviceMgr.getPlatform(),
       user_basic: userBasic
     } : {
-      platform: parseInt(deviceMgr.getPlatform()),
+      platform: deviceMgr.getPlatform(),
       user_basic: userBasic,
       auth_code: authCode
     }
