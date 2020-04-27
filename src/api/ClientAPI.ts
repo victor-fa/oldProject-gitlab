@@ -131,6 +131,14 @@ export default {
   fetchBindUserList (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/list')
   },
+  fetchQrCode (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(userModulePath + '/login/qr/meta_info')
+  },
+  fetchQrCodeLogin (session: string): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(userModulePath + '/login/qr/try_connecting', {
+      login_session: session
+    })
+  },
   detach (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/common/detach', {
       clear_disk_files: 0,

@@ -7,7 +7,7 @@
         <a-button v-if="showRefresh" @click="handleRefresh">刷新</a-button>
       </div>
     </a-spin>
-    <a-button class="back-button" @click="backBtnClick">账号密码登录</a-button>
+    <a-button class="back-button" @click="backBtnClick">{{ backTitle }}</a-button>
   </div>
 </template>
 
@@ -19,8 +19,16 @@ import router from '../../router'
 import UserAPI from '../../api/UserAPI'
 import QRCode from 'qrcode'
 import { AccessToken, User } from '../../api/UserModel'
+import ClientAPI from '../../api/ClientAPI'
+import { NasAccessInfo, NasInfo } from '../../api/ClientModel'
+import processCenter, { EventName } from '../../utils/processCenter'
 
 let timeId: NodeJS.Timeout | null = null
+
+enum QRCodeType {
+  online,
+  offline
+}
 
 export default Vue.extend({
   name: 'qr-code-login',
@@ -28,10 +36,14 @@ export default Vue.extend({
     return {
       loginIcons,
       loading: false,
-      qrCode: ''
+      qrCode: '',
+      nasInfo: this.$route.params.nasInfo
     }
   },
   computed: {
+    qrCodeType () {
+      return this.$route.params.type === 'offline' ? QRCodeType.offline : QRCodeType.online
+    },
     showCode () {
       const show = (!this.loading && !_.isEmpty(this.qrCode)) as boolean
       return show
@@ -39,10 +51,16 @@ export default Vue.extend({
     showRefresh () {
       const show = (!this.loading && _.isEmpty(this.qrCode)) as boolean
       return show
+    },
+    backTitle () {
+      return this.$route.params.type === 'offline' ? '账号密码登录' : '扫描列表'
     }
   },
   mounted () {
     this.fetchQrCode()
+  },
+  destroyed () {
+    if (timeId !== null) clearTimeout(timeId)
   },
   methods: {
     backBtnClick () {
@@ -53,6 +71,13 @@ export default Vue.extend({
     },
     fetchQrCode () {
       this.loading = true
+      if (this.qrCodeType === QRCodeType.online) {
+        this.fetchOnlineQrCode()
+      } else {
+        this.fetchOfflineQrCode()
+      }
+    },
+    fetchOnlineQrCode () {
       UserAPI.fetchQrCode().then(response => {
         console.log(response)
         if (response.data.code !== 200) return
@@ -64,42 +89,88 @@ export default Vue.extend({
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    generateQrCode (code: string) {
-      QRCode.toDataURL(code).then(url => {
+    fetchOfflineQrCode () {
+      ClientAPI.fetchQrCode().then(response => {
+        console.log(response)
+        if (response.data.code !== 200) return
+        const session = _.get(response.data.data, 'login_session')
+        this.generateQrCode(session)
+      }).catch(error => {
         this.loading = false
-        this.qrCode = url
-        this.pullLoginResult(code)
+        console.log(error)
+        this.$message.error('网络连接错误，请检测网络')
+      })
+    },
+    generateQrCode (code: string) {
+      if (_.isEmpty(code)) {
+        console.log('code is empty')
+        this.loading = false
+        return
+      }
+      QRCode.toDataURL(code).then(data => {
+        this.loading = false
+        this.qrCode = data
+        this.pollResult(code)
       }).catch(error => {
         this.loading = false
         console.log(error)
       })
     },
-    pullLoginResult (code: string) {
+    pollResult (code: string) {
       timeId = setTimeout(() => {
-        UserAPI.fetchQrCodeLogin(code).then(response => {
-          console.log(response)
-          if (response.data.code !== 200) {
-            this.qrCode = ''
-            return
-          }
-          // parse response
-          const accessToken = _.get(response.data.data, 'accessToken') as AccessToken
-          const user = _.get(response.data.data, 'user') as User
-          if (_.isEmpty(accessToken) || _.isEmpty(user)) {
-            // next pull
-            this.pullLoginResult(code)
-          } else {
-            // cache login info
-            this.$store.dispatch('User/updateUser', user)
-            this.$store.dispatch('User/updateAccessToken', accessToken)
-            this.$router.push('bind-device-list')
-          }
-        }).catch(error => {
-          console.log(error)
-          this.qrCode = ''
-          this.$message.error('二维码过期，请重新获取')
-        })
+        if (this.qrCodeType === QRCodeType.online) {
+          this.pollOnlineResult(code)
+        } else {
+          this.pollOfflineResult(code)
+        }
       }, 1000);
+    },
+    pollOnlineResult (code: string) {
+      UserAPI.fetchQrCodeLogin(code).then(response => {
+        console.log(response)
+        if (response.data.code !== 200) {
+          this.qrCode = ''
+          return
+        }
+        // parse response
+        const accessToken = _.get(response.data.data, 'accessToken') as AccessToken
+        const user = _.get(response.data.data, 'user') as User
+        if (_.isEmpty(accessToken) || _.isEmpty(user)) {
+          // next pull
+          this.pollResult(code)
+        } else {
+          // cache login info
+          this.$store.dispatch('User/updateUser', user)
+          this.$store.dispatch('User/updateAccessToken', accessToken)
+          this.$router.push('bind-device-list')
+        }
+      }).catch(error => {
+        console.log(error)
+        this.qrCode = ''
+        this.$message.error('二维码过期，请重新获取')
+      })
+    },
+    pollOfflineResult (session: string) {
+      ClientAPI.fetchQrCodeLogin(session).then(response => {
+        console.log(response)
+        if (response.data.code !== 200) {
+          this.qrCode = ''
+          return
+        }
+        const accessInfo = response.data.data as NasAccessInfo
+        const nasInfo = JSON.parse(this.nasInfo) as NasInfo
+        if (_.isEmpty(accessInfo)) {
+          this.pollResult(session)
+        } else {
+          this.$store.dispatch('NasServer/updateNasAccess', accessInfo)
+          this.$store.dispatch('NasServer/updateNasInfo', nasInfo)
+          processCenter.renderSend(EventName.home)
+        }
+      }).catch(error => {
+        console.log(error)
+        this.qrCode = ''
+        this.$message.error('二维码过期，请重新获取')
+      })
     }
   }
 })
