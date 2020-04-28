@@ -144,13 +144,10 @@ export default Vue.extend({
     },
     showOpenDialog (command: string) {
       const { dialog, BrowserWindow } = require('electron').remote
-      let list = ['openDirectory', 'createDirectory']
-      const supportMultiSeclections = command !== 'download'
-      supportMultiSeclections && list.push('multiSelections')
-      const supportOpenFile = command === 'upload' || command === 'uploadFile'
-      supportOpenFile && list.push('openFile')
+      const list = this.matchProperties(command)
+      const title = command === 'download' ? '下载' : '选择'
       dialog.showOpenDialog(BrowserWindow.getFocusedWindow()!, {
-        buttonLabel: '选择',
+        buttonLabel: title,
         properties: (list as any)
       }).then(result => {
         const newCommand = command === 'download' ? 'download' : 'upload'
@@ -158,6 +155,20 @@ export default Vue.extend({
         if (_.isEmpty(result.filePaths)) return
         this.$emit('didSelectItem', newCommand, result.filePaths)
       })
+    },
+    matchProperties (command: string) {
+      switch (command) {
+        case 'download':
+          return ['createDirectory', 'openDirectory']
+        case 'upload':
+          return ['createDirectory', 'openDirectory', 'openFile']
+        case 'uploadFile':
+          return ['createDirectory', 'openFile']
+        case 'uploadFolder':
+          return ['createDirectory', 'openDirectory']
+        default:
+          return []
+      }
     }
   }
 })
