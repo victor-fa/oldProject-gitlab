@@ -68,6 +68,7 @@ export default Vue.extend({
       loginIcons,
       account: '',
       password: '',
+      ciphertext: '',
       rememberPassword: false,
       dropdownItems: items,
       loading: false
@@ -76,15 +77,15 @@ export default Vue.extend({
   watch: {
     account: function (newValue: string) {
       if (_.isEmpty(newValue)) this.password = ''
+      this.ciphertext = ''
+    },
+    password: function (newValue) {
+      this.ciphertext = ''
     }
   },
   computed: {
     ...mapGetters('User', ['cacheAccounts', 'user']),
-    ...mapGetters('NasServer', ['nasInfo']),
-    ciphertext: function () {
-      const myThis: any = this
-      return StringUtility.encryptPassword(myThis.password)
-    }
+    ...mapGetters('NasServer', ['nasInfo'])
   },
   mounted () {
     this.observerToastNotify()
@@ -114,6 +115,7 @@ export default Vue.extend({
     },
     loginAction () {
       if (!this.checkInputFrom()) return
+      if (_.isEmpty(this.ciphertext)) this.ciphertext = StringUtility.encryptPassword(this.password)
       this.loading = true
       UserAPI.login(this.account, this.ciphertext).then(response => {
         this.loading = false
@@ -173,6 +175,9 @@ export default Vue.extend({
       this.account = item.account
       this.password = item.password
       this.dropdownItems = []
+      this.$nextTick(() => {
+        this.ciphertext = item.password
+      })
     },
     accountDeleteAction (item: Account) {
       for (let index = 0; index < this.dropdownItems.length; index++) {

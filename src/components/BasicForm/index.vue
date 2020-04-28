@@ -15,6 +15,7 @@
       <ul
         v-if="isLoadSelect"
         class="dropdown-content"
+        :style="{ 'width': formWidth + 'px' }"
       >
         <li
           v-for="(item, index) in selectItems"
@@ -76,6 +77,10 @@ export default Vue.extend({
         return true && this.showDropdown
       }
       return false && this.showDropdown
+    },
+    formWidth: function () {
+      const width = this.$el.clientWidth as number
+      return width - 50
     }
   },
   methods: {
@@ -135,7 +140,6 @@ export default Vue.extend({
       z-index: 100;
       position: absolute;
       background-color: white;
-      width: 232px;
       max-height: 130px;
       overflow: auto;
       margin-top: 4px;
