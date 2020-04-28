@@ -75,6 +75,7 @@ export default Vue.extend({
     // handle views action
     handleOperateAction (command: string) {
       const _this = this as any
+      console.log(this.backupInfo);
       switch (command) {
         case 'pauseAll':  // 全部暂停
           let pauseCount = 0

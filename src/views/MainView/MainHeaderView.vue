@@ -228,6 +228,10 @@ export default Vue.extend({
       line-height: 32px;
       display: flex;
       align-items: center;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       span {
         color: #484848;
         font-size: 12px;

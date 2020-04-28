@@ -51,6 +51,7 @@ nasServer.interceptors.response.use((response: AxiosResponse) => {
 const refreshTokenCodes = [8024, 8013]
 const reconnectCodes = [8044, 8045]
 const reLoginCodes = [8052]
+const defaultCodes = [8049]
 const handleExceptionSence = (response: AxiosResponse) => {
   if (response.status === 200) {
     const basicData = response.data as BasicResponse
@@ -60,6 +61,8 @@ const handleExceptionSence = (response: AxiosResponse) => {
       handleReconnectSence(basicData, false)
     } else if (reLoginCodes.indexOf(basicData.code) !== -1) {
       handleReconnectSence(basicData, true)
+    } else if (defaultCodes.indexOf(basicData.code) !== -1) {
+      // EventBus.$emit(EventType.showToast, basicData.msg)
     } else if (basicData.code !== 200) {
       EventBus.$emit(EventType.showToast, basicData.msg)
     }

@@ -286,7 +286,6 @@ export default Vue.extend({
         this.alreadyLogin = true
       }).catch(error => {
         this.loading = false
-        this.$message.error('网络连接错误，请检测网络')
         console.log(error)
         this.encryptLogin.isVisiable = true
       })

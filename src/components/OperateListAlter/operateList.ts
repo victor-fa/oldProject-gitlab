@@ -265,8 +265,7 @@ let listContextMenu: Array<OperateGroup> = [
     items: [
       { title: '清空剪切板', command: 'clearClipboard' },
       { title: '粘贴', command: 'paste' },
-      { title: '刷新', command: 'refresh' },
-      { title: '属性', command: 'directoryInfo' }
+      { title: '刷新', command: 'refresh' }
     ]
   }
 ]

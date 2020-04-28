@@ -211,7 +211,7 @@ export default Vue.extend({
     align-items: center;
     p {
       width: 100%;
-      line-height: 12px;
+      line-height: 16px;
       font-size: 12px;
       padding: 0px 3px;
       margin-bottom: 0px;
