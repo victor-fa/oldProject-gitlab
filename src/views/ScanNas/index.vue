@@ -161,10 +161,10 @@ export default Vue.extend({
       this.offlineLogin(account, password)
     },
     handleBackAction () {
-      if (this.type === 'addDevice') {
-        this.$router.replace('bind-device-list')
-      } else if (this.type === 'offlineLogin') {
+      if (this.type === 'offlineLogin') {
         this.$router.replace('login')
+      } else {
+        this.$router.replace('bind-device-list')
       }
     },
     bindUserToNas (authCode?: string) {

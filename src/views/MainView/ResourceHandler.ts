@@ -104,6 +104,7 @@ export default {
     return showArray.map(item => {
       item.disable = false
       item.isSelected = false
+      item.renaming = false
       return item
     })
   },

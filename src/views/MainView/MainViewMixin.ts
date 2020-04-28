@@ -118,7 +118,6 @@ export default Vue.extend({
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         if (response.data.code !== 200) return
         this.$message.info('重命名成功')
-        item.renaming = false
         item.path = newPath
         item.name = newName
         this.dataArray.splice(index, 1, item)
