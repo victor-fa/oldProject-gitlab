@@ -28,7 +28,7 @@ const HomeRouters = [
     component: () => import('../../views/Custom/index.vue'),
     name: 'custom',
     meta: {
-      title: '我的',
+      title: '精选',
       icon: require('../../assets/custom_icon.png'),
       selectedIcon: require('../../assets/custom_icon_selected.png'),
       isSelected: false

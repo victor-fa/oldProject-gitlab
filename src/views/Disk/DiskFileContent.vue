@@ -12,6 +12,7 @@ import WindowsHeader from '../../components/Disk/WindowHeader.vue'
 import { NAS_ACCESS } from '../../common/constants'
 import NasFileAPI from '../../api/NasFileAPI'
 import StringUtility from '../../utils/StringUtility'
+import { CRYPTO_INFO } from '@/common/constants'
 export default {
 	name: 'DiskFileContent',
 	components: { WindowsHeader },
@@ -30,15 +31,15 @@ export default {
 	created() {
 		this.$ipc.on('win-data', (event, data) => {
 			const nasJson = localStorage.getItem(NAS_ACCESS)
-			let token = NasFileAPI.getServerUrl;
+			let token = '';
 			if (nasJson !== null) {
 				token = JSON.parse(nasJson).api_token
 			}
+			let cryptoToken = ''
 			const cryptoJson = localStorage.getItem(CRYPTO_INFO)
-			if (cryptoJson === null) {
-				return Promise.reject(Error('not find crypto_info'))
+			if (cryptoJson !== null) {
+				cryptoToken = JSON.parse(cryptoJson).crypto_token
 			}
-			const cryptoToken = JSON.parse(cryptoJson).crypto_token
 			//接收打开文本文件的数据
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
@@ -47,7 +48,7 @@ export default {
 					if (item.path.indexOf('.ugreen_nas') === -1) {
 						this.LoadUrl =
 							this.$path.join(__static, 'plugins/syntaxhighlighter/index.html?url=') + 
-							`${NasFileAPI.getServerUrl()}/v1/file/httpEncryptDownload?uuid=${item.uuid}&path=${item.path}&crypto_token=${cryptoToken}`;
+							`${NasFileAPI.getServerUrl()}/v1/crypto/http_download?uuid=${item.uuid}&path=${item.path}&crypto_token=${cryptoToken}`;
 					} else {
 						this.LoadUrl =
 							this.$path.join(__static, 'plugins/syntaxhighlighter/index.html?url=') + 

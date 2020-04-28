@@ -3,6 +3,8 @@
     :loading="loading"
     :currentPath="currentPath"
     :dataSource="dataArray"
+    :contextListMenu="backupContextMenu"
+    :contextItemMenu="backupResourceContextMenu"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
     v-on:itemCallbackActions="handleItemActions"
@@ -19,6 +21,9 @@ import { BasicResponse } from '../../api/UserModel'
 import { ResourceItem, OrderType, UploadTimeSort } from '../../api/NasFileModel'
 import ResourceHandler from '../MainView/ResourceHandler'
 import NasFileAPI from '../../api/NasFileAPI'
+import { backupContextMenu, backupResourceContextMenu } from '../../components/OperateListAlter/operateList'
+import { uploadQueue } from '../../api/TransportQueue'
+import { UploadTask } from '../../api/UploadTask'
 
 export default Vue.extend({
   name: 'backup',
@@ -36,7 +41,19 @@ export default Vue.extend({
       dataArray: [] as ResourceItem[],
       page: 1,
       uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
-      busy: false
+      busy: false,
+      backupContextMenu, // list右键菜单选项
+      backupResourceContextMenu // item右键菜单选项
+    }
+  },
+  computed: {
+    path: function () {
+      const path = this.$route.query.path as string
+      return path
+    },
+    uuid: function () {
+      const uuid = this.$route.query.uuid as string
+      return uuid
     }
   },
   methods: {
@@ -77,6 +94,14 @@ export default Vue.extend({
       this.page = 1
       this.busy = false
       this.fetchBackupList()
+    },
+    handleUploadAction (filePaths: string[]) {
+      console.log(filePaths);
+      console.log(this.path, this.uuid);
+      filePaths.forEach(path => {
+        const task = new UploadTask(path, this.path, this.uuid)
+        uploadQueue.addTask(task)
+      })
     }
   }
 })

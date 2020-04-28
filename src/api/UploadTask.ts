@@ -6,6 +6,7 @@ import { UploadParams } from './NasFileModel'
 import fileHandle, { FileHandleError } from '../utils/FileHandle'
 import { AxiosResponse, Canceler } from 'axios'
 import { BasicResponse } from './UserModel'
+import StringUtility from '../utils/StringUtility'
 
 const maxChunkSize = 1 * 1024 * 1024 // 单次读取的最大字节数
 
@@ -198,9 +199,10 @@ class UploadTask {
       if (this.isCancel) return Promise.reject(Error('cancel upload task'))
       // return NasFileAPI.uploadData(params, buffer, this.requestTask)
       console.log(`path: ${file.path}, uploaded: ${file.uploadedSize}, total: ${file.totalSize}`)
+      return NasFileAPI.uploadData(params, buffer, () => {})
       // const date = new Date()
       // console.log(`${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`)
-      return this.testUpload(params, buffer, this.cancelTask)
+      // return this.testUpload(params, buffer, this.cancelTask)
     }).then(response => {
       if (response.data.code !== 200) {
         completionHandler(undefined, new UploadError(UploadErrorCode.uploadInnerError))
@@ -239,11 +241,12 @@ class UploadTask {
   }
   // 生成上传参数
   private generateUploadParams (fileInfo: FileInfo, chunkLength: number): UploadParams {
+    console.log(fileInfo);
     return {
       uuid: this.uuid,
-      path: this.destPath,
+      path: this.destPath + '/' + StringUtility.formatName(fileInfo.path),
       start: fileInfo.uploadedSize,
-      end: fileInfo.uploadedSize + chunkLength,
+      end: fileInfo.uploadedSize + chunkLength - 1,
       size: fileInfo.totalSize
     }
   }

@@ -34,7 +34,7 @@ export default {
 }
 .cd-setting-menu li {
 	width: 100%;
-	height: 46px;
+	height: 44px;
 	background: #fff;
 	color: #6e6e6e;
 	border-radius: 5px 0 0 5px;

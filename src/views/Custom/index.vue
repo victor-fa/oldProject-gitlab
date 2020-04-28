@@ -26,7 +26,7 @@ export default Vue.extend({
   data () {
     return {
       loading: false,
-      currentPath: '我的',
+      currentPath: '精选',
       dataArray: []
     }
   },

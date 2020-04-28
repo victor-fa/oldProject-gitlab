@@ -348,16 +348,24 @@ export default Vue.extend({
         this.$message.warning('暂不支持打开该类型文件');
       }
     },
-    // handleContextMenuActions (command: string, ...args: any[]) {
-    //   switch (command) {
-    //     case 'upload': 
-    //     case 'delete': 
-    //     case 'rename': 
-    //     case 'remove': 
-    //     case 'info': 
-    //     default:
-    //   }
-    // }
+    handleDeletAction () {
+      console.log('删除加密文件');
+      const items = ResourceHandler.getSelectItems(this.dataArray)
+      if (_.isEmpty(items)) return
+      console.log(JSON.parse(JSON.stringify(items)));
+    },
+    handleRenameAction () {
+      console.log('重命名加密文件');
+      const index = ResourceHandler.getFirstSelectItemIndex(this.dataArray)
+      const item = this.dataArray[index]
+      console.log(JSON.parse(JSON.stringify(item)));
+    },
+    handleMoveoutAction () {
+      console.log('加密文件移出空间');
+      const index = ResourceHandler.getFirstSelectItemIndex(this.dataArray)
+      const item = this.dataArray[index]
+      console.log(JSON.parse(JSON.stringify(item)));
+    }
   }
 })
 </script>

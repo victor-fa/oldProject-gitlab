@@ -55,6 +55,11 @@ export default {
       headers: {'Accept': '*/*'}
     })
   },
+  uploadEncrypt (options) {
+    return Vue.axios.post(host + nasCryptoModulePath + '/upload?' + jsonToParams(options.data), options.body, {
+      headers: {'Accept': '*/*'}
+    })
+  },
   addFile (body) {
     return Vue.axios.post(host + nasFileModulePath + '/add?' + jsonToParams(null), body)
   },
@@ -364,6 +369,15 @@ export default {
       }
     })
   },
+  backupCheck (options): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasFileModulePath + '/backup/check', options.body, {
+      params: {
+        path: options.data.path,
+        md5: options.data.md5,
+      },
+      headers: {'Accept': '*/*'}
+    })
+  }
 }
 
 enum TaskMode {

@@ -112,7 +112,7 @@ const encryptResourceContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/delet_accessory.png'),
     items: [
-      { title: '移出空间', command: 'remove' },
+      { title: '移出空间', command: 'moveout' },
       { title: '属性', command: 'info' }
     ]
   }
@@ -126,6 +126,46 @@ const encryptContextMenu: Array<OperateGroup> = [
       { title: '刷新', command: 'refresh' },
       { title: '修改密码', command: 'modifyPass' },
       { title: '重置空间', command: 'reset' }
+    ]
+  }
+]
+
+const backupResourceContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '打开', command: 'open' },
+      { title: '删除', command: 'delete' },
+      { title: '重命名', command: 'rename' },
+      { title: '下载', command: 'download' },
+      { title: '分享', command: 'share' },
+      { title: '收藏', command: 'collect' }
+    ]
+  },
+  {
+    items: [
+      { title: '复制', command: 'copy' },
+      { title: '剪切', command: 'cut' },
+      { title: '移动到', command: 'moveto' }
+    ]
+  },
+  {
+    icon: require('../../assets/delet_accessory.png'),
+    items: [
+      { title: '属性', command: 'info' }
+    ]
+  }
+]
+
+const backupContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '上传', command: 'upload' },
+      { title: '刷新', command: 'refresh' },
+      { title: '新建文件夹', command: 'newFolder' },
+      { title: '粘贴', command: 'paste' },
+      { title: '清空剪切板', command: 'clearClipboard' }
     ]
   }
 ]
@@ -244,6 +284,8 @@ export {
   storageContextMenu,
   encryptResourceContextMenu,
   encryptContextMenu,
+  backupResourceContextMenu,
+  backupContextMenu,
   collectContextMenu,
   collectResourceContextMenu,
   shareContextMenu,

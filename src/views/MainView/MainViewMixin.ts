@@ -199,6 +199,9 @@ export default Vue.extend({
         case 'reset':
           this.handleResetAction()
           break;
+        case 'moveout':
+          this.handleMoveoutAction()
+          break;
         default:
           break;
       }
@@ -374,6 +377,8 @@ export default Vue.extend({
     handleModifyPassAction () {
     },
     handleResetAction () {
+    },
+    handleMoveoutAction () {
     }
   }
 })

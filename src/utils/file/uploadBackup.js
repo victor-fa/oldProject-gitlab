@@ -27,9 +27,6 @@ export default {
 			}
 			return;
 		}
-		// if (data.target) {
-		// 	data = data.target;
-		// }
 		for (let k = 0; k < data.files.length; k++) {
 			this.selectUploadFiles.push(data.files[k]);
 		}
@@ -40,23 +37,41 @@ export default {
 			file = fileArea[i];
 			await this.handlePrepareUpload(file).then(callbackMd5 => {	// 获取文件的md5
 				const filePath = '/' +(options.data + '\\' + file.path).replace(new RegExp("\\\\", "g"), '/')
-				OneFile = {
-					id: new Date().getTime() / 1000,
-					time: new Date().getTime() / 1000,
-					name: file.name,
-					filePath: filePath,
-					path: file.path,
-					chunk: 0,
-					size: file.size,
-					trans_type: 'backup',
-					state: 'progressing',
-					shows: true,
-					mac: options.data,
-					md5: callbackMd5
-				}
-				this.handleUpload(OneFile, options).then().catch(err => {	// 处理过程切换成同步
-					console.log(err)
-				})
+				setTimeout(() => {	// 减少频繁调用时间间距
+					console.log(JSON.parse(JSON.stringify(this.selectUploadFiles)));
+					console.log(JSON.parse(JSON.stringify(this.uploadHistory)));
+					// 判断是否已备份
+					const input = {
+						data: { path: filePath, md5: callbackMd5 },
+						body: file
+					}
+					NasFileAPI.backupCheck(input).then(response => {
+						if (response.data.code !== 200) return
+						if (response.data.data.identical === 1) {
+							console.log('有重复');
+							return
+						}
+						OneFile = {
+							id: new Date().getTime() / 1000,
+							time: new Date().getTime() / 1000,
+							name: file.name,
+							filePath: filePath,
+							path: file.path,
+							chunk: 0,
+							size: file.size,
+							trans_type: 'backup',
+							state: 'progressing',
+							shows: true,
+							mac: options.data,
+							md5: callbackMd5
+						}
+						this.handleUpload(OneFile, options).then().catch(err => {	// 处理过程切换成同步
+							console.log(err)
+						})
+					}).catch(error => {
+						console.log(error);
+					})
+				}, 600);
 			}).catch(err => {
 				console.log(err)
 			})
@@ -99,7 +114,7 @@ export default {
 		let data = {
 			path: item.filePath,
 			start: blobFrom,
-			end: blobTo-1,
+			end: blobTo - 1,
 			size: totalSize,
 			md5: item.md5,
 			alias: item.mac,

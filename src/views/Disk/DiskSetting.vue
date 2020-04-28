@@ -37,47 +37,47 @@ import {app} from "electron";
 					</template>
 					<p class="cd-setting-title"><br></p>
 				</div>
-				<div class="cd-setting-container" v-show="SettingMenuData.System.active">
+				<!-- <div class="cd-setting-container" v-show="SettingMenuData.System.active">
 					<p class="cd-setting-title">系统设置</p>
 					<p class="cd-setting-sec-title">开机自启动</p>
 					<div class="cd-setting-form">
 						<a-checkbox v-model="SettingData.AutoStartFlag">系统启动后自动运行CloudDisk</a-checkbox>
 					</div>
-					<!-- <p class="cd-setting-sec-title">自动登录</p>
+					<p class="cd-setting-sec-title">自动登录</p>
 					<div class="cd-setting-form" style="width: 100%;text-align: left;">
 						<a-checkbox v-model="SettingData.AutoLogin">打开CloudDisk后自动登录(需勾选记住密码)</a-checkbox>
-					</div> -->
-				</div>
+					</div>
+				</div> -->
 				<div class="cd-setting-container" v-show="SettingMenuData.Safety.active">
 					<p class="cd-setting-title">绑定设置</p>
 					<p class="cd-setting-sec-title">修改安全邮箱</p>
 					<p class="cd-setting-info">当前绑定邮箱：{{ SettingData.Email }}<a-button @click="OpenChangeEmailDialog">修改</a-button></p>
 				</div>
-				<div class="cd-setting-container" v-show="SettingMenuData.Trans.active">
+				<!-- <div class="cd-setting-container" v-show="SettingMenuData.Trans.active">
 					<p class="cd-setting-title">传输设置</p>
 					<p class="cd-setting-sec-title">下载目录设置</p>
 					<div class="cd-setting-info">
 						当前目录：{{ SettingData.TransDownFolder }}
 						<a-button @click="ChangeTransAddress">修改</a-button>
 					</div>
-					<!-- <p class="cd-setting-sec-title">同时上传数</p>
+					<p class="cd-setting-sec-title">同时上传数</p>
 					<div class="cd-setting-form">
 						<a-input-number :min="1" :max="5" v-model="SettingData.MaxUpTrans" />
 					</div>
 					<p class="cd-setting-sec-title">同时下载数</p>
 					<div class="cd-setting-form" style="margin-bottom: 0">
 						<a-input-number :min="1" :max="5" v-model="SettingData.MaxDownTrans" />
-					</div> -->
+					</div>
 					<p class="cd-setting-tips">*请不要在正在下载文件的情况下修改下载目录</p>
 					<p class="cd-setting-tips">*修改目录在下次登录生效</p>
-				</div>
-				<div class="cd-setting-container" v-show="SettingMenuData.Notice.active">
+				</div> -->
+				<!-- <div class="cd-setting-container" v-show="SettingMenuData.Notice.active">
 					<p class="cd-setting-title">提醒设置</p>
 					<p class="cd-setting-sec-title">弹窗提醒</p>
 					<div class="cd-setting-form">
 						<a-checkbox v-model="SettingData.NoticeBubble">传输完成后气泡提示</a-checkbox>
 					</div>
-					<!-- <p class="cd-setting-sec-title">声音提醒</p>
+					<p class="cd-setting-sec-title">声音提醒</p>
 					<div class="cd-setting-form" style="width: 100%">
 						<a-checkbox v-model="SettingData.NoticeFlag">传输完成后声音提醒</a-checkbox>
 						<div class="cd-setting-form" style="width: 100%">
@@ -89,8 +89,8 @@ import {app} from "electron";
 							</a-radio-group>
 						</div>
 						<audio :src="VoiceSrc" ref="audio" />
-					</div> -->
-				</div>
+					</div>
+				</div> -->
 			</div>
 		</div>
 		<a-modal title="更换邮箱" :visible="ShowEmailDialog" width="400px" top="70px" style="top: 50px;" @cancel="ShowEmailDialog = false">
@@ -158,26 +158,26 @@ export default {
 					name: '用户',
 					icon: 'sf-icon-user'
 				},
-				System: {
-					active: '',
-					name: '系统',
-					icon: 'sf-icon-hashtag'
-				},
+				// System: {
+				// 	active: '',
+				// 	name: '系统',
+				// 	icon: 'sf-icon-hashtag'
+				// },
 				Safety: {
 					active: '',
 					name: '绑定',
 					icon: 'sf-icon-lock'
 				},
-				Trans: {
-					active: '',
-					name: '传输',
-					icon: 'sf-icon-exchange'
-				},
-				Notice: {
-					active: '',
-					name: '提醒',
-					icon: 'sf-icon-bell'
-				}
+				// Trans: {
+				// 	active: '',
+				// 	name: '传输',
+				// 	icon: 'sf-icon-exchange'
+				// },
+				// Notice: {
+				// 	active: '',
+				// 	name: '提醒',
+				// 	icon: 'sf-icon-bell'
+				// }
 			},
 			ChangePass: {
 				oldpass: '',
@@ -333,35 +333,35 @@ export default {
 				this.$message.error('网络连接错误,请检测网络')
 			})
 		},
-		VoiceChange(a) {
-			switch (a) {
-				case '音效一':
-					this.VoiceSrc = this.$path.join(__static, 'voice/1.wav');
-					this.PlayVoice();
-					break;
-				case '音效二':
-					this.VoiceSrc = this.$path.join(__static, 'voice/2.wav');
-					this.PlayVoice();
-					break;
-				case '音效三':
-					this.VoiceSrc = this.$path.join(__static, 'voice/3.wav');
-					this.PlayVoice();
-					break;
-				case '音效四':
-					this.VoiceSrc = this.$path.join(__static, 'voice/4.wav');
-					this.PlayVoice();
-					break;
-			}
-			localStorage.NoticeVoice = this.VoiceSrc;
-		},
-		PlayVoice() {
-			this.$refs.audio.currentTime = 0;
-			this.$refs.audio.pause();
-			this.$refs.audio.load();
-			setTimeout(() => {
-				this.$refs.audio.play();
-			}, 200);
-		},
+		// VoiceChange(a) {
+		// 	switch (a) {
+		// 		case '音效一':
+		// 			this.VoiceSrc = this.$path.join(__static, 'voice/1.wav');
+		// 			this.PlayVoice();
+		// 			break;
+		// 		case '音效二':
+		// 			this.VoiceSrc = this.$path.join(__static, 'voice/2.wav');
+		// 			this.PlayVoice();
+		// 			break;
+		// 		case '音效三':
+		// 			this.VoiceSrc = this.$path.join(__static, 'voice/3.wav');
+		// 			this.PlayVoice();
+		// 			break;
+		// 		case '音效四':
+		// 			this.VoiceSrc = this.$path.join(__static, 'voice/4.wav');
+		// 			this.PlayVoice();
+		// 			break;
+		// 	}
+		// 	localStorage.NoticeVoice = this.VoiceSrc;
+		// },
+		// PlayVoice() {
+		// 	this.$refs.audio.currentTime = 0;
+		// 	this.$refs.audio.pause();
+		// 	this.$refs.audio.load();
+		// 	setTimeout(() => {
+		// 		this.$refs.audio.play();
+		// 	}, 200);
+		// },
 		ChangeTransAddress() {
 			this.$electron.remote.dialog.showOpenDialog(
 				{
