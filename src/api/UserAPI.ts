@@ -169,7 +169,7 @@ export default {
   fetchQrCode (): Promise<AxiosResponse<BasicResponse>> {
     return nasCloud.get(userModulePath + '/generate/qrcode', {
       params: {
-        deviceType: deviceMgr.getPlatform()
+        deviceType: 'pc'
       }
     })
   },
