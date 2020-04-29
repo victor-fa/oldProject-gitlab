@@ -100,7 +100,8 @@ export default {
 			FullButton: 'sf-icon-expand',
 			TimeOutID: 0,
 			header: {
-				title: ''
+				title: '',
+				color: '#000'
 			}
 		};
 	},
@@ -193,7 +194,7 @@ export default {
 						this.animation = 'animated zoomIn';
 						this.$ipc.send('player-control', 'video', 'play');
 					}
-					this.header.title = StringUtility.formatName(this.NowPlay.path);
+					this.header.title = StringUtility.formatName(this.NowPlay.path) + '-视频查看';
 					this.$refs.VideoPlayer.focus();
 					break;
 			}

@@ -49,7 +49,7 @@ import {app} from "electron";
 					</div>
 				</div> -->
 				<div class="cd-setting-container" v-show="SettingMenuData.Safety.active">
-					<p class="cd-setting-title">绑定设置</p>
+					<p class="cd-setting-title">邮箱设置</p>
 					<p class="cd-setting-sec-title">修改安全邮箱</p>
 					<p class="cd-setting-info">当前绑定邮箱：{{ SettingData.Email }}<a-button @click="OpenChangeEmailDialog">修改</a-button></p>
 				</div>
@@ -165,7 +165,7 @@ export default {
 				// },
 				Safety: {
 					active: '',
-					name: '绑定',
+					name: '邮箱',
 					icon: 'sf-icon-lock'
 				},
 				// Trans: {

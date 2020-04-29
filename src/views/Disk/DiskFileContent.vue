@@ -24,7 +24,8 @@ export default {
 			},
 			LoadUrl: '',
 			header: {
-				title: ''
+				title: '',
+				color: '#000'
 			}
 		};
 	},

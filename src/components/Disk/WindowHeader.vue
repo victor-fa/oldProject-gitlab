@@ -9,9 +9,9 @@
 	>
 		<p v-show="data.head !== undefined ? data.head : true">{{ data.title }}</p>
 		<ul class="window-actions">
-			<li class="sf-icon-minus" v-show="data.mini === undefined ? true : data.mini" @click="mini" />
-			<li :class="ButtonState" v-show="data.resize === undefined ? true : data.resize" @click="restore" />
-			<li class="sf-icon-times" :style="{ 'color': data.actionColor === undefined ? '#06B650' : data.actionColor }"  style="font-size:16px" @click="close" />
+			<li class="sf-icon-minus" v-show="data.mini === undefined ? true : data.mini" :style="{ 'color': data.color }" @click="mini" />
+			<li :class="ButtonState" v-show="data.resize === undefined ? true : data.resize" :style="{ 'color': data.color }" @click="restore" />
+			<li class="sf-icon-times" :style="{ 'color': data.color }"  style="font-size:16px" @click="close" />
 		</ul>
 	</div>
 </template>
@@ -138,7 +138,6 @@ export default {
 	font-size: 12px;
 	-webkit-app-region: no-drag;
 	cursor: pointer;
-	color: #06B650;
 }
 .window-actions li:hover {
 	background: rgba(0, 0, 0, 0.1);

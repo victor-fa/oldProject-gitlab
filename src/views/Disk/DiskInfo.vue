@@ -81,7 +81,8 @@ export default {
 			header: {
 				title: '',
 				resize: false,
-				mini: false
+				mini: false,
+				color: '#000'
 			},
 			window: false
 		};

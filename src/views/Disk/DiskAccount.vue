@@ -13,7 +13,7 @@
 			<form @submit.prevent="onSubmit" ref="form">
 				<div class="cd-user-line">
 					<label>昵称：</label>
-					<a-input :value="User.nicName" clearable="" style="width: calc(100% - 50px)" placeholder="输入昵称" name="nicName" :number="true" />
+					<a-input v-model="User.nicName" clearable="" style="width: calc(100% - 50px)" placeholder="输入昵称" name="nicName" :number="true" />
 				</div>
 				<div class="cd-user-line">
 					<label>邮箱：</label>
@@ -21,7 +21,7 @@
 				</div>
 				<div class="cd-user-line">
 					<label>手机：</label>
-					<a-input :value="User.phoneNo" clearable="" style="width: calc(100% - 50px)" placeholder="输入手机" name="phone" :number="true" :maxlength="11" />
+					<a-input v-model="User.phoneNo" clearable="" style="width: calc(100% - 50px)" placeholder="输入手机" name="phone" :number="true" :maxlength="11" />
 				</div>
 				<div class="cd-user-line">
 					<label>生日：</label>
@@ -77,7 +77,8 @@ export default {
 			],
 			header: {
 				title: '',
-				resize: false
+				resize: false,
+				color: '#000'
 			},
 			dateFormat: 'YYYYMMDD',
 			codeVisiable: false,
@@ -85,11 +86,6 @@ export default {
 		};
 	},
 	created() {
-		// const userJson = localStorage.getItem(USER_MODEL)
-		// let token = '';
-		// if (userJson !== null) {
-		// 	this.User = JSON.parse(userJson)
-		// }
 		this.User = this.user
 		console.log(JSON.parse(JSON.stringify(this.User)));
 		this.getAge()
@@ -145,13 +141,22 @@ export default {
 				return
 			}
 			const input = {
-				sex: this.User.sex ? this.User.sex : '',
+				sex: this.User.sex,
 				nicName: this.User.nicName ? this.User.nicName : '',
 				userSay: this.User.userSay ? this.User.userSay : '',
 				birthday: this.User.birthday ? this.User.birthday : '',
 				phoneNo: this.User.phoneNo ? this.User.phoneNo : '',
 				code: this.code
 			}
+			// 获取用户信息进行比对
+			const userJson = localStorage.getItem(USER_MODEL)
+			if (userJson === null) return
+			const userObj = JSON.parse(userJson)
+			input.sex === userObj.sex ? delete input.sex : null
+			input.nicName === userObj.nicName ? delete input.nicName : null
+			input.userSay === userObj.userSay ? delete input.userSay : null
+			input.birthday === userObj.birthday ? delete input.birthday : null
+			input.phoneNo === userObj.phoneNo ? delete input.phoneNo : null
 			UserAPI.updateInfo(input).then(response => {
 				this.code = ''
 				if (response.data.code !== 200) return

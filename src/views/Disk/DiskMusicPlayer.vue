@@ -115,7 +115,7 @@ export default {
 			/* 歌曲回调函数设置的进度时间 */
 			duration_: -1,
 			header: {
-				color: '#4f4f4',
+				color: '#000',
 				title: '',
 				head: false,
 				resize: false,

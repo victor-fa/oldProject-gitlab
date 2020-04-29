@@ -26,8 +26,7 @@ export default {
 				drag: true,
 				background: '#01B74F',
 				color: '#fff',
-				title: 'Nas-uGreen-通知',
-				actionColor: '#fff'
+				title: 'Nas-uGreen-通知'
 			},
 			MegData: '',
 			animation: '',

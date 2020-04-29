@@ -46,6 +46,7 @@ export default Vue.extend({
   margin-bottom: 10px;
   padding: 15px;
   background-color: white;
+  cursor: pointer;
   img {
     height: 50px;
   }
@@ -60,6 +61,7 @@ export default Vue.extend({
       font-weight: bold;
       line-height: 14px;
       margin-bottom: 7px;
+      cursor: pointer;
     }
     .size {
       text-align: left;
@@ -67,6 +69,7 @@ export default Vue.extend({
       font-size: 10px;
       line-height: 10px;
       margin-bottom: 2px;
+      cursor: pointer;
     }
   }
 }

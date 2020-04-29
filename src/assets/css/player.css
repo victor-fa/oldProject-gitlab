@@ -87,6 +87,7 @@
     -moz-transition:all .35s;
     -o-transition:all .35s;
     z-index: 9999999;
+    margin-top: -13px;
 }
 .cd-video-control {
     position:absolute;
@@ -291,13 +292,13 @@
 .cd-music-player-volumn{
     width: 30px;
     height: 129px;
-    background: #fff;
     position: absolute;
+    background: rgb(1, 183, 79, 0.2);
     float: right;
-    right: 66px;
-    top: 105px;
+    right: 28px;
+    top: 35px;
     padding: 12px;
-    border: 1px solid #eee;
+    border-radius: 4px;
     z-index: 3;
     -webkit-app-region: no-drag;
 }
