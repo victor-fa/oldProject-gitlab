@@ -250,13 +250,54 @@ const shareResourceContextMenu: Array<OperateGroup> = [
   }
 ]
 
-let listContextMenu: Array<OperateGroup> = [
+const customContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
-      { title: '上传',
-        command: 'upload'
-      },
+      { title: '打开', command: 'open' },
+      { title: '修改', command: 'modify' },
+      { title: '删除', command: 'delete' }
+    ]
+  },
+  {
+    icon: require('../../assets/down_accessory.png'),
+    items: [
+      { title: '下载', command: 'download' },
+      { title: '分享', command: 'share' },
+      { title: '收藏', command: 'collect' }
+    ]
+  },
+  {
+    icon: require('../../assets/delet_accessory.png'),
+    items: [
+      { title: '加密', command: 'encrypt' },
+      { title: '属性', command: 'info' }
+    ]
+  }
+]
+const customListContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '上传', command: 'upload' },
+      { title: '新建', command: 'newCustom' }
+    ]
+  },
+  {
+    icon: require('../../assets/delet_accessory.png'),
+    items: [
+      { title: '清空剪切板', command: 'clearClipboard' },
+      { title: '粘贴', command: 'paste' },
+      { title: '刷新', command: 'refresh' }
+    ]
+  }
+]
+
+const listContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '上传', command: 'upload' },
       { title: '新建文件夹', command: 'newFolder' }
     ]
   },
@@ -289,6 +330,8 @@ export {
   collectResourceContextMenu,
   shareContextMenu,
   shareResourceContextMenu,
+  customContextMenu,
+  customListContextMenu,
   listContextMenu,
   OperateItem,
   OperateGroup

@@ -8,6 +8,7 @@
       <main-header-view
         :directory="currentPath"
         :popoverList="popoverList"
+        :funcList="funcList"
         v-model="categoryType"
         v-on:CallbackAction="handleHeaderViewAction"
       />
@@ -91,6 +92,7 @@ export default Vue.extend({
         return sortList
       }
     },
+    funcList: Array, // header中的操作功能按钮集合
     listGrid: Object, // 列表视图的布局
     contextListMenu: Array, // 右键list菜单数据   
     contextItemMenu: Array // 右键item菜单数据

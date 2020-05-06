@@ -4,7 +4,7 @@
     <div class="bottom-bar">
       <div class="left-bar">
         <custom-button
-          :image="operateFuncList.back"
+          :image="backIcon"
           :disable="disableBack"
           class="back-icon-style"
           iconWidth="6px"
@@ -25,47 +25,41 @@
           @blur="handleSearchBlur"
           @pressEnter="handleSearchAction"
         />
-        <custom-button
-          v-else
-          :image="operateFuncList.search"
-          iconWidth="13px"
-          class="right-item"
-          @click.native="searchAction"
-        />
-        <custom-button
-          :image="operateFuncList.refresh"
-          iconWidth="12px"
-          class="right-item"
-          @click.native="refreshAction"
-        />
-        <a-popover
-          trigger="click"
-          v-model="visible"
-          placement="bottom"
-          overlayClassName="sortPopover"
+        <div
+          v-for="(item, index) in showFuncList"
+          :key="index"
         >
-          <sort-popover-list
-            slot="content"
-            :sortList="popoverList"
-            v-on:sortWayChange="sortWayChange"
-          />
-          <span>
-            <custom-button
-              ref="sortButton"
-              :image="operateFuncList.sort"
-              iconWidth="14px"
-              class="right-item"
+          <a-popover
+            v-if="showPopover(item)"
+            trigger="click"
+            v-model="visible"
+            placement="bottom"
+          >
+            <sort-popover-list
+              slot="content"
+              :sortList="popoverList"
+              v-on:sortWayChange="sortWayChange"
             />
-          </span>
-        </a-popover>
-        <custom-button
-          :image="operateFuncList.arrange"
-          :selectedBackgroundImage="operateFuncList.selectedBg"
-          iconWidth="14px"
-          class="right-item"
-          ref="arrangeBtn"
-          @click.native="arrangeBtnClick"
-        />
+            <span>
+              <custom-button
+                class="right-item"
+                :image="item.icon"
+                :ref="item.command"
+                :iconWidth="item.iconWidth"
+                v-show="item.isHidden !== true"
+                @click.native="handleItemClick(item)"
+              />
+            </span>
+          </a-popover>
+          <custom-button
+            v-show="showItem(item)"
+            class="right-item"
+            :image="item.icon"
+            :ref="item.command"
+            :iconWidth="item.iconWidth"
+            @click.native="handleItemClick(item)"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -81,15 +75,7 @@ import CustomButton from '../../components/CustomButton/index.vue'
 import SortPopoverList from '../../components/SortPopoverList/index.vue'
 import { SortWay, SortKind, SortType, sortList, uploadSortList } from '../../model/sortList'
 import { ArrangeWay, OrderType } from '../../api/NasFileModel'
-
-const operateFuncList = {
-  back: require('../../assets/back_icon.png'),
-  search: require('../../assets/search_icon.png'),
-  refresh: require('../../assets/refresh_icon.png'),
-  sort: require('../../assets/sort_icon.png'),
-  arrange: require('../../assets/arrange_icon.png'),
-  selectedBg: require('../../assets/func_button_bg.png')
-}
+import { commonFuncList, ResourceFuncItem } from './ResourceFuncList'
 
 export default Vue.extend({
   name: 'main-header-view',
@@ -115,18 +101,34 @@ export default Vue.extend({
       type: String,
       default: ''
     },
+    funcList: Array,
     popoverList: Object,
     categoryType: {
       default: CategoryType.all
     }
   },
   data () {
+    let list = _.isEmpty(this.funcList) ? commonFuncList : (this.funcList as ResourceFuncItem[])
     return {
       categorys: _.cloneDeep(categorys),
-      operateFuncList,
+      backIcon: require('../../assets/back_icon.png'),
+      showFuncList: list,
       visible: false, // 控制排序气泡弹窗是否显示 
       showSearch: false, // 控制搜索框是否显示
       keyword: '', // 搜索关键字
+    }
+  },
+  watch: {
+    funcList: function (newValue: ResourceFuncItem[]) {
+      this.showFuncList = newValue
+    },
+    popoverList: function (newValue) {
+      console.log(newValue)
+    },
+    showSearch: function (newValue: boolean) {
+      const item = this.showFuncList[0]
+      item.isHidden = newValue
+      this.showFuncList.splice(0, 1, item)
     }
   },
   computed: {
@@ -135,6 +137,14 @@ export default Vue.extend({
     }
   },
   methods: {
+    showPopover (item: ResourceFuncItem) {
+      return item.command === 'sort'
+    },
+    showItem (item: ResourceFuncItem) {
+      const show = item.command !== 'sort'
+      const hide = item.isHidden
+      return show && !hide
+    },
     handleTabChange (index: number) {
       this.hideSearchInput()
       const item = categorys[index]
@@ -166,6 +176,26 @@ export default Vue.extend({
     backAction () {
       this.hideSearchInput()
       this.$emit('CallbackAction', 'back')
+    },
+    handleItemClick (item: ResourceFuncItem) {
+      switch (item.command) {
+        case 'search':
+          this.searchAction()
+          break;
+        case 'refresh':
+          this.refreshAction()
+          break;
+        case 'sort':
+          break;
+        case 'arrange':
+          this.arrangeAction()
+          break;
+        case 'newCustom':
+          this.$emit('CallbackAction', 'newCustom')
+          break;
+        default:
+          break;
+      }
     },
     searchAction () {
       this.showSearch = true
@@ -203,9 +233,9 @@ export default Vue.extend({
       this.hideSearchInput()
       this.$emit('CallbackAction', 'refresh')
     },
-    arrangeBtnClick () {
+    arrangeAction () {
       this.hideSearchInput()
-      const arrangeBtn: any = this.$refs.arrangeBtn
+      const arrangeBtn: any = this.$refs.arrange[0]
       const selected: boolean = arrangeBtn.isSelected
       const arrangeWay = selected ? ArrangeWay.vertical : ArrangeWay.horizontal
       this.$emit('CallbackAction', 'arrangeChange', arrangeWay)
@@ -254,21 +284,14 @@ export default Vue.extend({
       }
     }
     .right-bar {
+      display: flex;
+      align-items: center;
       height: 22px;
-      margin-right: 2px;
+      margin-right: 4px;
       .right-item {
         height: 22px;
         width: 22px;
-        margin-right: 2px;
-      }
-      .search-item {
-        height: 22px;
-        widows: 22px;
-      }
-      .right-button {
-        border: 1px solid #e5e5e5;
-        border-radius: 0px;
-        margin-right: 7px;
+        margin-left: 2px;
       }
     }
   }

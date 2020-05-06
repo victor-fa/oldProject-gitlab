@@ -17,7 +17,7 @@ export default {
     })
   },
   // 打开文件句柄
-  openFileHandle (filePath: string): Promise<number> {
+  openReadFileHandle (filePath: string): Promise<number> {
     return new Promise((resolve, reject) => {
       fs.open(filePath, 'r+', (error, fd) => {
         if (error === null) {
@@ -43,10 +43,10 @@ export default {
     }) 
   },
   // 读取文件数据
-  readFile (fd: number, position: number, chunk: number): Promise<Buffer> {
+  readFile (fd: number, position: number, length: number): Promise<any> {
     return new Promise((resolve, reject) => {
-      let buffer = Buffer.alloc(chunk)
-      fs.read(fd, buffer, 0, chunk, position, (error, bytes) => {
+      let buffer = Buffer.alloc(length, 0, 'binary')
+      fs.read(fd, buffer, 0, length, position, (error, bytes) => {
         if (error === null) {
           resolve(buffer.slice(0, bytes))
         } else {

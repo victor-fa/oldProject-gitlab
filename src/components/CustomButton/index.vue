@@ -64,7 +64,7 @@ export default Vue.extend({
   computed: {
     backgroundStyle: function (): object {
       return {
-        backgroundImage: 'url(' + this.currentBackgroundImage + ')',
+        backgroundImage: require('../../assets/func_button_bg.png'),
         backgroundRepeat: 'no-repeat',
         backgroundSize: '100% 100%'
       }

@@ -198,6 +198,26 @@ interface UploadParams {
   md5?: number
 }
 
+interface CustomModule {
+  path: string,
+  uuid: string,
+  myself_folder: CustomInfo,
+  // custom property
+  name: string,
+  isSelected?: boolean,
+  disable?: boolean
+}
+
+interface CustomInfo {
+  name: string,
+  title: string,
+  brief: string,
+  desc: string,
+  background_path: string,
+  image_path: string,
+  tags: string[]
+}
+
 export {
   ResourceItem,
   ResourceStatus,
@@ -217,5 +237,7 @@ export {
   TransportTask,
   RemoteTask,
   RemoteTaskStatus,
-  UploadParams
+  UploadParams,
+  CustomModule,
+  CustomInfo
 }

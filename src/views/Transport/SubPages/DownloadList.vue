@@ -20,7 +20,6 @@ import { TRANSFORM_INFO } from '../../../common/constants'
 import { downloadCategorys } from '../../../model/categoryList'
 import { mapGetters } from 'vuex'
 import TransportItem from '../MainPage/TransportItem.vue'
-import TransportQueue from '../../../api/TransportQueue'
 
 export default Vue.extend({
   name: 'download-list',

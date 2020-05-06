@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { ResourceItem, UploadParams } from '@/api/NasFileModel';
+import { ResourceItem, UploadParams, CustomInfo } from '@/api/NasFileModel';
 import { BasicResponse } from '@/api/UserModel';
 import Vue from 'vue'
 import { jsonToParams, jsonToParamsForPdf } from '../utils/request'
@@ -21,6 +21,7 @@ const nasUserModulePath = '/v1/user'
 const nasCryptoModulePath = '/v1/crypto'
 
 const CancelToken = axios.CancelToken
+let cancelCustomRequest: Canceler | null = null
 const host = (() => {
     const nasInfo = _.get(store.getters, 'NasServer/nasInfo') as NasInfo
     return `http://${nasInfo.ip}:${nasInfo.port}`
@@ -276,9 +277,17 @@ export default {
   uploadData (params: UploadParams, data: Buffer, cancel?: Canceler): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasFileModulePath + '/upload', data, { 
       params,
+      headers: { 'Content-Type': ' application/octet-stream' },
       cancelToken: new CancelToken(function executor(c) {
         cancel = c
       })
+    })
+  },
+  downloadData (path: string, uuid: string, begin: number, end: number): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.get(nasFileModulePath + '/download', {
+      params: { path, uuid },
+      headers: { 'Range': `${begin}-${end}` },
+      responseType: 'stream' 
     })
   },
   newFolder (path: string, uuid: string, newName: string): Promise<AxiosResponse<BasicResponse>> {
@@ -287,11 +296,6 @@ export default {
       path,
       type: 2,
       alias: newName
-    })
-  },
-  newCustomFolder (): Promise<AxiosResponse<BasicResponse>> {
-    return nasServer.post(nasMyselfModulePath + '/create_myself_folder', {
-      uuid: ''
     })
   },
   setOfflineAccount (data): Promise<AxiosResponse<BasicResponse>> {
@@ -377,7 +381,60 @@ export default {
       },
       headers: {'Accept': '*/*'}
     })
+  },
+  newCustomFolder (info: CustomInfo): Promise<AxiosResponse<BasicResponse>> {
+    const newInfo = filterParams(info)
+    return nasServer.post(nasMyselfModulePath + '/create_myself_folder', {
+      uuid: '',
+      myself_folder: newInfo
+    }, {
+      cancelToken: new CancelToken(function executor(c) {
+        cancelCustomRequest = c
+      })
+    })
+  },
+  uploadCustomCover (path: string, uuid: string, img: string): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasMyselfModulePath + '/update_background_img', {
+      uuid, path, background_img: img
+    }, {
+      cancelToken: new CancelToken(function executor(c) {
+        cancelCustomRequest = c
+      })
+    })
+  },
+  cancelCustomRequest () {
+    if (cancelCustomRequest !== null) {
+      cancelCustomRequest()
+    }
+  },
+  fetchCustomList (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasMyselfModulePath + '/get_myself_folders')
+  },
+  deleteCustomFolder (path: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasMyselfModulePath + '/del_myself_folder', { path, uuid })
+  },
+  updateCustomInfo (path: string, uuid: string, info: CustomInfo): Promise<AxiosResponse<BasicResponse>> {
+    const newInfo = filterParams(info)
+    return nasServer.post(nasMyselfModulePath + '/update_myself_folder', {
+      path, uuid, myself_folder: newInfo
+    })
+  },
+  fetchCustomInfo (path: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasMyselfModulePath + '/get_myself_folder', {
+      path, uuid
+    })
   }
+}
+
+const filterParams = (params: object) => {
+  let newParams = _.cloneDeep(params)
+  for (const key in params) {
+    if (params.hasOwnProperty(key)) {
+      const element = params[key]
+      if (!_.isNumber(element) && _.isEmpty(element)) delete newParams[key]
+    }
+  }
+  return newParams
 }
 
 enum TaskMode {

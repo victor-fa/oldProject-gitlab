@@ -161,11 +161,11 @@ export default Vue.extend({
         case 'download':
           return ['createDirectory', 'openDirectory']
         case 'upload':
-          return ['createDirectory', 'openDirectory', 'openFile']
+          return ['createDirectory', 'openDirectory', 'openFile', 'multiSelections']
         case 'uploadFile':
-          return ['createDirectory', 'openFile']
+          return ['createDirectory', 'openFile', 'multiSelections']
         case 'uploadFolder':
-          return ['createDirectory', 'openDirectory']
+          return ['createDirectory', 'openDirectory', 'multiSelections']
         default:
           return []
       }

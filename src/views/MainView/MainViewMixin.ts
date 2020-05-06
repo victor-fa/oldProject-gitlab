@@ -180,6 +180,9 @@ export default Vue.extend({
         case 'newFolder':
           this.handleNewFolderAction()
           break;
+        case 'newCustom':
+          this.handleNewCustomAction()
+          break;
         case 'clearClipboard':
           this.clearClipboardAction()
           break;
@@ -201,6 +204,9 @@ export default Vue.extend({
           break;
         case 'moveout':
           this.handleMoveoutAction()
+          break;
+        case 'modify':
+          this.handleModifyAction()
           break;
         default:
           break;
@@ -308,17 +314,20 @@ export default Vue.extend({
       if (_.isEmpty(items)) return
       this.showDeleteDialog(items).then(result => {
         if (result === 1) return // filter cancel action
-        ResourceHandler.disableSelectItems(this.dataArray)
-        NasFileAPI.addDeleteTask(items).then(response => {
-          this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
-          if (response.data.code !== 200) return
-          this.dataArray = ResourceHandler.removeSelectedItems(this.dataArray)
-          this.$message.info('任务添加成功')
-          this.$store.dispatch('Resource/increaseTask')
-        }).catch(_ => {
-          this.$message.error('删除失败')
-          this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
-        })
+        this.handleDeletRequest(items)
+      })
+    },
+    handleDeletRequest (items: ResourceItem[]) {
+      ResourceHandler.disableSelectItems(this.dataArray)
+      NasFileAPI.addDeleteTask(items).then(response => {
+        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+        if (response.data.code !== 200) return
+        this.dataArray = ResourceHandler.removeSelectedItems(this.dataArray)
+        this.$message.info('任务添加成功')
+        this.$store.dispatch('Resource/increaseTask')
+      }).catch(_ => {
+        this.$message.error('删除失败')
+        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
       })
     },
     showDeleteDialog (items: ResourceItem[]): Promise<number> {
@@ -366,6 +375,8 @@ export default Vue.extend({
       this.$store.dispatch('Resource/updateClipboard', { isClip: false, items: [] })
       this.$message.info('剪切板已清空')
     },
+    handleNewCustomAction () {
+    },
     handleUploadAction (filePaths: string[]) {
     },
     handleNewFolderAction () {
@@ -379,6 +390,8 @@ export default Vue.extend({
     handleResetAction () {
     },
     handleMoveoutAction () {
+    },
+    handleModifyAction () {
     }
   }
 })
