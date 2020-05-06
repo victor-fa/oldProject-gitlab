@@ -12,7 +12,12 @@
       </div>
       <div class="body">
         <a-input placeholder="请输入本地账号" v-model="account"/>
-        <a-input type="password" placeholder="请输入本地密码" v-model="password"/>
+        <a-input
+          type="password"
+          placeholder="请输入本地密码"
+          v-model="password"
+          v-on:pressEnter="handleLogin"
+        />
       </div>
       <div class="footer">
         <a-button @click="handleCancel">取消</a-button>
@@ -45,6 +50,8 @@ export default Vue.extend({
       this.visible = true
     },
     hide () {
+      this.account = ''
+      this.password = ''
       this.visible = false
     },
     handleClick (event: MouseEvent) {
@@ -59,8 +66,8 @@ export default Vue.extend({
       } else if (_.isEmpty(this.password)) {
         this.$message.error('密码不能为空')
       } else {
-        this.hide()
         this.$emit('offlienLogin', this.account, this.password)
+        this.hide()
       }
     },
     handleQrcodeLogin () {

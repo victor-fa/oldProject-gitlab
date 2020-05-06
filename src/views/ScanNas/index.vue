@@ -153,8 +153,8 @@ export default Vue.extend({
       this.bindUserToNas(code)
     },
     handleOfflineLogin (account: string, password: string) {
-      const basrUrl = `http://${this.selectNas.ip}:${this.selectNas.port}`
-      ClientAPI.setBaseUrl(basrUrl)
+      const baserUrl = `http://${this.selectNas.ip}:${this.selectNas.port}`
+      ClientAPI.setBaseUrl(baserUrl)
       this.offlineLogin(account, password)
     },
     handleQrcodeLogin () {
@@ -184,10 +184,9 @@ export default Vue.extend({
     },
     // 离线账号登录接口
     offlineLogin (account: string, password: string) {
-      console.log('begin offline login to nas')
-      const encryptPsd = StringUtility.encryptPassword('password')
+      const encryptPwd = StringUtility.encryptPassword(password)
       this.connectLoading = true
-      ClientAPI.offlineLogin(account, encryptPsd).then(response => {
+      ClientAPI.offlineLogin(account, encryptPwd).then(response => {
         this.handleConnectSuccess(response)
       }).catch(error => {
         this.handleConnectFailure(error)
@@ -207,7 +206,9 @@ export default Vue.extend({
       if (response.data.code !== 200) return
       const data = response.data.data as NasAccessInfo
       // cache nas access info
-      data.key = StringUtility.filterPublicKey(data.key)
+      if (!_.isEmpty(data.key)) {
+        data.key = StringUtility.filterPublicKey(data.key)
+      }
       this.$store.dispatch('NasServer/updateNasAccess', data)
       // cache nas info 
       this.$store.dispatch('NasServer/updateNasInfo', this.selectNas)

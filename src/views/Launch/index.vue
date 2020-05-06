@@ -39,6 +39,9 @@ export default Vue.extend({
       if (_.isEmpty(this.nasInfo) || _.isEmpty(this.accessInfo)) {
         return ValidatorResult.notBind
       }
+      if (_.isEmpty(this.accessInfo.key)) {
+        return ValidatorResult.notBind
+      }
       return ValidatorResult.pass
     },
     handleValidatorResult (result: ValidatorResult) {

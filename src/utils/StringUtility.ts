@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import { ResourceType } from '../api/NasFileModel'
+import crypto from 'crypto'
 
 //  字串处理工具类
 export default {
@@ -69,7 +70,6 @@ export default {
   // 加密密码规则
   // recursion 递归次数
   encryptPassword (password: string, recursion: number = 2) {
-    const crypto = require('crypto')
     const md5 = crypto.createHash("md5")
     const ciphertext = md5.update(password).digest('hex')
     if (recursion === 1) return ciphertext
