@@ -17,6 +17,7 @@
 </template>
 
 <script>
+import processCenter, { EventName } from '../../utils/processCenter'
 export default {
 	name: 'cd-drag-head',
 	props: {
@@ -85,6 +86,7 @@ export default {
 		},
 		close() {
 			this.$store.dispatch('Transform/saveTransInfo'); // 关窗口时，对上传下载的store进行保存
+			processCenter.renderSend(EventName.photo);
 			(this.data.close && this.data.close()) || this.win.close();
 		},
 		restore() {

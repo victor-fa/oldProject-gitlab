@@ -64,15 +64,14 @@ export default Vue.extend({
       return _.get(myThis.user, 'userName', '')
     },
     imageUrl: function () {
-      const myThis: any = this
-      return myThis.user.image
+      return this.user.image
     },
     ...mapGetters('User', ['user'])
   },
   methods: {
     didSettingItemClick (sender: Setting) {
       const _this = this as any
-      this.visible = false
+      _this.visible = false
       switch (sender.type) {
         case SettingType.system:
           _this.$ipc.send('system', 'setting', '');
@@ -84,7 +83,7 @@ export default Vue.extend({
           _this.$ipc.send('system', 'feedback', '');
           break
         case SettingType.logout:
-          this.switchUser()
+          _this.switchUser()
           break
         case SettingType.switching_device:
           console.log('切换设备');

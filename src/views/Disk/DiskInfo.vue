@@ -141,6 +141,7 @@ export default {
 		font-size: 16px;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		text-align: left;
 	}
 }
 .cd-disk-info-item {
@@ -173,6 +174,7 @@ export default {
     overflow: hidden;
     text-overflow: ellipsis;
 		cursor: pointer;
+    text-align: left;
 	}
 	input {
 		width: calc(100% - 160px);

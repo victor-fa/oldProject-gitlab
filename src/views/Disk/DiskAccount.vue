@@ -17,7 +17,7 @@
 				</div>
 				<div class="cd-user-line">
 					<label>邮箱：</label>
-					<p>{{ User.email }} <br></p>
+					<p :title="'邮箱变更，请到系统设置中进行修改'" style="cursor: pointer">{{ User.email }} <br></p>
 				</div>
 				<div class="cd-user-line">
 					<label>手机：</label>
@@ -34,7 +34,7 @@
 					</a-select>
 				</div>
 				<div class="cd-user-head" onclick="this.childNodes[0].click()">
-					<a-input type="file" name="userhead" @change="preview()" ref="file" />
+					<a-input type="file" name="userhead" @change="changePhoto()" ref="file" />
 				</div>
 				<div class="cd-user-line" style="height: 72px;">
 					<label>说说:</label>
@@ -95,7 +95,7 @@ export default {
 	},
 	methods: {
 		moment,
-		preview() {
+		changePhoto () {
 			this.UploadSrc = false;
 			let elm = event.target;
 			let user_pic = elm.value;
@@ -114,6 +114,7 @@ export default {
 					this.loading = false;
 					if (response.data.code !== 200) return
 					this.User.image = response.data.data.imageUrl
+					this.$message.success('修改头像成功')
 					this.$store.dispatch('User/updateUser', this.User)
 				}).catch(error => {
 					this.loading = false;
@@ -283,7 +284,7 @@ export default {
 	-o-transition: all 0.35s;
 }
 .cd-user-head:hover {
-	box-shadow: 0 0 29px -2px #06B650;
+	box-shadow: 0 0 29px -2px #ffffff;
 	cursor: pointer;
 	-webkit-transition: all 0.35s;
 	-moz-transition: all 0.35s;

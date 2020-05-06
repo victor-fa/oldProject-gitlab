@@ -61,6 +61,9 @@ export default {
     win.show()
     win.focus()
   },
+  refreshWindow (win: BrowserWindow): void {
+    win.reload()
+  },
   closeOtherWindow (window: BrowserWindow): void {
     const wins = BrowserWindow.getAllWindows()
     for (let index = 0; index < wins.length; index++) {
@@ -228,5 +231,10 @@ export default {
       processCenter.mainSend(mediaWindow!, MainEventName.mediaInfo, data)
     })
     return mediaWindow
+  },
+  refreshHomeWindow () {
+    if (homeWindow !== null) {
+      this.refreshWindow(homeWindow)
+    }
   }
 }
