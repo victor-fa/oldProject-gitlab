@@ -7,6 +7,7 @@ import { UploadParams } from '../NasFileModel'
 import FileHandle, { FileHandleError } from '../../utils/FileHandle'
 import { AxiosResponse, Canceler } from 'axios'
 import { BasicResponse } from '../UserModel'
+import StringUtility from '../../utils/StringUtility'
 
 const maxChunkSize = 1 * 1024 * 1024 // 单次读取的最大字节数
 
@@ -190,7 +191,11 @@ export default class UploadTask extends EventEmitter {
     }).then(response => {
       console.log(response)
       if (response.data.code !== 200) {
-        completionHandler(undefined, new UploadError(UploadErrorCode.uploadInnerError))
+        if (response.data.code === 4050) {
+          console.log('文件已存在');
+        } else {
+          completionHandler(undefined, new UploadError(UploadErrorCode.uploadInnerError))
+        }
         return
       }
       file.uploadedSize += chunkLength
@@ -200,7 +205,7 @@ export default class UploadTask extends EventEmitter {
       if (error instanceof UploadError) {
         completionHandler(undefined, error as UploadError)
       } else {
-        completionHandler(undefined, new UploadError(UploadErrorCode.networkError))
+        // completionHandler(undefined, new UploadError(UploadErrorCode.networkError))
       }
     })
   }
@@ -208,7 +213,7 @@ export default class UploadTask extends EventEmitter {
   private generateUploadParams (fileInfo: FileInfo, chunkLength: number): UploadParams {
     return {
       uuid: this.uuid,
-      path: this.destPath + fileInfo.name,
+      path: this.destPath + '/' + StringUtility.formatName(fileInfo.name.replace(new RegExp("\\\\", "g"), '/')),
       start: fileInfo.uploadedSize,
       end: fileInfo.uploadedSize + chunkLength - 1,
       size: fileInfo.totalSize

@@ -974,7 +974,7 @@ export default {
 				} else {
 					let newArr:any = []
 					res.list.forEach(item => {
-						if (StringUtility.suffixToTpe(StringUtility.formatSuffix(item.path)) === myThis.currentType) { newArr.push(item) }
+						if (StringUtility.suffixToType(StringUtility.formatSuffix(item.path)) === myThis.currentType) { newArr.push(item) }
 					})
 					myThis.UserDiskData = newArr
 				}
@@ -1024,7 +1024,7 @@ export default {
 				} else {
 					let newArr:any = []
 					res.files.forEach(item => {
-						if (StringUtility.suffixToTpe(StringUtility.formatSuffix(item.path)) === myThis.currentType) { newArr.push(item) }
+						if (StringUtility.suffixToType(StringUtility.formatSuffix(item.path)) === myThis.currentType) { newArr.push(item) }
 					})
 					myThis.UserDiskData = newArr
 				}
@@ -1067,7 +1067,7 @@ export default {
 				} else {
 					let newArr:any = []
 					res.files.forEach(item => {
-						if (StringUtility.suffixToTpe(StringUtility.formatSuffix(item.path)) === myThis.currentType) { newArr.push(item) }
+						if (StringUtility.suffixToType(StringUtility.formatSuffix(item.path)) === myThis.currentType) { newArr.push(item) }
 					})
 					myThis.UserDiskData = newArr
 				}
@@ -1093,7 +1093,7 @@ export default {
 				} else {
 					let newArr:any = []
 					res.list.forEach(item => {
-						if (StringUtility.suffixToTpe(StringUtility.formatSuffix(item.path)) === myThis.currentType) { newArr.push(item) }
+						if (StringUtility.suffixToType(StringUtility.formatSuffix(item.path)) === myThis.currentType) { newArr.push(item) }
 					})
 					myThis.UserDiskData = newArr
 				}

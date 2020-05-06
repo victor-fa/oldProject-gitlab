@@ -4,11 +4,11 @@
     v-bind:class="{ 'transport-item-odd': isOdd }"
   >
     <a-layout-sider class="icon-wrapper" :width="58">
-      <img :src="searchResourceIcon(model.type)" class="item-icon">
+      <img :src="searchResourceIcon(model)" class="item-icon">
     </a-layout-sider>
     <a-layout-content class="content">
       <div class="content-top">
-        <span>{{ model.sourcePath }}</span>
+        <span>{{ model.srcPath }}</span>
         <div>
           <custom-button
             v-for="(item, index) in showItems"
@@ -26,17 +26,17 @@
       <div v-if="!isCompleted" class="content-bottom">
         <a-progress
           class="progress"
-          :percent="model.progressPercent"
+          :percent="(model.uploadedBytes / model.countOfBytes) * 100"
           :showInfo="false"
           :strokeColor="'#06B650'"
           :strokeWidth="6"
-          :title="model.progressPercent + '%'"
+          :title="(model.uploadedBytes / model.countOfBytes) * 100 + '%'"
         />
-        <span class="speed">{{ model.speed }}</span>
-        <span class="progress-value">{{ model.progress }}</span>
+        <span class="speed">{{ model.countOfBytes | formatSpeed }}</span>
+        <span class="progress-value">{{ model.uploadedBytes | formatShowSize }} / {{ model.countOfBytes | formatShowSize }}</span>
       </div>
       <div v-else class="completed-content-bottom">
-        <span>{{ model.total }}</span>
+        <span>{{ model.countOfBytes }}</span>
       </div>
     </a-layout-content>
   </a-layout>
@@ -76,8 +76,24 @@ export default Vue.extend({
       return (this.model as TransportModel).status === TransportStatus.completed
     }
   },
+  filters: {
+    formatShowSize: function (num) {
+      return StringUtility.formatShowSize(num)
+    },
+    formatSpeed: function (num) {
+      return StringUtility.formatSpeed(num)
+    }
+  },
   methods: {
-    searchResourceIcon (type: ResourceType) {
+    searchResourceIcon (item) {
+      console.log(item);
+      const suffix = StringUtility.formatSuffix(item.srcPath)
+      let type:any = 0
+      if (item.fileInfos.length === 1) {
+        type = StringUtility.suffixToType(suffix, 'number')
+      } else {
+        type = 6
+      }
       return ResourceHandler.searchResourceIcon(type)
     },
     handleOperationAction (index: number) {
@@ -155,7 +171,7 @@ export default Vue.extend({
         text-align: right;
         font-size: 11px;
         color: #484848;
-        width: 80px;
+        width: 90px;
       }
     }
     .completed-content-bottom {

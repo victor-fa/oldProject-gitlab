@@ -22,7 +22,7 @@ import { ResourceItem, OrderType, UploadTimeSort } from '../../api/NasFileModel'
 import ResourceHandler from '../MainView/ResourceHandler'
 import NasFileAPI from '../../api/NasFileAPI'
 import { backupContextMenu, backupResourceContextMenu } from '../../components/OperateListAlter/operateList'
-import { uploadQueue } from '../../api/Transport/TransportQueue'
+import { backupUploadQueue } from '../../api/Transport/TransportQueue'
 import UploadTask from '../../api/Transport/UploadTask'
 
 export default Vue.extend({
@@ -100,7 +100,7 @@ export default Vue.extend({
       console.log(this.path, this.uuid);
       filePaths.forEach(path => {
         const task = new UploadTask(path, this.path, this.uuid)
-        uploadQueue.addTask(task)
+        backupUploadQueue.addTask(task)
       })
     }
   }

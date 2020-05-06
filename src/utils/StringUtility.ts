@@ -75,9 +75,10 @@ export default {
     if (recursion === 1) return ciphertext
     return this.encryptPassword(ciphertext, --recursion)
   },
-  // 后缀转对应类型
-  suffixToTpe (suffix) {
+  // 后缀转对应类型，支持转换成枚举类型
+  suffixToType (suffix, type?) {
     let res = 'unkonw';
+    let resNum = 0
     if (['mp4', 'rmvb', 'mkv'].indexOf(suffix) > -1) {
       res = 'video';
     } else if (['m4a', 'mp3', 'ogg', 'flac', 'f4a', 'wav', 'ape'].indexOf(suffix) > -1) {
@@ -88,6 +89,11 @@ export default {
       res = 'txt';
     } else if (suffix === 'pdf') {
       res = 'pdf';
+    }
+    if (type === 'number') {
+      const arr = ['unknown', 'video', 'audio', 'image', 'document', 'archive', 'folder']
+      resNum = arr.indexOf(res)
+      return resNum
     }
     return res
   },
@@ -140,5 +146,19 @@ export default {
   filterRepeatPath(arr) {
     const res = new Map()
     return arr.filter(item => !res.has(item.path) && res.set(item.path, 1))
-  }
+  },
+  // 格式化速度
+  formatSpeed (speed: number) {
+    const kByte = 1024
+    const mByte = kByte * 1024
+    const gByte = mByte * 1024
+    if (speed < kByte) {
+      return `${(speed).toFixed(2)}B/s`
+    } else if (speed < mByte) {
+      return `${(speed / kByte).toFixed(2)}K/s`
+    } else if (speed < gByte) {
+      return `${(speed / mByte).toFixed(2)}M/s`
+    } 
+    return `${(speed / gByte).toFixed(2)}G/s`
+  },
 }

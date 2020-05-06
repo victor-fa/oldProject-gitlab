@@ -149,8 +149,12 @@ class UploadQueue extends EventEmitter {
 }
 
 const uploadQueue = new UploadQueue()
+const backupUploadQueue = new UploadQueue()
+const encryptUploadQueue = new UploadQueue()
 
 export {
   UploadQueue,
-  uploadQueue
+  uploadQueue,
+  backupUploadQueue,
+  encryptUploadQueue
 }

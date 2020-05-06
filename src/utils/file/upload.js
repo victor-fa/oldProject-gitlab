@@ -81,6 +81,7 @@ export default {
 		let blobFrom = Math.round(chunk * eachSize); // 分段开始
 		let blobTo = (chunk + 1) * eachSize > totalSize ? totalSize : Math.round((chunk + 1) * eachSize); // 分段结尾
 		item.chunk = blobTo;
+		console.log(fileName);
 		let data = {
 			uuid: this.uuid,	// 动态获取uuid
 			path: '/.ugreen_nas/' + this.getUgreenNo() + '/' + fileName,

@@ -56,11 +56,11 @@ export default Vue.extend({
 			return require(`../../assets/resource/${type}_icon.png`);
 		},
 		getTypeNam(data) {
-			let typeName = 'unkonw'
+			let typeName:any = 'unkonw'
 			if (data.type === 6 || data.myself_folder) {
 				typeName = 'folder'
 			} else {
-				typeName = StringUtility.suffixToTpe(StringUtility.formatSuffix(data.path))
+				typeName = StringUtility.suffixToType(StringUtility.formatSuffix(data.path))
 			}
 			return typeName
 		}
