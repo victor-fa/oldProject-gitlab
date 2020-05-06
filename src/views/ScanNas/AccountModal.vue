@@ -3,6 +3,12 @@
     <div class="content">
       <div class="header">
         <span>本地登录</span>
+        <custom-button
+          class="qrcode-btn"
+          :image="qrcode"
+          iconWidth="18px"
+          @click.native="handleQrcodeLogin"
+        />
       </div>
       <div class="body">
         <a-input placeholder="请输入本地账号" v-model="account"/>
@@ -19,14 +25,19 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
+import CustomButton from '../../components/CustomButton/index.vue'
 
 export default Vue.extend({
   name: 'account-modal',
+  components: {
+    CustomButton
+  },
   data () {
     return {
       visible: false,
       account: '',
-      password: ''
+      password: '',
+      qrcode: require('../../assets/qrcode_icon.png')
     }
   },
   methods: {
@@ -51,6 +62,9 @@ export default Vue.extend({
         this.hide()
         this.$emit('offlienLogin', this.account, this.password)
       }
+    },
+    handleQrcodeLogin () {
+      this.$emit('qrcodeLogin')
     }
   }
 })
@@ -73,10 +87,17 @@ export default Vue.extend({
     overflow: hidden;
     background-color: white;
     .header {
+      position: relative;
       margin: 20px 0px;
       color: #353535;
       font-size: 16px;
       font-weight: bold;
+      .qrcode-btn {
+        vertical-align: middle;
+        position: absolute;
+        right: 20px;
+        top: 3px;
+      }
     }
     .body {
       padding: 15px 20px 25px;

@@ -26,6 +26,7 @@
       <account-modal
         ref="accountModal"
         v-on:offlienLogin="handleOfflineLogin"
+        v-on:qrcodeLogin="handleQrcodeLogin"
       />
     </div>
   </div>
@@ -60,7 +61,7 @@ export default Vue.extend({
       nasList: [] as NasInfo[],
       selectNas: {} as NasInfo,
       connectLoading: false,
-      type: this.$route.params.type
+      type: this.$route.query.type
     }
   },
   computed: {
@@ -98,19 +99,15 @@ export default Vue.extend({
     didSelectItem (index: number) {
       const item = this.nasList[index]
       this.selectNas = item
-      const deviceInfo = this.isBindDevice(item)
-      if (deviceInfo === null) { // 当前设备未绑定
-        this.notBindConnect(item)
-      } else { // 当前设备已绑定
-        if (this.type === 'offlineLogin') { // 离线登录
-          const accountModal = this.$refs.accountModal as any
-          accountModal.show()
-        } else { // 在线登录
-          this.boundContent(deviceInfo)
-        }
+      if (this.type === 'offlineLogin') {
+        const accountModal = this.$refs.accountModal as any
+        accountModal.show()
+      } else {
+        const nas = this.isBindDevice(item)
+        nas === null ? this.notBindConnect(item) : this.boundContent(nas)
       }
     },
-    /** 判断当前设备用户是否已绑定 */
+    // 判断当前设备用户是否已绑定
     isBindDevice (nas: NasInfo) {
       const boundDevices = this.nasDevices as DeviceInfo[]
       for (let index = 0; index < boundDevices.length; index++) {
@@ -159,6 +156,14 @@ export default Vue.extend({
       const basrUrl = `http://${this.selectNas.ip}:${this.selectNas.port}`
       ClientAPI.setBaseUrl(basrUrl)
       this.offlineLogin(account, password)
+    },
+    handleQrcodeLogin () {
+      const basrUrl = `http://${this.selectNas.ip}:${this.selectNas.port}`
+      ClientAPI.setBaseUrl(basrUrl)
+      this.$router.push({
+        name: 'qr-code-login',
+        params: { type: 'offline' }
+      })
     },
     handleBackAction () {
       if (this.type === 'offlineLogin') {

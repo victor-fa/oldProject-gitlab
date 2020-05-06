@@ -55,8 +55,8 @@ export default Vue.extend({
         this.loading = false
         if (response.data.code !== 200) return
         this.deviceList = _.get(response.data.data, 'userDevices') as DeviceInfo[]
+        // cache device list
         this.$store.dispatch('User/updateNasDevices', this.deviceList)
-        // TODO: 列表为空的场景还没有处理
       }).catch((error: any) => {
         console.log(error)
         this.loading = false
@@ -109,7 +109,7 @@ export default Vue.extend({
     addAction () {
       this.$router.push({
         name: 'scan-nas',
-        params: { type: 'addDevice' }
+        query: { type: 'addDevice' }
       })
     },
     handleListClick () {

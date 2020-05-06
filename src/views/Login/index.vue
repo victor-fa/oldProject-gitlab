@@ -140,7 +140,7 @@ export default Vue.extend({
         if (result.response !== 0) return
         this.$router.push({
           name: 'scan-nas',
-          params: { type: 'offlineLogin' }
+          query: { type: 'offlineLogin' }
         })
       })
     },

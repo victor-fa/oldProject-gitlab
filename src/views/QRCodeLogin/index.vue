@@ -53,7 +53,8 @@ export default Vue.extend({
       return show
     },
     backTitle () {
-      return this.$route.params.type === 'offline' ? '账号密码登录' : '扫描列表'
+      const isOffline = (this.qrCodeType === QRCodeType.offline) as boolean
+      return isOffline ? '账号密码登录' : '扫描列表'
     }
   },
   mounted () {
@@ -64,7 +65,11 @@ export default Vue.extend({
   },
   methods: {
     backBtnClick () {
-      router.go(-1)
+      if (this.qrCodeType === QRCodeType.offline) {
+        this.$router.replace('login')
+      } else {
+        this.$router.go(-1)
+      }
     },
     handleRefresh () {
       this.fetchQrCode()
