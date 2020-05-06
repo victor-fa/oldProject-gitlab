@@ -56,6 +56,7 @@ import WindowsHeader from '../../components/Disk/WindowHeader.vue'
 import { USER_MODEL } from '../../common/constants'
 import UserAPI from '../../api/UserAPI'
 import StringUtility from '../../utils/StringUtility'
+import processCenter, { EventName } from '../../utils/processCenter'
 import { mapGetters } from 'vuex'
 import moment from 'moment';
 export default {
@@ -115,6 +116,7 @@ export default {
 					if (response.data.code !== 200) return
 					this.User.image = response.data.data.imageUrl
 					this.$message.success('修改头像成功')
+					processCenter.renderSend(EventName.account);
 					this.$store.dispatch('User/updateUser', this.User)
 				}).catch(error => {
 					this.loading = false;
@@ -165,6 +167,7 @@ export default {
 				this.codeVisiable = false
 				this.User = response.data.data.userVO
 				this.getAge()
+				processCenter.renderSend(EventName.account);
         this.$message.success('修改成功')
       }).catch(error => {
         console.log(error)

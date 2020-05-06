@@ -16,7 +16,7 @@ enum EventName {
   file = 'present_file',
   mediaInfo = 'media_info',
   jump = 'jump_to_localtion',
-  photo = 'photo_info'
+  account = 'account_info'
 }
 
 // use in main process
@@ -44,7 +44,7 @@ export default {
         case EventName.mediaInfo:
           windowManager.presentMediaWindow(args[0])
           break
-        case EventName.photo:
+        case EventName.account:
           windowManager.refreshHomeWindow()
           break
         default:
