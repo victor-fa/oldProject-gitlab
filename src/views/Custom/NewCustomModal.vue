@@ -49,6 +49,7 @@ export default Vue.extend({
       desc: '',
       loading: false,
       imageObj: null as object | null,
+      imageData: '',
       item: null as CustomModule | null
     }
   },
@@ -56,14 +57,6 @@ export default Vue.extend({
     showCover: function () {
       const result: boolean = _.isEmpty(this.imageData)
       return result
-    },
-    imageData: function () {
-      if (this.imageObj === null) {
-        return ''
-      } else {
-        const obj = this.imageObj as any
-        return _.get(obj, 'imageData')
-      }
     }
   },
   methods: {
@@ -97,6 +90,7 @@ export default Vue.extend({
         const path = result.filePaths[0]
         ImageUtility.getImageBase64(path).then(data => {
           this.imageObj = data
+          this.imageData = _.get(data, 'imageData')
         })
       })
     },
@@ -139,7 +133,9 @@ export default Vue.extend({
         if (response.data.code !== 200) return Promise.reject(response.data.msg)
         const path = _.get(response.data.data, 'path')
         const uuid = _.get(response.data.data, 'uuid')
-        return NasFileAPI.uploadCustomCover(path, uuid, this.imageData)
+        const data = _.get(this.imageObj, 'base64')
+        console.log(data)
+        return NasFileAPI.uploadCustomCover(path, uuid, data)
       }).then(response => {
         this.loading = false
         console.log(response)
@@ -169,7 +165,8 @@ export default Vue.extend({
           const msg = 'not change'
           return Promise.reject(msg)
         }
-        return NasFileAPI.uploadCustomCover(path, uuid, this.imageData)
+        const data = _.get(this.imageObj, 'base64')
+        return NasFileAPI.uploadCustomCover(path, uuid, data)
       }).then(response => {
         this.loading = false
         console.log(response)
