@@ -1,6 +1,6 @@
 import { RemoteTask, RemoteTaskStatus } from '@/api/NasFileModel';
 import { TransportModel } from './MainPage/TransportModel';
-import { TransportStatus } from '@/model/categoryList';
+import { UploadStatus } from '@/model/categoryList';
 import { ResourceType } from '../../api/NasFileModel'
 
 export default {
@@ -17,11 +17,11 @@ export default {
       destinationPath: model.curr_dst_path 
     }
   },
-  convertRemoteTaskStatus (status: RemoteTaskStatus): TransportStatus {
+  convertRemoteTaskStatus (status: RemoteTaskStatus): number {
     if (status === RemoteTaskStatus.completed || status === RemoteTaskStatus.error) {
-      return TransportStatus.completed
+      return UploadStatus.completed
     }
-    return TransportStatus.running
+    return UploadStatus.uploading
   },
   convertBackupTask (model): TransportModel {
     let total_size = 0
@@ -45,8 +45,8 @@ export default {
       destinationPath: model.path
     }
   },
-  convertBackupTaskStatus (total_chunk: number, total_size: number): TransportStatus {
-    return total_chunk / total_size === 1 ? TransportStatus.completed : TransportStatus.running
+  convertBackupTaskStatus (total_chunk: number, total_size: number): number {
+    return total_chunk / total_size === UploadStatus.uploading ? UploadStatus.completed : UploadStatus.uploading
   },
   formatSpeed (speed: number) {
     const kByte = 1024

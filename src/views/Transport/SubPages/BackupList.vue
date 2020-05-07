@@ -25,7 +25,7 @@
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
 import TransportItem from '../MainPage/TransportItem.vue'
-import { backupCategorys, TransportStatus } from '../../../model/categoryList'
+import { backupCategorys, UploadStatus } from '../../../model/categoryList'
 import uploadBackup from '../../../utils/file/uploadBackup';
 import StringUtility from '../../../utils/StringUtility'
 import ClientAPI from '../../../api/ClientAPI'
@@ -217,7 +217,7 @@ export default Vue.extend({
         })
         backupCategorys[0].count = 0
         this.dataArray.forEach((item:any) => {
-          if (item.status === TransportStatus.running) {
+          if (item.status === UploadStatus.uploading) {
             backupCategorys[0].count += 1
           }
         })

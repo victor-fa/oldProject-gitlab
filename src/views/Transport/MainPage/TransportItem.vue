@@ -36,7 +36,7 @@
         <span class="progress-value">{{ model.uploadedBytes | formatShowSize }} / {{ model.countOfBytes | formatShowSize }}</span>
       </div>
       <div v-else class="completed-content-bottom">
-        <span>{{ model.countOfBytes }}</span>
+        <span>{{ model.countOfBytes | formatShowSize }}</span>
       </div>
     </a-layout-content>
   </a-layout>
@@ -49,7 +49,7 @@ import { ResourceType } from '../../../api/NasFileModel'
 import ResourceHandler from '../../../views/MainView/ResourceHandler'
 import CustomButton from '../../../components/CustomButton/index.vue'
 import StringUtility from '../../../utils/StringUtility'
-import { TransportStatus } from '../../../model/categoryList'
+import { UploadStatus } from '../../../model/categoryList'
 import { runningOperateItems, completedOperateItems, pauseItem, continueItem, TransportModel } from './TransportModel'
 
 export default Vue.extend({
@@ -62,7 +62,7 @@ export default Vue.extend({
     index: Number
   },
   data () {
-    let items = this.model.status === TransportStatus.running ? runningOperateItems : completedOperateItems
+    let items = this.model.status === UploadStatus.pending || this.model.status === UploadStatus.uploading ? runningOperateItems : completedOperateItems
     return {
       showItems: _.cloneDeep(items)
     }
@@ -73,7 +73,7 @@ export default Vue.extend({
       return _this.index % 2
     },
     isCompleted: function () {
-      return (this.model as TransportModel).status === TransportStatus.completed
+      return (this.model as TransportModel).status === UploadStatus.completed
     }
   },
   filters: {

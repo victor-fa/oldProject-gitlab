@@ -1,4 +1,4 @@
-import { TransportStatus } from '@/model/categoryList'
+import { UploadStatus } from '@/model/categoryList'
 import { ResourceType } from '@/api/NasFileModel'
 
 interface TransportOpItem {
@@ -59,7 +59,7 @@ const completedOperateItems: TransportOpItem[] = [
 // TransportItem.vue对应的数据模型
 interface TransportModel {
   id: number,
-  status: TransportStatus, // 任务状态
+  status: UploadStatus, // 任务状态
   type: ResourceType, // 资源类型
   speed: string, // 展示的速度
   total: string, // 总数

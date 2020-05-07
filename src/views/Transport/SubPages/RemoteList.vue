@@ -21,7 +21,7 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
-import { remoteCategorys, TransportStatus } from '../../../model/categoryList'
+import { remoteCategorys, UploadStatus } from '../../../model/categoryList'
 import { ResourceType, RemoteTask, RemoteTaskStatus } from '../../../api/NasFileModel'
 import TransportItem from '../MainPage/TransportItem.vue'
 import NasFileAPI from '../../../api/NasFileAPI'
@@ -128,12 +128,12 @@ export default Vue.extend({
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    filterDataArray (status: TransportStatus) {
+    filterDataArray (status: UploadStatus) {
       return this.dataArray.filter(item => {
         return item.status === status
       })
     },
-    updateCategoryCount (status: TransportStatus) {
+    updateCategoryCount (status: UploadStatus) {
       this.categorys = this.categorys.map(aItem => {
         if (aItem.status === status) {
           aItem.count = this.showArray.length

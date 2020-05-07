@@ -39,6 +39,14 @@ class UploadQueue extends EventEmitter {
     this.checkUploadQueue()
     this.emit('removeTask', _.cloneDeep(task))
   }
+  /**暂停任务 */
+  suspendTask (task: UploadTask) {
+    task.suspend()
+  }
+  /**继续任务 */
+  resumeTask (task: UploadTask) {
+    task.resume()
+  }
   /**刷新任务，当上传出错时，调用此接口刷新任务 */
   reloadTask (task: UploadTask) {
     const index = this.queue.indexOf(task)

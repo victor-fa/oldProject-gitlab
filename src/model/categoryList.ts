@@ -20,14 +20,9 @@ enum TaskCategoryType {
   remote = 'remote'
 }
 
-enum TransportStatus {
-  running = 'runing',
-  completed = 'compoleted'
-}
-
 interface TransportCategory {
   name: string,
-  status: TransportStatus,
+  status: UploadStatus,
   count: number,
   isSelected: boolean
 }
@@ -90,24 +85,31 @@ let taskCategorys: Category[] = [
   }
 ]
 
+enum UploadStatus {
+  pending,
+  uploading,
+  completed,
+  error
+}
+
 // 传输条目分类
 const downloadCategorys: TransportCategory[] = [
-  { name: '正在下载', status: TransportStatus.running, count: 0, isSelected: true },
-  { name: '下载完成', status: TransportStatus.completed, count: 0, isSelected: false }
+  { name: '正在下载', status: UploadStatus.uploading, count: 0, isSelected: true },
+  { name: '下载完成', status: UploadStatus.completed, count: 0, isSelected: false }
 ]
 
 const uploadCategorys: TransportCategory[] = [
-  { name: '正在上传', status: TransportStatus.running, count: 0, isSelected: true },
-  { name: '上传完成', status: TransportStatus.completed, count: 0, isSelected: false }
+  { name: '正在上传', status: UploadStatus.uploading, count: 0, isSelected: true },
+  { name: '上传完成', status: UploadStatus.completed, count: 0, isSelected: false }
 ]
 
 const backupCategorys: TransportCategory[] = [
-  { name: '正在备份', status: TransportStatus.running, count: 0, isSelected: true }
+  { name: '正在备份', status: UploadStatus.uploading, count: 0, isSelected: true }
 ]
 
 const remoteCategorys: TransportCategory[] = [
-  { name: '正在进行', status: TransportStatus.running, count: 0, isSelected: true },
-  { name: '操作完成', status: TransportStatus.completed, count: 0, isSelected: false }
+  { name: '正在进行', status: UploadStatus.uploading, count: 0, isSelected: true },
+  { name: '操作完成', status: UploadStatus.completed, count: 0, isSelected: false }
 ]
 
 export {
@@ -121,5 +123,5 @@ export {
   uploadCategorys,
   backupCategorys,
   remoteCategorys,
-  TransportStatus
+  UploadStatus
 }
