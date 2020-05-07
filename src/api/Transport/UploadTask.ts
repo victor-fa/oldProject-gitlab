@@ -195,6 +195,7 @@ export default class UploadTask extends EventEmitter {
       }
       file.uploadedSize += chunkLength
       completionHandler(chunkLength)
+      if (file.uploadedSize < file.totalSize) this.uploadFileChunk(fd, file, completionHandler)
     }).catch(error => {
       if (error instanceof UploadError) {
         completionHandler(undefined, error as UploadError)
@@ -205,7 +206,6 @@ export default class UploadTask extends EventEmitter {
   }
   // 生成上传参数
   private generateUploadParams (fileInfo: FileInfo, chunkLength: number): UploadParams {
-    console.log(fileInfo);
     return {
       uuid: this.uuid,
       path: this.destPath + fileInfo.name,

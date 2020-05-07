@@ -40,7 +40,7 @@ import NasDeviceList from './NasDeviceList.vue'
 import AuthCodeModal from './AuthCodeModal.vue'
 import AccountModal from './AccountModal.vue'
 import ClientAPI from '../../api/ClientAPI'
-import { NasInfo, NasActive, NasAccessInfo } from '../../api/ClientModel'
+import { NasInfo, NasActive, NasAccessInfo, NasUser } from '../../api/ClientModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 import { User, BasicResponse, DeviceRole, DeviceInfo } from '../../api/UserModel'
 import router from '../../router'
@@ -177,7 +177,19 @@ export default Vue.extend({
       console.log('begin bind user to nas')
       this.connectLoading = true
       ClientAPI.bindUser(this.user, authCode).then(response => {
-        this.handleConnectSuccess(response)
+        console.log(response)
+        this.connectLoading = false
+        if (response.data.code !== 200) return
+        const data = response.data.data as NasAccessInfo
+        // cache nas access info
+        data.key = StringUtility.filterPublicKey(data.key)
+        this.$store.dispatch('NasServer/updateNasAccess', data)
+        // cache nas info 
+        this.$store.dispatch('NasServer/updateNasInfo', this.selectNas)
+        // cache new bind nas device
+        this.$store.dispatch('User/addNasDevice', this.selectNas)
+        // switch home window
+        processCenter.renderSend(EventName.home)
       }).catch(error => {
         this.handleConnectFailure(error)
       })
@@ -187,10 +199,33 @@ export default Vue.extend({
       const encryptPwd = StringUtility.encryptPassword(password)
       this.connectLoading = true
       ClientAPI.offlineLogin(account, encryptPwd).then(response => {
-        this.handleConnectSuccess(response)
+        console.log(response)
+        this.connectLoading = false
+        if (response.data.code !== 200) return
+        const nasInfo = response.data.data as NasAccessInfo
+        // cache nas access info
+        this.$store.dispatch('NasServer/updateNasAccess', nasInfo)
+        // cache nas info 
+        this.$store.dispatch('NasServer/updateNasInfo', this.selectNas)
+        // cache user info
+        const user = this.convertUser(nasInfo.data)
+        this.$store.dispatch('User/updateUser', user)
+        // switch home window
+        processCenter.renderSend(EventName.home)
       }).catch(error => {
         this.handleConnectFailure(error)
       })
+    },
+    convertUser (nasUser: NasUser) {
+      return {
+        birthday: nasUser.birthday,
+        email: nasUser.email,
+        nickName: nasUser.nic_name,
+        phoneNo: nasUser.phone_no,
+        sex: nasUser.sex,
+        ugreenNo: nasUser.ugreen_no,
+        versionNo: nasUser.version
+      } as User
     },
     checkCacheUser () {
       if (_.isEmpty(this.user)) {
@@ -199,23 +234,6 @@ export default Vue.extend({
         return false
       }
       return true
-    },
-    handleConnectSuccess (response: AxiosResponse<BasicResponse>) {
-      console.log(response)
-      this.connectLoading = false
-      if (response.data.code !== 200) return
-      const data = response.data.data as NasAccessInfo
-      // cache nas access info
-      if (!_.isEmpty(data.key)) {
-        data.key = StringUtility.filterPublicKey(data.key)
-      }
-      this.$store.dispatch('NasServer/updateNasAccess', data)
-      // cache nas info 
-      this.$store.dispatch('NasServer/updateNasInfo', this.selectNas)
-      // cache new bind nas device
-      this.$store.dispatch('User/addNasDevice', this.selectNas)
-      // switch home window
-      processCenter.renderSend(EventName.home)
     },
     handleConnectFailure (error) {
       console.log(error)

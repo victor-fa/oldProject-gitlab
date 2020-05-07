@@ -41,7 +41,7 @@ interface NasUser {
   nic_name: string,
   email: string,
   sex: UserSex,
-  birthday: string,
+  birthday: number,
   role: number,
   status: number,
   version: number,

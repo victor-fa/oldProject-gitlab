@@ -24,8 +24,8 @@
         @contextmenu.stop.exact="contextMenuClick($event, index)"
       >
         <img :src="item.myself_folder.image_path">
-        <span class="custom-name">{{ item.myself_folder.name }}</span>
-        <span class="custom-desc">{{ item.myself_folder.desc }}</span>
+        <p class="custom-name">{{ item.myself_folder.name }}</p>
+        <p class="custom-desc">{{ item.myself_folder.desc }}</p>
       </div>
     </template>
     </main-view>
@@ -104,7 +104,6 @@ export default Vue.extend({
       }
       image_path += '/v1/file/http_download?'
       image_path += `uuid=${item.uuid}&path=${item.myself_folder.background_path}&api_token=${api_token}`
-      console.log(image_path)
       item.myself_folder.image_path = image_path
     },
     showCustomModal (item?: CustomModule) {
@@ -126,6 +125,9 @@ export default Vue.extend({
     },
     doubleClick (index: number) {
       const item = this.dataArray[index]
+      this.pushResourceList(item)
+    },
+    pushResourceList (item: CustomModule) {
       const name = item.myself_folder.name
       this.$router.push({
         name: 'main-resource-view',
@@ -145,6 +147,14 @@ export default Vue.extend({
     // 覆盖混入中的方法
     handleRefreshAction () {
       this.fetchCustomList()
+    },
+    handleOpenAction () {
+      const items = this.dataArray.filter(item => {
+        return item.isSelected === true
+      })
+      if (_.isEmpty(items)) return
+      const item = items[0]
+      this.pushResourceList(item)
     },
     handleNewCustomAction () {
       console.log('newCustom')
@@ -182,9 +192,6 @@ interface PageConfig {
 .custom-item {
   width: 132px;
   height: 107px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
   background-color: #f6f8fb;
   border-radius: 5px;
   img {
@@ -195,18 +202,26 @@ interface PageConfig {
   }
   .custom-name {
     color: #353535;
+    text-align: left;
     font-size: 10px;
     font-weight: bolder;
-    padding-left: 10px;
-    line-height: 9px;
+    margin: 0px 7px;
+    line-height: 10px;
+    margin-bottom: 0px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
   .custom-desc {
     color: #b3b6c5;
     font-size: 8px;
-    font-weight: bold;
-    padding-left: 9px;
-    padding-top: 4px;
     line-height: 9px;
+    font-weight: bold;
+    margin: 4px 7px 0px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
   }
 }
 .custom-selected-item {

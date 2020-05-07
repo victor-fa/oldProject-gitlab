@@ -16,12 +16,14 @@ class UploadQueue extends EventEmitter {
   constructor () {
     super()
     this.queue = []
-    this.parseCache()
+    // this.parseCache()
   }
   // upload methods
+  /**获取全部任务 */
   getAllTasks () {
     return this.queue
   }
+  /**添加新的任务 */
   addTask (task: UploadTask) {
     task.index = this.queue.length
     this.queue.push(task)
@@ -29,13 +31,15 @@ class UploadQueue extends EventEmitter {
     this.checkUploadQueue()
     this.emit('addTask', _.cloneDeep(task))
   }
-  cancelTask (task: UploadTask) {
+  /**删除任务 */
+  deleteTask (task: UploadTask) {
     task.cancel()
     this.queue = this.removeTask(task)
     this.cacheQueue()
     this.checkUploadQueue()
     this.emit('removeTask', _.cloneDeep(task))
   }
+  /**刷新任务，当上传出错时，调用此接口刷新任务 */
   reloadTask (task: UploadTask) {
     const index = this.queue.indexOf(task)
     const newTask = new UploadTask(task.srcPath, task.destPath, task.uuid)
@@ -47,7 +51,7 @@ class UploadQueue extends EventEmitter {
   }
   // private methods
   // 检测队列并开始新的上传任务
-  checkUploadQueue () {
+  private checkUploadQueue () {
     const uploadingQueue = this.getUploadingQueue()
     if (uploadingQueue.length < this.maxCount) {
       for (let index = 0; index < this.queue.length; index++) {
@@ -61,20 +65,28 @@ class UploadQueue extends EventEmitter {
     }
   }
   // 获取正在上传中的任务队列
-  getUploadingQueue () {
+  private getUploadingQueue () {
     return this.queue.filter(item => {
       return item.status === UploadStatus.uploading
     })
   }
   // 监听上传任务的回调
-  observerTask (task: UploadTask) {
-    task.on('progress', this.handleTaskProcess)
-    task.on('fileFinished', this.handleFileFinished)
-    task.once('taskFinished', this.handleTaskFinished)
-    task.once('error', this.handleTaskError)
+  private observerTask (task: UploadTask) {
+    task.on('progress', (index: number) => {
+      this.handleTaskProcess(index)
+    })
+    task.on('fileFinished', (index: number, fileInfo: FileInfo) => {
+      this.handleFileFinished(index, fileInfo)
+    })
+    task.once('taskFinished', (index: number) => {
+      this.handleTaskFinished(index)
+    })
+    task.once('error', (index: number, error: UploadError) => {
+      this.handleTaskError(index, error)
+    })
   }
   // 移除task,并更新其它任务的标识符
-  removeTask (task: UploadTask) {
+  private removeTask (task: UploadTask) {
     const index = task.index
     return this.queue.filter((task, aIndex) => {
       if (aIndex === index) return false
@@ -83,22 +95,22 @@ class UploadQueue extends EventEmitter {
     })
   }
   // 上传任务状态改变就同步到本地缓存
-  cacheQueue () {
-    if (this.queue.length === 0) return Promise.resolve()
-    return new Promise((resolve) => {
-      if (_.isEmpty(this.queue)) {
-        localStorage.removeItem(UPLOAD_QUEUE)
-        resolve()
-        return
-      }
-      // TODO： 任务队列应该使用数据库缓存，目前使用localStorage缓存，性能很差
-      const json = JSON.stringify(this.queue)
-      localStorage.setItem(UPLOAD_QUEUE, json)
-      resolve()
-    })
+  private cacheQueue () {
+    // TODO： 任务队列应该使用数据库缓存，目前使用localStorage缓存，性能很差
+    // if (this.queue.length === 0) return Promise.resolve()
+    // return new Promise((resolve) => {
+    //   if (_.isEmpty(this.queue)) {
+    //     localStorage.removeItem(UPLOAD_QUEUE)
+    //     resolve()
+    //     return
+    //   }
+    //   const json = JSON.stringify(this.queue)
+    //   localStorage.setItem(UPLOAD_QUEUE, json)
+    //   resolve()
+    // })
   }
   // 解析并添加缓存的队列
-  parseCache () {
+  private parseCache () {
     const json = localStorage.getItem(UPLOAD_QUEUE)
     if (json === null) return
     const queue = JSON.parse(json) as UploadTask[]
@@ -112,23 +124,24 @@ class UploadQueue extends EventEmitter {
       return newTask
     })
   }
+  // protected methods
   // handle upload task callback
-  handleTaskProcess (index: number) {
+  protected handleTaskProcess (index: number) {
     const task = this.queue[index]
     this.emit('progress', _.cloneDeep(task))
   }
-  handleFileFinished (index: number, fileInfo: FileInfo) {
+  protected handleFileFinished (index: number, fileInfo: FileInfo) {
     const task = this.queue[index]
     this.emit('fileFinished', _.cloneDeep(task), fileInfo)
     this.cacheQueue()
   }
-  handleTaskFinished (index: number) {
+  protected handleTaskFinished (index: number) {
     const task = this.queue[index]
     this.checkUploadQueue()
     task.removeAllListeners()
     this.emit('taskFinished', _.cloneDeep(task))
   }
-  handleTaskError (index: number, error: UploadError) {
+  protected handleTaskError (index: number, error: UploadError) {
     const task = this.queue[index]
     task.removeAllListeners()
     this.emit('error', _.cloneDeep(task), error)
