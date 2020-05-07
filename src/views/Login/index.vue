@@ -249,7 +249,7 @@ export default Vue.extend({
         font-weight: bold;
         border: none;
         border-radius: 20px;
-        background-image: linear-gradient(to right, #29cb7a, #4de9b9);
+        background-color: #2CD18A;
       }
     }
     .register-button {

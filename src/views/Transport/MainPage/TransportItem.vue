@@ -8,7 +8,7 @@
     </a-layout-sider>
     <a-layout-content class="content">
       <div class="content-top">
-        <span>{{ model.srcPath }}</span>
+        <span>{{ model.srcPath | formatSrcPath }}</span>
         <div>
           <custom-button
             v-for="(item, index) in showItems"
@@ -82,7 +82,10 @@ export default Vue.extend({
     },
     formatSpeed: function (num) {
       return StringUtility.formatSpeed(num)
-    }
+    },
+    formatSrcPath: function (srcPath) {
+      return StringUtility.formatSrcPath(srcPath)
+    },
   },
   methods: {
     searchResourceIcon (item) {

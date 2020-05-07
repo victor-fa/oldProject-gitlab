@@ -63,7 +63,7 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { secure: tru
 function createWindow () {
 	// Create the browser window.
   win = new BrowserWindow({ 
-		width: 900,
+		width: 420,
     height: 610,
     icon: './src/assets/logo.png',
     frame: false,

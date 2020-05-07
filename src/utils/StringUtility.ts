@@ -36,6 +36,11 @@ export default {
     const name = _.last(path.split('/'))
     return name === undefined ? '' : name
   },
+  // 格式化文件名
+  formatSrcPath (path: string) {
+    const name = _.last(path.split('\\'))
+    return name === undefined ? '' : name
+  },
   // 文件后缀
   formatSuffix (path: string) {
     const name = _.last(path.split('.'))

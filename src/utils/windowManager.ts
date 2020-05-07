@@ -22,7 +22,7 @@ export default {
       height: 600,
 			icon: './src/assets/logo.png',
       minWidth: 600,
-      minHeight: 450,
+      minHeight: 420,
       title: packageInfo.name,
       useContentSize: false,
       transparent: false,
@@ -77,7 +77,7 @@ export default {
     } else {
       loginWindow = this.createWindow({
         path,
-        width: 450,
+        width: 420,
         height: 610,
         title: '登录',
         resizable: true

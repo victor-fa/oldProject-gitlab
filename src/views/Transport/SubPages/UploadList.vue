@@ -28,6 +28,7 @@ import { mapGetters } from 'vuex'
 import upload from '../../../utils/file/upload'
 import TransportItem from '../MainPage/TransportItem.vue'
 import { uploadQueue } from '../../../api/Transport/TransportQueue'
+import { EventBus, EventType } from '../../../utils/eventBus'
 
 export default Vue.extend({
   name: 'upload-list',
@@ -45,8 +46,19 @@ export default Vue.extend({
   created () {
     this.resetSelected()
     this.getListData()
+    this.observerEventBus()
   },
   methods: {
+    observerEventBus () {
+      const myThis = this as any
+      EventBus.$on('fileFinished', (task, fileInfo) => {
+        console.log(task);
+        console.log(fileInfo);
+      })
+      EventBus.$on('progress', index => {
+        console.log(index);
+      })
+    },
     // handle views action
     handleCategoryChange (index: number) {  // 切换"正在上传"、"上传完成"
       this.state = index
