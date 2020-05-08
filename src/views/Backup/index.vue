@@ -94,14 +94,6 @@ export default Vue.extend({
       this.page = 1
       this.busy = false
       this.fetchBackupList()
-    },
-    handleUploadAction (filePaths: string[]) {
-      console.log(filePaths);
-      console.log(this.path, this.uuid);
-      filePaths.forEach(path => {
-        const task = new UploadTask(path, this.path, this.uuid)
-        backupUploadQueue.addTask(task)
-      })
     }
   }
 })

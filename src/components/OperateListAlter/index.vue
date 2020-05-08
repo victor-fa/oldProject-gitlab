@@ -231,6 +231,7 @@ const dialogCommands = ['download', 'upload', 'uploadFile', 'uploadFolder']
         border-top: 1px solid #acacb7;
         position: absolute;
         width: 79px;
+        background-color: #fff;
       }
     }
   }

@@ -72,7 +72,12 @@ export default class UploadTask extends EventEmitter {
     }).catch(_ => {
       this.handlerUploadError(UploadErrorCode.readStatError)
     })
+<<<<<<< HEAD
   } 
+=======
+    return fileInfos
+  }
+>>>>>>> 暂存代码
   // 获取需要上传的文件对象
   private getUploadFileInfos (stats: fs.Stats): Promise<FileInfo[]> {
     return new Promise((resolve, reject) => {
@@ -88,6 +93,7 @@ export default class UploadTask extends EventEmitter {
       }
     })
   }
+<<<<<<< HEAD
   // 深遍历目录文件
   private deepTraverseDirectory (directory: string): Promise<FileInfo[]> {
     return new Promise((resolve, reject) => {
@@ -109,6 +115,17 @@ export default class UploadTask extends EventEmitter {
         resolve(fileInfos)
       })
     })
+=======
+  // 转换stats
+  private convertFileStats (path: string, stats: fs.Stats): FileInfo {
+    const name = StringUtility.formatName(StringUtility.formatSrcPath(path))
+    return {
+      path,
+      name,
+      totalSize: stats.size,
+      uploadedSize: 0,
+    }
+>>>>>>> 暂存代码
   }
   // 计算待上传文件的总大小
   private calculatorUploadFileSize () {
@@ -223,7 +240,7 @@ export default class UploadTask extends EventEmitter {
   private generateUploadParams (fileInfo: FileInfo, chunkLength: number): UploadParams {
     return {
       uuid: this.uuid,
-      path: this.destPath + '/' + StringUtility.formatName(fileInfo.name.replace(new RegExp("\\\\", "g"), '/')),
+      path: this.destPath + '/' + fileInfo.name,
       start: fileInfo.uploadedSize,
       end: fileInfo.uploadedSize + chunkLength - 1,
       size: fileInfo.totalSize

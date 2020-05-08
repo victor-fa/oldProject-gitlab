@@ -194,6 +194,7 @@ interface PageConfig {
   height: 107px;
   background-color: #f6f8fb;
   border-radius: 5px;
+  cursor: pointer;
   img {
     margin: 5px;
     width: 122px;
@@ -222,6 +223,7 @@ interface PageConfig {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
+    text-align: left;
   }
 }
 .custom-selected-item {

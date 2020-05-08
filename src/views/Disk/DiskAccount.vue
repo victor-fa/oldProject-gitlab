@@ -1,15 +1,9 @@
 <template>
 	<div class="cd-user-main">
 		<WindowsHeader :data="header" />
-		<div class="cd-user-left">
-			<div class="cd-user-right-info">
-				<img draggable="false" :src="UploadSrc ? UploadSrc : User.image" alt="" />
-				<p class="name">{{ User.nicName }}</p>
-				<p class="age">{{ User.sex === 0 ? '男' : '女' }}{{ User.age }}</p>
-			</div>
-		</div>
 		<div class="cd-user-right">
 			<p class="cd-user-title">个人信息</p>
+			<img draggable="false" :src="UploadSrc ? UploadSrc : User.image" alt="" />
 			<form @submit.prevent="onSubmit" ref="form">
 				<div class="cd-user-line">
 					<label>昵称：</label>
@@ -25,7 +19,7 @@
 				</div>
 				<div class="cd-user-line">
 					<label>生日：</label>
-					<a-date-picker :defaultValue="moment(User.birthday ? User.birthday : new Date(), dateFormat)" @change="onChange" style="width: calc(100% - 50px)" :format="dateFormat" />
+					<a-date-picker :defaultValue="moment(User.birthday ? new Date(User.birthday) : new Date(), dateFormat)" @change="onChange" style="width: calc(100% - 50px)" :format="dateFormat" />
 				</div>
 				<div class="cd-user-line">
 					<label>性别：</label>
@@ -81,7 +75,7 @@ export default {
 				resize: false,
 				color: '#000'
 			},
-			dateFormat: 'YYYYMMDD',
+			dateFormat: 'YYYY/MM/DD',
 			codeVisiable: false,
 			code: ''
 		};
@@ -89,7 +83,6 @@ export default {
 	created() {
 		this.User = this.user
 		console.log(JSON.parse(JSON.stringify(this.User)));
-		this.getAge()
 	},
 	computed: {
 		...mapGetters('User', ['user']),
@@ -102,14 +95,10 @@ export default {
 			let user_pic = elm.value;
 			if (user_pic.length > 1 && user_pic) {
 				let type = StringUtility.formatSuffix(user_pic).toLowerCase();
-				console.log(type);
-				console.log(['png', 'jpg', 'jpeg', 'bmp', 'gif'].indexOf(type));
 				if (['png', 'jpg', 'jpeg', 'bmp', 'gif'].indexOf(type) === -1) {
 					return this.$message.error('所选格式为' + type + ' 请重新选择上传的文件');
 				}
 				elm.files && elm.files[0] ? (this.UploadSrc = window.URL.createObjectURL(elm.files[0])) : '';
-				console.log(this.UploadSrc);
-				console.log(elm.files[0]);
 				this.loading = true;
 				UserAPI.uploadPhoto(elm.files[0]).then(response => {
 					this.loading = false;
@@ -147,7 +136,7 @@ export default {
 				sex: this.User.sex,
 				nicName: this.User.nicName ? this.User.nicName : '',
 				userSay: this.User.userSay ? this.User.userSay : '',
-				birthday: this.User.birthday ? this.User.birthday : '',
+				birthday: this.User.birthday ? (new Date(this.User.birthday)).getTime() : '',
 				phoneNo: this.User.phoneNo ? this.User.phoneNo : '',
 				code: this.code
 			}
@@ -179,15 +168,7 @@ export default {
 			return false;
 		},
 		onChange(date, dateString) {
-			console.log(dateString);
 			this.User.birthday = dateString
-		},
-		getAge() {
-			// if (!this.User.birthday) return
-			// var birthday = new Date(this.User.birthday.substring(0, this.User.birthday.indexOf(' ')).replace(/-/g, "\/"));
-			// console.log(birthday);
-			// var d = new Date(); 
-			// this.User.age = '，' + d.getFullYear() - birthday.getFullYear() - (((d.getMonth()<birthday.getMonth() || d.getMonth() === birthday.getMonth()) && d.getDate()<birthday.getDate()) ? 1 : 0) + '岁';
 		}
 	}
 };
@@ -200,16 +181,6 @@ export default {
 	height: 100%;
 	background: #fff;
 }
-.cd-user-left {
-	float: left;
-	width: 50%;
-	height: 100%;
-	background: url('../../assets/logo_bg.png');
-	background-position: -60px 0;
-	margin-top: -30px;
-	background-size: cover;
-	background-color: #4996ed;
-}
 .cd-user-right-info {
 	width: 100%;
 	height: 150px;
@@ -218,21 +189,21 @@ export default {
 }
 .cd-user-right {
 	float: left;
-	width: 50%;
+	width: 100%;
 	height: 100%;
 	background: #fff;
 	padding: 0 20px 20px;
 	color: #000;
 }
-.cd-user-right-info img {
-	width: 100px;
-	height: 100px;
+.cd-user-right img {
+	width: 70px;
+	height: 70px;
 	border-radius: 100px;
 	margin-bottom: 15px;
 	-webkit-border-radius: 100px;
 	-moz-border-radius: 100px;
 }
-.cd-user-right-info img:hover {
+.cd-user-right img:hover {
 	opacity: 0.5;
 	cursor: pointer;
 }
@@ -275,11 +246,11 @@ export default {
 	margin-right: 8px;
 }
 .cd-user-head {
-	width: 100px;
-	height: 100px;
+	width: 70px;
+	height: 70px;
 	position: absolute;
-	left: 118px;
-	top: 135px;
+	left: 133px;
+	top: 75px;
 	overflow: unset;
 	border-radius: 100%;
 	-webkit-transition: all 0.35s;

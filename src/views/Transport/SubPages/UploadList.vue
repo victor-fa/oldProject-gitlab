@@ -36,7 +36,7 @@ export default Vue.extend({
     return {
       dataArray: [] as any,
       category: uploadCategorys,
-      state: 0
+      state: UploadStatus.pending
     }
   },
   created () {
@@ -157,7 +157,7 @@ export default Vue.extend({
     // inner private methods
     handleItemAction(command: string, ...args: any[]) {
       const item:any = this.dataArray[args[0]]
-      console.log(item);
+      console.log(JSON.parse(JSON.stringify(item)));
       const _this = this as any
       switch (command) {
         case 'cancel':  // 取消

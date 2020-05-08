@@ -242,8 +242,8 @@ let DiskSystem = {
 			data: data,
 			icon: './src/assets/logo.png',
 			title: '个人信息',
-			width: 670,
-			height: 420,
+			width: 335,
+			height: 500,
 			maximizable: false,
 			resizable: false,
 			onclose: () => {
