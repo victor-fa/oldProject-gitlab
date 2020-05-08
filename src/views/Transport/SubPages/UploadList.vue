@@ -146,12 +146,12 @@ export default Vue.extend({
     getListData () {
       const list = uploadQueue.getAllTasks()
       console.log(JSON.parse(JSON.stringify(list)));
-      uploadCategorys[0].count = list.filter(item => (item.status === UploadStatus.pending || item.status === UploadStatus.uploading || item.status === UploadStatus.error)).length  // 正在上传
-      uploadCategorys[1].count = list.filter(item => item.status === UploadStatus.completed).length  // 上传完成
+      uploadCategorys[0].count = list.filter(item => (item.status === 0 || item.status === 1 || item.status === 3)).length  // 正在上传
+      uploadCategorys[1].count = list.filter(item => item.status === 2).length  // 上传完成
       if (this.state === UploadStatus.pending) {
-        this.dataArray = list.filter(item => item.status === UploadStatus.pending || item.status === UploadStatus.uploading || item.status === UploadStatus.error)
+        this.dataArray = list.filter(item => item.status === 0 || item.status === 1 || item.status === 3)
       } else {
-        this.dataArray = list.filter(item => item.status === UploadStatus.completed)
+        this.dataArray = list.filter(item => item.status === 2)
       }
     },
     // inner private methods

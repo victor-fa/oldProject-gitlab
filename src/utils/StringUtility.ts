@@ -31,6 +31,14 @@ export default {
     // filter enter
     return this.replaceString(newSecretKey, '/n', '')
   },
+  // 左斜撇转右斜撇
+  convertL2R (path: string) {
+    return path.replace(/\//g, '\\')
+  },
+  // 右斜撇转左斜撇
+  convertR2L (path: string) {
+    return path.replace(new RegExp("\\\\", "g"), '/')
+  },
   // 格式化文件名
   formatName (path: string) {
     const name = _.last(path.split('/'))
@@ -150,7 +158,7 @@ export default {
   // 去重相同path
   filterRepeatPath(arr) {
     const res = new Map()
-    return arr.filter(item => !res.has(item.path) && res.set(item.path, 1))
+    return arr.filter(item => !res.has(item.srcPath) && res.set(item.srcPath, 1))
   },
   // 格式化速度
   formatSpeed (speed: number) {

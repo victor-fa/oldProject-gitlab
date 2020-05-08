@@ -89,7 +89,6 @@ export default Vue.extend({
   },
   methods: {
     searchResourceIcon (item) {
-      console.log(item);
       const suffix = StringUtility.formatSuffix(item.srcPath)
       let type:any = 0
       if (item.fileInfos.length === 1) {

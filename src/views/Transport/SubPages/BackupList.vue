@@ -8,8 +8,8 @@
     >
       <template v-slot:renderItem="{ item, index}">
         <transport-item
-          :ref="'renderItem' + item.id"
-          :key="item.id"
+          :ref="'renderItem' + item.srcPath"
+          :key="item.srcPath"
           :model="item"
           :index="index"
           v-on:operationAction="handleItemAction"
@@ -21,13 +21,18 @@
 
 <script lang="ts">
 import _ from 'lodash' 
+import fs from 'fs'
 import Vue from 'vue'
+import crypto from 'crypto'
 import MainPage from '../MainPage/index.vue'
 import { backupCategorys, UploadStatus } from '../../../model/categoryList'
 import TransportItem from '../MainPage/TransportItem.vue'
 import { backupUploadQueue } from '../../../api/Transport/TransportQueue'
 import StringUtility from '../../../utils/StringUtility'
 import UploadTask from '../../../api/Transport/UploadTask'
+import BackupUploadTask from '../../../api/Transport/BackupUploadTask'
+import NasFileAPI from '../../../api/NasFileAPI'
+import ClientAPI from '../../../api/ClientAPI'
 
 export default Vue.extend({
   name: 'backup-list',
@@ -54,7 +59,6 @@ export default Vue.extend({
   },
   created () {
     this.getListData()
-    // this.hostname = require("os").hostname();  // 获取主机名
     backupUploadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
       setTimeout(() => { this.getListData() }, 1000);
     })
@@ -65,16 +69,13 @@ export default Vue.extend({
       const _this = this as any
       switch (command) {
         case 'pauseAll':  // 全部暂停
-          // this.pauseAllTrans()
+          this.pauseAllTrans()
           break;
         case 'resumeAll':  // 全部开始
-          // this.resumeAllTrans()
+          this.resumeAllTrans()
           break;
         case 'cancelAll': // 全部取消
-          // this.cancelAllTrans()
-          break;
-        case 'clearAll': // 清除所有记录
-          // this.clearAllTrans()
+          this.cancelAllTrans()
           break;
         case 'backupFolder': // 上传文件夹
           this.showOpenDialog()
@@ -84,6 +85,58 @@ export default Vue.extend({
       }
     },
     // inner private methods
+    pauseAllTrans() { // 全部暂停
+      const _this = this as any
+      let pauseCount = 0
+      _this.dataArray.forEach(item => item.status === UploadStatus.uploading ? pauseCount++ : null)
+      if (pauseCount === 0) {
+        _this.$message.warning('无可暂停任务')
+      }
+      _this.dataArray.forEach(item => {
+        if (item.status === UploadStatus.uploading) {
+          backupUploadQueue.suspendTask(item)
+          item.status = UploadStatus.pending
+          const refKey = 'renderItem' + item.srcPath
+          const cell: any = this.$refs[refKey]
+          cell.setOperateItemDisable('pause', true)
+          cell.updatePauseItem()
+        }
+      });
+      setTimeout(() => { _this.getListData() }, 1000);
+    },
+    resumeAllTrans() {  // 全部开始
+      const _this = this as any
+      let resumeCount = 0
+      _this.dataArray.forEach(item => item.status === UploadStatus.pending ? resumeCount++ : null)
+      if (resumeCount === 0) {
+        _this.$message.warning('无可开始任务')
+      }
+      _this.dataArray.forEach(item => {
+        if (item.status === UploadStatus.pending) {
+          backupUploadQueue.resumeTask(item)
+          item.status = UploadStatus.uploading
+          const refKey = 'renderItem' + item.srcPath
+          const cell: any = this.$refs[refKey]
+          cell.setOperateItemDisable('continue', true)
+          cell.updateContinueItem()
+        }
+      });
+      setTimeout(() => { _this.getListData() }, 1000);
+    },
+    cancelAllTrans() { // 取消所有
+      const _this = this as any
+      let cancelCount = 0
+      _this.dataArray.forEach(item => item.status === UploadStatus.pending || item.status === UploadStatus.uploading ? cancelCount++ : null)
+      if (cancelCount === 0) {
+        _this.$message.warning('无可取消任务')
+      }
+      _this.dataArray.forEach(item => {
+        if (item.status === UploadStatus.pending || item.status === UploadStatus.uploading) {
+          backupUploadQueue.deleteTask(item)
+        }
+      });
+      setTimeout(() => { _this.getListData() }, 1000);
+    },
     handleItemAction(command: string, ...args: any[]) {
       const item:any = this.dataArray[args[0]]
       console.log(item);
@@ -125,6 +178,7 @@ export default Vue.extend({
           break;
       }
     },
+    // 打开上传界面
     showOpenDialog () {
       const { dialog, BrowserWindow } = require('electron').remote
       const list = ['createDirectory', 'openDirectory', 'multiSelections']
@@ -142,122 +196,52 @@ export default Vue.extend({
         })
       })
     },
+    calculatorFileMD5 (path: string): string {
+      const buffer = fs.readFileSync(path)
+      const fsHash = crypto.createHash('md5')
+      fsHash.update(buffer)
+      return fsHash.digest('hex')
+    },
     getListData () {
       const list = backupUploadQueue.getAllTasks()
       console.log(JSON.parse(JSON.stringify(list)));
-      backupCategorys[0].count = list.filter(item => (item.status === UploadStatus.pending || item.status === UploadStatus.uploading || item.status === UploadStatus.error)).length  // 正在上传
-      if (this.state === UploadStatus.pending) {
-        this.dataArray = list.filter(item => item.status === UploadStatus.pending || item.status === UploadStatus.uploading || item.status === UploadStatus.error)
-      } else {
-        this.dataArray = list.filter(item => item.status === UploadStatus.completed)
-      }
-
-      // // console.log(JSON.parse(JSON.stringify(this.backupInfo)));
-      // if (this.backupInfo.length === 0) return
-      // this.$nextTick(() => {
-      //   let filesArr:any = [];
-      //   let arr = this.backupInfo
-      //   arr.forEach(item => {
-      //     if (filesArr.length > 0) {
-      //       filesArr.forEach((cell, index) => {
-      //         if (StringUtility.pathDirectory(item.path.replace(new RegExp("\\\\", "g"), '/')) === cell.path) {
-      //           cell.files.forEach((unit, index2, self) => {
-      //             if (unit.path === item.path) {
-      //               unit = item
-      //             } else {
-      //               self.push(item)
-      //             }
-      //           })
-      //           cell.files = StringUtility.filterRepeatPath(cell.files)	// 去重
-      //         } else {
-      //           let temp = { files: [] as any, path: '' }
-      //           temp.files.push(item)
-      //           temp.path = StringUtility.pathDirectory(item.path.replace(new RegExp("\\\\", "g"), '/'))
-      //           filesArr.push(temp)
-      //           filesArr = StringUtility.filterRepeatPath(filesArr)	// 去重
-      //         }
-      //       })
-      //     } else {
-      //       let temp = { files: [] as any, path: '' }
-      //       temp.files.push(item)
-      //       temp.path = StringUtility.pathDirectory(item.path.replace(new RegExp("\\\\", "g"), '/'))
-      //       filesArr.push(temp)
-      //     }
-      //   })
-      //   // console.log(JSON.parse(JSON.stringify(filesArr)));
-      //   this.dataArray = filesArr.map(item => {
-      //     return TransportHandler.convertBackupTask(item)
-      //   })
-      //   backupCategorys[0].count = 0
-      //   this.dataArray.forEach((item:any) => {
-      //     if (item.status === UploadStatus.uploading) {
-      //       backupCategorys[0].count += 1
-      //     }
-      //   })
-      //   console.log(JSON.parse(JSON.stringify(this.dataArray)));
-      // })
+      backupCategorys[0].count = list.filter(item => (item.status === 0 || item.status === 1 || item.status === 3)).length
+      this.dataArray = StringUtility.filterRepeatPath(list)
     },
-		// PrepareUploadFile(data: any) {
-    //   // let finalPath = data.target.files[0].path.split('\\')
-    //   // finalPath.pop()
-    //   // console.log(finalPath.join('/'));
-    //   // this.checkFile(finalPath.join('/'))
-
-    //   const _this = this as any
-		// 	uploadBackup.prepareFile(data.target, { // 备份上传
-    //     data: _this.hostname + ClientAPI.getMac(),
-		// 		add: file => {
-    //       _this.transBackupData.push(file);
-    //       console.log(JSON.parse(JSON.stringify(file)));
-    //       console.log(_this.transBackupData);
-		// 		},
-		// 		success: (file, response) => {
-    //       const rs = response.data;
-    //       console.log(response);
-		// 			if (rs.code !== 200) {
-		// 				if (rs.code === '4050') {
-		// 					_this.$message.warning('文件已存在')
-		// 				} else {
-		// 					_this.$message.warning(rs.msg)
-		// 				}
-		// 				return
-    //       }
-    //       _this.$store.dispatch('Transform/updateTransBackupInfo', _this.transBackupData)
-    //       _this.getListData()
-		// 			_this.$message.success('文件上传成功！')
-    //       _this.$ipc.send('system', 'popup', file.name + '上传完成');
-		// 		}
-		// 	});
-    // },
-    // checkFile (flagPath) {
-    //   var fs = require('fs');
-    //   var path = require('path');
-    //   var filePath = path.resolve(flagPath);
-    //   const _this = this
-    //   fs.readdir(filePath, (err, files) => {
-    //     if (err) {
-    //       console.warn(err)
-    //     } else {
-    //       files.forEach((filename) => {
-    //         var filedir = path.join(filePath, filename);
-    //         fs.readFile(filedir, (err, data) => {
-    //           if (err) {
-    //             _this.checkFile(filedir)  // 递归获取
-    //           } else {
-    //             fs.stat(filedir, (err, stats) => {
-    //               // console.log(stats);
-    //               let file = new File([stats], filename, {
-    //                 lastModified: stats.mtime
-    //               })
-    //               // console.log(file);
-    //               // console.log(filedir.replace(new RegExp("\\\\", "g"), '/'));
-    //             });
-    //           }
-    //         });
-    //       });
-    //     }
-    //   })
-    // },
+    checkFile (flagPath) {
+      return new Promise((resolve, reject) => {
+        var fs = require('fs');
+        var path = require('path');
+        var filePath = path.resolve(flagPath);
+        const _this = this
+        var arr = []
+        fs.readdir(filePath, (err, files) => {
+          if (err) {
+            console.warn(err)
+          } else {
+            files.forEach((filename) => {
+              var filedir = path.join(filePath, filename);
+              fs.readFile(filedir, (err, data) => {
+                if (err) {
+                  _this.checkFile(filedir)  // 递归获取
+                } else {
+                  fs.stat(filedir, (err, stats) => {
+                    // console.log(stats);
+                    let file = new File([stats], filename, {
+                      lastModified: stats.mtime
+                    })
+                    // console.log(file);
+                    console.log(filedir);
+                    console.log(filedir.replace(new RegExp("\\\\", "g"), '/'));
+                    resolve(arr)
+                  });
+                }
+              });
+            });
+          }
+        })
+      }) 
+    },
   }
 })
 </script>

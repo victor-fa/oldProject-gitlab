@@ -190,12 +190,14 @@ interface RemoteTask {
 }
 
 interface UploadParams {
-  uuid: string,
+  uuid?: string,
   path: string,
   start: number, 
   end: number, 
   size: number, 
-  md5?: number
+  md5?: string,
+  alias?: string,
+  id?: string
 }
 
 interface CustomModule {
