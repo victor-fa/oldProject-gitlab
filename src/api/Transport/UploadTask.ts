@@ -1,6 +1,7 @@
 // 上传工具类，支持目录和文件上传、断点续传
 import _ from 'lodash'
-import fs from 'fs'
+import fs, { read } from 'fs'
+import crypto from 'crypto'
 import { EventEmitter } from 'events'
 import NasFileAPI from '../NasFileAPI'
 import { UploadParams } from '../NasFileModel'
@@ -9,19 +10,19 @@ import { AxiosResponse, Canceler } from 'axios'
 import { BasicResponse } from '../UserModel'
 import StringUtility from '../../utils/StringUtility'
 
-const maxChunkSize = 1 * 1024 * 1024 // 单次读取的最大字节数
-
 interface FileInfo {
   name: string,
   path: string,
   totalSize: number,
-  uploadedSize: number
+  uploadedSize: number,
+  md5?: string
 }
 
 export default class UploadTask extends EventEmitter {
   readonly srcPath: string
   readonly destPath: string
   readonly uuid: string
+  readonly maxChunkSize = 1 * 1024 * 1024 // 单次读取的最大字节数
   index: number = 0 // 任务标识符
   status: UploadStatus // 上传任务的状态 
   fileInfos: FileInfo[] = [] // 待上传的文件对象
@@ -43,14 +44,14 @@ export default class UploadTask extends EventEmitter {
     // 1. 改变任务状态
     this.status = UploadStatus.uploading
     // 2. 解析当前目录
-    _.isEmpty(this.fileInfos) && (this.fileInfos = await this.parseSourcePath(this.srcPath))
+    _.isEmpty(this.fileInfos) && await this.parseSourcePath(this.srcPath) 
     // 3. 过滤掉空目录
     if (_.isEmpty(this.fileInfos)) {
       this.handlerUploadError(UploadErrorCode.pathError)
       return
     }
     // 4. 计算待上传文件的总大小
-    this.countOfBytes = this.calculatorUploadFileSize()
+    this.calculatorUploadFileSize()
     // 5. 开始递归上传文件
     this.uploadFile()
   }
@@ -70,13 +71,11 @@ export default class UploadTask extends EventEmitter {
   // pricvate methods 
   // 解析文件源路径
   private async parseSourcePath (path: string) {
-    let fileInfos: FileInfo[] = []
     await FileHandle.statFile(path).then(stats => {
-      fileInfos = this.getUploadFileInfos(stats)
+      this.fileInfos = this.getUploadFileInfos(stats)
     }).catch(_ => {
       this.handlerUploadError(UploadErrorCode.readStatError)
     })
-    return fileInfos
   } 
   // 获取需要上传的文件对象
   private getUploadFileInfos (stats: fs.Stats) {
@@ -103,24 +102,16 @@ export default class UploadTask extends EventEmitter {
     })
     return subpaths
   }
-  // 转换stats
-  private convertFileStats (path: string, stats: fs.Stats): FileInfo {
-    const start = this.srcPath.lastIndexOf('/')
-    const name = path.substring(start, path.length)
-    return {
-      path,
-      name,
-      totalSize: stats.size,
-      uploadedSize: 0,
-    }
-  }
   // 计算待上传文件的总大小
   private calculatorUploadFileSize () {
     let totalSize = 0
     this.fileInfos!.forEach(item => {
       totalSize += item.totalSize
+      if (item.uploadedSize > 0) {
+        this.uploadedBytes += item.uploadedSize
+      }
     })
-    return totalSize
+    this.countOfBytes = totalSize
   }
   // 处理上传错误回调
   private handlerUploadError (code: UploadErrorCode) {
@@ -159,7 +150,7 @@ export default class UploadTask extends EventEmitter {
   // 获取待上传的文件对象
   private getUploadFileInfo () {
     for (let index = 0; index < this.fileInfos!.length; index++) {
-      const item = this.fileInfos![index]
+      const item = this.fileInfos[index]
       if (item.uploadedSize < item.totalSize) return item
     }
     return null
@@ -181,32 +172,32 @@ export default class UploadTask extends EventEmitter {
   }
   // 递归读取上传文件块
   private uploadFileChunk (fd: number, file: FileInfo, completionHandler: (bytes?: number, error?: UploadError) => void) {
-    if (this.isCancel) return
     let chunkLength = 0
-    FileHandle.readFile(fd, file.uploadedSize, maxChunkSize).then(buffer => {
+    FileHandle.readFile(fd, file.uploadedSize, this.maxChunkSize).then(buffer => {
       if (this.isCancel) return Promise.reject(UploadErrorCode.cancel)
       chunkLength = buffer.length
-      if (this.isCancel) return Promise.reject(Error('cancel upload task'))
       return this.uploadChunckData(file, buffer, this.cancelRequest)
     }).then(response => {
-      console.log(response)
       if (response.data.code !== 200) {
-        if (response.data.code === 4050) {
-          console.log('文件已存在');
-        } else {
-          completionHandler(undefined, new UploadError(UploadErrorCode.uploadInnerError))
-        }
+        const error = new UploadError(UploadErrorCode.uploadInnerError, response.data.msg)
+        completionHandler(undefined, error)
         return
       }
+      if (this.isCancel) return Promise.reject(UploadErrorCode.cancel)
+      if (response.data.code !== 200) return Promise.reject(UploadErrorCode.uploadInnerError)
       file.uploadedSize += chunkLength
       completionHandler(chunkLength)
       if (file.uploadedSize < file.totalSize) this.uploadFileChunk(fd, file, completionHandler)
     }).catch(error => {
-      if (error instanceof UploadError) {
-        completionHandler(undefined, error as UploadError)
+      let code = UploadErrorCode.unkown
+      if (error === FileHandleError.readError) {
+        code = UploadErrorCode.readDataError
+      } else if (error === UploadErrorCode.cancel || error === UploadErrorCode.uploadInnerError) {
+        code = error
       } else {
-        // completionHandler(undefined, new UploadError(UploadErrorCode.networkError))
+        code = UploadErrorCode.networkError
       }
+      completionHandler(undefined, new UploadError(code))
     })
   }
   // 生成上传参数
@@ -220,6 +211,18 @@ export default class UploadTask extends EventEmitter {
     }
   }
   // protected methods
+  /**转换stats */
+  protected convertFileStats (path: string, stats: fs.Stats): FileInfo {
+    const start = this.srcPath.lastIndexOf('/')
+    const name = path.substring(start, path.length)
+    return {
+      path,
+      name,
+      totalSize: stats.size,
+      uploadedSize: 0,
+    }
+  }
+  /**上传文件数据 */
   protected uploadChunckData (file: FileInfo, buffer: Buffer, cancel?: Canceler): Promise<AxiosResponse<BasicResponse>> {
     const params = this.generateUploadParams(file, buffer.length)
     return NasFileAPI.uploadData(params, buffer, cancel)
@@ -227,21 +230,22 @@ export default class UploadTask extends EventEmitter {
 }
 
 enum UploadErrorCode {
+  unkown = -1,
   openHandleError,
   closeHandleError,
   readStatError,
   readDataError,
-  uploadInnerError,
   networkError,
+  uploadInnerError,
   pathError,
   cancel
 }
 class UploadError {
   code: UploadErrorCode
   desc: string
-  constructor (code: number, json?: string) {
+  constructor (code: number, desc?: string) {
     this.code = code
-    this.desc = this.matchNormalErrorDesc(code)
+    this.desc = desc === undefined ? this.matchNormalErrorDesc(code) : desc
   }
   matchNormalErrorDesc (code: UploadErrorCode) {
     switch (code) {
