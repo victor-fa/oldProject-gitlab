@@ -79,14 +79,15 @@ export default Vue.extend({
     pauseAllTrans() { // 全部暂停
       const _this = this as any
       let pauseCount = 0
-      _this.dataArray.forEach(item => item.status === UploadStatus.uploading ? pauseCount++ : null)
+      const filterArr = [UploadStatus.uploading]
+      _this.dataArray.forEach((item:any) => filterArr.indexOf(item.status) > -1 ? pauseCount++ : null)
       if (pauseCount === 0) {
         _this.$message.warning('无可暂停任务')
       }
-      _this.dataArray.forEach(item => {
-        if (item.status === UploadStatus.uploading) {
+      _this.dataArray.forEach((item:any) => {
+        if (filterArr.indexOf(item.status) > -1) {
           uploadQueue.suspendTask(item)
-          item.status = UploadStatus.pending
+          // item.status = UploadStatus.suspend
           const refKey = 'renderItem' + item.srcPath
           const cell: any = this.$refs[refKey]
           cell.setOperateItemDisable('pause', true)
@@ -98,14 +99,15 @@ export default Vue.extend({
     resumeAllTrans() {  // 全部开始
       const _this = this as any
       let resumeCount = 0
-      _this.dataArray.forEach(item => item.status === UploadStatus.pending ? resumeCount++ : null)
+      const filterArr = [UploadStatus.suspend]
+      _this.dataArray.forEach((item:any) => filterArr.indexOf(item.status) > -1 ? resumeCount++ : null)
       if (resumeCount === 0) {
         _this.$message.warning('无可开始任务')
       }
-      _this.dataArray.forEach(item => {
-        if (item.status === UploadStatus.pending) {
+      _this.dataArray.forEach((item:any) => {
+        if (filterArr.indexOf(item.status) > -1) {
           uploadQueue.resumeTask(item)
-          item.status = UploadStatus.uploading
+          // item.status = UploadStatus.uploading
           const refKey = 'renderItem' + item.srcPath
           const cell: any = this.$refs[refKey]
           cell.setOperateItemDisable('continue', true)
@@ -117,12 +119,15 @@ export default Vue.extend({
     cancelAllTrans() { // 取消所有
       const _this = this as any
       let cancelCount = 0
-      _this.dataArray.forEach(item => item.status === UploadStatus.pending || item.status === UploadStatus.uploading ? cancelCount++ : null)
+      const filterArr = [UploadStatus.pending, UploadStatus.uploading, UploadStatus.suspend]
+      _this.dataArray.forEach((item:any) => filterArr.indexOf(item.status) > -1 ? cancelCount++ : null)
       if (cancelCount === 0) {
         _this.$message.warning('无可取消任务')
       }
-      _this.dataArray.forEach(item => {
-        uploadQueue.deleteTask(item)
+      _this.dataArray.forEach((item:any) => {
+        if (filterArr.indexOf(item.status) > -1) {
+          uploadQueue.deleteTask(item)
+        }
       });
       setTimeout(() => { _this.getListData() }, 1000);
     },
@@ -136,7 +141,7 @@ export default Vue.extend({
         okType: 'danger',
         cancelText: '取消',
         onOk() {
-          _this.dataArray.forEach(item => {
+          _this.dataArray.forEach((item:any) => {
             uploadQueue.deleteTask(item)
           });
           setTimeout(() => { _this.getListData() }, 1000);
@@ -146,12 +151,14 @@ export default Vue.extend({
     getListData () {
       const list = uploadQueue.getAllTasks()
       console.log(JSON.parse(JSON.stringify(list)));
-      uploadCategorys[0].count = list.filter(item => (item.status === 0 || item.status === 1 || item.status === 3)).length  // 正在上传
-      uploadCategorys[1].count = list.filter(item => item.status === 2).length  // 上传完成
+      const filterDoingArr = [UploadStatus.pending, UploadStatus.uploading, UploadStatus.suspend, UploadStatus.error]
+      const filterDoneArr = [UploadStatus.completed]
+      uploadCategorys[0].count = list.filter((item:any) => filterDoingArr.indexOf(item.status) > -1).length  // 正在上传
+      uploadCategorys[1].count = list.filter((item:any) => filterDoneArr.indexOf(item.status) > -1).length  // 上传完成
       if (this.state === UploadStatus.pending) {
-        this.dataArray = list.filter(item => item.status === 0 || item.status === 1 || item.status === 3)
+        this.dataArray = list.filter((item:any) => filterDoingArr.indexOf(item.status) > -1)
       } else {
-        this.dataArray = list.filter(item => item.status === 2)
+        this.dataArray = list.filter((item:any) => filterDoneArr.indexOf(item.status) > -1)
       }
     },
     // inner private methods
@@ -167,16 +174,21 @@ export default Vue.extend({
         case 'pause': // 暂停 开始
           const refKey = 'renderItem' + item.srcPath
           const cell: any = this.$refs[refKey]
-          if (item.status === 1) {
-            uploadQueue.suspendTask(item)
-            item.status = 0
-            cell.setOperateItemDisable('pause', true)
-            cell.updatePauseItem()
-          } else if (item.status === 0) {
+          if (item.status === UploadStatus.suspend) {
             uploadQueue.resumeTask(item)
-            item.status = 1
+            // item.status = UploadStatus.uploading
             cell.setOperateItemDisable('continue', true)
             cell.updateContinueItem()
+          } else if (item.status === UploadStatus.uploading) {
+            uploadQueue.suspendTask(item)
+            // item.status = UploadStatus.suspend
+            cell.setOperateItemDisable('pause', true)
+            cell.updatePauseItem()
+          } else if (item.status === UploadStatus.error) {
+            uploadQueue.resumeTask(item)
+            // item.status = UploadStatus.uploading
+            cell.setOperateItemDisable('error', true)
+            cell.updateErrorItem()
           }
           break;
         case 'jump': // 打开所在文件夹

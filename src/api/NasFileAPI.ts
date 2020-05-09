@@ -382,11 +382,11 @@ export default {
       }
     })
   },
-  backupCheck (options): Promise<AxiosResponse<BasicResponse>> {
+  backupCheck (path: string, md5: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasFileModulePath + '/backup/check', {}, {
       params: {
-        path: options.path,
-        md5: options.md5,
+        path,
+        md5
       },
       headers: {'Accept': '*/*'}
     })

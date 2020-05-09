@@ -7,6 +7,7 @@ import { UploadParams } from '../NasFileModel'
 import FileHandle, { FileHandleError } from '../../utils/FileHandle'
 import axios, { AxiosResponse, CancelTokenSource } from 'axios'
 import { BasicResponse } from '../UserModel'
+import StringUtility from '../../utils/StringUtility'
 
 export default class UploadTask extends EventEmitter {
   readonly srcPath: string
@@ -59,7 +60,6 @@ export default class UploadTask extends EventEmitter {
     this.source.cancel()
   }
   resume () {
-    console.log(132);
     this.status = UploadStatus.uploading
     this.uploadFile()
   }
@@ -94,7 +94,7 @@ export default class UploadTask extends EventEmitter {
     return new Promise((resolve, reject) => {
       let fileInfos: FileInfo[] = []
       fs.readdirSync(directory).forEach(async filename => {
-        const path = directory + '/' + filename
+        const path = StringUtility.convertR2L(directory + '/' + filename)
         const stats = fs.statSync(path)
         if (stats.isDirectory()) {
           await this.deepTraverseDirectory(path).then(files => {
@@ -196,9 +196,7 @@ export default class UploadTask extends EventEmitter {
       } else {
         file.uploadedSize += chunkLength
         completionHandler(chunkLength)
-        setTimeout(() => {
-          if (file.uploadedSize < file.totalSize) this.uploadFileChunk(fd, file, completionHandler)
-        }, 1000);
+        if (file.uploadedSize < file.totalSize) this.uploadFileChunk(fd, file, completionHandler)
       }
     }).catch(error => {
       if (this.status !== UploadStatus.uploading) return
@@ -229,8 +227,7 @@ export default class UploadTask extends EventEmitter {
   /**转换stats */
   protected convertFileStats (path: string, stats: fs.Stats): Promise<FileInfo> {
     return new Promise(resolve => {
-      const start = this.srcPath.lastIndexOf('/')
-      const name = path.substring(start, path.length)
+      const name = StringUtility.formatName(path)
       const fileInfo: FileInfo = {
         path,
         name,

@@ -92,7 +92,7 @@ export default Vue.extend({
     searchResourceIcon (item) {
       const suffix = StringUtility.formatSuffix(item.srcPath)
       let type:any = 0
-      if (item.fileInfos.length === 1) {
+      if (item.fileInfos.length === 1 && item.srcPath.indexOf('.') > -1) {
         type = StringUtility.suffixToType(suffix, 'number')
       } else {
         type = 6
