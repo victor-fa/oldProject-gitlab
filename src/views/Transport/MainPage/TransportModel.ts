@@ -20,6 +20,12 @@ const continueItem: TransportOpItem = {
   command: 'continue',
   iconWidth: '7px'
 }
+const errorItem: TransportOpItem = {
+  icon: require('../../../assets/refresh_icon.png'),
+  hoverIcon: require('../../../assets/refresh_icon_selected.png'),
+  command: 'error',
+  iconWidth: '7px'
+}
 const runningOperateItems: TransportOpItem[] = [
   pauseItem,
   {
@@ -73,6 +79,7 @@ export {
   TransportOpItem,
   pauseItem,
   continueItem,
+  errorItem,
   runningOperateItems,
   completedOperateItems,
   TransportModel

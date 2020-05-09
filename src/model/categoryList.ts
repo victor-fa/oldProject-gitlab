@@ -88,6 +88,7 @@ let taskCategorys: Category[] = [
 enum UploadStatus {
   pending,
   uploading,
+  suspend,
   completed,
   error
 }

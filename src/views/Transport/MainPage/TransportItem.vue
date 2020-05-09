@@ -8,7 +8,7 @@
     </a-layout-sider>
     <a-layout-content class="content">
       <div class="content-top">
-        <span>{{ model.srcPath | formatSrcPath }}</span>
+        <span>{{ model.srcPath | formatSrcPath }}<span style="color: red">{{ model.status === 4 ? '&nbsp;(上传错误)' : null }}</span></span>
         <div>
           <custom-button
             v-for="(item, index) in showItems"
@@ -36,7 +36,7 @@
         <span class="progress-value">{{ model.uploadedBytes | formatShowSize }} / {{ model.countOfBytes | formatShowSize }}</span>
       </div>
       <div v-else class="completed-content-bottom">
-        <span>{{ model.countOfBytes | formatShowSize }}</span>
+        <span>{{ model.uploadedBytes | formatShowSize }}</span>
       </div>
     </a-layout-content>
   </a-layout>
@@ -50,7 +50,7 @@ import ResourceHandler from '../../../views/MainView/ResourceHandler'
 import CustomButton from '../../../components/CustomButton/index.vue'
 import StringUtility from '../../../utils/StringUtility'
 import { UploadStatus } from '../../../model/categoryList'
-import { runningOperateItems, completedOperateItems, pauseItem, continueItem, TransportModel } from './TransportModel'
+import { runningOperateItems, completedOperateItems, pauseItem, continueItem, errorItem, TransportModel } from './TransportModel'
 
 export default Vue.extend({
   name: 'transport-item',
@@ -62,7 +62,8 @@ export default Vue.extend({
     index: Number
   },
   data () {
-    let items = this.model.status === UploadStatus.pending || this.model.status === UploadStatus.uploading ? runningOperateItems : completedOperateItems
+    const filterAarr = [UploadStatus.pending, UploadStatus.uploading, UploadStatus.suspend, UploadStatus.error]
+    let items = filterAarr.indexOf(this.model.status) > -1 ? runningOperateItems : completedOperateItems
     return {
       showItems: _.cloneDeep(items)
     }
@@ -114,11 +115,18 @@ export default Vue.extend({
         return item.command === 'continue' ? pauseItem : item
       })
     },
+    updateErrorItem () {
+      this.showItems = this.showItems.map(item => {
+        item.disable = false
+        return item.command === 'error' ? errorItem : item
+      })
+    },
     setOperateItemDisable (command: string, disable: boolean) {
       this.showItems = this.showItems.map(item => {
         if (item.command === command) item.disable = disable
         return item
       })
+      console.log(this.showItems);
     }
   }
 })
@@ -173,7 +181,7 @@ export default Vue.extend({
         text-align: right;
         font-size: 11px;
         color: #484848;
-        width: 90px;
+        width: 100px;
       }
     }
     .completed-content-bottom {

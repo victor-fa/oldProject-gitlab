@@ -59,6 +59,7 @@ export default class UploadTask extends EventEmitter {
     this.source.cancel()
   }
   resume () {
+    console.log(132);
     this.status = UploadStatus.uploading
     this.uploadFile()
   }
@@ -195,7 +196,9 @@ export default class UploadTask extends EventEmitter {
       } else {
         file.uploadedSize += chunkLength
         completionHandler(chunkLength)
-        if (file.uploadedSize < file.totalSize) this.uploadFileChunk(fd, file, completionHandler)
+        setTimeout(() => {
+          if (file.uploadedSize < file.totalSize) this.uploadFileChunk(fd, file, completionHandler)
+        }, 1000);
       }
     }).catch(error => {
       if (this.status !== UploadStatus.uploading) return

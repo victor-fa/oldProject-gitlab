@@ -24,7 +24,7 @@ class UploadQueue extends EventEmitter {
     return this.queue
   }
   /**添加新的任务 */
-  addTask (task: UploadTask) {
+  addTask (task: any) {
     task.index = this.queue.length
     this.queue.push(task)
     this.cacheQueue()

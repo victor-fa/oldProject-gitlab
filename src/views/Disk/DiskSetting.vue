@@ -114,7 +114,7 @@ import {app} from "electron";
 			<p>验证码：</p><a-input placeholder="请输入邮箱验证码" v-model="ChangeEmailData.code" />
 		</a-modal>
 		<a-modal
-			:title="'阿萨德'"
+			:title="'修改密码'"
 			:visible="offlinePass.offline_modify_visiable" :mask="false" :closable="false" :maskClosable="false" width="350px" style="top: 50px;" 
 			okText="确定" cancelText="取消" @ok="modifyOfflineAccount" @cancel="offlinePass.offline_modify_visiable = false">
 			<div style="display: flex;justify-content: space-between;margin-bottom: 15px;">
