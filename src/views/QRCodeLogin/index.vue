@@ -20,7 +20,7 @@ import UserAPI from '../../api/UserAPI'
 import QRCode from 'qrcode'
 import { AccessToken, User } from '../../api/UserModel'
 import ClientAPI from '../../api/ClientAPI'
-import { NasAccessInfo, NasInfo } from '../../api/ClientModel'
+import { NasAccessInfo, NasInfo, NasUser } from '../../api/ClientModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 
 let timeId: NodeJS.Timeout | null = null
@@ -36,25 +36,32 @@ export default Vue.extend({
     return {
       loginIcons,
       loading: false,
-      qrCode: '',
-      nasInfo: this.$route.params.nasInfo
+      qrCode: ''
     }
   },
   computed: {
-    qrCodeType () {
+    qrCodeType: function () {
       return this.$route.params.type === 'offline' ? QRCodeType.offline : QRCodeType.online
     },
-    showCode () {
+    showCode: function () {
       const show = (!this.loading && !_.isEmpty(this.qrCode)) as boolean
       return show
     },
-    showRefresh () {
+    showRefresh: function () {
       const show = (!this.loading && _.isEmpty(this.qrCode)) as boolean
       return show
     },
-    backTitle () {
+    backTitle: function () {
       const isOffline = (this.qrCodeType === QRCodeType.offline) as boolean
       return isOffline ? '账号密码登录' : '扫描列表'
+    },
+    nasInfo: function () {
+      const json = this.$route.params.nasInfo
+      if (json === undefined) {
+        return undefined
+      }
+      const nasInfo = JSON.parse(json) as NasInfo
+      return nasInfo
     }
   },
   mounted () {
@@ -87,7 +94,8 @@ export default Vue.extend({
         console.log(response)
         if (response.data.code !== 200) return
         const code = _.get(response.data.data, 'qrCode')
-        this.generateQrCode(code)
+        const codeInfo = this.generateQrJson(code)
+        this.generateQrCode(codeInfo)
       }).catch(error => {
         this.loading = false
         console.log(error)
@@ -99,23 +107,43 @@ export default Vue.extend({
         console.log(response)
         if (response.data.code !== 200) return
         const session = _.get(response.data.data, 'login_session')
-        this.generateQrCode(session)
+        const codeInfo = this.generateQrJson(session)
+        this.generateQrCode(codeInfo)
       }).catch(error => {
         this.loading = false
         console.log(error)
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    generateQrCode (code: string) {
-      if (_.isEmpty(code)) {
+    generateQrJson (code: string) {
+      let codeInfo = {}
+      if (_.isEmpty(code)) return codeInfo
+      if (this.nasInfo === undefined) {
+        codeInfo = { t: 4, code }
+      } else {
+        codeInfo = {
+          t: 3,
+          data: {
+            id: this.nasInfo.ssl_port,
+            name: this.nasInfo.name,
+            model: this.nasInfo.model,
+            sn: this.nasInfo.sn
+          }
+        }
+      }
+      return codeInfo
+    },
+    generateQrCode (codeInfo: any) {
+      if (_.isEmpty(codeInfo)) {
         console.log('code is empty')
         this.loading = false
         return
       }
-      QRCode.toDataURL(code).then(data => {
+      const json = JSON.stringify(codeInfo)
+      QRCode.toDataURL(json).then(data => {
         this.loading = false
         this.qrCode = data
-        this.pollResult(code)
+        this.pollResult(codeInfo.code)
       }).catch(error => {
         this.loading = false
         console.log(error)
@@ -162,13 +190,16 @@ export default Vue.extend({
           this.qrCode = ''
           return
         }
-        const accessInfo = response.data.data as NasAccessInfo
-        const nasInfo = JSON.parse(this.nasInfo) as NasInfo
-        if (_.isEmpty(accessInfo)) {
+        const nasAccess = response.data.data as NasAccessInfo
+        if (_.isEmpty(nasAccess)) {
           this.pollResult(session)
         } else {
-          this.$store.dispatch('NasServer/updateNasAccess', accessInfo)
-          this.$store.dispatch('NasServer/updateNasInfo', nasInfo)
+          // cache nas info
+          this.$store.dispatch('NasServer/updateNasAccess', nasAccess)
+          this.$store.dispatch('NasServer/updateNasInfo', this.nasInfo)
+          // cache user info
+          const user = this.convertUser(nasAccess.data)
+          this.$store.dispatch('User/updateUser', user)
           processCenter.renderSend(EventName.home)
         }
       }).catch(error => {
@@ -176,6 +207,17 @@ export default Vue.extend({
         this.qrCode = ''
         this.$message.error('二维码过期，请重新获取')
       })
+    },
+    convertUser (nasUser: NasUser) {
+      return {
+        birthday: nasUser.birthday,
+        email: nasUser.email,
+        nickName: nasUser.nic_name,
+        phoneNo: nasUser.phone_no,
+        sex: nasUser.sex,
+        ugreenNo: nasUser.ugreen_no,
+        versionNo: nasUser.version
+      } as User
     }
   }
 })

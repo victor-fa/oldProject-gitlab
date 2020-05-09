@@ -14,7 +14,7 @@
         <a-button v-if="showCover" @click="handleCoverAction">
           <img src="../../assets/new_custom_icon.png" >
         </a-button>
-        <img v-else class="cover-image" :src="imageData">
+        <img v-else class="cover-image" :src="imageData" @click="handleCoverAction">
       </div>
       <a-input placeholder="请输入模块名" v-model="name"/>
       <a-textarea placeholder="请填写简要叙述" :rows="3" v-model="desc"/>

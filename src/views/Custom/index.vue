@@ -157,7 +157,6 @@ export default Vue.extend({
       this.pushResourceList(item)
     },
     handleNewCustomAction () {
-      console.log('newCustom')
       this.showCustomModal()
     },
     handleModifyAction () {

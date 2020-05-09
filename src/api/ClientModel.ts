@@ -24,6 +24,7 @@ interface NasInfo {
   ip: string,
   sn: string,
   port: number,
+  ssl_port: string,
   softversion: string
 }
 

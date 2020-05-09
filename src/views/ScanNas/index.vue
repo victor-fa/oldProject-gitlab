@@ -162,7 +162,7 @@ export default Vue.extend({
       ClientAPI.setBaseUrl(basrUrl)
       this.$router.push({
         name: 'qr-code-login',
-        params: { type: 'offline' }
+        params: { type: 'offline', nasInfo: JSON.stringify(this.selectNas) }
       })
     },
     handleBackAction () {
@@ -202,13 +202,13 @@ export default Vue.extend({
         console.log(response)
         this.connectLoading = false
         if (response.data.code !== 200) return
-        const nasInfo = response.data.data as NasAccessInfo
+        const nasAccess = response.data.data as NasAccessInfo
         // cache nas access info
-        this.$store.dispatch('NasServer/updateNasAccess', nasInfo)
+        this.$store.dispatch('NasServer/updateNasAccess', nasAccess)
         // cache nas info 
         this.$store.dispatch('NasServer/updateNasInfo', this.selectNas)
         // cache user info
-        const user = this.convertUser(nasInfo.data)
+        const user = this.convertUser(nasAccess.data)
         this.$store.dispatch('User/updateUser', user)
         // switch home window
         processCenter.renderSend(EventName.home)

@@ -111,7 +111,10 @@ export default Vue.extend({
       })
     },
     codeLoginBtnClick () {
-      this.$router.push('qr-code-login')
+      this.$router.push({
+        name: 'qr-code-login',
+        params: { type: 'online' }
+      })
     },
     loginAction () {
       if (!this.checkInputFrom()) return

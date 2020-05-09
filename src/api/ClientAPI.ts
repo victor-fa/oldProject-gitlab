@@ -13,15 +13,6 @@ const userModulePath = '/v1/user'
 let client: dgram.Socket | null = null
 const CancelToken = axios.CancelToken
 let cancel: Canceler | null = null
-const apiToken = (() => {
-  const tokenJson = localStorage.getItem(NAS_ACCESS)
-    if (tokenJson === null) {
-      console.log('not find access_token in localStorage')
-      return null
-    }
-    return JSON.parse(tokenJson).api_token
-})()
-
 
 export default {
   setBaseUrl (url: string) {
@@ -139,7 +130,7 @@ export default {
       login_session: session
     })
   },
-  detach (): Promise<AxiosResponse<BasicResponse>> {
+  detach (apiToken: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/common/detach', {
       clear_disk_files: 0,
     }, {
