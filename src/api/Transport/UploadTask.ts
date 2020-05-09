@@ -5,20 +5,20 @@ import { EventEmitter } from 'events'
 import NasFileAPI from '../NasFileAPI'
 import { UploadParams } from '../NasFileModel'
 import FileHandle, { FileHandleError } from '../../utils/FileHandle'
-import { AxiosResponse, Canceler } from 'axios'
+import axios, { AxiosResponse, CancelTokenSource } from 'axios'
 import { BasicResponse } from '../UserModel'
 
 export default class UploadTask extends EventEmitter {
   readonly srcPath: string
   readonly destPath: string
   readonly uuid: string
+  readonly source: CancelTokenSource // 下载取消请求标识
   readonly maxChunkSize = 1 * 1024 * 1024 // 单次读取的最大字节数
   index: number = 0 // 任务标识符
   status: UploadStatus // 上传任务的状态 
   fileInfos: FileInfo[] = [] // 待上传的文件对象
   countOfBytes: number = 0 // 待上传文件总大小
   uploadedBytes: number = 0 // 已上传文件总大小
-  cancelRequest?: Canceler // 上传取消请求标识
   private fileHandle = -1 // 标记当前正在操作的文件句柄
   
   constructor(srcPath: string, destPath: string, uuid: string) {
@@ -27,6 +27,8 @@ export default class UploadTask extends EventEmitter {
     this.destPath = destPath
     this.uuid = uuid
     this.status = UploadStatus.pending
+    const CancelToken = axios.CancelToken
+    this.source = CancelToken.source()
   }
   // public methods
   async start () {
@@ -48,14 +50,13 @@ export default class UploadTask extends EventEmitter {
     this.status = UploadStatus.error
     this.fileInfos = []
     if (this.fileHandle > 0) FileHandle.closeFileHandle(this.fileHandle)
-    this.cancelRequest !== undefined && this.cancelRequest()
+    this.source.cancel()
   }
   suspend () {
     this.status = UploadStatus.suspend
     if (this.fileHandle > 0) FileHandle.closeFileHandle(this.fileHandle)
     this.fileHandle = -1
-    this.cancelRequest !== undefined && this.cancelRequest()
-    this.cancelRequest = undefined
+    this.source.cancel()
   }
   resume () {
     this.status = UploadStatus.uploading
@@ -129,10 +130,7 @@ export default class UploadTask extends EventEmitter {
   // 递归读取上传多个文件
   private uploadFile () {
     // check status
-    if (this.status !== UploadStatus.uploading) {
-      this.handlerUploadError(UploadErrorCode.cancel)
-      return
-    }
+    if (this.status !== UploadStatus.uploading) return
     // check upload file
     const fileInfo = this.getUploadFileInfo()
     if (fileInfo === null) {
@@ -188,12 +186,10 @@ export default class UploadTask extends EventEmitter {
     let chunkLength = 0
     FileHandle.readFile(fd, file.uploadedSize, this.maxChunkSize).then(buffer => {
       chunkLength = buffer.length
-      return this.uploadChunckData(file, buffer, this.cancelRequest)
+      return this.uploadChunckData(file, buffer, this.source)
     }).then(response => {
-      if (this.status !== UploadStatus.uploading) {
-        const error = new UploadError(UploadErrorCode.cancel)
-        completionHandler(undefined, error)
-      } else if (response.data.code !== 200) {
+      if (this.status !== UploadStatus.uploading) return
+      if (response.data.code !== 200) {
         const error = new UploadError(UploadErrorCode.uploadInnerError, response.data.msg)
         completionHandler(undefined, error)
       } else {
@@ -202,10 +198,8 @@ export default class UploadTask extends EventEmitter {
         if (file.uploadedSize < file.totalSize) this.uploadFileChunk(fd, file, completionHandler)
       }
     }).catch(error => {
-      if (this.status !== UploadStatus.uploading) {
-        const error = new UploadError(UploadErrorCode.cancel)
-        completionHandler(undefined, error)
-      } else if (error === FileHandleError.readError) {
+      if (this.status !== UploadStatus.uploading) return
+      if (error === FileHandleError.readError) {
         completionHandler(undefined, new UploadError(UploadErrorCode.readDataError))
       } else {
         completionHandler(undefined, new UploadError(UploadErrorCode.networkError))
@@ -244,7 +238,7 @@ export default class UploadTask extends EventEmitter {
     })
   }
   /**上传文件数据 */
-  protected uploadChunckData (file: FileInfo, buffer: Buffer, cancel?: Canceler): Promise<AxiosResponse<BasicResponse>> {
+  protected uploadChunckData (file: FileInfo, buffer: Buffer, cancel?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {
     const params = this.generateUploadParams(file, buffer.length)
     return NasFileAPI.uploadData(params, buffer, cancel)
   }
@@ -281,8 +275,6 @@ class UploadError {
         return 'network error'
       case UploadErrorCode.pathError:
         return 'upload file directory is empty'
-      case UploadErrorCode.cancel:
-        return 'upload task was cancelled'
       default:
         return 'unkown'
     }
@@ -297,8 +289,7 @@ enum UploadErrorCode {
   readDataError,
   networkError,
   uploadInnerError,
-  pathError,
-  cancel
+  pathError
 }
 
 enum UploadStatus {
