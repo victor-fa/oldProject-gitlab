@@ -32,11 +32,11 @@
           :strokeWidth="6"
           :title="(model.uploadedBytes / model.countOfBytes) * 100 + '%'"
         />
-        <span class="speed">{{ model.countOfBytes | formatSpeed }}</span>
+        <span class="speed">{{ model.uploadedBytes | formatSpeed }}</span>
         <span class="progress-value">{{ model.uploadedBytes | formatShowSize }} / {{ model.countOfBytes | formatShowSize }}</span>
       </div>
       <div v-else class="completed-content-bottom">
-        <span>{{ model.uploadedBytes | formatShowSize }}</span>
+        <span>{{ model.countOfBytes | formatShowSize }}</span>
       </div>
     </a-layout-content>
   </a-layout>

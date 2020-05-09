@@ -90,7 +90,7 @@ export default class UploadTask extends EventEmitter {
     })
   }
   // 深遍历目录文件
-  private deepTraverseDirectory (directory: string): Promise<FileInfo[]> {
+  protected deepTraverseDirectory (directory: string): Promise<FileInfo[]> {
     return new Promise((resolve, reject) => {
       let fileInfos: FileInfo[] = []
       fs.readdirSync(directory).forEach(async filename => {

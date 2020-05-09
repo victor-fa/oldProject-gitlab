@@ -193,110 +193,23 @@ export default Vue.extend({
         buttonLabel: '选择',
         properties: (list as any)
       }).then(result => {
-        const newCommand = 'upload'
-        // filter cancel action
         if (_.isEmpty(result.filePaths)) return
         result.filePaths.forEach(path => {
-          // await this.deepTraverseDirectory(path).then(res => {
-            console.log(path);
-            // res.forEach(item => {
-              // if (item.noRepeat) {
           const task = new BackupUploadTask(path, this.path, this.uuid)
           backupUploadQueue.addTask(task)
           this.$store.dispatch('Resource/increaseTask')
           this.getListData()
-              // }
-            // })
-          // }).catch(error => {
-          //   console.log(error);
-          // })
-        })
-      })
-    },
-    checkPath (path, md5) {
-      return new Promise((resolve, reject) => {
-        const hostName = require("os").hostname() + ClientAPI.getMac()
-        const pathP = '/' + StringUtility.convertR2L(hostName + '\\' + path)
-        NasFileAPI.backupCheck(pathP, md5).then(response => {
-          if (response.data.code !== 200) return resolve(false)
-          if (response.data.data.identical === 1) return resolve(false)
-          return resolve(true)
-        }).catch(error => {
-          reject(error)
-        })
-      })
-    },
-    calculatorFileMD5 (path: string): Promise<string> {
-      return new Promise((resolve, reject) => {
-        const stream = fs.createReadStream(path)
-        const fsHash = crypto.createHash('md5')
-        stream.on('data', data => {
-          fsHash.update(data)
-        })
-        stream.once('end', () => {
-          const md5 = fsHash.digest('hex')
-          resolve(md5)
-        })
-        stream.once('error', error => {
-          reject(error)
-        })
-      })
-    },
-    // 深遍历目录文件
-    deepTraverseDirectory (directory: string): Promise<any[]> {
-      return new Promise((resolve, reject) => {
-        let fileInfos:any = []
-        fs.readdirSync(directory).forEach(async filename => {
-          const path = StringUtility.convertR2L(directory + '/' + filename)
-          const stats = fs.statSync(path)
-          if (stats.isDirectory()) {
-            await this.deepTraverseDirectory(path).then(files => {
-              fileInfos = fileInfos.concat(files)
-            })
-          } else {
-            await this.convertFileStats(path, stats).then(fileInfo => {
-              fileInfos.push(fileInfo)
-            }).catch(error => {
-              reject(error)
-            })
-          }
-          resolve(fileInfos)
-        })
-      })
-    },
-    /**转换stats */
-    convertFileStats (path: string, stats: fs.Stats): Promise<any> {
-      return new Promise(resolve => {
-        const name = StringUtility.formatName(path)
-        // this.doSomething(path).then(res => {
-          const fileInfo: any = {
-            path,
-            name,
-            // noRepeat: res,
-          }
-          resolve(fileInfo)
-        // })
-      })
-    },
-    doSomething (path) {
-      return new Promise((resolve, reject) => {
-        this.calculatorFileMD5(path).then(md5 => {
-          console.log(path);
-          return this.checkPath(path, md5)
-        }).then(repeat => {
-          console.log(repeat);
-          resolve(repeat)
-        }).catch(error => {
-          console.log(error);
         })
       })
     },
     getListData () {
       const list = backupUploadQueue.getAllTasks()
-      console.log(JSON.parse(JSON.stringify(list)));
+      let filterList:any = []
+      filterList = list.filter(item => item.fileInfos.length > 0)
+      console.log(JSON.parse(JSON.stringify(filterList)));
       const filterAarr = [UploadStatus.pending, UploadStatus.uploading, UploadStatus.suspend, UploadStatus.error]
-      backupCategorys[0].count = list.filter((item:any) => (filterAarr.indexOf(item.status) > -1)).length
-      this.dataArray = StringUtility.filterRepeatPath(list)
+      backupCategorys[0].count = filterList.filter((item:any) => (filterAarr.indexOf(item.status) > -1)).length
+      this.dataArray = StringUtility.filterRepeatPath(filterList)
     }
   }
 })
