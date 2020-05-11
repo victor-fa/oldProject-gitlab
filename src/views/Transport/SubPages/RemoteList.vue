@@ -54,6 +54,10 @@ export default Vue.extend({
       this.updateCategoryCount(item.status)
     }
   },
+  created () {
+    this.resetSelected()
+    this.fetchRemoteList()
+  },
   mounted () {
     timer = setInterval(this.fetchRemoteList, 1000)
   },
@@ -69,18 +73,58 @@ export default Vue.extend({
     handleOperateAction (command: string) {
       switch (command) {
         case 'pauseAll':
-          
+          const pauseAllFlag = this.showArray.some(item => item.status !== UploadStatus.completed)
+          if (!pauseAllFlag) {
+            this.$message.error('无可暂停任务')
+          } else {
+            this.showArray.forEach(item => {
+              if (item.status !== UploadStatus.completed) {
+                this.pauseRemoteTask(item.id)
+              }
+            })
+          }
           break;
         case 'cancelAll':
-          
+          const cancelAllFlag = this.showArray.some(item => item.status !== UploadStatus.completed)
+          if (!cancelAllFlag) {
+            this.$message.error('无可取消任务')
+          } else {
+            this.showArray.forEach(item => {
+              if (item.status !== UploadStatus.completed) {
+                this.cancelRemoteTask(item.id)
+              }
+            })
+          }
           break;
         case 'clearAll':
-          
+          const clearAllFlag = this.showArray.some(item => item.status === UploadStatus.completed)
+          const _this = this as any
+          if (!clearAllFlag) {
+            this.$message.error('无可清空任务')
+          } else {
+            _this.$electron.shell.beep()
+            _this.$confirm({
+              title: '删除',
+              content: '是否将所有记录清空',
+              okText: '删除',
+              okType: 'danger',
+              cancelText: '取消',
+              onOk() {
+                this.showArray.forEach(item => {
+                  if (item.status === UploadStatus.completed) {
+                    this.cancelRemoteTask(item.id)
+                  }
+                })
+                setTimeout(() => { _this.fetchRemoteList() }, 1000);
+              }
+            });
+          }
           break;
       }
     },
     handleItemAction (command: string, ...args: any[]) {
       const item = this.showArray[args[0]]
+      const _this = this as any
       switch (command) {
         case 'pause':
           this.pauseRemoteTask(item.id)
@@ -92,13 +136,7 @@ export default Vue.extend({
           this.cancelRemoteTask(item.id)
           break;
         case 'jump':
-          
-          break;
-        case 'open':
-          
-          break;
-        case 'openInFinder':
-          
+          _this.$electron.shell.showItemInFolder(item.sourcePath)
           break;
         case 'delete':
           this.cancelRemoteTask(item.id)
@@ -106,20 +144,17 @@ export default Vue.extend({
       }
     },
     // private methods
+    resetSelected() { // 重置默认选项
+      remoteCategorys[0].isSelected = true
+      remoteCategorys[1].isSelected = false
+    },
     fetchRemoteList () {
       this.loading = true
       NasFileAPI.fetchRemoteTaskList().then(response => {
         this.loading = false
         if (response.data.code !== 200) return
-        // const tasks = _.get(response.data.data, 'list') as RemoteTask[] 
-        const tasks: RemoteTask[] = [
-          { id: 1, status: RemoteTaskStatus.prerunning, type: ResourceType.folder, uid: 1, errmsg: '', total_num: 100, total_size: 100 * 1024 * 1024, curr_num: 50, curr_size: 40 * 1024 * 1024, curr_src_path: '/a1', curr_dst_path: '/b1', speed: 20 * 1024 },
-          { id: 2, status: RemoteTaskStatus.running, type: ResourceType.folder, uid: 1, errmsg: '', total_num: 200, total_size: 200 * 1024 * 1024, curr_num: 60, curr_size: 50 * 1024 * 1024, curr_src_path: '/a2', curr_dst_path: '/b2', speed: 30 * 1024 },
-          { id: 3, status: RemoteTaskStatus.error, type: ResourceType.folder, uid: 1, errmsg: 'error', total_num: 300, total_size: 300 * 1024 * 1024, curr_num: 60, curr_size: 60 * 1024 * 1024, curr_src_path: '/a3', curr_dst_path: '/b3', speed: 40 * 1024 },
-          { id: 4, status: RemoteTaskStatus.pause, type: ResourceType.folder, uid: 1, errmsg: 'error', total_num: 400, total_size: 400 * 1024 * 1024, curr_num: 70, curr_size: 70 * 1024 * 1024, curr_src_path: '/a4', curr_dst_path: '/b4', speed: 50 * 1024 },
-          { id: 5, status: RemoteTaskStatus.completed, type: ResourceType.folder, uid: 1, errmsg: 'error', total_num: 500, total_size: 500 * 1024 * 1024, curr_num: 80, curr_size: 80 * 1024 * 1024, curr_src_path: '/a5', curr_dst_path: '/b5', speed: 60 * 1024 }
-        ]
-        this.dataArray = tasks.map(item => {
+        const tasks = _.get(response.data.data, 'list') as RemoteTask[] 
+        this.dataArray = tasks.map(item => {  // 1-1 / 2-2 / 4-4 / 8-8 / 10-16  对应16进制
           return TransportHandler.convertRemoteTask(item)
         })
       }).catch(error => {

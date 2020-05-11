@@ -61,6 +61,14 @@ const completedOperateItems: TransportOpItem[] = [
     iconWidth: '11px'
   }
 ]
+const remoteCompletedOperateItems: TransportOpItem[] = [
+  {
+    icon: require('../../../assets/delete_icon.png'),
+    hoverIcon: require('../../../assets/delete_icon_selected.png'),
+    command: 'delete',
+    iconWidth: '11px'
+  }
+]
 
 // TransportItem.vue对应的数据模型
 interface TransportModel {
@@ -82,5 +90,6 @@ export {
   errorItem,
   runningOperateItems,
   completedOperateItems,
+  remoteCompletedOperateItems,
   TransportModel
 }

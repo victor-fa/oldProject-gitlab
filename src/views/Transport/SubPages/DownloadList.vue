@@ -5,10 +5,15 @@
     :currentTab="'download'"
     v-on:categoryChange="handleCategoryChange"
     v-on:transportOperateAction="handleOperateAction"
-    v-on:CallbackControl="handleControl"
   >
     <template v-slot:renderItem="{ item, index}">
-      <transport-item :model="item" :index="index"/>
+      <transport-item
+        :ref="'renderItem' + item.srcPath"
+        :key="item.srcPath"
+        :model="item"
+        :index="index"
+        v-on:operationAction="handleItemAction"
+      />
     </template>
   </main-page>
 </template>
@@ -19,7 +24,12 @@ import MainPage from '../MainPage/index.vue'
 import { TRANSFORM_INFO } from '../../../common/constants'
 import { downloadCategorys } from '../../../model/categoryList'
 import { mapGetters } from 'vuex'
+import StringUtility from '../../../utils/StringUtility'
 import TransportItem from '../MainPage/TransportItem.vue'
+import { TaskStatus } from '../../../api/Transport/BaseTask'
+import DownloadTask from '../../../api/Transport/DownloadTask'
+import { downloadQueue } from '../../../api/Transport/TransportQueue'
+
 
 export default Vue.extend({
   name: 'download-list',
@@ -29,78 +39,45 @@ export default Vue.extend({
   },
   data () {
     return {
-      dataArray: [],
+      dataArray: [] as DownloadTask[],
       category: downloadCategorys,
-      state: 'interrupted'
+      state: TaskStatus.pending
     }
   },
   computed: {
-    ...mapGetters('Transform', ['downloadInfo'])
+    path: function () {
+      const path = this.$route.query.path as string
+      return path
+    },
+    uuid: function () {
+      const uuid = this.$route.query.uuid as string
+      return uuid
+    }
   },
   created () {
     this.resetSelected()
     this.getListData()
-  },
-  watch: {
-    "$route": {
-      handler(route) {
-        if (route.name === 'download') {   // 首次路由进来后查询结果
-          this.resetSelected()
-          this.getListData()
-        }
-      }
-    }
+    downloadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
+      setTimeout(() => { this.getListData() }, 1000);
+    })
   },
   methods: {
     // handle views action
     handleCategoryChange (index: number) {  // 切换"正在下载"、"下载完成"
-      if (index === 0) {
-        this.state = 'progressing'
-      } else if (index === 1) {
-        this.state = 'completed'
-      }
+      this.state = index
       this.getListData()
     },
     handleOperateAction (command: string) {
       const _this = this as any
       switch (command) {
         case 'pauseAll':  // 全部暂停
-          let pauseCount = 0
-          this.downloadInfo.forEach(item => {
-            if (item.state === 'progressing') {
-              pauseCount++
-              _this.$ipc.send('download', 'pause', item.id);
-            }
-          })
-          if (pauseCount === 0) {
-            _this.$message.warning('无可暂停任务')
-          }
+          this.pauseAllTrans()
           break;
         case 'resumeAll':  // 全部开始
-          let resumeCount = 0
-          this.downloadInfo.forEach(item => {
-            if (item.state === 'interrupted') {
-              resumeCount++
-              _this.$ipc.send('download', 'resume', item.id);
-            }
-          })
-          if (resumeCount === 0) {
-            _this.$message.warning('无可开始任务')
-          }
+          this.resumeAllTrans()
           break;
         case 'cancelAll': // 全部取消
-          let cancelCount = 0
-          this.downloadInfo.forEach(item => {
-            if (item.state === 'progressing' || item.state === 'interrupted') {
-              cancelCount++
-              _this.$ipc.send('download', 'cancel', item.id)
-            }
-          })
-          if (cancelCount === 0) {
-            _this.$message.warning('无可取消任务')
-          } else {
-            setTimeout(() => { _this.getListData() }, 1000);
-          }
+          this.cancelAllTrans()
           break;
         case 'clearAll': // 清除所有记录
           this.clearAllTrans()
@@ -110,78 +87,165 @@ export default Vue.extend({
       }
     },
     // inner private methods
-    getListData () {
-      console.log(JSON.parse(JSON.stringify(this.downloadInfo)));
-      downloadCategorys[0].count = this.downloadInfo.filter(item => item.trans_type === 'download' && (item.state === 'progressing' || item.state === 'interrupted')).length  // 正在下载
-      downloadCategorys[1].count = this.downloadInfo.filter(item => item.trans_type === 'download' && item.state === 'completed').length  // 下载完成
-      this.dataArray = this.downloadInfo.filter(item => {
-        if (item.state === 'progressing' || item.state === 'completed') {
-          return item.trans_type === 'download' && item.state === this.state
-        } else if (item.state === 'interrupted') {
-          return item.trans_type === 'download' && item.state === 'interrupted'
+    resetSelected() { // 重置默认选项
+      downloadCategorys[0].isSelected = true
+      downloadCategorys[1].isSelected = false
+    },
+    pauseAllTrans() { // 全部暂停
+      let pauseCount = 0
+      for (let index = 0; index < this.dataArray.length; index++) {
+        const ele = this.dataArray[index]
+        if (ele.status === TaskStatus.progress) {
+          pauseCount++
+          break
         }
-      })
+      }
+      if (pauseCount === 0) {
+        this.$message.warning('无可暂停任务')
+      }
+      this.dataArray.forEach((item: DownloadTask) => {
+        if (pauseCount > 0) {
+          item.suspend()
+          const refKey = 'renderItem' + item.srcPath
+          const cell: any = this.$refs[refKey]
+          cell.setOperateItemDisable('pause', true)
+          cell.updatePauseItem()
+        }
+      });
+      setTimeout(() => { this.getListData() }, 1000);
+    },
+    resumeAllTrans() {  // 全部开始
+      let resumeCount = 0
+      for (let index = 0; index < this.dataArray.length; index++) {
+        const ele = this.dataArray[index]
+        if (ele.status === TaskStatus.suspend) {
+          resumeCount++
+          break
+        }
+      }
+      if (resumeCount === 0) {
+        this.$message.warning('无可开始任务')
+      }
+      this.dataArray.forEach((item: DownloadTask) => {
+        if (resumeCount > 0) {
+          item.resume()
+          const refKey = 'renderItem' + item.srcPath
+          const cell: any = this.$refs[refKey]
+          cell.setOperateItemDisable('continue', true)
+          cell.updateContinueItem()
+        }
+      });
+      setTimeout(() => { this.getListData() }, 1000);
+    },
+    cancelAllTrans() { // 取消所有
+      let cancelCount = 0
+      for (let index = 0; index < this.dataArray.length; index++) {
+        const ele = this.dataArray[index]
+        if (ele.status === TaskStatus.pending || ele.status === TaskStatus.progress || ele.status === TaskStatus.suspend) {
+          cancelCount++
+          break
+        }
+      }
+      if (cancelCount === 0) {
+        this.$message.warning('无可取消任务')
+      }
+      this.dataArray.forEach((item:any) => {
+        if (cancelCount > 0) {
+          downloadQueue.deleteTask(item)
+        }
+      });
+      setTimeout(() => { this.getListData() }, 1000);
     },
     clearAllTrans() { // 清空所有记录
       const _this = this as any
-      if (_this.downloadInfo.length === 0) {
-        _this.$message.warning('当前无记录')
+      const clearAllFlag = this.dataArray.some(item => item.status === TaskStatus.finished)
+      if (!clearAllFlag) {
+        this.$message.error('无可清空任务')
         return
       }
       _this.$electron.shell.beep()
       _this.$confirm({
         title: '删除',
-        content: '是否将所所有记录清空',
+        content: '是否将所有记录清空',
         okText: '删除',
         okType: 'danger',
         cancelText: '取消',
         onOk() {
-          _this.$store.dispatch('Transform/updateTransDownloadInfo', [])
-          _this.$store.dispatch('Transform/saveTransDownloadInfo') // 清空后要更新缓存，不然下次进来可能有问题
-          _this.getListData()
+          _this.dataArray.forEach((item:any) => {
+            downloadQueue.deleteTask(item)
+          });
+          setTimeout(() => { _this.getListData() }, 1000);
         }
       });
     },
-    resetSelected() { // 重置默认选项
-      downloadCategorys[0].isSelected = true
-      downloadCategorys[1].isSelected = false
+    // getListData () {
+    //   console.log(JSON.parse(JSON.stringify(this.downloadInfo)));
+    //   downloadCategorys[0].count = this.downloadInfo.filter(item => item.trans_type === 'download' && (item.state === 'progressing' || item.state === 'interrupted')).length  // 正在下载
+    //   downloadCategorys[1].count = this.downloadInfo.filter(item => item.trans_type === 'download' && item.state === 'completed').length  // 下载完成
+    //   this.dataArray = this.downloadInfo.filter(item => {
+    //     if (item.state === 'progressing' || item.state === 'completed') {
+    //       return item.trans_type === 'download' && item.state === this.state
+    //     } else if (item.state === 'interrupted') {
+    //       return item.trans_type === 'download' && item.state === 'interrupted'
+    //     }
+    //   })
+    // },
+    getListData () {
+      const list = downloadQueue.getAllTasks()
+      console.log(JSON.parse(JSON.stringify(list)));
+      const filterDoingArr = [TaskStatus.pending, TaskStatus.progress, TaskStatus.suspend, TaskStatus.error]
+      const filterDoneArr = [TaskStatus.finished]
+      downloadCategorys[0].count = list.filter((item:any) => filterDoingArr.indexOf(item.status) > -1).length  // 正在上传
+      downloadCategorys[1].count = list.filter((item:any) => filterDoneArr.indexOf(item.status) > -1).length  // 上传完成
+      if (this.state === TaskStatus.pending) {
+        this.dataArray = list.filter((item:any) => filterDoingArr.indexOf(item.status) > -1)
+      } else {
+        this.dataArray = list.filter((item:any) => filterDoneArr.indexOf(item.status) > -1)
+      }
     },
-    handleControl(model, ...args: any[]) {
+    handleItemAction(command: string, ...args: any[]) {
+      const item: DownloadTask = this.dataArray[args[0]]
+      console.log(JSON.parse(JSON.stringify(item)));
       const _this = this as any
-      switch (args[0]) {
-        case 'deleteFile':
-          _this.$electron.shell.beep()
-          _this.$confirm({
-            title: '删除',
-            content: '是否将所选文件彻底删除',
-            okText: '删除',
-            okType: 'danger',
-            cancelText: '取消',
-            onOk() {
-              // _this.$electron.shell.moveItemToTrash(item.path)  // 暂时不把本地文件删除了
-              const index = _this.downloadInfo.map(o => o.name).indexOf(model.name)
-              _this.downloadInfo.splice(index, 1)
-              _this.getListData()
-            }
-          });
+      switch (command) {
+        case 'cancel':  // 取消
+          downloadQueue.deleteTask(item)
+          this.getListData()
           break;
-        case 'refresh':
+        case 'pause': // 暂停 开始
+          const refKey = 'renderItem' + item.srcPath
+          const cell: any = this.$refs[refKey]
+          if (item.status === TaskStatus.suspend) {
+            item.resume()
+            cell.setOperateItemDisable('continue', true)
+            cell.updateContinueItem()
+          } else if (item.status === TaskStatus.progress) {
+            item.suspend()
+            cell.setOperateItemDisable('pause', true)
+            cell.updatePauseItem()
+          } else if (item.status === TaskStatus.error) {
+            item.resume()
+            cell.setOperateItemDisable('error', true)
+            cell.updateErrorItem()
+          }
+          break;
+        case 'jump': // 打开所在文件夹
+          _this.$electron.shell.showItemInFolder(item.srcPath)
+          break;
+        case 'open': // 打开文件
+          _this.$electron.shell.openItem(item.srcPath)
+          break;
+        case 'openInFinder': // 打开所在文件夹
+          _this.$electron.shell.showItemInFolder(StringUtility.convertL2R(item.srcPath))
+          break;
+        case 'delete': // 删除
+          downloadQueue.deleteTask(item)
           _this.getListData()
-          break;
-        case 'cancel':
-          _this.$ipc.send('download', 'cancel', model.id)
-          setTimeout(() => {
-            _this.getListData()
-          }, 1000);
-          break;
-        case 'pause':
-          let commend = model.state === 'progressing' ? 'pause' : 'resume';
-          _this.$ipc.send('download', commend, model.id);
           break;
         default:
           break;
       }
-    }
+    },
   }
 })
 </script>

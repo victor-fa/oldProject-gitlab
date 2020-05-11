@@ -60,6 +60,8 @@ import NasFileAPI from '../../api/NasFileAPI'
 import { ResourceItem, OrderType, UploadTimeSort } from '../../api/NasFileModel'
 import StringUtility from '../../utils/StringUtility'
 import { encryptContextMenu, encryptResourceContextMenu } from '../../components/OperateListAlter/operateList'
+import EncryptUploadTask from '../../api/Transport/EncryptUploadTask'
+import { encryptUploadQueue } from '../../api/Transport/TransportQueue'
 
 export default Vue.extend({
   name: 'encrypt',
@@ -68,10 +70,21 @@ export default Vue.extend({
   },
   mixins: [MainViewMixin],
   computed: {
-    ...mapGetters('NasServer', ['cryptoInfo'])
+    ...mapGetters('NasServer', ['cryptoInfo']),
+    path: function () {
+      const path = this.$route.query.path as string
+      return path
+    },
+    uuid: function () {
+      const uuid = this.$route.query.uuid as string
+      return uuid
+    },
   },
   created() {
     this.checkEncryptStatus()
+    encryptUploadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
+      setTimeout(() => { this.getEncryptList() }, 1000);
+    })
   },
   destroyed() {
     if (this.alreadyLogin === true) { // 已登录情况下才需要登录
@@ -364,7 +377,15 @@ export default Vue.extend({
       const index = ResourceHandler.getFirstSelectItemIndex(this.dataArray)
       const item = this.dataArray[index]
       console.log(JSON.parse(JSON.stringify(item)));
-    }
+    },
+    handleUploadAction (filePaths: string[]) {
+      console.log(filePaths);
+      filePaths.forEach(path => {
+        const task = new EncryptUploadTask(path, this.path, this.uuid)
+        encryptUploadQueue.addTask(task)
+        this.$store.dispatch('Resource/increaseTask')
+      })
+    },
   }
 })
 </script>

@@ -51,16 +51,6 @@ export default {
       headers: {'Accept': '*/*'}
     })
   },
-  // uploadBackup (options) {
-  //   return Vue.axios.post(host + nasFileModulePath + '/backup/upload?' + jsonToParams(options.data), options.body, {
-  //     headers: {'Accept': '*/*'}
-  //   })
-  // },
-  uploadEncrypt (options) {
-    return Vue.axios.post(host + nasCryptoModulePath + '/upload?' + jsonToParams(options.data), options.body, {
-      headers: {'Accept': '*/*'}
-    })
-  },
   addFile (body) {
     return Vue.axios.post(host + nasFileModulePath + '/add?' + jsonToParams(null), body)
   },
@@ -283,6 +273,13 @@ export default {
   },
   uploadBackup (params: UploadParams, data: Buffer, source?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasFileModulePath + '/backup/upload', data, { 
+      params,
+      headers: { 'Content-Type': ' application/octet-stream' },
+      cancelToken: source === undefined ? undefined : source.token
+    })
+  },
+  uploadEncrypt (params: UploadParams, data: Buffer, source?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(nasCryptoModulePath + '/upload', data, { 
       params,
       headers: { 'Content-Type': ' application/octet-stream' },
       cancelToken: source === undefined ? undefined : source.token

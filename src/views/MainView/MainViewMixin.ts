@@ -133,6 +133,7 @@ export default Vue.extend({
     },
     // handle main view context menu actions
     handleContextMenuActions (command: string, ...args: any[]) {
+      console.log(command);
       switch (command) {
         case 'open': 
           this.handleOpenAction(args[0])

@@ -56,7 +56,8 @@ export default Vue.extend({
 <style lang="less" scoped>
 .basic-list {
   background-color: white;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 </style>
 

@@ -157,7 +157,7 @@ export default Vue.extend({
         const paths = result.filePaths.map(item => {
           return StringUtility.replaceString(item, '\\', '/')
         })
-        this.$emit('didSelectItem', newCommand, result.filePaths)
+        this.$emit('didSelectItem', newCommand, paths)
       })
     },
     matchProperties (command: string) {

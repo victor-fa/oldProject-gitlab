@@ -30,7 +30,6 @@ import TransportItem from '../MainPage/TransportItem.vue'
 import { backupUploadQueue } from '../../../api/Transport/TransportQueue'
 import StringUtility from '../../../utils/StringUtility'
 import BackupUploadTask from '../../../api/Transport/BackupUploadTask'
-import NasFileAPI from '../../../api/NasFileAPI'
 import ClientAPI from '../../../api/ClientAPI'
 import { TaskStatus } from '../../../api/Transport/BaseTask'
 
@@ -42,7 +41,7 @@ export default Vue.extend({
   },
   data () {
     return {
-      dataArray: [] as any,
+      dataArray: [] as BackupUploadTask[],
       category: backupCategorys,
       state: TaskStatus.pending
     }
@@ -66,7 +65,6 @@ export default Vue.extend({
   methods: {
     // handle views action
     handleOperateAction (command: string) {
-      const _this = this as any
       switch (command) {
         case 'pauseAll':  // 全部暂停
           this.pauseAllTrans()
@@ -86,59 +84,69 @@ export default Vue.extend({
     },
     // inner private methods
     pauseAllTrans() { // 全部暂停
-      const _this = this as any
       let pauseCount = 0
-      const filterAarr = [TaskStatus.progress]
-      _this.dataArray.forEach((item:any) => filterAarr.indexOf(item.status) > -1 ? pauseCount++ : null)
-      if (pauseCount === 0) {
-        _this.$message.warning('无可暂停任务')
+      for (let index = 0; index < this.dataArray.length; index++) {
+        const ele = this.dataArray[index]
+        if (ele.status === TaskStatus.progress) {
+          pauseCount++
+          break
+        }
       }
-      _this.dataArray.forEach((item: BackupUploadTask) => {
-        if (filterAarr.indexOf(item.status) > -1) {
+      if (pauseCount === 0) {
+        this.$message.warning('无可暂停任务')
+      }
+      this.dataArray.forEach((item: BackupUploadTask) => {
+        if (pauseCount > 0) {
           item.suspend()
-          // item.status = TaskStatus.suspend
           const refKey = 'renderItem' + item.srcPath
           const cell: any = this.$refs[refKey]
           cell.setOperateItemDisable('pause', true)
           cell.updatePauseItem()
         }
       });
-      setTimeout(() => { _this.getListData() }, 1000);
+      setTimeout(() => { this.getListData() }, 1000);
     },
     resumeAllTrans() {  // 全部开始
-      const _this = this as any
       let resumeCount = 0
-      const filterAarr = [TaskStatus.suspend]
-      _this.dataArray.forEach((item:any) => filterAarr.indexOf(item.status) > -1 ? resumeCount++ : null)
-      if (resumeCount === 0) {
-        _this.$message.warning('无可开始任务')
+      for (let index = 0; index < this.dataArray.length; index++) {
+        const ele = this.dataArray[index]
+        if (ele.status === TaskStatus.suspend) {
+          resumeCount++
+          break
+        }
       }
-      _this.dataArray.forEach((item: BackupUploadTask) => {
-        if (filterAarr.indexOf(item.status) > -1) {
+      if (resumeCount === 0) {
+        this.$message.warning('无可开始任务')
+      }
+      this.dataArray.forEach((item: BackupUploadTask) => {
+        if (resumeCount > 0) {
           item.resume()
-          // item.status = TaskStatus.uploading
           const refKey = 'renderItem' + item.srcPath
           const cell: any = this.$refs[refKey]
           cell.setOperateItemDisable('continue', true)
           cell.updateContinueItem()
         }
       });
-      setTimeout(() => { _this.getListData() }, 1000);
+      setTimeout(() => { this.getListData() }, 1000);
     },
     cancelAllTrans() { // 取消所有
-      const _this = this as any
       let cancelCount = 0
-      const filterAarr = [TaskStatus.pending, TaskStatus.progress, TaskStatus.suspend]
-      _this.dataArray.forEach((item:any) => filterAarr.indexOf(item.status) > -1 ? cancelCount++ : null)
-      if (cancelCount === 0) {
-        _this.$message.warning('无可取消任务')
+      for (let index = 0; index < this.dataArray.length; index++) {
+        const ele = this.dataArray[index]
+        if (ele.status === TaskStatus.pending || ele.status === TaskStatus.progress || ele.status === TaskStatus.suspend) {
+          cancelCount++
+          break
+        }
       }
-      _this.dataArray.forEach((item:any) => {
-        if (filterAarr.indexOf(item.status) > -1) {
+      if (cancelCount === 0) {
+        this.$message.warning('无可取消任务')
+      }
+      this.dataArray.forEach((item:any) => {
+        if (cancelCount > 0) {
           backupUploadQueue.deleteTask(item)
         }
       });
-      setTimeout(() => { _this.getListData() }, 1000);
+      setTimeout(() => { this.getListData() }, 1000);
     },
     handleItemAction(command: string, ...args: any[]) {
       const item: BackupUploadTask = this.dataArray[args[0]]
@@ -146,7 +154,7 @@ export default Vue.extend({
       switch (command) {
         case 'cancel':  // 取消
           backupUploadQueue.deleteTask(item)
-          _this.getListData()
+          this.getListData()
           break;
         case 'pause': // 暂停 开始
           const refKey = 'renderItem' + item.srcPath
@@ -154,17 +162,14 @@ export default Vue.extend({
           console.log(item.status);
           if (item.status === TaskStatus.suspend) {
             item.resume()
-            // item.status = TaskStatus.uploading
             cell.setOperateItemDisable('continue', true)
             cell.updateContinueItem()
           } else if (item.status === TaskStatus.progress) {
             item.suspend()
-            // item.status = TaskStatus.suspend
             cell.setOperateItemDisable('pause', true)
             cell.updatePauseItem()
           } else if (item.status === TaskStatus.error) {
             item.resume()
-            // item.status = TaskStatus.uploading
             cell.setOperateItemDisable('error', true)
             cell.updateErrorItem()
           }
@@ -176,7 +181,7 @@ export default Vue.extend({
           _this.$electron.shell.openItem(item.srcPath)
           break;
         case 'openInFinder': // 打开所在文件夹
-          _this.$electron.shell.showItemInFolder(item.srcPath)
+          _this.$electron.shell.showItemInFolder(StringUtility.convertL2R(item.srcPath))
           break;
         case 'delete': // 删除
           backupUploadQueue.deleteTask(item)

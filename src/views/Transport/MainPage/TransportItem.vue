@@ -8,7 +8,13 @@
     </a-layout-sider>
     <a-layout-content class="content">
       <div class="content-top">
-        <span>{{ model.srcPath | formatSrcPath }}<span style="color: red">{{ model.status === 4 ? '&nbsp;(上传错误)' : null }}</span></span>
+        <span v-show="model.speed"
+          :title="model.speed ? discernTypeForTitle(model) : null">
+          {{ '任务' + model.id }}
+          <!-- {{ model.sourcePath }} -->
+          <span style="color: red">{{ model.status === 4 ? '&nbsp;(上传错误)' : null }}</span>
+        </span>
+        <span v-show="!model.speed">{{ model.name }}<span style="color: red">{{ model.status === 4 ? '&nbsp;(上传错误)' : null }}</span></span>
         <div>
           <custom-button
             v-for="(item, index) in showItems"
@@ -26,17 +32,20 @@
       <div v-if="!isCompleted" class="content-bottom">
         <a-progress
           class="progress"
-          :percent="(model.uploadedBytes / model.countOfBytes) * 100"
+          :percent="model.speed ? model.progressPercent : (model.completedBytes / model.countOfBytes) * 100"
           :showInfo="false"
           :strokeColor="'#06B650'"
           :strokeWidth="6"
-          :title="(model.uploadedBytes / model.countOfBytes) * 100 + '%'"
+          :title="model.speed ? model.progressPercent + '%' : (model.completedBytes / model.countOfBytes) * 100 + '%'"
         />
-        <span class="speed">{{ model.uploadedBytes | formatSpeed }}</span>
-        <span class="progress-value">{{ model.uploadedBytes | formatShowSize }} / {{ model.countOfBytes | formatShowSize }}</span>
+        <span class="speed" v-show="model.speed">{{ model.speed }}</span>
+        <span class="speed" v-show="!model.speed">{{ model.completedBytes | formatSpeed }}</span>
+        <span class="progress-value" v-show="model.progress">{{ model.progress }}</span>
+        <span class="progress-value" v-show="!model.progress">{{ model.completedBytes | formatShowSize }} / {{ model.countOfBytes | formatShowSize }}</span>
       </div>
       <div v-else class="completed-content-bottom">
-        <span>{{ model.countOfBytes | formatShowSize }}</span>
+        <span v-show="model.speed">{{ model.total }}</span>
+        <span v-show="!model.speed">{{ model.countOfBytes | formatShowSize }}</span>
       </div>
     </a-layout-content>
   </a-layout>
@@ -45,12 +54,11 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import { ResourceType } from '../../../api/NasFileModel'
 import ResourceHandler from '../../../views/MainView/ResourceHandler'
 import CustomButton from '../../../components/CustomButton/index.vue'
 import StringUtility from '../../../utils/StringUtility'
 import { UploadStatus } from '../../../model/categoryList'
-import { runningOperateItems, completedOperateItems, pauseItem, continueItem, errorItem, TransportModel } from './TransportModel'
+import { runningOperateItems, completedOperateItems, remoteCompletedOperateItems, pauseItem, continueItem, errorItem, TransportModel } from './TransportModel'
 
 export default Vue.extend({
   name: 'transport-item',
@@ -63,7 +71,7 @@ export default Vue.extend({
   },
   data () {
     const filterAarr = [UploadStatus.pending, UploadStatus.uploading, UploadStatus.suspend, UploadStatus.error]
-    let items = filterAarr.indexOf(this.model.status) > -1 ? runningOperateItems : completedOperateItems
+    let items = filterAarr.indexOf(this.model.status) > -1 ? runningOperateItems : (this.model.speed ? remoteCompletedOperateItems : completedOperateItems)
     return {
       showItems: _.cloneDeep(items)
     }
@@ -83,19 +91,20 @@ export default Vue.extend({
     },
     formatSpeed: function (num) {
       return StringUtility.formatSpeed(num)
-    },
-    formatSrcPath: function (srcPath) {
-      return StringUtility.formatSrcPath(srcPath)
-    },
+    }
   },
   methods: {
     searchResourceIcon (item) {
-      const suffix = StringUtility.formatSuffix(item.srcPath)
       let type:any = 0
-      if (item.fileInfos.length === 1 && item.srcPath.indexOf('.') > -1) {
-        type = StringUtility.suffixToType(suffix, 'number')
-      } else {
-        type = 6
+      if (item.srcPath) {
+        const suffix = StringUtility.formatSuffix(item.srcPath)
+        if (item.fileInfos.length === 1 && item.srcPath.indexOf('.') > -1) {
+          type = StringUtility.suffixToType(suffix, 'number')
+        } else {
+          type = 6
+        }
+      } else {  // 远程操作
+        type = item.type
       }
       return ResourceHandler.searchResourceIcon(type)
     },
@@ -127,6 +136,18 @@ export default Vue.extend({
         return item
       })
       console.log(this.showItems);
+    },
+    // 转换title内容
+    discernTypeForTitle (item) {
+      let result = ''
+      if (item.type === 1) {
+        result = '从\n' + item.sourcePath + '\n复制到\n' + item.destinationPath
+      } else if (item.type === 2) {
+        result = '从\n' + item.sourcePath + '\n剪切到\n' + item.destinationPath
+      } else if (item.type === 4) {
+        result = '删除' + item.sourcePath
+      }
+      return result
     }
   }
 })
@@ -156,6 +177,12 @@ export default Vue.extend({
       span {
         font-size: 14px;
         color: #484848;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1;
+        cursor: pointer;
       }
       .operate-item {
         width: 19px;

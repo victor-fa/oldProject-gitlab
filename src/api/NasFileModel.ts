@@ -166,12 +166,12 @@ interface TransportTask {
   curr_dst_path: string // (当前操作的目的文件）
 }
 
-enum RemoteTaskStatus {
+enum RemoteTaskStatus { // 对应的是16进制
   prerunning = 1,
   running = 2,
   error = 3,
-  pause = 4,
-  completed = 5
+  pause = 8,
+  completed = 16
 }
 
 interface RemoteTask {
@@ -197,7 +197,8 @@ interface UploadParams {
   size: number, 
   md5?: string,
   alias?: string,
-  id?: string
+  id?: string,
+  crypto_token?: string
 }
 
 interface DownloadParams {

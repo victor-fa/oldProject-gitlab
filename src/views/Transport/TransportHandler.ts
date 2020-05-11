@@ -18,7 +18,7 @@ export default {
     }
   },
   convertRemoteTaskStatus (status: RemoteTaskStatus): number {
-    if (status === RemoteTaskStatus.completed || status === RemoteTaskStatus.error) {
+    if (status === RemoteTaskStatus.completed) {
       return UploadStatus.completed
     }
     return UploadStatus.uploading
