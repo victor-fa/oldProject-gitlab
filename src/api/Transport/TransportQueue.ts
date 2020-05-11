@@ -36,9 +36,10 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
     this.queue.push(task)
     this.checkUploadQueue()
     this.emit('addTask', _.cloneDeep(task))
-    // if (this.db !== undefined) {
-    //   this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).add(task)
-    // }
+    if (this.db !== undefined) {
+      const obj = this.convertTask2Obj(task)
+      this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).add(obj)
+    }
   }
   /**删除任务 */
   deleteTask (task: T) {
@@ -46,28 +47,29 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
     this.queue = this.removeTask(task)
     this.checkUploadQueue()
     this.emit('removeTask', _.cloneDeep(task))
-    // if (this.db !== undefined) {
-    //   this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).delete(task.index)
-    // }
+    if (this.db !== undefined) {
+      this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).delete(task.index)
+    }
   }
   /**刷新任务，当上传出错时，调用此接口刷新任务 */
   reloadTask (task: T) {
     const index = this.queue.indexOf(task)
-    const newTask = new BaseTask(task.srcPath, task.destPath, task.uuid) as T
-    newTask.index = task.index
-    newTask.fileInfos = task.fileInfos
-    this.queue.splice(index, 1, newTask)
+    task.reload()
+    this.queue.splice(index, 1, task)
     this.checkUploadQueue()
-    // this.reloadTaskInDB(newTask)
+    this.reloadTaskInDB(task)
   }
   // private methods
   private readDBTasks () {
-    const request = window.indexedDB.open('nas_client')
+    const request = window.indexedDB.open('nas_transport')
     request.onupgradeneeded = event => {
       const target = event.target as IDBOpenDBRequest
       const db = target.result
-      if (db.objectStoreNames.contains(this.tableName)) {
-        db.createObjectStore(this.tableName, { keyPath: 'index' })
+      if (!db.objectStoreNames.contains(this.tableName)) {
+        db.createObjectStore('UploadQueue', { keyPath: 'index' })
+        db.createObjectStore('BackupQueue', { keyPath: 'index' })
+        db.createObjectStore('EncryptQueue', { keyPath: 'index' })
+        db.createObjectStore('DownloadQueue', { keyPath: 'index' })
       }
     }
     request.onsuccess = event => {
@@ -76,12 +78,50 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
       if (db.objectStoreNames.length > 0) {
         const objectStore = this.db.transaction(this.tableName, 'readonly').objectStore(this.tableName)
         objectStore.openCursor().onsuccess = event => {
-          const cursor = (event.target as IDBRequest).result
-          if (_.isEmpty(cursor)) return
-          this.queue.push(cursor as T)
+          const cursor = (event.target as IDBRequest).result as IDBCursorWithValue
+          if (cursor !== null) {
+            const task = this.convertObj2Task(cursor.value)
+            this.queue.push(task)
+            cursor.continue()
+          }
         }
       }
     }
+  }
+  // 将task转换成DB可以存储的对象
+  convertTask2Obj (task: T) {
+    return {
+      srcPath: task.srcPath,
+      destPath: task.destPath,
+      uuid: task.uuid,
+      index: task.index,
+      countOfBytes: task.countOfBytes,
+      completedBytes: task.completedBytes,
+      fileInfos: task.fileInfos,
+      status: task.status
+    }
+  }
+  // 将DB中存储的对象转换成task
+  convertObj2Task (obj: any) {
+    const task = this.createTask(obj.srcPath, obj.destPath, obj.uuid)
+    task.index = obj.index
+    task.countOfBytes = obj.countOfBytes
+    task.completedBytes = obj.completedBytes
+    task.fileInfos = obj.fileInfos
+    task.status = obj.status
+    return task as T
+  }
+  createTask (srcPath: string, destPath: string, uuid: string) {
+    if (this.tableName === 'UploadQueue') {
+      return new UploadTask(srcPath, destPath, uuid)
+    } else if (this.tableName === 'BackupQueue') {
+      return new BackupUploadTask(srcPath, destPath, uuid)
+    } else if (this.tableName === 'EncryptQueue') {
+      return new EncryptUploadTask(srcPath, destPath, uuid)
+    } else if (this.tableName === 'DownloadQueue') {
+      return new DownloadTask(srcPath, destPath, uuid)
+    }
+    return new BaseTask(srcPath, destPath, uuid)
   }
   // 检测队列并开始新的上传任务
   private checkUploadQueue () {
@@ -97,9 +137,10 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
       }
     }
   }
-  reloadTaskInDB (task: T) {
+  private reloadTaskInDB (task: T) {
     if (this.db !== undefined) {
-      this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).put(task)
+      const obj = this.convertTask2Obj(task)
+      this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).put(obj)
     }
   }
   // 获取正在上传中的任务队列
@@ -149,7 +190,7 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
     const task = this.searchTask(index)
     if (task === undefined) return
     this.emit('fileFinished', _.cloneDeep(task), fileInfo)
-    // this.reloadTaskInDB(task)
+    this.reloadTaskInDB(task)
   }
   protected handleTaskFinished (index: number) {
     const task = this.searchTask(index)
@@ -157,19 +198,19 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
     this.checkUploadQueue()
     task.removeAllListeners()
     this.emit('taskFinished', _.cloneDeep(task))
-    // this.reloadTaskInDB(task)
+    this.reloadTaskInDB(task)
   }
   protected handleTaskError (index: number, error: TaskError) {
     const task = this.searchTask(index)
     if (task === undefined) return
     task.removeAllListeners()
     this.emit('error', _.cloneDeep(task), error)
-    // this.reloadTaskInDB(task)
+    this.reloadTaskInDB(task)
   }
 }
 
 const uploadQueue = new TaskQueue<UploadTask>('UploadQueue')
-const backupUploadQueue = new TaskQueue<BackupUploadTask>('BaskupQueue')
+const backupUploadQueue = new TaskQueue<BackupUploadTask>('BackupQueue')
 const encryptUploadQueue = new TaskQueue<EncryptUploadTask>('EncryptQueue')
 const downloadQueue = new TaskQueue<DownloadTask>('DownloadQueue')
 

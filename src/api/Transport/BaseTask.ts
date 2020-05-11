@@ -1,10 +1,12 @@
 // 上传工具类，支持目录和文件上传、断点续传
 import { EventEmitter } from 'events'
+import StringUtility from '@/utils/StringUtility'
 
 export default class BaseTask extends EventEmitter {
   readonly srcPath: string
   readonly destPath: string
   readonly uuid: string
+  readonly name: string // 文件名
   readonly maxChunkSize = 1 * 1024 * 1024 // 单次读取的最大字节数
   /**任务索引 */
   index: number = 0
@@ -22,6 +24,7 @@ export default class BaseTask extends EventEmitter {
     this.srcPath = srcPath
     this.destPath = destPath
     this.uuid = uuid
+    this.name = StringUtility.formatName(srcPath)
   }
   // public methods
   async start () {
@@ -35,6 +38,9 @@ export default class BaseTask extends EventEmitter {
   }
   resume () {
     this.status = TaskStatus.progress
+  }
+  reload () {
+    this.status = TaskStatus.pending
   }
 }
 

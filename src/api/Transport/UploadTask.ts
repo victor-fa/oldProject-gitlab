@@ -15,6 +15,10 @@ export default class UploadTask extends BaseTask {
   source? = CancelToken.source() // 下载取消请求标识
   private fileHandle = -1 // 标记当前正在操作的文件句柄
 
+  constructor(srcPath: string, destPath: string, uuid: string) {
+    super(srcPath, destPath, uuid)
+    this.source = CancelToken.source()
+  }
   // public methods
   async start () {
     super.start()
@@ -45,9 +49,12 @@ export default class UploadTask extends BaseTask {
   }
   resume () {
     super.resume()
-    const CancelToken = axios.CancelToken
     this.source = CancelToken.source()
     this.uploadFile()
+  }
+  reload () {
+    super.reload()
+    this.source = CancelToken.source()
   }
   // pricvate methods 
   // 解析文件源路径
