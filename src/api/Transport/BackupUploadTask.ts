@@ -47,7 +47,7 @@ export default class BackupUploadTask extends UploadTask {
   backupUploadParams (fileInfo: FileInfo, chunkLength: number): UploadParams {
     const hostName = require("os").hostname() + ClientAPI.getMac()
     return {
-      path: '/' + StringUtility.convertR2L(hostName + '\\' + fileInfo.path),
+      path: '/' + StringUtility.convertR2L(hostName + '\\' + fileInfo.srcPath),
       start: fileInfo.completedSize,
       end: fileInfo.completedSize + chunkLength - 1,
       size: fileInfo.totalSize,

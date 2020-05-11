@@ -59,7 +59,8 @@ export default class DownloadTask extends BaseTask {
   private initFileInfo () {
     const fileName = StringUtility.formatName(this.srcPath)
     const fileInfo: FileInfo = {
-      path: this.srcPath,
+      srcPath: this.srcPath,
+      destPath: `${this.destPath}/${fileName}`,
       name: fileName,
       totalSize: 0,
       completedSize: 0
@@ -70,8 +71,7 @@ export default class DownloadTask extends BaseTask {
   private removeUnfinishedFile () {
     this.fileInfos.forEach(item => {
       if (item.completedSize < item.totalSize && item.completedSize > 0) { // not completed
-        const path = `${this.destPath}/${item.name}`
-        FileHandle.removeFile(path)
+        FileHandle.removeFile(item.destPath)
       }
     })
   }
@@ -84,18 +84,19 @@ export default class DownloadTask extends BaseTask {
       this.emit('taskFinished', this.index)
       return
     }
-    const localPath = `${this.destPath}/${fileInfo.name}`
-    FileHandle.openWriteFileHandle(localPath).then(fd => { // open file handle
-      this.fileHandle = fd
-      return this.downloadSingleFile(fd, fileInfo)
+    FileHandle.openWriteFileHandle(fileInfo.destPath).then(obj => { // open file handle
+      this.fileHandle = obj.fd
+      fileInfo.destPath = obj.path 
+      return this.downloadSingleFile(obj.fd, fileInfo)
     }).then(fd => { // download file
       return FileHandle.closeFileHandle(fd)
     }).then(() => { // close file handle
       this.fileHandle = -1
-      return FileHandle.renameFinishedFile(localPath)
-    }).then(() => { // rename file
-      this.emit('fileFinished', this.index, _.cloneDeep(fileInfo))
+      return FileHandle.renameFinishedFile(fileInfo.destPath)
+    }).then(path => { // rename file
+      fileInfo.destPath = path
       this.downloadFile()
+      this.emit('fileFinished', this.index, _.cloneDeep(fileInfo))
     }).catch(error => {
       if (error instanceof TaskError) {
         this.handleDownloadError(error.code)
@@ -110,7 +111,7 @@ export default class DownloadTask extends BaseTask {
   getNextFileInfo () {
     for (let index = 0; index < this.fileInfos.length; index++) {
       const item = this.fileInfos[index]
-      if (item.completedSize < item.totalSize) return item
+      if (item.completedSize < item.totalSize || item.completedSize === 0) return item
     }
     return null
   }
@@ -122,7 +123,8 @@ export default class DownloadTask extends BaseTask {
           reject(error)
         } else {
           this.emit('progress', this.index)
-          this.completedBytes >= this.countOfBytes && resolve(fd)
+          if (this.countOfBytes === 0) this.countOfBytes = fileInfo.totalSize
+          fileInfo.completedSize >= fileInfo.totalSize && resolve(fd)
         }
       })
     })
@@ -135,7 +137,6 @@ export default class DownloadTask extends BaseTask {
         const error = new TaskError(TaskErrorCode.serverError, response.statusText)
         return Promise.reject(error)
       }
-      console.log(response.headers)
       const result = this.parseResponse(response)
       if (result === null) {
         const error = new TaskError(TaskErrorCode.serverError, 'response headers is null')
@@ -143,12 +144,11 @@ export default class DownloadTask extends BaseTask {
       }
       fileInfo.totalSize = result.total
       fileInfo.completedSize += result.bytes
-      this.completedBytes += result.bytes
       return FileHandle.wirteFile(fd, result.buffer)
     }).then(() => { // write data
       if (this.status !== TaskStatus.progress) return
       completionHandler()
-      if (this.completedBytes < this.countOfBytes) this.downloadFileChunk(fd, fileInfo, completionHandler)
+      if (fileInfo.completedSize < fileInfo.totalSize) this.downloadFileChunk(fd, fileInfo, completionHandler)
     }).catch(error => { // catch error
       if (this.status !== TaskStatus.progress || axios.isCancel(error)) return
       if (error === FileHandleError.writeError) {
@@ -164,7 +164,7 @@ export default class DownloadTask extends BaseTask {
   generateDownloadParams (fileInfo: FileInfo): DownloadParams {
     return {
       uuid: this.uuid,
-      path: fileInfo.path,
+      path: fileInfo.srcPath,
       start: fileInfo.completedSize,
       end: fileInfo.completedSize + this.maxDownloadSize
     }

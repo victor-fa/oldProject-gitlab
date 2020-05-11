@@ -133,7 +133,7 @@ export default class UploadTask extends BaseTask {
       return
     }
     // start upload
-    FileHandle.openReadFileHandle(fileInfo.path).then(fd => { // open file handle success
+    FileHandle.openReadFileHandle(fileInfo.srcPath).then(fd => { // open file handle success
       this.fileHandle = fd
       return this.uploadSingleFile(fd, fileInfo)
     }).then(fd => { // upload file data success
@@ -183,7 +183,6 @@ export default class UploadTask extends BaseTask {
       chunkLength = buffer.length
       return this.uploadChunckData(file, buffer, this.source)
     }).then(response => {
-      console.log(response)
       if (this.status !== TaskStatus.progress) return
       if (response.data.code !== 200) {
         const error = new TaskError(TaskErrorCode.serverError, response.data.msg)
@@ -212,7 +211,7 @@ export default class UploadTask extends BaseTask {
   private generateUploadParams (fileInfo: FileInfo, chunkLength: number): UploadParams {
     return {
       uuid: this.uuid,
-      path: this.destPath + '/' + fileInfo.name,
+      path: fileInfo.destPath,
       start: fileInfo.completedSize,
       end: fileInfo.completedSize + chunkLength - 1,
       size: fileInfo.totalSize
@@ -224,8 +223,9 @@ export default class UploadTask extends BaseTask {
     return new Promise(resolve => {
       const name = StringUtility.formatName(path)
       const fileInfo: FileInfo = {
-        path,
         name,
+        srcPath: path,
+        destPath: `${this.destPath}/${name}`,
         totalSize: stats.size,
         completedSize: 0,
       }

@@ -264,7 +264,7 @@ export default Vue.extend({
       const destPath = directory[0]
       const items = ResourceHandler.getSelectItems(this.dataArray)
       items.forEach(item => {
-        const task = new DownloadTask(item.path, item.uuid, destPath)
+        const task = new DownloadTask(item.path, destPath, item.uuid)
         downloadQueue.addTask(task)
       })
     },

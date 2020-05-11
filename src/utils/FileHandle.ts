@@ -1,8 +1,9 @@
 // 文件句柄工具类,让文件操作支持Promise
 import fs from 'fs'
 import _ from 'lodash'
+import StringUtility from './StringUtility'
 
-const downloadingSuffix = '.nas-downloading'
+const downloadingSuffix = '.nas_downloading'
 
 export default {
   /**异步获取文件信息 */
@@ -32,9 +33,9 @@ export default {
     })
   },
   /**打开写文件句柄，(创建中间目录，文件重命名) */
-  openWriteFileHandle (path: string): Promise<number> {
+  openWriteFileHandle (path: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      let newPath = path
+      let newPath = StringUtility.replaceString(path, '\\', '/')
       if (fs.existsSync(newPath)) {
         newPath = this.renameFile(path)
       }
@@ -42,7 +43,7 @@ export default {
       newPath += downloadingSuffix
       fs.open(newPath, 'w+', (error, fd) => {
         if (error === null) {
-          resolve(fd)
+          resolve({ fd, path: newPath })
         } else {
           console.log(error)
           reject(FileHandleError.openError)
@@ -50,7 +51,7 @@ export default {
       })
     })
   },
-  /**重命名文件 */
+  /**重命名文件(文件名已存在) */
   renameFile (path: string) {
     let number = 0
     const index = path.lastIndexOf('/') + 1
@@ -111,15 +112,15 @@ export default {
     })
   },
   /**重命名下载完成文件 */
-  renameFinishedFile (path: string): Promise<void> {
+  renameFinishedFile (path: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const newPath = _.trimEnd(downloadingSuffix)
+      const newPath = _.trimEnd(path, downloadingSuffix)
       fs.rename(path, newPath, error => {
         if (error !== null) {
           console.log(error)
           reject(FileHandleError.renameError)
         } else {
-          resolve()
+          resolve(newPath)
         }
       })
     })

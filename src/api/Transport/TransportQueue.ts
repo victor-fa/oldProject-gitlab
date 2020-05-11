@@ -189,23 +189,26 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
   protected handleFileFinished (index: number, fileInfo: FileInfo) {
     const task = this.searchTask(index)
     if (task === undefined) return
-    this.emit('fileFinished', _.cloneDeep(task), fileInfo)
-    this.reloadTaskInDB(task)
+    const newTask = _.cloneDeep(task)
+    this.reloadTaskInDB(newTask)
+    this.emit('fileFinished', newTask, fileInfo)
   }
   protected handleTaskFinished (index: number) {
     const task = this.searchTask(index)
     if (task === undefined) return
     this.checkUploadQueue()
     task.removeAllListeners()
-    this.emit('taskFinished', _.cloneDeep(task))
-    this.reloadTaskInDB(task)
+    const newTask = _.cloneDeep(task)
+    this.reloadTaskInDB(newTask)
+    this.emit('taskFinished', newTask)
   }
   protected handleTaskError (index: number, error: TaskError) {
     const task = this.searchTask(index)
     if (task === undefined) return
     task.removeAllListeners()
-    this.emit('error', _.cloneDeep(task), error)
-    this.reloadTaskInDB(task)
+    const newTask = _.cloneDeep(task)
+    this.reloadTaskInDB(newTask)
+    this.emit('error', newTask, error)
   }
 }
 

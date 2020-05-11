@@ -46,7 +46,8 @@ export default class BaseTask extends EventEmitter {
 
 interface FileInfo {
   name: string,
-  path: string,
+  srcPath: string,
+  destPath: string,
   totalSize: number,
   completedSize: number,
   md5?: string
