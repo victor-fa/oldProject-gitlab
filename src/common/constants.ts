@@ -11,7 +11,6 @@ const TRANSFORM_INFO = 'transform_info'
 const TRANS_DOWNLOAD = 'trans_download'
 const TRANS_UPLOAD = 'trans_upload'
 const TRANS_BACKUP = 'trans_backup'
-const UPLOAD_QUEUE = 'upload_queue'
 const NAS_DEVICES = 'nas_devices'
 
 export {
@@ -25,6 +24,5 @@ export {
   TRANS_DOWNLOAD,
   TRANS_UPLOAD,
   TRANS_BACKUP,
-  UPLOAD_QUEUE,
   NAS_DEVICES
 }

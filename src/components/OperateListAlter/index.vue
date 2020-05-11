@@ -45,6 +45,7 @@
 import _ from 'lodash' 
 import Vue from 'vue'
 import { OperateItem, OperateGroup } from './operateList'
+import StringUtility from '../../utils/StringUtility'
 
 export default Vue.extend({
   name: 'operate-list-alter',
@@ -153,6 +154,9 @@ export default Vue.extend({
         const newCommand = command === 'download' ? 'download' : 'upload'
         // filter cancel action
         if (_.isEmpty(result.filePaths)) return
+        const paths = result.filePaths.map(item => {
+          return StringUtility.replaceString(item, '\\', '/')
+        })
         this.$emit('didSelectItem', newCommand, result.filePaths)
       })
     },

@@ -249,6 +249,7 @@ export default {
   // 1. 已分享的显示取消分享，已收藏的显示取消收藏
   // 2. 多选情况下，打开、到文件位置、属性、重命名不可用
   // 3. 多选情况下，如果既包含已分享(收藏)和未分享(收藏)，就展示成不可用的分享(收藏)
+  // 4. 目录不支持下载
   filterItemOperateList (groups: OperateGroup[], showArray: Array<ResourceItem>) {
     if (_.isEmpty(groups)) return null 
     const selectItems = this.getSelectItems(showArray)
@@ -260,6 +261,8 @@ export default {
           item.disable = states.disableShare
         } else if (item.command === 'collect') {
           item.disable = states.disableCollect
+        } else if (item.command === 'download') {
+          item.disable = states.disableDownload
         } else if (multipleDisableItem.indexOf(item.command) !== -1) {
           item.disable = states.disable
         }
@@ -273,6 +276,7 @@ export default {
     const disable = selectItems.length > 1
     let disableShare = false
     let disableCollect = false
+    let disableDownload = false
     for (let index = 0; index < selectItems.length; index++) {
       const element = selectItems[index]
       if (!disableShare && element.shared === ShareStatus.has) {
@@ -281,11 +285,15 @@ export default {
       if (!disableCollect && element.collected === CollectStatus.has) {
         disableCollect = true
       }
+      if (!disableDownload && element.type === ResourceType.folder) {
+        disableDownload = true
+      }
     }
     return {
       disable, // 是否禁用打开、属性、重命名菜单项
       disableShare, // 是否禁用分享菜单项
-      disableCollect // 是否禁用收藏菜单项
+      disableCollect, // 是否禁用收藏菜单项
+      disableDownload // 是否禁用下载
     }
   },
   // list的右键菜单显示规则

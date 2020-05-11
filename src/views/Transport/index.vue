@@ -35,6 +35,8 @@ export default Vue.extend({
   },
   created () {
     if (this.$route.name !== 'download') this.$router.push('download')
+    // clear current task count
+    this.$store.dispatch('Resource/clearTaskCount')
   },
   methods: {
     handleTabsChange (index: number) {

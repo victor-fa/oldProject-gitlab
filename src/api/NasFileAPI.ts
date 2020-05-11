@@ -1,11 +1,11 @@
 import _ from 'lodash'
-import { ResourceItem, UploadParams, CustomInfo } from '@/api/NasFileModel';
+import { ResourceItem, UploadParams, CustomInfo, DownloadParams } from '@/api/NasFileModel';
 import { BasicResponse } from '@/api/UserModel';
 import Vue from 'vue'
-import { jsonToParams, jsonToParamsForPdf } from '../utils/request'
+import { jsonToParams, jsonToParamsForPdf, source } from '../utils/request'
 import { CRYPTO_INFO } from '@/common/constants'
 import { NasInfo, CryptoInfo } from './ClientModel';
-import axios, { AxiosResponse, Canceler } from 'axios/index'
+import axios, { AxiosResponse, Canceler, CancelTokenSource } from 'axios/index'
 import { OrderType, UploadTimeSort } from './NasFileModel'
 import { nasServer } from './NasServer';
 import store from '@/store';
@@ -274,29 +274,26 @@ export default {
       params: { task_id: id }
     })
   },
-  uploadData (params: UploadParams, data: Buffer, cancel?: Canceler): Promise<AxiosResponse<BasicResponse>> {
+  uploadData (params: UploadParams, data: Buffer, source?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasFileModulePath + '/upload', data, { 
       params,
       headers: { 'Content-Type': ' application/octet-stream' },
-      cancelToken: new CancelToken(function executor(c) {
-        cancel = c
-      })
+      cancelToken: source === undefined ? undefined : source.token
     })
   },
-  uploadBackup (params: UploadParams, data: Buffer, cancel?: Canceler): Promise<AxiosResponse<BasicResponse>> {
+  uploadBackup (params: UploadParams, data: Buffer, source?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasFileModulePath + '/backup/upload', data, { 
       params,
       headers: { 'Content-Type': ' application/octet-stream' },
-      cancelToken: new CancelToken(function executor(c) {
-        cancel = c
-      })
+      cancelToken: source === undefined ? undefined : source.token
     })
   },
-  downloadData (path: string, uuid: string, begin: number, end: number): Promise<AxiosResponse<BasicResponse>> {
+  downloadData (params: DownloadParams, source?: CancelTokenSource): Promise<AxiosResponse<ArrayBuffer>> {
     return nasServer.get(nasFileModulePath + '/download', {
-      params: { path, uuid },
-      headers: { 'Range': `${begin}-${end}` },
-      responseType: 'stream' 
+      params: { path: params.path, uuid: params.uuid },
+      headers: { 'Range': `bytes=${params.start}-${params.end}` },
+      responseType: 'arraybuffer',
+      cancelToken: source === undefined ? undefined : source.token
     })
   },
   newFolder (path: string, uuid: string, newName: string): Promise<AxiosResponse<BasicResponse>> {

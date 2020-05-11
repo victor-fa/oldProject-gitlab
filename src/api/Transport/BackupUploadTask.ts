@@ -1,12 +1,13 @@
 import fs from 'fs'
 import crypto from 'crypto'
-import UploadTask, { FileInfo } from './UploadTask'
-import { Canceler, AxiosResponse } from 'axios';
+import UploadTask from './UploadTask'
+import { AxiosResponse, CancelTokenSource } from 'axios';
 import { BasicResponse } from '../UserModel';
 import NasFileAPI from '../NasFileAPI';
 import { UploadParams } from '../NasFileModel';
 import StringUtility from '../../utils/StringUtility'
 import ClientAPI from '../ClientAPI'
+import { FileInfo } from './BaseTask';
 
 export default class BackupUploadTask extends UploadTask {
   convertFileStats (path: string, stats: fs.Stats): Promise<FileInfo> {
@@ -39,10 +40,9 @@ export default class BackupUploadTask extends UploadTask {
       })
     })
   }
-  uploadChunckData (file: FileInfo, buffer: Buffer, cancel?: Canceler): Promise<AxiosResponse<BasicResponse>> {
-    // temporary code
+  uploadChunckData (file: FileInfo, buffer: Buffer, source?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {
     const params = this.backupUploadParams(file, buffer.length) as UploadParams
-    return NasFileAPI.uploadBackup(params, buffer, cancel)
+    return NasFileAPI.uploadBackup(params, buffer, source)
   }
   backupUploadParams (fileInfo: FileInfo, chunkLength: number): UploadParams {
     const hostName = require("os").hostname() + ClientAPI.getMac()

@@ -1,7 +1,7 @@
 // 上传工具类，支持目录和文件上传、断点续传
 import _ from 'lodash'
 import fs from 'fs'
-import { EventEmitter } from 'events'
+import BaseTask, { FileInfo, TaskStatus, TaskErrorCode, TaskError } from './BaseTask'
 import NasFileAPI from '../NasFileAPI'
 import { UploadParams } from '../NasFileModel'
 import FileHandle, { FileHandleError } from '../../utils/FileHandle'
@@ -9,58 +9,44 @@ import axios, { AxiosResponse, CancelTokenSource } from 'axios'
 import { BasicResponse } from '../UserModel'
 import StringUtility from '../../utils/StringUtility'
 
-export default class UploadTask extends EventEmitter {
-  readonly srcPath: string
-  readonly destPath: string
-  readonly uuid: string
-  readonly source: CancelTokenSource // 下载取消请求标识
-  readonly maxChunkSize = 1 * 1024 * 1024 // 单次读取的最大字节数
-  index: number = 0 // 任务标识符
-  status: UploadStatus // 上传任务的状态 
-  fileInfos: FileInfo[] = [] // 待上传的文件对象
-  countOfBytes: number = 0 // 待上传文件总大小
-  uploadedBytes: number = 0 // 已上传文件总大小
+const CancelToken = axios.CancelToken
+
+export default class UploadTask extends BaseTask {
+  source? = CancelToken.source() // 下载取消请求标识
   private fileHandle = -1 // 标记当前正在操作的文件句柄
-  
-  constructor(srcPath: string, destPath: string, uuid: string) {
-    super()
-    this.srcPath = srcPath
-    this.destPath = destPath
-    this.uuid = uuid
-    this.status = UploadStatus.pending
-    const CancelToken = axios.CancelToken
-    this.source = CancelToken.source()
-  }
+
   // public methods
   async start () {
-    // 1. 改变任务状态
-    this.status = UploadStatus.uploading
-    // 2. 解析当前目录
+    super.start()
+    // 1. 解析当前目录
     _.isEmpty(this.fileInfos) && await this.parseSourcePath(this.srcPath)
-    // 3. 过滤掉空目录
+    // 2. 过滤掉空目录
     if (_.isEmpty(this.fileInfos)) {
-      this.handlerUploadError(UploadErrorCode.pathError)
+      this.handlerTaskError(TaskErrorCode.pathError)
       return
     }
-    // 4. 计算待上传文件的总大小
+    // 3. 计算待上传文件的总大小
     this.calculatorUploadFileSize()
-    // 5. 开始递归上传文件
+    // 4. 开始递归上传文件
     this.uploadFile()
   }
   cancel () {
-    this.status = UploadStatus.error
+    super.cancel()
     this.fileInfos = []
     if (this.fileHandle > 0) FileHandle.closeFileHandle(this.fileHandle)
-    this.source.cancel()
+    this.source !== undefined && this.source.cancel()
   }
   suspend () {
-    this.status = UploadStatus.suspend
+    super.suspend()
     if (this.fileHandle > 0) FileHandle.closeFileHandle(this.fileHandle)
     this.fileHandle = -1
-    this.source.cancel()
+    this.source !== undefined && this.source.cancel()
+    this.source = undefined
   }
   resume () {
-    this.status = UploadStatus.uploading
+    super.resume()
+    const CancelToken = axios.CancelToken
+    this.source = CancelToken.source()
     this.uploadFile()
   }
   // pricvate methods 
@@ -71,7 +57,7 @@ export default class UploadTask extends EventEmitter {
     }).then(fileInfos => {
       this.fileInfos = fileInfos
     }).catch(_ => {
-      this.handlerUploadError(UploadErrorCode.readStatError)
+      this.handlerTaskError(TaskErrorCode.readStatError)
     })
   }
   // 获取需要上传的文件对象
@@ -117,25 +103,25 @@ export default class UploadTask extends EventEmitter {
     this.fileInfos!.forEach(item => {
       totalSize += item.totalSize
       if (item.uploadedSize > 0) {
-        this.uploadedBytes += item.uploadedSize
+        this.completedBytes += item.uploadedSize
       }
     })
     this.countOfBytes = totalSize
   }
   // 处理上传错误回调
-  private handlerUploadError (code: UploadErrorCode) {
-    const error = new UploadError(code)
-    this.status = UploadStatus.error
+  private handlerTaskError (code: TaskErrorCode) {
+    const error = new TaskError(code)
+    this.status = TaskStatus.error
     this.emit('error', this.index, error)
   }
   // 递归读取上传多个文件
   private uploadFile () {
     // check status
-    if (this.status !== UploadStatus.uploading) return
+    if (this.status !== TaskStatus.progress) return
     // check upload file
     const fileInfo = this.getUploadFileInfo()
     if (fileInfo === null) {
-      this.status = UploadStatus.finished
+      this.status = TaskStatus.finished
       this.emit('taskFinished', this.index)
       return
     }
@@ -150,12 +136,13 @@ export default class UploadTask extends EventEmitter {
       this.emit('fileFinished', this.index, _.cloneDeep(fileInfo))
       this.uploadFile()
     }).catch(error => { // handler error
-      if (error instanceof UploadError) {
-        this.handlerUploadError(error.code)
+      console.log(error)
+      if (error instanceof TaskError) {
+        this.handlerTaskError(error.code)
       } else if (error === FileHandleError.openError) {
-        this.handlerUploadError(UploadErrorCode.openHandleError)
+        this.handlerTaskError(TaskErrorCode.openHandleError)
       } else {
-        this.handlerUploadError(UploadErrorCode.closeHandleError)
+        this.handlerTaskError(TaskErrorCode.closeHandleError)
       }
     })
   }
@@ -174,7 +161,7 @@ export default class UploadTask extends EventEmitter {
         if (!_.isEmpty(error) || bytes === undefined) {
           reject(error)
         } else {
-          this.uploadedBytes += bytes
+          this.completedBytes += bytes
           this.emit('progress', this.index)
           const isCompleted = file.uploadedSize >= file.totalSize
           isCompleted && resolve(fd)
@@ -183,15 +170,16 @@ export default class UploadTask extends EventEmitter {
     })
   }
   // 递归读取上传文件块
-  private uploadFileChunk (fd: number, file: FileInfo, completionHandler: (bytes?: number, error?: UploadError) => void) {
+  private uploadFileChunk (fd: number, file: FileInfo, completionHandler: (bytes?: number, error?: TaskError) => void) {
     let chunkLength = 0
     FileHandle.readFile(fd, file.uploadedSize, this.maxChunkSize).then(buffer => {
       chunkLength = buffer.length
       return this.uploadChunckData(file, buffer, this.source)
     }).then(response => {
-      if (this.status !== UploadStatus.uploading) return
+      console.log(response)
+      if (this.status !== TaskStatus.progress) return
       if (response.data.code !== 200) {
-        const error = new UploadError(UploadErrorCode.uploadInnerError, response.data.msg)
+        const error = new TaskError(TaskErrorCode.serverError, response.data.msg)
         completionHandler(undefined, error)
       } else {
         file.uploadedSize += chunkLength
@@ -199,17 +187,17 @@ export default class UploadTask extends EventEmitter {
         if (file.uploadedSize < file.totalSize) this.uploadFileChunk(fd, file, completionHandler)
       }
     }).catch(error => {
-      if (this.status !== UploadStatus.uploading) return
+      if (this.status !== TaskStatus.progress || axios.isCancel(error)) return
       if (error === FileHandleError.readError) {
-        completionHandler(undefined, new UploadError(UploadErrorCode.readDataError))
+        completionHandler(undefined, new TaskError(TaskErrorCode.readDataError))
       } else {
-        completionHandler(undefined, new UploadError(UploadErrorCode.networkError))
+        completionHandler(undefined, new TaskError(TaskErrorCode.networkError))
       }
     })
   }
-  handleUploadError (code: UploadErrorCode) {
+  handleTaskError (code: TaskErrorCode) {
     return new Promise((resolve, reject) => {
-      const error = new UploadError(code)
+      const error = new TaskError(code)
       reject(error)
     })
   }
@@ -242,67 +230,4 @@ export default class UploadTask extends EventEmitter {
     const params = this.generateUploadParams(file, buffer.length)
     return NasFileAPI.uploadData(params, buffer, cancel)
   }
-}
-
-interface FileInfo {
-  name: string,
-  path: string,
-  totalSize: number,
-  uploadedSize: number,
-  md5?: string
-}
-
-class UploadError {
-  code: UploadErrorCode
-  desc: string
-  constructor (code: number, desc?: string) {
-    this.code = code
-    this.desc = desc === undefined ? this.matchNormalErrorDesc(code) : desc
-  }
-  matchNormalErrorDesc (code: UploadErrorCode) {
-    switch (code) {
-      case UploadErrorCode.openHandleError:
-        return 'open file handle error'
-      case UploadErrorCode.closeHandleError:
-        return 'close file handle error'
-      case UploadErrorCode.readStatError:
-        return 'read file stat error'
-      case UploadErrorCode.readDataError:
-        return 'read file data error'
-      case UploadErrorCode.uploadInnerError:
-        return 'upload interface inner error'
-      case UploadErrorCode.networkError:
-        return 'network error'
-      case UploadErrorCode.pathError:
-        return 'upload file directory is empty'
-      default:
-        return 'unkown'
-    }
-  }
-}
-
-enum UploadErrorCode {
-  unkown = -1,
-  openHandleError,
-  closeHandleError,
-  readStatError,
-  readDataError,
-  networkError,
-  uploadInnerError,
-  pathError
-}
-
-enum UploadStatus {
-  pending,
-  uploading,
-  suspend,
-  finished,
-  error
-}
-
-export {
-  FileInfo,
-  UploadErrorCode,
-  UploadError,
-  UploadStatus
 }

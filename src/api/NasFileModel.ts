@@ -200,6 +200,13 @@ interface UploadParams {
   id?: string
 }
 
+interface DownloadParams {
+  uuid: string,
+  path: string,
+  start: number,
+  end: number
+}
+
 interface CustomModule {
   path: string,
   uuid: string,
@@ -241,5 +248,6 @@ export {
   RemoteTaskStatus,
   UploadParams,
   CustomModule,
-  CustomInfo
+  CustomInfo,
+  DownloadParams
 }

@@ -192,7 +192,7 @@ export default Vue.extend({
           this.handleOpenAction()
           break;
         case 'rename':
-          
+          // TODO: 磁盘重命名
           break;
         case 'unload':
           

@@ -14,6 +14,8 @@ export default {
         return require('../../assets/mobile_disk.png')
       case StorageType.external_USB:
         return require('../../assets/u_disk.png')
+      default:
+        return require('../../assets/builtin_disk.png')
     }
   },
   matchStorageName (type: StorageType) {
@@ -33,7 +35,7 @@ export default {
       case StorageType.external_USB:
         return 'U盘'
       default:
-        return '未知'
+        return '内置硬盘'
     }
   },
   matchStorageSize (used: number, total: number) {

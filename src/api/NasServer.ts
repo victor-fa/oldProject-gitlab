@@ -42,6 +42,9 @@ nasServer.interceptors.request.use((config) => {
 
 nasServer.interceptors.response.use((response: AxiosResponse) => {
   // handle response exception scene
+  if (response.config.responseType === 'arraybuffer') {
+    return response
+  }
   return handleExceptionSence(response)
 }, (error: AxiosError) => {
   // Do something with response error

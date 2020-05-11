@@ -4,7 +4,7 @@ import crypto from 'crypto'
 
 //  字串处理工具类
 export default {
-  // 全替换字串中的文本
+  /**全替换字串中的文本 */
   replaceString (str: string, char: string, replaceChar: string) {
     let tmpStr = ''
     for (let index = 0; index < str.length; index++) {

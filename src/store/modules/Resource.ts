@@ -51,6 +51,9 @@ export default {
     },
     UPDATE_TASK_COUNT (state: ResourceState, adjust: number) {
       state.taskCount += adjust
+    },
+    CLEAR_TASK_COUNT (state: ResourceState) {
+      state.taskCount = 0
     }
   },
   actions: {
@@ -68,6 +71,9 @@ export default {
     },
     decreaseTask (context: ActionContext<ResourceState, ResourceState>) {
       context.commit('UPDATE_TASK_COUNT', -1)
+    },
+    clearTaskCount (context: ActionContext<ResourceState, ResourceState>) {
+      context.commit('CLEAR_TASK_COUNT')
     }
   }
 }

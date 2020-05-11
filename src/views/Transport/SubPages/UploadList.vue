@@ -21,10 +21,12 @@
 <script lang="ts">
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
-import { uploadCategorys, UploadStatus } from '../../../model/categoryList'
+import { uploadCategorys } from '../../../model/categoryList'
 import TransportItem from '../MainPage/TransportItem.vue'
 import { uploadQueue } from '../../../api/Transport/TransportQueue'
 import { EventBus, EventType } from '../../../utils/eventBus'
+import { TaskStatus } from '../../../api/Transport/BaseTask'
+import UploadTask from '../../../api/Transport/UploadTask'
 
 export default Vue.extend({
   name: 'upload-list',
@@ -36,7 +38,7 @@ export default Vue.extend({
     return {
       dataArray: [] as any,
       category: uploadCategorys,
-      state: UploadStatus.pending
+      state: TaskStatus.pending
     }
   },
   created () {
@@ -79,15 +81,15 @@ export default Vue.extend({
     pauseAllTrans() { // 全部暂停
       const _this = this as any
       let pauseCount = 0
-      const filterArr = [UploadStatus.uploading]
+      const filterArr = [TaskStatus.progress]
       _this.dataArray.forEach((item:any) => filterArr.indexOf(item.status) > -1 ? pauseCount++ : null)
       if (pauseCount === 0) {
         _this.$message.warning('无可暂停任务')
       }
-      _this.dataArray.forEach((item:any) => {
+      _this.dataArray.forEach((item: UploadTask) => {
         if (filterArr.indexOf(item.status) > -1) {
-          uploadQueue.suspendTask(item)
-          // item.status = UploadStatus.suspend
+          item.suspend()
+          // item.status = TaskStatus.suspend
           const refKey = 'renderItem' + item.srcPath
           const cell: any = this.$refs[refKey]
           cell.setOperateItemDisable('pause', true)
@@ -99,15 +101,15 @@ export default Vue.extend({
     resumeAllTrans() {  // 全部开始
       const _this = this as any
       let resumeCount = 0
-      const filterArr = [UploadStatus.suspend]
+      const filterArr = [TaskStatus.suspend]
       _this.dataArray.forEach((item:any) => filterArr.indexOf(item.status) > -1 ? resumeCount++ : null)
       if (resumeCount === 0) {
         _this.$message.warning('无可开始任务')
       }
-      _this.dataArray.forEach((item:any) => {
+      _this.dataArray.forEach((item: UploadTask) => {
         if (filterArr.indexOf(item.status) > -1) {
-          uploadQueue.resumeTask(item)
-          // item.status = UploadStatus.uploading
+          item.resume()
+          // item.status = TaskStatus.uploading
           const refKey = 'renderItem' + item.srcPath
           const cell: any = this.$refs[refKey]
           cell.setOperateItemDisable('continue', true)
@@ -119,7 +121,7 @@ export default Vue.extend({
     cancelAllTrans() { // 取消所有
       const _this = this as any
       let cancelCount = 0
-      const filterArr = [UploadStatus.pending, UploadStatus.uploading, UploadStatus.suspend]
+      const filterArr = [TaskStatus.pending, TaskStatus.progress, TaskStatus.suspend]
       _this.dataArray.forEach((item:any) => filterArr.indexOf(item.status) > -1 ? cancelCount++ : null)
       if (cancelCount === 0) {
         _this.$message.warning('无可取消任务')
@@ -151,11 +153,11 @@ export default Vue.extend({
     getListData () {
       const list = uploadQueue.getAllTasks()
       console.log(JSON.parse(JSON.stringify(list)));
-      const filterDoingArr = [UploadStatus.pending, UploadStatus.uploading, UploadStatus.suspend, UploadStatus.error]
-      const filterDoneArr = [UploadStatus.completed]
+      const filterDoingArr = [TaskStatus.pending, TaskStatus.progress, TaskStatus.suspend, TaskStatus.error]
+      const filterDoneArr = [TaskStatus.finished]
       uploadCategorys[0].count = list.filter((item:any) => filterDoingArr.indexOf(item.status) > -1).length  // 正在上传
       uploadCategorys[1].count = list.filter((item:any) => filterDoneArr.indexOf(item.status) > -1).length  // 上传完成
-      if (this.state === UploadStatus.pending) {
+      if (this.state === TaskStatus.pending) {
         this.dataArray = list.filter((item:any) => filterDoingArr.indexOf(item.status) > -1)
       } else {
         this.dataArray = list.filter((item:any) => filterDoneArr.indexOf(item.status) > -1)
@@ -163,7 +165,7 @@ export default Vue.extend({
     },
     // inner private methods
     handleItemAction(command: string, ...args: any[]) {
-      const item:any = this.dataArray[args[0]]
+      const item: UploadTask = this.dataArray[args[0]]
       console.log(JSON.parse(JSON.stringify(item)));
       const _this = this as any
       switch (command) {
@@ -174,19 +176,19 @@ export default Vue.extend({
         case 'pause': // 暂停 开始
           const refKey = 'renderItem' + item.srcPath
           const cell: any = this.$refs[refKey]
-          if (item.status === UploadStatus.suspend) {
-            uploadQueue.resumeTask(item)
-            // item.status = UploadStatus.uploading
+          if (item.status === TaskStatus.suspend) {
+            item.resume()
+            // item.status = TaskStatus.uploading
             cell.setOperateItemDisable('continue', true)
             cell.updateContinueItem()
-          } else if (item.status === UploadStatus.uploading) {
-            uploadQueue.suspendTask(item)
-            // item.status = UploadStatus.suspend
+          } else if (item.status === TaskStatus.progress) {
+            item.suspend()
+            // item.status = TaskStatus.suspend
             cell.setOperateItemDisable('pause', true)
             cell.updatePauseItem()
-          } else if (item.status === UploadStatus.error) {
-            uploadQueue.resumeTask(item)
-            // item.status = UploadStatus.uploading
+          } else if (item.status === TaskStatus.error) {
+            item.resume()
+            // item.status = TaskStatus.uploading
             cell.setOperateItemDisable('error', true)
             cell.updateErrorItem()
           }

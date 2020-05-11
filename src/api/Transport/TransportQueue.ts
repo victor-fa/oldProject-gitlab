@@ -1,8 +1,10 @@
 // 传输队列，管理上传下载队列
 import _ from 'lodash'
 import { EventEmitter } from 'events'
-import UploadTask, { UploadStatus, FileInfo, UploadError } from './UploadTask'
-import { UPLOAD_QUEUE } from '@/common/constants'
+import BaseTask, { TaskStatus, FileInfo, TaskError } from './BaseTask'
+import UploadTask from './UploadTask'
+import BackupUploadTask from './BackupUploadTask'
+import EncryptUploadTask from './EncryptUploadTask'
 
 /**
  * progress (task) 上传进度回调
@@ -10,61 +12,77 @@ import { UPLOAD_QUEUE } from '@/common/constants'
  * taskFinished (task) 上传任务完成回调
  * error (task, error) 任务出错回调
 */
-class UploadQueue extends EventEmitter {
+class UploadQueue<T extends BaseTask> extends EventEmitter {
   maxCount = 5 // 最大任务数
-  private queue: UploadTask[] // 任务队列
+  private queue: T[] // 任务队列
+  private tableName = 'UploadQueue'
+  private db?: IDBDatabase
   constructor () {
     super()
     this.queue = []
-    // this.parseCache()
+    this.readDBTasks()
   }
-  // upload methods
+  // public methods
   /**获取全部任务 */
   getAllTasks () {
     return this.queue
   }
   /**添加新的任务 */
-  addTask (task: any) {
+  addTask (task: T) {
     task.index = this.queue.length
     this.queue.push(task)
-    this.cacheQueue()
     this.checkUploadQueue()
     this.emit('addTask', _.cloneDeep(task))
+    if (this.db !== undefined) {
+      this.db.transaction(this.tableName, 'readwrite').objectStore(this.tableName).add(task)
+    }
   }
   /**删除任务 */
-  deleteTask (task: UploadTask) {
+  deleteTask (task: T) {
     task.cancel()
     this.queue = this.removeTask(task)
-    this.cacheQueue()
     this.checkUploadQueue()
     this.emit('removeTask', _.cloneDeep(task))
-  }
-  /**暂停任务 */
-  suspendTask (task: UploadTask) {
-    task.suspend()
-  }
-  /**继续任务 */
-  resumeTask (task: UploadTask) {
-    task.resume()
+    if (this.db !== undefined) {
+      this.db.transaction(this.tableName, 'readwrite').objectStore(this.tableName).delete(task.index)
+    }
   }
   /**刷新任务，当上传出错时，调用此接口刷新任务 */
-  reloadTask (task: UploadTask) {
+  reloadTask (task: T) {
     const index = this.queue.indexOf(task)
-    const newTask = new UploadTask(task.srcPath, task.destPath, task.uuid)
+    // TODO: 这个的类型需要处理
+    const newTask = new BaseTask(task.srcPath, task.destPath, task.uuid) as T
     newTask.index = task.index
     newTask.fileInfos = task.fileInfos
     this.queue.splice(index, 1, newTask)
-    this.cacheQueue()
     this.checkUploadQueue()
+    this.reloadTaskInDB(newTask)
   }
   // private methods
+  private readDBTasks () {
+    const request = window.indexedDB.open('nas_client')
+    request.onsuccess = event => {
+      const target = event.target as IDBOpenDBRequest
+      const db = target.result
+      this.db = db
+      if (db.objectStoreNames.contains(this.tableName)) {
+        db.createObjectStore(this.tableName, { keyPath: 'index' })
+      }
+      const objectStore = db.transaction(this.tableName).objectStore(this.tableName)
+      objectStore.openCursor().onsuccess = event => {
+        const cursor = (event.target as IDBRequest).result
+        if (_.isEmpty(cursor)) return
+        this.queue.push(cursor as T)
+      }
+    }
+  }
   // 检测队列并开始新的上传任务
   private checkUploadQueue () {
     const uploadingQueue = this.getUploadingQueue()
     if (uploadingQueue.length < this.maxCount) {
       for (let index = 0; index < this.queue.length; index++) {
         const task = this.queue[index]
-        if (task.status === UploadStatus.pending) {
+        if (task.status === TaskStatus.pending) {
           task.start()
           this.observerTask(task)
           return
@@ -72,14 +90,19 @@ class UploadQueue extends EventEmitter {
       }
     }
   }
+  reloadTaskInDB (task: T) {
+    if (this.db !== undefined) {
+      this.db.transaction(this.tableName, 'readwrite').objectStore(this.tableName).put(task)
+    }
+  }
   // 获取正在上传中的任务队列
   private getUploadingQueue () {
     return this.queue.filter(item => {
-      return item.status === UploadStatus.uploading
+      return item.status === TaskStatus.progress
     })
   }
   // 监听上传任务的回调
-  private observerTask (task: UploadTask) {
+  private observerTask (task: T) {
     task.on('progress', (index: number) => {
       this.handleTaskProcess(index)
     })
@@ -89,12 +112,12 @@ class UploadQueue extends EventEmitter {
     task.once('taskFinished', (index: number) => {
       this.handleTaskFinished(index)
     })
-    task.once('error', (index: number, error: UploadError) => {
+    task.once('error', (index: number, error: TaskError) => {
       this.handleTaskError(index, error)
     })
   }
   // 移除task,并更新其它任务的标识符
-  private removeTask (task: UploadTask) {
+  private removeTask (task: T) {
     const index = task.index
     return this.queue.filter((task, aIndex) => {
       if (aIndex === index) return false
@@ -102,63 +125,45 @@ class UploadQueue extends EventEmitter {
       return true
     })
   }
-  // 上传任务状态改变就同步到本地缓存
-  private cacheQueue () {
-    // TODO： 任务队列应该使用数据库缓存，目前使用localStorage缓存，性能很差
-    // if (this.queue.length === 0) return Promise.resolve()
-    // return new Promise((resolve) => {
-    //   if (_.isEmpty(this.queue)) {
-    //     localStorage.removeItem(UPLOAD_QUEUE)
-    //     resolve()
-    //     return
-    //   }
-    //   const json = JSON.stringify(this.queue)
-    //   localStorage.setItem(UPLOAD_QUEUE, json)
-    //   resolve()
-    // })
-  }
-  // 解析并添加缓存的队列
-  private parseCache () {
-    const json = localStorage.getItem(UPLOAD_QUEUE)
-    if (json === null) return
-    const queue = JSON.parse(json) as UploadTask[]
-    this.queue = queue.map(item => {
-      const newTask = new UploadTask(item.srcPath, item.destPath, item.uuid)
-      newTask.index = item.index
-      newTask.status = item.status
-      newTask.fileInfos = item.fileInfos
-      newTask.countOfBytes = item.countOfBytes
-      newTask.uploadedBytes = item.uploadedBytes
-      return newTask
-    })
+  searchTask (aIndex: number) {
+    for (let index = 0; index < this.queue.length; index++) {
+      const task = this.queue[index]
+      if (task.index === aIndex) return task
+    }
   }
   // protected methods
   // handle upload task callback
   protected handleTaskProcess (index: number) {
-    const task = this.queue[index]
+    const task = this.searchTask(index)
+    if (task === undefined) return
     this.emit('progress', _.cloneDeep(task))
   }
   protected handleFileFinished (index: number, fileInfo: FileInfo) {
-    const task = this.queue[index]
+    const task = this.searchTask(index)
+    if (task === undefined) return
     this.emit('fileFinished', _.cloneDeep(task), fileInfo)
-    this.cacheQueue()
+    this.reloadTaskInDB(task)
   }
   protected handleTaskFinished (index: number) {
-    const task = this.queue[index]
+    const task = this.searchTask(index)
+    if (task === undefined) return
     this.checkUploadQueue()
     task.removeAllListeners()
     this.emit('taskFinished', _.cloneDeep(task))
+    this.reloadTaskInDB(task)
   }
-  protected handleTaskError (index: number, error: UploadError) {
-    const task = this.queue[index]
+  protected handleTaskError (index: number, error: TaskError) {
+    const task = this.searchTask(index)
+    if (task === undefined) return
     task.removeAllListeners()
     this.emit('error', _.cloneDeep(task), error)
+    this.reloadTaskInDB(task)
   }
 }
 
-const uploadQueue = new UploadQueue()
-const backupUploadQueue = new UploadQueue()
-const encryptUploadQueue = new UploadQueue()
+const uploadQueue = new UploadQueue<UploadTask>()
+const backupUploadQueue = new UploadQueue<BackupUploadTask>()
+const encryptUploadQueue = new UploadQueue<EncryptUploadTask>()
 
 export {
   UploadQueue,
