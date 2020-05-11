@@ -102,8 +102,8 @@ export default class UploadTask extends BaseTask {
     let totalSize = 0
     this.fileInfos!.forEach(item => {
       totalSize += item.totalSize
-      if (item.uploadedSize > 0) {
-        this.completedBytes += item.uploadedSize
+      if (item.completedSize > 0) {
+        this.completedBytes += item.completedSize
       }
     })
     this.countOfBytes = totalSize
@@ -150,7 +150,7 @@ export default class UploadTask extends BaseTask {
   private getUploadFileInfo () {
     for (let index = 0; index < this.fileInfos!.length; index++) {
       const item = this.fileInfos[index]
-      if (item.uploadedSize < item.totalSize) return item
+      if (item.completedSize < item.totalSize) return item
     }
     return null
   }
@@ -163,7 +163,7 @@ export default class UploadTask extends BaseTask {
         } else {
           this.completedBytes += bytes
           this.emit('progress', this.index)
-          const isCompleted = file.uploadedSize >= file.totalSize
+          const isCompleted = file.completedSize >= file.totalSize
           isCompleted && resolve(fd)
         }
       })
@@ -172,7 +172,7 @@ export default class UploadTask extends BaseTask {
   // 递归读取上传文件块
   private uploadFileChunk (fd: number, file: FileInfo, completionHandler: (bytes?: number, error?: TaskError) => void) {
     let chunkLength = 0
-    FileHandle.readFile(fd, file.uploadedSize, this.maxChunkSize).then(buffer => {
+    FileHandle.readFile(fd, file.completedSize, this.maxChunkSize).then(buffer => {
       chunkLength = buffer.length
       return this.uploadChunckData(file, buffer, this.source)
     }).then(response => {
@@ -182,9 +182,9 @@ export default class UploadTask extends BaseTask {
         const error = new TaskError(TaskErrorCode.serverError, response.data.msg)
         completionHandler(undefined, error)
       } else {
-        file.uploadedSize += chunkLength
+        file.completedSize += chunkLength
         completionHandler(chunkLength)
-        if (file.uploadedSize < file.totalSize) this.uploadFileChunk(fd, file, completionHandler)
+        if (file.completedSize < file.totalSize) this.uploadFileChunk(fd, file, completionHandler)
       }
     }).catch(error => {
       if (this.status !== TaskStatus.progress || axios.isCancel(error)) return
@@ -206,8 +206,8 @@ export default class UploadTask extends BaseTask {
     return {
       uuid: this.uuid,
       path: this.destPath + '/' + fileInfo.name,
-      start: fileInfo.uploadedSize,
-      end: fileInfo.uploadedSize + chunkLength - 1,
+      start: fileInfo.completedSize,
+      end: fileInfo.completedSize + chunkLength - 1,
       size: fileInfo.totalSize
     }
   }
@@ -220,7 +220,7 @@ export default class UploadTask extends BaseTask {
         path,
         name,
         totalSize: stats.size,
-        uploadedSize: 0,
+        completedSize: 0,
       }
       resolve(fileInfo)
     })

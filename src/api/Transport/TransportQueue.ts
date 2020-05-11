@@ -5,6 +5,7 @@ import BaseTask, { TaskStatus, FileInfo, TaskError } from './BaseTask'
 import UploadTask from './UploadTask'
 import BackupUploadTask from './BackupUploadTask'
 import EncryptUploadTask from './EncryptUploadTask'
+import DownloadTask from './DownloadTask'
 
 /**
  * progress (task) 上传进度回调
@@ -12,13 +13,15 @@ import EncryptUploadTask from './EncryptUploadTask'
  * taskFinished (task) 上传任务完成回调
  * error (task, error) 任务出错回调
 */
-class UploadQueue<T extends BaseTask> extends EventEmitter {
-  maxCount = 5 // 最大任务数
-  private queue: T[] // 任务队列
-  private tableName = 'UploadQueue'
+class TaskQueue<T extends BaseTask> extends EventEmitter {
+  /**最大任务数 */
+  maxCount = 5
+  private queue: T[]
+  private tableName: string
   private db?: IDBDatabase
-  constructor () {
+  constructor (tableName: string) {
     super()
+    this.tableName = tableName
     this.queue = []
     this.readDBTasks()
   }
@@ -33,9 +36,9 @@ class UploadQueue<T extends BaseTask> extends EventEmitter {
     this.queue.push(task)
     this.checkUploadQueue()
     this.emit('addTask', _.cloneDeep(task))
-    if (this.db !== undefined) {
-      this.db.transaction(this.tableName, 'readwrite').objectStore(this.tableName).add(task)
-    }
+    // if (this.db !== undefined) {
+    //   this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).add(task)
+    // }
   }
   /**删除任务 */
   deleteTask (task: T) {
@@ -43,36 +46,40 @@ class UploadQueue<T extends BaseTask> extends EventEmitter {
     this.queue = this.removeTask(task)
     this.checkUploadQueue()
     this.emit('removeTask', _.cloneDeep(task))
-    if (this.db !== undefined) {
-      this.db.transaction(this.tableName, 'readwrite').objectStore(this.tableName).delete(task.index)
-    }
+    // if (this.db !== undefined) {
+    //   this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).delete(task.index)
+    // }
   }
   /**刷新任务，当上传出错时，调用此接口刷新任务 */
   reloadTask (task: T) {
     const index = this.queue.indexOf(task)
-    // TODO: 这个的类型需要处理
     const newTask = new BaseTask(task.srcPath, task.destPath, task.uuid) as T
     newTask.index = task.index
     newTask.fileInfos = task.fileInfos
     this.queue.splice(index, 1, newTask)
     this.checkUploadQueue()
-    this.reloadTaskInDB(newTask)
+    // this.reloadTaskInDB(newTask)
   }
   // private methods
   private readDBTasks () {
     const request = window.indexedDB.open('nas_client')
-    request.onsuccess = event => {
+    request.onupgradeneeded = event => {
       const target = event.target as IDBOpenDBRequest
       const db = target.result
-      this.db = db
       if (db.objectStoreNames.contains(this.tableName)) {
         db.createObjectStore(this.tableName, { keyPath: 'index' })
       }
-      const objectStore = db.transaction(this.tableName).objectStore(this.tableName)
-      objectStore.openCursor().onsuccess = event => {
-        const cursor = (event.target as IDBRequest).result
-        if (_.isEmpty(cursor)) return
-        this.queue.push(cursor as T)
+    }
+    request.onsuccess = event => {
+      const db = (event.target as IDBOpenDBRequest).result
+      this.db = db
+      if (db.objectStoreNames.length > 0) {
+        const objectStore = this.db.transaction(this.tableName, 'readonly').objectStore(this.tableName)
+        objectStore.openCursor().onsuccess = event => {
+          const cursor = (event.target as IDBRequest).result
+          if (_.isEmpty(cursor)) return
+          this.queue.push(cursor as T)
+        }
       }
     }
   }
@@ -92,7 +99,7 @@ class UploadQueue<T extends BaseTask> extends EventEmitter {
   }
   reloadTaskInDB (task: T) {
     if (this.db !== undefined) {
-      this.db.transaction(this.tableName, 'readwrite').objectStore(this.tableName).put(task)
+      this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).put(task)
     }
   }
   // 获取正在上传中的任务队列
@@ -142,7 +149,7 @@ class UploadQueue<T extends BaseTask> extends EventEmitter {
     const task = this.searchTask(index)
     if (task === undefined) return
     this.emit('fileFinished', _.cloneDeep(task), fileInfo)
-    this.reloadTaskInDB(task)
+    // this.reloadTaskInDB(task)
   }
   protected handleTaskFinished (index: number) {
     const task = this.searchTask(index)
@@ -150,24 +157,26 @@ class UploadQueue<T extends BaseTask> extends EventEmitter {
     this.checkUploadQueue()
     task.removeAllListeners()
     this.emit('taskFinished', _.cloneDeep(task))
-    this.reloadTaskInDB(task)
+    // this.reloadTaskInDB(task)
   }
   protected handleTaskError (index: number, error: TaskError) {
     const task = this.searchTask(index)
     if (task === undefined) return
     task.removeAllListeners()
     this.emit('error', _.cloneDeep(task), error)
-    this.reloadTaskInDB(task)
+    // this.reloadTaskInDB(task)
   }
 }
 
-const uploadQueue = new UploadQueue<UploadTask>()
-const backupUploadQueue = new UploadQueue<BackupUploadTask>()
-const encryptUploadQueue = new UploadQueue<EncryptUploadTask>()
+const uploadQueue = new TaskQueue<UploadTask>('UploadQueue')
+const backupUploadQueue = new TaskQueue<BackupUploadTask>('BaskupQueue')
+const encryptUploadQueue = new TaskQueue<EncryptUploadTask>('EncryptQueue')
+const downloadQueue = new TaskQueue<DownloadTask>('DownloadQueue')
 
 export {
-  UploadQueue,
+  TaskQueue,
   uploadQueue,
   backupUploadQueue,
-  encryptUploadQueue
+  encryptUploadQueue,
+  downloadQueue
 }

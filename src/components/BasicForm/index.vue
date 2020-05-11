@@ -11,6 +11,7 @@
         @change="handleChange($event.target.value)"
         @focus="handleFocus"
         @blur="handleBlur"
+        v-on:pressEnter="handlePressEnter"
       />
       <ul
         v-if="isLoadSelect"
@@ -99,6 +100,9 @@ export default Vue.extend({
         this.autoFocus = false
         this.showDropdown = false
       }, 100)
+    },
+    handlePressEnter () {
+      this.$emit('pressEnter')
     },
     handleSelect (item: any) {
       this.$emit('select', item)

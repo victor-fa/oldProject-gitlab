@@ -232,15 +232,27 @@ export default Vue.extend({
     },
     handlePasteAction (mode: TaskMode) {
       const srcItems = ResourceHandler.getSelectItems(this.showArray)
-      const dstItem = { path: this.path, uuid: this.uuid } as ResourceItem
-      NasFileAPI.addMoveTask(srcItems, dstItem, mode).then(response => {
-        console.log(response)
-        if (response.data.code !== 200) return
-        this.handlePasteSuccess()
-      }).catch(error => {
-        console.log(error)
-        this.$message.error('网络连接错误，请检测网络')
-      })
+      const destItem = { path: this.path, uuid: this.uuid } as ResourceItem
+      const isClip = (this.clipboard as ClipboardModel).isClip
+      if (isClip) {
+        NasFileAPI.addMoveTask(srcItems, destItem, mode).then(response => {
+          console.log(response)
+          if (response.data.code !== 200) return
+          this.handlePasteSuccess()
+        }).catch(error => {
+          console.log(error)
+          this.$message.error('网络连接错误，请检测网络')
+        })
+      } else {
+        NasFileAPI.addCopyTask(srcItems, destItem, mode).then(response => {
+          console.log(response)
+          if (response.data.code !== 200) return
+          this.handlePasteSuccess()
+        }).catch(error => {
+          console.log(error)
+          this.$message.error('网络连接错误，请检测网络')
+        })
+      }
     }
   }
 })

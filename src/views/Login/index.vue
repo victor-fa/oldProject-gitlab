@@ -11,7 +11,6 @@
           v-on:change="accountChangeAction"
           v-on:select="accountSelectAction"
           v-on:delete="accountDeleteAction"
-          @keyup.enter.native="loginAction"
         />
       </li>
       <li class="password-from">
@@ -20,6 +19,7 @@
           placeholder="输入您的密码"
           v-model="password"
           isSecure="ture"
+          v-on:pressEnter="loginAction"
         />
       </li>
       <li class="password-checkbox">

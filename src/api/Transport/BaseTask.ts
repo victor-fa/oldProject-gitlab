@@ -12,7 +12,7 @@ export default class BaseTask extends EventEmitter {
   countOfBytes: number = 0
   /**已传输完成字节数 */
   completedBytes: number = 0
-  /**待上传文件对象集合 */
+  /**待传输文件对象集合 */
   fileInfos: FileInfo[] = []
   /**任务状态 */
   status = TaskStatus.pending
@@ -42,7 +42,7 @@ interface FileInfo {
   name: string,
   path: string,
   totalSize: number,
-  uploadedSize: number,
+  completedSize: number,
   md5?: string
 }
 

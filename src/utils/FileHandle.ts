@@ -1,6 +1,8 @@
 // 文件句柄工具类,让文件操作支持Promise
-import fs, { mkdirSync } from 'fs'
+import fs from 'fs'
 import _ from 'lodash'
+
+const downloadingSuffix = '.nas-downloading'
 
 export default {
   /**异步获取文件信息 */
@@ -37,6 +39,7 @@ export default {
         newPath = this.renameFile(path)
       }
       this.checkDirectoryExist(newPath)
+      newPath += downloadingSuffix
       fs.open(newPath, 'w+', (error, fd) => {
         if (error === null) {
           resolve(fd)
@@ -89,6 +92,38 @@ export default {
       })
     }) 
   },
+  /**移除临时文件 */
+  removeFile (path: string) {
+    return new Promise((resolve, reject) => {
+      const stats = fs.statSync(path)
+      if (stats.isFile()) {
+        const newPath = path + downloadingSuffix
+        if (fs.existsSync(newPath)) {
+          fs.unlink(newPath, error => {
+            if (error === null) {
+              reject(error)
+            } else {
+              resolve()
+            }
+          })
+        }
+      }
+    })
+  },
+  /**重命名下载完成文件 */
+  renameFinishedFile (path: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const newPath = _.trimEnd(downloadingSuffix)
+      fs.rename(path, newPath, error => {
+        if (error !== null) {
+          console.log(error)
+          reject(FileHandleError.renameError)
+        } else {
+          resolve()
+        }
+      })
+    })
+  },
   /**读取文件数据 */
   readFile (fd: number, position: number, length: number): Promise<any> {
     return new Promise((resolve, reject) => {
@@ -123,7 +158,8 @@ enum FileHandleError {
   openError,
   closeError,
   readError,
-  writeError
+  writeError,
+  renameError
 }
 
 export {

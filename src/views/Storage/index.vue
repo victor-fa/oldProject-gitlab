@@ -127,7 +127,7 @@ export default Vue.extend({
       } else {
         const uuid = item.partitions[0].uuid
         const no = (this.user as User).ugreenNo
-        const path = item.isInternal ? `/.ugreen_nas/${no}` : `/${no}`
+        const path = item.isInternal ? `/.ugreen_nas/${no}` : `/`
         this.pushResourceLitsPage(path, uuid, item.showName)
       }
     },

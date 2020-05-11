@@ -8,6 +8,8 @@ import NasFileAPI, { TaskMode } from '@/api/NasFileAPI'
 import processCenter, { EventName } from '@/utils/processCenter'
 import { EventBus } from '@/utils/eventBus'
 import StringUtility from '@/utils/StringUtility'
+import DownloadTask from '@/api/Transport/DownloadTask'
+import { downloadQueue } from '@/api/Transport/TransportQueue'
 
 // declare module 'vue/types/vue' {
 //   interface Vue {
@@ -217,9 +219,9 @@ export default Vue.extend({
       if (srcItem === undefined) {
         const selectedItem = ResourceHandler.getFirstSelectItem(this.dataArray)
         if (selectedItem !== null) srcItem = selectedItem
+      } else {
+        srcItem.type === ResourceType.folder ? this.handleOpenFolderAction(srcItem) : this.handleOpenFileAction(srcItem)
       }
-      if (srcItem === undefined) return
-      srcItem.type === ResourceType.folder ? this.handleOpenFolderAction(srcItem) : this.handleOpenFileAction(srcItem)
     },
     handleOpenFolderAction (item: ResourceItem) {
       this.$router.push({
@@ -258,15 +260,12 @@ export default Vue.extend({
       EventBus.$emit(EventName.jump, item)
     },
     handleDownloadAction (directory: string[]) {
-      const myThis = this as any
+      const destPath = directory[0]
       const items = ResourceHandler.getSelectItems(this.dataArray)
       items.forEach(item => {
-        if (item.path.indexOf('.ugreen_nas') === -1) {
-          myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(NasFileAPI.httpEncryptDownload(item))
-        } else {
-          myThis.$electron.remote.getCurrentWindow().webContents.downloadURL(NasFileAPI.download(item))
-        }
-      });
+        const task = new DownloadTask(item.path, item.uuid, destPath)
+        downloadQueue.addTask(task)
+      })
     },
     handleShareAction () {
       const items = ResourceHandler.disableSelectItems(this.dataArray)
