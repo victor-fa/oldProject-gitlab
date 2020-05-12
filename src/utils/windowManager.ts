@@ -80,6 +80,7 @@ export default {
         width: 420,
         height: 610,
         title: '登录',
+        backgroundColor: '#f6f8fb',
         resizable: true
       })
     }
@@ -101,6 +102,7 @@ export default {
         path: 'home',
         width: 800,
         height: 600,
+        backgroundColor: '#f6f8fb',
         title: 'nas_client'
       })
     }

@@ -191,14 +191,15 @@ export default Vue.extend({
           return
         }
         const nasAccess = response.data.data as NasAccessInfo
-        if (_.isEmpty(nasAccess)) {
+        const status = _.get(nasAccess, 'auth_status')
+        if (status !== 1) {
           this.pollResult(session)
         } else {
           // cache nas info
           this.$store.dispatch('NasServer/updateNasAccess', nasAccess)
           this.$store.dispatch('NasServer/updateNasInfo', this.nasInfo)
           // cache user info
-          const user = this.convertUser(nasAccess.data)
+          const user = this.convertUser(_.get(nasAccess, 'user_basic'))
           this.$store.dispatch('User/updateUser', user)
           processCenter.renderSend(EventName.home)
         }

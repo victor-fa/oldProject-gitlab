@@ -27,6 +27,7 @@ export default Vue.extend({
   display: flex;
   justify-content: flex-start;
   align-items: center;
+  -webkit-app-region: drag;
   img {
     height: 42px;
     margin-left: 27px;
