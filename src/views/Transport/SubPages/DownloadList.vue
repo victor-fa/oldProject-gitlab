@@ -58,6 +58,7 @@ export default Vue.extend({
     this.resetSelected()
     this.getListData()
     downloadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
+      this.$store.dispatch('Resource/decreaseTask')
       setTimeout(() => { this.getListData() }, 1000);
     })
   },
@@ -178,18 +179,6 @@ export default Vue.extend({
         }
       });
     },
-    // getListData () {
-    //   console.log(JSON.parse(JSON.stringify(this.downloadInfo)));
-    //   downloadCategorys[0].count = this.downloadInfo.filter(item => item.trans_type === 'download' && (item.state === 'progressing' || item.state === 'interrupted')).length  // 正在下载
-    //   downloadCategorys[1].count = this.downloadInfo.filter(item => item.trans_type === 'download' && item.state === 'completed').length  // 下载完成
-    //   this.dataArray = this.downloadInfo.filter(item => {
-    //     if (item.state === 'progressing' || item.state === 'completed') {
-    //       return item.trans_type === 'download' && item.state === this.state
-    //     } else if (item.state === 'interrupted') {
-    //       return item.trans_type === 'download' && item.state === 'interrupted'
-    //     }
-    //   })
-    // },
     getListData () {
       const list = downloadQueue.getAllTasks()
       console.log(JSON.parse(JSON.stringify(list)));
@@ -230,13 +219,13 @@ export default Vue.extend({
           }
           break;
         case 'jump': // 打开所在文件夹
-          _this.$electron.shell.showItemInFolder(item.srcPath)
+          _this.$electron.shell.showItemInFolder(item.destPath)
           break;
         case 'open': // 打开文件
-          _this.$electron.shell.openItem(item.srcPath)
+          _this.$electron.shell.openItem(item.destPath + '/' + item.name)
           break;
         case 'openInFinder': // 打开所在文件夹
-          _this.$electron.shell.showItemInFolder(StringUtility.convertL2R(item.srcPath))
+          _this.$electron.shell.showItemInFolder(StringUtility.convertL2R(item.destPath))
           break;
         case 'delete': // 删除
           downloadQueue.deleteTask(item)

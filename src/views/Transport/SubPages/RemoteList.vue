@@ -110,9 +110,9 @@ export default Vue.extend({
               okType: 'danger',
               cancelText: '取消',
               onOk() {
-                this.showArray.forEach(item => {
+                _this.showArray.forEach(item => {
                   if (item.status === UploadStatus.completed) {
-                    this.cancelRemoteTask(item.id)
+                    _this.cancelRemoteTask(item.id)
                   }
                 })
                 setTimeout(() => { _this.fetchRemoteList() }, 1000);

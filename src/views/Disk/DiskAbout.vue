@@ -23,8 +23,7 @@
 			<div class="bottom">
 				<p class="release">©2020 CloudSeries_{{ name }} uGreen</p>
 				<a-button @click="checkUpdate" :disabled="percent > 0 && percent !== 100">
-					<span v-if="!loading">{{ CheckText }}</span>
-					<span v-else>{{ ProcessText }}</span>
+					<span>{{ !loading ? CheckText : ProcessText }}</span>
 				</a-button>
 				<a-button @click="OpenLink">
 					官网
@@ -125,7 +124,7 @@ export default {
 			};
 		},
 		checkUpdate() {
-			this.$ipc.send('system', 'check-for-update', 'https://update.zjinh.cn/c-disk');
+			this.$ipc.send('system', 'check-for-update', 'http://192.168.10.21/sys/file/gz/');	// 20200511/NasDevUpgrade-V01.02.33.200511.tar.gz
 			this.loading = true;
 		},
 		OpenLink() {

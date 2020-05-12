@@ -122,7 +122,7 @@ const encryptContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
-      { title: '上传', command: 'upload' },
+      { title: '上传', command: 'uploadFile' },
       { title: '刷新', command: 'refresh' },
       { title: '修改密码', command: 'modifyPass' },
       { title: '重置空间', command: 'reset' }

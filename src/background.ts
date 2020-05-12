@@ -1,12 +1,10 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain, nativeImage, Tray, Menu, session, screen } from 'electron'
-import {
-  createProtocol,
-} from 'vue-cli-plugin-electron-builder/lib'
-import processCenter, { MainEventName } from './utils/processCenter'
+import { app, protocol, BrowserWindow, ipcMain, nativeImage, Tray, Menu, screen } from 'electron'
+import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
+import processCenter from './utils/processCenter'
 import windowControl from './utils/windowControl'
-import download from './utils/file/download'
+import { autoUpdater } from 'electron-updater';
 const path = require('path');
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -165,7 +163,6 @@ app.on('ready', async () => {
 
 	}
   bindIpc(); //初始化ipc
-	download.init();
 	createWindow()
 	processCenter.mainObserverChannel()
 	DiskSystem.MainWindow({})
@@ -308,6 +305,40 @@ let DiskSystem = {
 			onclose: () => {
 				PopupWindow = null;
 			}
+		});
+	},
+	CheckUpdate: event => {
+		let message = {
+			appName: 'CloudDisk',
+			error: '检查更新出错, 请联系开发人员',
+			checking: '正在检查更新……',
+			updateAva: '检测到新版本，正在下载……',
+			updateNotAva: '现在使用的就是最新版本，不用更新',
+			downloaded: '最新版本已下载，点击安装进行更新'
+		};
+		//当开始检查更新的时候触发
+		autoUpdater.on('checking-for-update', function() {
+			event.sender.send('check-for-update', message.checking); //返回一条信息
+		});
+		//当发现一个可用更新的时候触发，更新包下载会自动开始
+		autoUpdater.on('update-available', function(info) {
+			event.sender.send('update-down-success', info);
+			event.sender.send('check-for-update', message.updateAva); //返回一条信息
+		});
+		//当没有可用更新的时候触发
+		autoUpdater.on('update-not-available', function() {
+			event.sender.send('check-for-update', message.updateNotAva); //返回一条信息
+		});
+		autoUpdater.on('error', function() {
+			event.sender.send('check-for-update', message.error); //返回一条信息
+		});
+		// 更新下载进度事件
+		autoUpdater.on('download-progress', progressObj => {
+			event.sender.send('download-progress', progressObj);
+		});
+		autoUpdater.on('update-downloaded', function() {
+			event.sender.send('check-for-update', message.downloaded); //返回一条信息
+			//通过main进程发送事件给renderer进程，提示更新信息
 		});
 	},
 	logoff: () => {
@@ -461,18 +492,16 @@ function bindIpc() {
 				DiskSystem.SettingWindow();
 				break;
 			case 'check-for-update' /*检查更新*/:
-				// autoUpdater.setFeedURL(data);
-				// DiskSystem.CheckUpdate(event);
-				// autoUpdater.checkForUpdates();
+				console.log(data);
+				autoUpdater.setFeedURL(data);
+				DiskSystem.CheckUpdate(event);
+				autoUpdater.checkForUpdates();
 				break;
 			case 'update' /*安装更新*/:
 				// autoUpdater.quitAndInstall();
 				break;
 			case 'user-update':
 				MainWindow.webContents.send('user-update', data);
-				break;
-			case 'download-update':
-				data && download.changeFolder(data);
 				break;
 			case 'logoff':
 				DiskSystem.logoff();
@@ -507,26 +536,6 @@ function bindIpc() {
 				break;
 			case 0: //属性
 				FileViewer.Attributes(data);
-				break;
-		}
-	});
-	/*下载事件控制*/
-	ipcMain.on('download', (event, type, data) => {
-		let downloadItem = download.downloadList[data];
-		if (downloadItem === undefined) {
-			return;
-		}
-		switch (type) {
-			case 'pause':
-				downloadItem.pause();
-				break;
-			case 'cancel':
-				downloadItem.cancel();
-				break;
-			case 'resume':
-				if (downloadItem.canResume()) {
-					downloadItem.resume();
-				}
 				break;
 		}
 	});

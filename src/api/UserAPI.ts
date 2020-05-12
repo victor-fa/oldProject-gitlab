@@ -6,6 +6,7 @@ import store from '@/store'
 import { nasCloud } from './CloudServer'
 
 const userModulePath = '/api/user/v1'
+const updateModulePath = '/api/device/v1'
 const CancelToken = axios.CancelToken
 let cancel: Canceler | null = null
 const getAccessToken = () => {
@@ -175,5 +176,8 @@ export default {
   },
   fetchQrCodeLogin (qrCode: string): Promise<AxiosResponse<BasicResponse>> {
     return nasCloud.post(userModulePath + '/basic/qrCode/login', { qrCode })
+  },
+  fetchUpdateInfo (appNo: string, versionNo: string): Promise<AxiosResponse<BasicResponse>> {
+    return nasCloud.post(updateModulePath + '/softVer/latest', { appNo, versionNo })
   }
 }

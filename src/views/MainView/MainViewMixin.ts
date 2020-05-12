@@ -278,6 +278,7 @@ export default Vue.extend({
       items.forEach(item => {
         const task = new DownloadTask(item.path, destPath, item.uuid)
         downloadQueue.addTask(task)
+        this.$store.dispatch('Resource/increaseTask')
       })
     },
     handleShareAction () {

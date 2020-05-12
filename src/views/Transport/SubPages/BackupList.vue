@@ -59,6 +59,7 @@ export default Vue.extend({
   created () {
     this.getListData()
     backupUploadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
+      this.$store.dispatch('Resource/decreaseTask')
       setTimeout(() => { this.getListData() }, 1000);
     })
   },

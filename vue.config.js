@@ -20,6 +20,12 @@ module.exports = {
         "directories": {
           "output": "./dist_electron"//输出文件路径
         },
+        "publish": [
+          {
+            "provider": "generic",
+            "url": "http://192.168.10.21/sys/file/gz/"
+          }
+        ],
         "win": {//win相关配置
           "icon": "./logo.png",//图标，当前图标在根目录下，注意这里有两个坑
           "target": [

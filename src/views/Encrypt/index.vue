@@ -160,7 +160,7 @@ export default Vue.extend({
         return false
       }
       this.loading = true
-      NasFileAPI.setEncrypt(StringUtility.encryptPassword(this.encryptSet.securityUserPassword)).then(response => {
+      NasFileAPI.setEncrypt(this.encryptSet.securityUserPassword).then(response => {
         this.loading = false
         if (response.data.code !== 200) return
         this.login()
@@ -201,11 +201,11 @@ export default Vue.extend({
     login() {
       let security_password = ''
       if (this.encryptSet.isVisiable) {
-        security_password = StringUtility.encryptPassword(this.encryptSet.securityUserPassword)
+        security_password = this.encryptSet.securityUserPassword
       } else if (this.encryptLogin.isVisiable) {
-        security_password = StringUtility.encryptPassword(this.encryptLogin.securityPassword)
+        security_password = this.encryptLogin.securityPassword
       } else if (this.encryptModify.isVisiable) {
-        security_password = StringUtility.encryptPassword(this.encryptModify.newPassword)
+        security_password = this.encryptModify.newPassword
       }
       this.loading = true
       NasFileAPI.loginEncrypt(security_password).then(response => {
@@ -249,8 +249,8 @@ export default Vue.extend({
         return false
       }
       const input = {
-        security_user_password: StringUtility.encryptPassword(this.encryptModify.oldPassword),
-        security_user_password_new: StringUtility.encryptPassword(this.encryptModify.newPassword)
+        security_user_password: this.encryptModify.oldPassword,
+        security_user_password_new: this.encryptModify.newPassword
       }
       this.loading = true
       NasFileAPI.modifyEncrypt(input).then(response => {
@@ -324,15 +324,18 @@ export default Vue.extend({
       this.page++
       this.getEncryptList()
     },
-    handleSortWayChangeAction (order: OrderType) {
-      if (order === OrderType.ByUploadDesc) {
-        this.uploadOrder = UploadTimeSort.descend
-      } else if (order === OrderType.ByUploadAsc) {
-        this.uploadOrder = UploadTimeSort.ascend
-      }
-      this.page = 1
-      this.busy = false
-      this.getEncryptList()
+    // handleSortWayChangeAction (order: OrderType) {
+    //   if (order === OrderType.ByUploadDesc) {
+    //     this.uploadOrder = UploadTimeSort.descend
+    //   } else if (order === OrderType.ByUploadAsc) {
+    //     this.uploadOrder = UploadTimeSort.ascend
+    //   }
+    //   this.page = 1
+    //   this.busy = false
+    //   this.getEncryptList()
+    // },
+    handleEncryptAction (filePaths: string[]) {
+      console.log(filePaths);
     },
     handleModifyPassAction () { //  修改加密空间密码
       this.encryptModify.isVisiable = true
@@ -379,7 +382,6 @@ export default Vue.extend({
       console.log(JSON.parse(JSON.stringify(item)));
     },
     handleUploadAction (filePaths: string[]) {
-      console.log(filePaths);
       filePaths.forEach(path => {
         const task = new EncryptUploadTask(path, this.path, this.uuid)
         encryptUploadQueue.addTask(task)
