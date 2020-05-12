@@ -55,6 +55,7 @@
             v-show="showItem(item)"
             class="right-item"
             :image="item.icon"
+            :selectedImage="item.selectedIcon"
             :ref="item.command"
             :iconWidth="item.iconWidth"
             @click.native="handleItemClick(item)"

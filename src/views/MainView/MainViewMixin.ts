@@ -112,7 +112,10 @@ export default Vue.extend({
       }
     },
     handleRenameRequestAction (index: number, newName: string) {
-      // TODO: 当前没有对文件名合法性进行校验
+      if (!this.checkResourceName(newName)) {
+        this.$message.error('名称包含非法字符')
+        return
+      }
       const item = ResourceHandler.disableFirstSelectItem(this.dataArray)
       if (item === undefined) return
       const newPath = StringUtility.renamePath(item.path, newName)
@@ -129,11 +132,20 @@ export default Vue.extend({
         this.$message.error('重命名失败')
       })
     },
+    checkResourceName (newName: string) {
+      const illegalCharset = ['\\', '/', ':', '*', '"', '>', '<', '|', '', '?']
+      for (let index = 0; index < newName.length; index++) {
+        const char = newName.charAt(index)
+        if (illegalCharset.indexOf(char) !== -1) {
+          return false
+        }
+      }
+      return true
+    },
     handleNewFolderRequestAction (index: number, newName: string) {
     },
     // handle main view context menu actions
     handleContextMenuActions (command: string, ...args: any[]) {
-      console.log(command);
       switch (command) {
         case 'open': 
           this.handleOpenAction(args[0])

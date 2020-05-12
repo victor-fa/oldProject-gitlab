@@ -162,6 +162,9 @@ export default Vue.extend({
         case 'click':
           this.handleListClickAction()
           break;
+        case 'selectAllItems':
+          this.handleSelectAllItemsAction()
+          break
         default:
           break;
       }
@@ -187,6 +190,12 @@ export default Vue.extend({
         this.showArray = ResourceHandler.resetSelectState(this.showArray)
       }
     },
+    handleSelectAllItemsAction () {
+      this.showArray = this.showArray.map(item => {
+        item.isSelected = true
+        return item
+      })
+    },
     // handle resource list view item callback actions
     handleResourceItemAction (action: string, index: number, ...args: any[]) {
       this.$emit('itemCallbackActions', action, index, ...args)
@@ -201,6 +210,9 @@ export default Vue.extend({
         case 'commandSelection':
           this.handleCommandSelection(index)
           break;
+        case 'ctrlSelection':
+          this.handleCtrlSelection(index)
+          break
         case 'shiftSelection':
           this.handleShiftSelection(index)
           break;
@@ -216,8 +228,16 @@ export default Vue.extend({
       this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
     },
     handleCommandSelection (index: number) {
-      const select = this.showArray[index].isSelected === true
-      this.showArray = ResourceHandler.setSelectState(this.showArray, index, !select)
+      if (process.platform === 'darwin') {
+        const select = this.showArray[index].isSelected === true
+        this.showArray = ResourceHandler.setSelectState(this.showArray, index, !select)
+      }
+    },
+    handleCtrlSelection (index: number) {
+      if (process.platform === 'win32') {
+        const select = this.showArray[index].isSelected === true
+        this.showArray = ResourceHandler.setSelectState(this.showArray, index, !select)
+      }
     },
     handleShiftSelection (index: number) {
       this.showArray = ResourceHandler.shiftMultipleSelection(this.showArray, index)

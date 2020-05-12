@@ -13,8 +13,9 @@
           :src="searchResourceIcon(model.type)"
           @click.stop.exact="singleClick()"
           @click.meta.stop="multipleClick()"
-          @click.shift.stop="listMultipleClick()"
-          @dblclick="doubleClick()"
+          @click.ctrl.stop="ctrlMultipleClick()"
+          @click.shift.stop="shiftMultipleClick()"
+          @dblclick.stop="doubleClick()"
           @contextmenu.prevent="contextMenuClick($event)"
         />
       </div>
@@ -24,17 +25,17 @@
           v-focus
           type="text"
           v-model="inputName"
-          @blur="handleRename($event)"
+          @blur="handleBlur($event)"
           @focus="handleFocus($event)"
-          v-on:pressEnter="handleRename($event)"
+          v-on:pressEnter="handlePressEnter($event)"
         />
         <p
           v-else
           :title="showName"
           @click.stop.exact="singleClick()"
           @click.meta.stop="multipleClick()"
-          @click.shift.stop="listMultipleClick()"
-          @dblclick="doubleClick()"
+          @click.shift.stop="shiftMultipleClick()"
+          @dblclick.stop="doubleClick()"
           @contextmenu.prevent="contextMenuClick($event)"
         >
           {{ showName }}
@@ -45,20 +46,20 @@
       v-else
       class="vertical-item"
       v-bind:class="{
+        verticalSelectedItem: isSelected,
         oddVerticalItem: isOddStyle,
-        verticalSelectedItem: isSelected, 
         disableItem: model.disable 
       }"
+      @click.stop.exact="singleClick()"
+      @click.meta.stop="multipleClick()"
+      @click.shift.stop="shiftMultipleClick()"
+      @dblclick.stop="doubleClick()"
+      @contextmenu.prevent.stop="contextMenuClick($event)"
     >
       <a-row
         type="flex"
         justify="space-around"
         align="middle"
-        @click.stop.exact="singleClick()"
-        @click.meta.stop="multipleClick()"
-        @click.shift.stop="shiftMultipleClick()"
-        @dblclick="doubleClick()"
-        @contextmenu.prevent.stop="contextMenuClick($event)"
       >
         <a-col :span="13">
           <img :src="searchResourceIcon(model.type)">
@@ -132,7 +133,9 @@ export default Vue.extend({
     searchResourceIcon (type: ResourceType) {
       return ResourceHandler.searchResourceIcon(type)
     },
-    handleRename (event: MouseEvent) {
+    handlePressEnter (event: MouseEvent) {
+    },
+    handleBlur (event: MouseEvent) {
       if (_.isEmpty(this.inputName)) {
         const item = this.model as ResourceItem
         const isDirectory = item.type === ResourceType.folder
@@ -169,6 +172,10 @@ export default Vue.extend({
       if (this.model.disable) return
       this.$emit('callbackAction', 'commandSelection', this.index)
     },
+    ctrlMultipleClick () {
+      if (this.model.disable) return
+      this.$emit('callbackAction', 'ctrlSelection', this.index)
+    },
     shiftMultipleClick () {
       if (this.model.disable) return
       this.$emit('callbackAction', 'shiftSelection', this.index)
@@ -192,7 +199,6 @@ export default Vue.extend({
   width: 80px;
   height: 100px;
   overflow: hidden;
-  cursor: pointer;
   .icon-wrapper {
     height: 75px;
     display: flex;
@@ -245,7 +251,6 @@ export default Vue.extend({
   font-size: 12px;
   text-align: left;
   background-color: white;
-  cursor: pointer;
   img {
     width: 19px;
     height: 16px;
@@ -254,7 +259,7 @@ export default Vue.extend({
   }
 }
 .verticalSelectedItem {
-  background-color: #ececec;
+  background-color: #DEF1EA !important;
 }
 .oddVerticalItem {
   background-color: #FCFBFE;

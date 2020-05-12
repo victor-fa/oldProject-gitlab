@@ -78,12 +78,15 @@ export default Vue.extend({
   },
   watch: {
     isSelected: function (value: boolean) {
+      if (this.selectedImage === null && this.selectedTitle === null && this.selectedBackgroundImage === null) return
       value ? this.changeSelectStyle() : this.changeNormalStyle()
     },
     isHover: function (value: boolean) {
+      if (this.hoverImage === null) return
       value ? this.changeHoverStyle() : this.changeNormalStyle()
     },
     isHighlight: function (value: boolean) {
+      if (this.highlightImage === null) return
       value ? this.changeHighlightStyle() : this.changeNormalStyle()
     }
   },

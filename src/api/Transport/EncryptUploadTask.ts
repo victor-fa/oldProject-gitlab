@@ -5,8 +5,6 @@ import { AxiosResponse, CancelTokenSource } from 'axios';
 import { BasicResponse } from '../UserModel';
 import NasFileAPI from '../NasFileAPI';
 import { UploadParams } from '../NasFileModel';
-import StringUtility from '../../utils/StringUtility'
-import ClientAPI from '../ClientAPI'
 import { CRYPTO_INFO } from '@/common/constants'
 import { CryptoInfo } from '../ClientModel';
 import { FileInfo } from './BaseTask';
@@ -55,8 +53,8 @@ export default class EncryptUploadTask extends UploadTask {
     }
     return {
       path: '/' + fileInfo.name,
-      start: fileInfo.uploadedSize,
-      end: fileInfo.uploadedSize + chunkLength - 1,
+      start: fileInfo.completedSize,
+      end: fileInfo.completedSize + chunkLength - 1,
       size: fileInfo.totalSize,
       md5: fileInfo.md5,
       crypto_token: token.crypto_token

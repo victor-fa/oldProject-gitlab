@@ -90,17 +90,30 @@ export default Vue.extend({
   },
   mounted () {
     window.addEventListener('resize', this.observerWindowResize)
-    document.onkeyup = (event) => {
+    document.onclick = event => { // click
+     this.$emit('callbackAction', 'click')
+    }
+    document.onkeyup = event => {
       if (event.keyCode === 13) { // enter
+        event.preventDefault()
         this.$emit('callbackAction', 'enterRenaming')
-      } else if (event.keyCode === 8) {
+      } else if (event.keyCode === 8) { // esc
+        event.preventDefault()
         this.$emit('callbackAction', 'deleteItems')
+      }
+    }
+    document.onkeydown = event => {
+      if (event.keyCode === 65 && event.metaKey === true) {
+        event.preventDefault()
+        this.$emit('callbackAction', 'selectAllItems')
       }
     }
   },
   destroyed () {
-    window.removeEventListener('resize', this.observerWindowResize)
+    window.addEventListener('resize', this.observerWindowResize)
+    document.onclick = null
     document.onkeyup = null
+    document.onkeydown = null
   },
   methods: {
     observerWindowResize () {
@@ -120,8 +133,8 @@ export default Vue.extend({
       this.$emit('callbackAction', 'contextMenu', event)
     },
     handleListClick (event: MouseEvent) {
-      event.stopPropagation()
-      this.$emit('callbackAction', 'click')
+      // event.stopPropagation()
+      // this.$emit('callbackAction', 'click')
     }
   }
 })
