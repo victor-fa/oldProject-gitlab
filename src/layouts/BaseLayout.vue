@@ -5,7 +5,7 @@
         <sider-menu/>
       </a-layout-sider>
       <a-layout>
-        <a-layout-header class="base-header" style="-webkit-app-region: drag">
+        <a-layout-header class="base-header">
           <basic-header/>
         </a-layout-header>
         <a-layout-content>

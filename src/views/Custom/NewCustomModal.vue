@@ -134,7 +134,6 @@ export default Vue.extend({
         const path = _.get(response.data.data, 'path')
         const uuid = _.get(response.data.data, 'uuid')
         const data = _.get(this.imageObj, 'base64')
-        console.log(data)
         return NasFileAPI.uploadCustomCover(path, uuid, data)
       }).then(response => {
         this.loading = false

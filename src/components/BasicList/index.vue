@@ -2,6 +2,10 @@
   <div
     class="basic-list"
     :style="{ height: scrollHeight + 'px' }"
+    v-infinite-scroll="handleInfiniteOnLoad"
+    :infinite-scroll-disabled="busy"
+    :infinite-scroll-distance="0"
+    :infinite-scroll-immediate-check="false"
   >
     <a-list
       itemLayout="horizontal"
@@ -16,14 +20,20 @@
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
+import infiniteScroll from 'vue-infinite-scroll'
 
 export default Vue.extend({
   name: 'basic-list',
+  directives: { infiniteScroll },
   props: {
     dataSource: Array,
     adjust: {
       default: 0
+    },
+    busy: {
+      default: false
     }
   },
   watch: {
@@ -37,10 +47,14 @@ export default Vue.extend({
     }
   },
   mounted () {
-    window.addEventListener('resize', this.observerWindowResize)
+    if (this.adjust > 0) {
+      window.addEventListener('resize', this.observerWindowResize)
+    }
   },
   destroyed () {
-    window.removeEventListener('resize', this.observerWindowResize)
+    if (this.adjust > 0) {
+      window.removeEventListener('resize', this.observerWindowResize)
+    }
   },
   methods: {
     observerWindowResize () {
@@ -48,6 +62,10 @@ export default Vue.extend({
       if (newHeight !== this.scrollHeight) {
         this.scrollHeight = newHeight
       }
+    },
+    handleInfiniteOnLoad () {
+      if (_.isEmpty(this.dataSource)) return
+      this.$emit('loadMoreData')
     }
   }
 })

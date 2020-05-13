@@ -1,5 +1,5 @@
 <template>
-  <div class="window-menu">
+  <div class="window-menu" style="-webkit-app-region: drag">
     <custom-button
       v-if="closable"
       :image="menuIcons.close"

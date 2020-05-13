@@ -174,9 +174,6 @@ export default Vue.extend({
         case 'cut':
           this.handleClipboardAction()
           break;
-        case 'moveto':
-          this.handleMoveToAction()
-          break;
         case 'delete':
           this.handleDeletAction()
           break;
@@ -318,9 +315,6 @@ export default Vue.extend({
       this.$message.info(info)
       const items = ResourceHandler.getSelectItems(this.dataArray)
       this.$store.dispatch('Resource/updateClipboard', { isClip: isClip, items })
-    },
-    handleMoveToAction () {
-      // TODO: 移动文件位置
     },
     handleDeletAction () {
       const items = ResourceHandler.getSelectItems(this.dataArray)

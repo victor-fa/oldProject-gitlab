@@ -47,6 +47,7 @@
       :style="alterStyle"
       v-on:didSelectItem="handleAlterAction"
     />
+    <move-file-modal v-if="showModal" v-on:moveCompleted="handleMoveCompleted"/>
   </div>
 </template>
 
@@ -66,6 +67,7 @@ import OperateListAlter from '../../components/OperateListAlter/index.vue'
 import NasFileAPI, { TaskMode } from '../../api/NasFileAPI'
 import { OperateGroup } from '../../components/OperateListAlter/operateList'
 import { sortList } from '../../model/sortList'
+import MoveFileModal from './MoveFileModal/index.vue'
 
 export default Vue.extend({
   name: 'main-view',
@@ -74,7 +76,8 @@ export default Vue.extend({
     MainBottomView,
     ResourceList,
     OperateListAlter,
-    ResourceListItem
+    ResourceListItem,
+    MoveFileModal
   },
   props: {
     currentPath: { // header中展示的当前路径
@@ -104,7 +107,8 @@ export default Vue.extend({
       arrangeWay: ArrangeWay.horizontal, // list的排列方式
       alterPosition: { left: '0px', top: '0px' }, // 右键菜单样式
       showAlter: false, // 控制右键菜单的显示与隐藏
-      showOperateList: [] as OperateGroup[] // 展示的右键菜单数据
+      showOperateList: [] as OperateGroup[], // 展示的右键菜单数据
+      showModal: false // 控制移动文件弹窗的显示与隐藏
     }
   },
   computed: {
@@ -254,6 +258,19 @@ export default Vue.extend({
     handleAlterAction (command: string, ...args: any[]) {
       this.$emit('contextMenuCallbackActions', command, ...args)
       this.showAlter = false
+      switch (command) {
+        case 'moveto':
+          this.handleMoveToAction()
+          break;
+        default:
+          break;
+      }
+    },
+    handleMoveToAction () {
+      this.showModal = true
+    },
+    handleMoveCompleted () {
+      this.showModal = false
     }
   }
 })
