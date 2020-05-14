@@ -114,7 +114,11 @@ export default {
       this.closeOtherWindow(homeWindow!)
     })
     // 托盘信息
-    appTray = new Tray(path.join(__dirname, '/logo.ico'));
+    if (process.env.WEBPACK_DEV_SERVER_URL) { // 测试环境
+      appTray = new Tray(path.join(__filename, '../../public/logo.ico'));
+    } else {  // 生产环境
+      appTray = new Tray(path.join(__dirname, '/logo.ico'));
+    }
     let trayMenuTemplate = [
       {
         label: '我的网盘',

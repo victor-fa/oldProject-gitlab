@@ -20,14 +20,14 @@
       <p>为保护您的加密数据安全，系统不会自动记录您的登陆密码。一旦遗忘，将无法通过任何方式打开加密文件。</p>
       <p><a-checkbox v-model="encryptSet.alreadyKnow">我已经了解</a-checkbox></p>
       <p><a-input type="password" placeholder="请输入加密空间密码" v-model="encryptSet.securityUserPassword" /></p>
-      <a-input type="password" placeholder="请再次输入加密空间密码" v-model="encryptSet.securityUserPasswordRepeat" />
+      <a-input type="password" placeholder="请再次输入加密空间密码" v-model="encryptSet.securityUserPasswordRepeat" v-on:pressEnter="handleEncryptSet()"/>
     </a-modal>
     <a-modal
       width="360px" style="top: 120px;"
       :visible="encryptLogin.isVisiable" :mask="false" :closable="false" :maskClosable="false"
       okText="确定" cancelText="取消" @ok="login" @cancel="cancleEncryptLogin">
       <p class="modal-title">输入加密密码</p>
-      <a-input type="password" placeholder="请输入加密空间密码" v-model="encryptLogin.securityPassword" />
+      <a-input type="password" placeholder="请输入加密空间密码" v-model="encryptLogin.securityPassword" v-on:pressEnter="login()"/>
     </a-modal>
     <a-modal
       width="360px" style="top: 120px;"
