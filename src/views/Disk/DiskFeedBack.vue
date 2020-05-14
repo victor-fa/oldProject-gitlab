@@ -12,7 +12,7 @@
 				<textarea v-model="FeedBackContent" placeholder="尽量详细的描述遇到的问题" />
 			</div>
 			<div class="bottom">
-				<p class="release">©2019 Nas-uGreen</p>
+				<p class="release">©2020 Nas-uGreen</p>
 				<a-button class="cd-cancel-button" :disabled="loading" @click="FeedBack">提交</a-button>
 			</div>
 		</div>

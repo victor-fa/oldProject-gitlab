@@ -8,6 +8,8 @@ import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import { AccessToken } from '../../api/UserModel'
+import UserAPI from '../../api/UserAPI'
+const packageInfo = require('../../../package');
 
 enum ValidatorResult {
   notLogin,
@@ -23,10 +25,26 @@ export default Vue.extend({
     ...mapGetters('NasServer', ['nasInfo', 'accessInfo'])
   },
   created () {
+    this.checkUpdate()
     const result = this.validatorToken()
     this.handleValidatorResult(result)
   },
   methods: {
+    checkUpdate () {  // 检查是否有新版本
+      UserAPI.fetchUpdateInfo(packageInfo.appId, packageInfo.softVersion).then(response => {
+        if (response.data.code !== 200) {
+					this.$message.error('获取更新信息失败')
+          return
+				}
+				if (response.data.data) {
+          const _this = this as any
+					const pkgUrl = _.get(response.data.data, 'pkgUrl')
+					_this.$ipc.send('system', 'check-for-update', pkgUrl);
+				}
+      }).catch(error => {
+        console.log(error)
+      })
+    },
     validatorToken (): ValidatorResult {
       if (_.isEmpty(this.user) || _.isEmpty(this.accessToken)) {
         return ValidatorResult.notLogin

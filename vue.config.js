@@ -23,7 +23,7 @@ module.exports = {
         "publish": [
           {
             "provider": "generic",
-            "url": "http://192.168.10.21/sys/file/gz/"
+            "url": "http://192.168.10.21/sys/file/exe/"
           }
         ],
         "win": {//win相关配置

@@ -5,7 +5,6 @@
 			<div class="app-version">
 				<div class="logo">Nas-uGreen</div>
 				<span>Version{{ version }}</span>
-				<span style="color: #E83C3C;">{{ NewVersion }}</span>
 			</div>
 			<div class="app-icon"></div>
 			<div class="engine-info">
@@ -14,16 +13,10 @@
 					<li v-for="(item, index) in InfoList" :key="index">{{ index }}<span />{{ item }}</li>
 				</ul>
 			</div>
-			<div class="update-info">
-				<p class="tips">{{ message }}</p>
-				<div class="process">
-					<Progress :percent="percent" v-show="percent > 0" />
-				</div>
-			</div>
 			<div class="bottom">
-				<p class="release">©2020 CloudSeries_{{ name }} uGreen</p>
-				<a-button @click="checkUpdate" :disabled="percent > 0 && percent !== 100">
-					<span>{{ !loading ? CheckText : ProcessText }}</span>
+				<p class="release">©2020 uGreen_{{ name }}</p>
+				<a-button @click="checkUpdate">
+					<span>{{ CheckText }}</span>
 				</a-button>
 				<a-button @click="OpenLink">
 					官网
@@ -35,17 +28,13 @@
 
 <script>
 import WindowsHeader from '../../components/Disk/WindowHeader.vue'
+import UserAPI from '../../api/UserAPI'
 const packageInfo = require('../../../package');
 export default {
 	name: 'DiskAbout',
 	data() {
 		return {
-			loading: false,
 			CheckText: '检查更新',
-			ProcessText: '正在检查',
-			NewVersion: '',
-			message: '',
-			percent: 0,
 			header: {
 				color: '#666',
 				title: '',
@@ -75,60 +64,26 @@ export default {
 			return packageInfo.name;
 		}
 	},
-	created() {
-		this.bind();
-	},
-	watch: {
-		percent: {
-			handler() {
-				this.ProcessText = '正在下载';
-			},
-			deep: true
-		}
-	},
 	methods: {
-		bind() {
-			this.$ipc.on('check-for-update', (event, message) => {
-				this.message = message;
-				if (message === '检查更新出错, 请联系开发人员' || message === '现在使用的就是最新版本，不用更新') {
-					this.loading = false;
-				}
-				if (message === '最新版本已下载，点击安装进行更新') {
-					this.CheckText = '安装';
-					this.loading = false;
-					this.percent = 100;
-					this.checkUpdate = () => {
-						this.$ipc.send('system', 'update');
-					};
-				}
-			});
-			this.$ipc.on('update-down-success', (event, message) => {
-				this.NewVersion = 'New ' + message.version;
-			});
-			this.$ipc.on('download-progress', (event, message) => {
-				this.$nextTick(() => {
-					this.percent = parseInt(message.percent);
-					if (this.percent === 100) {
-						this.CheckText = '安装';
-						this.loading = false;
-						this.checkUpdate = () => {
-							this.$ipc.send('system', 'update');
-						};
-					}
-				});
-			});
-			window.onbeforeunload = () => {
-				if (this.percent > 0 && this.percent !== 100) {
-					return false;
-				}
-			};
-		},
 		checkUpdate() {
-			this.$ipc.send('system', 'check-for-update', 'http://192.168.10.21/sys/file/gz/');	// 20200511/NasDevUpgrade-V01.02.33.200511.tar.gz
-			this.loading = true;
+      UserAPI.fetchUpdateInfo(packageInfo.appId, packageInfo.softVersion).then(response => {
+        if (response.data.code !== 200) {
+					this.$message.error('获取更新信息失败')
+          return
+				}
+				if (response.data.data) {
+					const pkgUrl = _.get(response.data.data, 'pkgUrl')
+					this.$ipc.send('system', 'check-for-update', pkgUrl);
+				} else {
+					// this.$ipc.send('system', 'check-for-update', 'http://192.168.10.21/sys/file/exe/20200512/Nas-uGreen Setup 0.1.3.exe');	// 测试用
+					this.$message.info("当前已为最新版")
+				}
+      }).catch(error => {
+        console.log(error)
+      })
 		},
 		OpenLink() {
-			this.$electron.shell.openExternal('https://www.ugreen.com/');
+			this.$electron.shell.openExternal('https://www.lulian.cn/');
 		}
 	}
 };
@@ -209,15 +164,19 @@ export default {
 .update-info {
 	width: 100%;
 	padding: 10px 8px;
+	display: inline-block;
 }
 .update-info .tips {
 	font-size: 14px;
 	font-weight: 400;
 	color: #4f4f4f;
+	text-align: left;
+	margin-bottom: 0;
 }
 .update-info .process {
 	padding: 10px 0;
 	height: 35px;
+	text-align: left;
 }
 .cloudSeries-about-main .bottom {
 	width: calc(100% - 60px);

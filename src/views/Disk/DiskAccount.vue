@@ -3,15 +3,20 @@
 		<WindowsHeader :data="header" />
 		<div class="cd-user-right">
 			<p class="cd-user-title">个人信息</p>
-			<img draggable="false" :src="UploadSrc ? UploadSrc : User.image" alt="" />
+			<img draggable="false" v-if="UploadSrc" :src="UploadSrc" alt="" />
+			<img draggable="false" v-else-if="User.image" :src="User.image" alt="" />
+      <div v-else class="avatar"></div>
 			<form @submit.prevent="onSubmit" ref="form">
+				<div class="cd-user-head" onclick="this.childNodes[0].click()">
+					<a-input type="file" name="userhead" @change="changePhoto()" ref="file" />
+				</div>
 				<div class="cd-user-line">
 					<label>昵称：</label>
 					<a-input v-model="User.nicName" clearable="" style="width: calc(100% - 50px)" placeholder="输入昵称" name="nicName" :number="true" />
 				</div>
 				<div class="cd-user-line">
 					<label>邮箱：</label>
-					<p :title="'邮箱变更，请到系统设置中进行修改'" style="cursor: pointer">{{ User.email }} <br></p>
+					<p :title="'邮箱变更，请到系统设置中进行修改'" style="cursor: pointer">{{ User.email ? User.email : '您未绑定邮箱' }} <br></p>
 				</div>
 				<div class="cd-user-line">
 					<label>手机：</label>
@@ -26,9 +31,6 @@
 					<a-select v-model="User.sex" style="width: calc(100% - 50px)" placeholder="Tags Mode">
 						<a-select-option v-for="item in sexs" :key="item.value">{{ item.label }}</a-select-option>
 					</a-select>
-				</div>
-				<div class="cd-user-head" onclick="this.childNodes[0].click()">
-					<a-input type="file" name="userhead" @change="changePhoto()" ref="file" />
 				</div>
 				<div class="cd-user-line" style="height: 72px;">
 					<label>说说:</label>
@@ -206,6 +208,14 @@ export default {
 .cd-user-right img:hover {
 	opacity: 0.5;
 	cursor: pointer;
+}
+.cd-user-right .avatar {
+	width: 70px;
+	height: 70px;
+	background-color: #ddd;
+	border-radius: 50%;
+	text-align: center;
+	display: inline-block;
 }
 .cd-user-right name {
 	color: #fff;

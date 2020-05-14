@@ -327,6 +327,7 @@ export default {
 				this.ShowEmailDialog = false;
 				this.ChangeEmailData.email = '';
 				this.$store.dispatch('User/updateUser', response.data.data.userVO)
+				this.SettingData.Email = response.data.data.userVO.email
 				this.$message.success('修改邮箱成功')
 			}).catch(error => {
 				console.log(error)

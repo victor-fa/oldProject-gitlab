@@ -177,7 +177,7 @@ export default {
   fetchQrCodeLogin (qrCode: string): Promise<AxiosResponse<BasicResponse>> {
     return nasCloud.post(userModulePath + '/basic/qrCode/login', { qrCode })
   },
-  fetchUpdateInfo (appNo: string, versionNo: string): Promise<AxiosResponse<BasicResponse>> {
+  fetchUpdateInfo (appNo: string, versionNo: number): Promise<AxiosResponse<BasicResponse>> {
     return nasCloud.post(updateModulePath + '/softVer/latest', { appNo, versionNo })
   }
 }
