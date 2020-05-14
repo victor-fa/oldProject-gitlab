@@ -62,6 +62,9 @@ import StringUtility from '../../utils/StringUtility'
 import { encryptContextMenu, encryptResourceContextMenu } from '../../components/OperateListAlter/operateList'
 import EncryptUploadTask from '../../api/Transport/EncryptUploadTask'
 import { encryptUploadQueue } from '../../api/Transport/TransportQueue'
+import DownloadTask from '@/api/Transport/DownloadTask'
+import { downloadQueue } from '@/api/Transport/TransportQueue'
+
 
 export default Vue.extend({
   name: 'encrypt',
@@ -263,23 +266,6 @@ export default Vue.extend({
         console.log(error)
       })
     },
-    handleEncryptReset() {
-      if (!this.encryptReset.alreadyKnow) {
-        this.$message.warning('请先勾选已了解')
-        return false
-      }
-      this.loading = true
-      NasFileAPI.resetEncrypt().then(response => {
-        this.loading = false
-        if (response.data.code !== 200) return
-        console.log(response);
-        // TODO: 当前加密空间重置接口还没好
-      }).catch(error => {
-        this.loading = false
-        this.$message.error('网络连接错误，请检测网络')
-        console.log(error)
-      })
-    },
     getEncryptList() {
       this.loading = true
       NasFileAPI.getEncryptList().then(response => {
@@ -323,6 +309,32 @@ export default Vue.extend({
     handleLoadmoreAction () {
       this.page++
       this.getEncryptList()
+    },
+    handleEncryptReset() {
+      if (!this.encryptReset.alreadyKnow) {
+        this.$message.warning('请先勾选已了解')
+        return false
+      }
+      this.loading = true
+      NasFileAPI.resetEncrypt().then(response => {
+        this.loading = false
+        if (response.data.code !== 200) return
+        console.log(response);
+        // TODO: 当前加密空间重置接口还没好
+      }).catch(error => {
+        this.loading = false
+        this.$message.error('网络连接错误，请检测网络')
+        console.log(error)
+      })
+    },
+    handleDownloadAction (directory: string[]) {
+      const destPath = directory[0]
+      const items = ResourceHandler.getSelectItems(this.dataArray)
+      items.forEach(item => {
+        const task = new DownloadTask(item.path, destPath, item.uuid)
+        downloadQueue.addTask(task)
+        this.$store.dispatch('Resource/increaseTask')
+      })
     },
     // handleSortWayChangeAction (order: OrderType) {
     //   if (order === OrderType.ByUploadDesc) {

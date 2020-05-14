@@ -118,6 +118,10 @@ export default {
 		},
 		getMessage() {
 			this.loading = true;
+			if (this.getInputInfo().changeFlag === 0) {
+				this.$message.error('您未变更任何信息')
+				return
+			}
 			UserAPI.smsCode(this.User.phoneNo, 5).then(response => {
 				this.loading = false;
 				if (response.data.code !== 200) return
@@ -129,11 +133,8 @@ export default {
         this.$message.error('网络连接错误,请检测网络')
       })
 		},
-		handleUpdate() {
-			if (!this.code) {
-				this.$message.error('验证码不能为空')
-				return
-			}
+		getInputInfo () {
+			let changeFlag = 0	// 标识是否有数据变更
 			const input = {
 				sex: this.User.sex,
 				nicName: this.User.nicName ? this.User.nicName : '',
@@ -146,18 +147,25 @@ export default {
 			const userJson = localStorage.getItem(USER_MODEL)
 			if (userJson === null) return
 			const userObj = JSON.parse(userJson)
-			input.sex === userObj.sex ? delete input.sex : null
-			input.nicName === userObj.nicName ? delete input.nicName : null
-			input.userSay === userObj.userSay ? delete input.userSay : null
-			input.birthday === userObj.birthday ? delete input.birthday : null
-			input.phoneNo === userObj.phoneNo ? delete input.phoneNo : null
+			input.sex === userObj.sex ? delete input.sex : changeFlag++
+			input.nicName === userObj.nicName ? delete input.nicName : changeFlag++
+			input.userSay === userObj.userSay ? delete input.userSay : changeFlag++
+			input.birthday === userObj.birthday ? delete input.birthday : changeFlag++
+			input.phoneNo === userObj.phoneNo ? delete input.phoneNo : changeFlag++
+			return {input, changeFlag}
+		},
+		handleUpdate() {
+			if (!this.code) {
+				this.$message.error('验证码不能为空')
+				return
+			}
+			const input = this.getInputInfo().input
 			UserAPI.updateInfo(input).then(response => {
 				this.code = ''
 				if (response.data.code !== 200) return
 				this.$store.dispatch('User/updateUser', response.data.data.userVO)
 				this.codeVisiable = false
 				this.User = response.data.data.userVO
-				this.getAge()
 				processCenter.renderSend(EventName.account);
         this.$message.success('修改成功')
       }).catch(error => {

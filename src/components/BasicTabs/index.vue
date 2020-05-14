@@ -59,7 +59,6 @@ export {
   list-style: none;
   display: flex;
   justify-content: flex-start;
-  cursor: pointer;
   li {
     display: inline-block;
     color: #484848;
@@ -70,6 +69,7 @@ export {
     height: 25px;
     line-height: 25px;
     margin-bottom: 10px;
+    cursor: pointer;
   }
   .split-line {
     height: 4px;
