@@ -83,39 +83,6 @@ function createWindow () {
 		win.loadURL('app://./index.html')
   }
 
-	// let appTrayLogin:any = null;
-	// appTrayLogin = new Tray(path.join(__filename, '../../public/logo.ico'));
-	// let trayMenuTemplateLogin = [
-	// 	{
-	// 		label: 'Nas-uGreen',
-	// 		click: function() {
-	// 			if (win) {
-	// 				win.show();
-	// 				win.restore();
-	// 				win.focus();
-	// 			}
-	// 		}
-	// 	},
-	// 	{
-	// 		label: '退出',
-	// 		click: function() {
-	// 			if (win) {
-	// 				win.show();
-	// 				win.focus();
-	// 				win.close();
-	// 			}
-	// 		}
-	// 	}
-	// ];
-	// const contextMenuLogin = Menu.buildFromTemplate(trayMenuTemplateLogin);
-	// appTrayLogin.setToolTip('uGgreen-Nas');  // 设置此托盘图标的悬停提示内容
-	// appTrayLogin.setContextMenu(contextMenuLogin);  // 设置此图标的上下文菜单
-	// appTrayLogin.on('click', function() {
-	// 	if (win) {
-	// 		win.isVisible() ? win.hide() : win.show();
-	// 	}
-	// });
-
   win.on('closed', () => {
     win = null
   })
@@ -133,9 +100,6 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  // if (win === null) {
-  //   createWindow()
-  // }
   const wins = BrowserWindow.getAllWindows()
   if (wins.length === 0) {
     createWindow()
@@ -245,9 +209,10 @@ let DiskSystem = {
 			item.once('done', (event, state) => {
 				if (state === 'completed') {
 					console.log('Download successfully')
-					console.log(item.getSavePath());
+					const savePath = item.getSavePath()
+					console.log(savePath);
 					const { spawn } = require('child_process')
-					spawn(item.getSavePath())	// 
+					spawn(savePath)	// 打开对应路径
 				} else {
 					console.log(`Download failed: ${state}`)
 				}

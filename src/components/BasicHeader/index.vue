@@ -86,7 +86,7 @@ export default Vue.extend({
           _this.switchUser()
           break
         case SettingType.switching_device:
-          console.log('切换设备');
+          _this.switchDevice()
           break
         case SettingType.quit:
           _this.$electron.remote.getCurrentWindow().close();
@@ -100,7 +100,6 @@ export default Vue.extend({
       _this.$ipc.send('system', 'account', '');
     },
     switchUser () {
-      // const myThis
       UserAPI.logout().then(response => {
         if (response.data.code !== 200) return
         processCenter.renderSend(EventName.login)
@@ -112,6 +111,11 @@ export default Vue.extend({
         console.log(error)
         this.$message.error('网络连接错误,请检测网络')
       })
+    },
+    switchDevice () {
+      processCenter.renderSend(EventName.connecting)
+      this.$message.success('切换成功！')
+      this.$store.dispatch('NasServer/clearCacheNas')
     }
   }
 })

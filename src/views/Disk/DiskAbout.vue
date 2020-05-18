@@ -18,7 +18,7 @@
 				<a-button @click="checkUpdate">
 					<span>{{ CheckText }}</span>
 				</a-button>
-				<a-button @click="OpenLink">
+				<a-button @click="openLink">
 					官网
 				</a-button>
 			</div>
@@ -67,7 +67,17 @@ export default {
 	},
 	methods: {
 		checkUpdate() {
-      UserAPI.fetchUpdateInfo(packageInfo.appId, packageInfo.softVersion).then(response => {
+			console.log(process.platform);
+			let appId = ''
+			let appVersion = ''
+			if (process.platform === 'win32') {	// win环境
+				appId = packageInfo.winAppId
+				appVersion = packageInfo.winAppVersion
+			} else {	// mac环境
+				appId = packageInfo.macAppId
+				appVersion = packageInfo.macAppVersion
+			}
+      UserAPI.fetchUpdateInfo(appId, appVersion).then(response => {
         if (response.data.code !== 200) {
 					this.$message.error('获取更新信息失败')
           return
@@ -83,7 +93,7 @@ export default {
         console.log(error)
       })
 		},
-		OpenLink() {
+		openLink() {
 			this.$electron.shell.openExternal('https://www.lulian.cn/');
 		}
 	}

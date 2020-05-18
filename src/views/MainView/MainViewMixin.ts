@@ -148,7 +148,7 @@ export default Vue.extend({
     handleContextMenuActions (command: string, ...args: any[]) {
       switch (command) {
         case 'open': 
-          this.handleOpenAction(args[0])
+          this.handleOpenAction()
           break;
         case 'jump':
           this.handleJumpAction()
@@ -224,14 +224,15 @@ export default Vue.extend({
           break;
       }
     },
-    handleOpenAction (item?: ResourceItem) {
-      let srcItem = item
-      if (srcItem === undefined) {
-        const selectedItem = ResourceHandler.getFirstSelectItem(this.dataArray)
-        if (selectedItem !== null) srcItem = selectedItem
-      } else {
+    handleOpenAction () {
+      const items = ResourceHandler.disableSelectItems(this.dataArray)
+      console.log(items);
+      if (_.isEmpty(items)) return
+      let srcItem = items[0]
+      if (srcItem !== undefined) {
         srcItem.type === ResourceType.folder ? this.handleOpenFolderAction(srcItem) : this.handleOpenFileAction(srcItem)
       }
+      this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
     },
     handleOpenFolderAction (item: ResourceItem) {
       this.$router.push({

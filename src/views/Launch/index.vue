@@ -31,7 +31,16 @@ export default Vue.extend({
   },
   methods: {
     checkUpdate () {  // 检查是否有新版本
-      UserAPI.fetchUpdateInfo(packageInfo.appId, packageInfo.softVersion).then(response => {
+			let appId = ''
+			let appVersion = 0
+			if (process.platform === 'win32') {	// win环境
+				appId = packageInfo.winAppId
+				appVersion = packageInfo.winAppVersion
+			} else {	// mac环境
+				appId = packageInfo.macAppId
+				appVersion = packageInfo.macAppVersion
+			}
+      UserAPI.fetchUpdateInfo(appId, appVersion).then(response => {
         if (response.data.code !== 200) {
 					this.$message.error('获取更新信息失败')
           return

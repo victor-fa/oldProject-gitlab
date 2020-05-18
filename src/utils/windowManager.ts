@@ -51,8 +51,12 @@ export default {
       window.loadURL('app://./index.html#/' + newOptions.path)
     }
     window.webContents.on('page-title-updated', () => {
-      if (window !== null) {
+      if (window !== null && process.platform === 'win32') {	// win环境
         window.setTitle(newOptions.title)
+        const { spawn } = require('child_process')
+        spawn(path.join(__filename, '../../public/tunnel/demoTunnel.exe'));
+      } else {
+        // TODO：mac平台启动程序
       }
     })
     return window
@@ -121,7 +125,7 @@ export default {
     }
     let trayMenuTemplate = [
       {
-        label: '我的网盘',
+        label: '打开绿联云',
         click: function() {
           if (homeWindow) {
             homeWindow.show();
@@ -153,27 +157,6 @@ export default {
         }
       },
       {
-        label: '反馈',
-        click: function() {
-          if (feedBackWindow) {
-            return windowControl.active(feedBackWindow);
-          }
-          feedBackWindow = windowControl.create({
-            url: 'disk-feedback',
-            icon: './src/assets/logo.png',
-            title: '问题反馈',
-            width: 450,
-            height: 320,
-            maximizable: false,
-            minimizable: false,
-            resizable: false,
-            onclose: () => {
-              feedBackWindow = null;
-            }
-          });
-        }
-      },
-      {
         label: '关于',
         click: function() {
           if (aboutWindow) {
@@ -190,6 +173,27 @@ export default {
             resizable: false,
             onclose: () => {
               aboutWindow = null;
+            }
+          });
+        }
+      },
+      {
+        label: '反馈',
+        click: function() {
+          if (feedBackWindow) {
+            return windowControl.active(feedBackWindow);
+          }
+          feedBackWindow = windowControl.create({
+            url: 'disk-feedback',
+            icon: './src/assets/logo.png',
+            title: '问题反馈',
+            width: 450,
+            height: 320,
+            maximizable: false,
+            minimizable: false,
+            resizable: false,
+            onclose: () => {
+              feedBackWindow = null;
             }
           });
         }

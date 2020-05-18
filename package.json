@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "author": "stormfa",
   "private": true,
-  "appId": "com.ugreen.nas",
-  "softVersion": 1000000002,
+  "winAppId": "com.ugreenNas.win",
+  "winAppVersion": 1000000001,
+  "macAppId": "com.ugreenNas.mac",
+  "macAppVersion": 1000000001,
   "description": "electron+vue nas server client",
   "scripts": {
     "serve": "vue-cli-service serve",
