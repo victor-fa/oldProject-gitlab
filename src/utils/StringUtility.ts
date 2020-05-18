@@ -115,7 +115,7 @@ export default {
     ]
     return toolJson.filter(o => o.path === path)[0].name
   },
-  // 获取路径目录
+  /**获取路径目录 */
   pathDirectory (path: string) {
     const index = path.lastIndexOf('/')
     return path.slice(0, index)
@@ -124,7 +124,7 @@ export default {
   fileTypeToName (type: number) {
     let res = ''
     switch (type) {
-      case ResourceType.unknown:
+      case ResourceType.all:
         res = '未知类型'
         break;
       case ResourceType.video:

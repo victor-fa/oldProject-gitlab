@@ -47,7 +47,12 @@ export default Vue.extend({
         this.$router.go(-1)
       } else {
         this.$store.dispatch('Login/updateErrorCount', 0)
-        this.$router.push('scan-nas')
+        let type = this.$route.params.type
+        type = type === 'offlineLogin' ? type : 'addDevice'
+        this.$router.push({
+          name: 'scan-nas',
+          query: { type } 
+        })
       }
     }
   }

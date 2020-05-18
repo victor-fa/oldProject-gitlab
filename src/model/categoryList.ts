@@ -1,15 +1,9 @@
+import { ResourceType } from '@/api/NasFileModel'
+
 interface Category {
-  type: CategoryType | TaskCategoryType,
+  type: ResourceType | TaskCategoryType,
   title: string,
   isSelected: boolean
-}
-
-enum CategoryType {
-  all = 'all',
-  image = 'image',
-  audio = 'audio',
-  video = 'video',
-  document = 'document'
 }
 
 enum TaskCategoryType {
@@ -30,27 +24,27 @@ interface TransportCategory {
 // 最近使用
 let categorys: Category[] = [
   {
-    type: CategoryType.all,
+    type: ResourceType.all,
     title: '所有',
     isSelected: true
   },
   {
-    type: CategoryType.image,
+    type: ResourceType.image,
     title: '图片',
     isSelected: false
   },
   {
-    type: CategoryType.video,
+    type: ResourceType.video,
     title: '视频',
     isSelected: false
   },
   {
-    type: CategoryType.audio,
+    type: ResourceType.audio,
     title: '音频',
     isSelected: false
   },
   {
-    type: CategoryType.document,
+    type: ResourceType.document,
     title: '文档',
     isSelected: false
   }
@@ -117,7 +111,6 @@ export {
   categorys,
   taskCategorys,
   Category,
-  CategoryType,
   TaskCategoryType,
   TransportCategory,
   downloadCategorys,

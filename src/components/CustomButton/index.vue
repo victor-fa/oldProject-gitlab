@@ -23,6 +23,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
+
 export default Vue.extend({
   name: 'custom-button',
   props: {
@@ -49,6 +50,9 @@ export default Vue.extend({
     },
     disable: {
       default: false
+    },
+    disableImage: {
+      default: null
     }
   },
   data () {
@@ -60,6 +64,9 @@ export default Vue.extend({
       isHover: false,
       isHighlight: false
     }
+  },
+  mounted () {
+    if (this.disable === true) this.changeDisableStyle()
   },
   computed: {
     backgroundStyle: function (): object {
@@ -88,6 +95,9 @@ export default Vue.extend({
     isHighlight: function (value: boolean) {
       if (this.highlightImage === null) return
       value ? this.changeHighlightStyle() : this.changeNormalStyle()
+    },
+    disable: function (value: boolean) {
+      value === true ? this.changeDisableStyle() : this.changeNormalStyle()
     }
   },
   methods: {
@@ -118,10 +128,13 @@ export default Vue.extend({
       this.selectedBackgroundImage && (this.currentBackgroundImage = this.selectedBackgroundImage)
     },
     changeHighlightStyle () {
-      this.highlightImage && (this.currentImage = this.highlightImage)
+      this.highlightImage !== null && (this.currentImage = this.highlightImage)
     },
     changeHoverStyle () {
-      this.hoverImage && (this.currentImage = this.hoverImage)
+      this.hoverImage !== null && (this.currentImage = this.hoverImage)
+    },
+    changeDisableStyle () {
+      this.disableImage !== null && (this.currentImage = this.disableImage)
     }
   }
 })
@@ -149,7 +162,7 @@ export default Vue.extend({
 </style>
 
 <style>
-/* .custom-button .ant-btn[disabled] {
+.custom-button .ant-btn[disabled] {
   cursor: default;
-} */
+}
 </style>

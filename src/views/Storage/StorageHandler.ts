@@ -1,5 +1,8 @@
+import _ from 'lodash'
 import { StorageType, StorageInfo } from '@/api/NasFileModel'
 import StringUtility from '@/utils/StringUtility'
+import store from '@/store'
+import { User } from '@/api/UserModel'
 
 export default {
   matchStorageIcon (type: StorageType) {
@@ -54,5 +57,27 @@ export default {
       } 
     }
     return item
+  },
+  formatStorages (storags: StorageInfo[]) {
+    const internalTypes = [StorageType.internal, StorageType.internal_SSD, StorageType.internal_HDD]
+    const user = _.get(store.getters, 'User/user') as User
+    const ugreenNo = user.ugreenNo
+    return storags.map(item => {
+      item.showName = this.matchStorageName(item.type)
+      item.showIcon = this.matchStorageIcon(item.type)
+      item.showSize = this.matchStorageSize(item.used, item.size)
+      item.showProgress = (item.used / item.size) * 100
+      item.isInternal = internalTypes.indexOf(item.type) !== -1
+      const path = item.isInternal === true ? `/.ugreen_nas/${ugreenNo}` : '/'
+      item.partitions.forEach((partition, index) => {
+        partition.showName = `分区${index + 1}`
+        partition.showIcon = item.showIcon
+        partition.showSize = this.matchStorageSize(partition.used, partition.size)
+        partition.showProgress = (partition.used / partition.size) * 100
+        partition.isInternal = item.isInternal
+        partition.path = path
+      })
+      return item
+    })
   }
 }

@@ -40,7 +40,6 @@ export default Vue.extend({
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #ffffff;
   height: 100%;
 }
 * {

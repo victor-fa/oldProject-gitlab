@@ -15,7 +15,7 @@
             'operate-item-disable': subItem.disable,
             'operate-item-enable': subItem.enable
           }"
-          @click="menuClick(subItem)"
+          @click.stop="menuClick(subItem)"
           @mouseenter="handleMouseEnter(subItem)"
         >
           {{ subItem.title }}

@@ -9,10 +9,15 @@ interface WindowOptions extends Electron.BrowserWindowConstructorOptions {
 let loginWindow: BrowserWindow | null = null
 let homeWindow: BrowserWindow | null = null
 let mediaWindow: BrowserWindow | null = null
+let moveWindow: BrowserWindow | null = null
 let aboutWindow, feedBackWindow, settingWindow
 let appTray:any = null;
 const packageInfo = require('../../package.json')
 const path = require('path');
+
+export {
+  homeWindow
+}
 
 export default {
   createWindow (options: WindowOptions): BrowserWindow {
@@ -24,14 +29,13 @@ export default {
       minWidth: 600,
       minHeight: 420,
       title: packageInfo.name,
-      useContentSize: false,
+      useContentSize: true,
       transparent: false,
       minimizable: true,
       maximizable: true,
       resizable: true,
       frame: false,
       show: false,
-      backgroundColor: '#f6f8fb',
       webPreferences: {
         nodeIntegration: true,
         webSecurity: false
@@ -45,7 +49,7 @@ export default {
       // Load the url of the dev server if in development mode
       const url = (process.env.WEBPACK_DEV_SERVER_URL as string) + '#/' + newOptions.path
       window.loadURL(url)
-      if (!process.env.IS_TEST && newOptions.path !== 'operate-list-alter') window.webContents.openDevTools()
+      if (!process.env.IS_TEST) window.webContents.openDevTools()
     } else {
       // Load the index.html when not in development
       window.loadURL('app://./index.html#/' + newOptions.path)
@@ -101,6 +105,7 @@ export default {
   presentHomeWindow (): BrowserWindow {
     if (homeWindow !== null) {
       this.activeWindow(homeWindow)
+      return homeWindow
     } else {
       homeWindow = this.createWindow({
         path: 'home',
@@ -232,6 +237,7 @@ export default {
       resizable: true, // 暂时为true
       minimizable: false,
       title: 'meida',
+      backgroundColor: '#f6f8fb',
       parent: homeWindow!
     })
     mediaWindow.on('closed', () => {
@@ -247,5 +253,34 @@ export default {
     if (homeWindow !== null) {
       this.refreshWindow(homeWindow)
     }
+  },
+  presentMoveModal () {
+    if (moveWindow !== null) {
+      this.activeWindow(moveWindow)
+      return moveWindow
+     }
+    moveWindow = this.createWindow({
+      path: 'move-modal',
+      width: 465,
+      height: 405,
+      resizable: true,
+      minimizable: false,
+      maximizable: false,
+      fullscreen: false,
+      transparent: true,
+      hasShadow: false,
+      title: 'move-file',
+      parent: homeWindow!,
+      backgroundColor: '#00000000',
+      modal: true,
+      show: false
+    })
+    moveWindow.on('closed', () => {
+      moveWindow = null
+    })
+    moveWindow.once('ready-to-show', () => {
+      this.activeWindow(moveWindow!)
+    })
+    return moveWindow
   }
 }

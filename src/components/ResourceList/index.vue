@@ -12,7 +12,7 @@
       :infinite-scroll-distance="0"
       :infinite-scroll-immediate-check="false"
       @contextmenu.prevent="handleListContextMenu"
-      @click="handleListClick"
+      @click.stop="handleListClick"
     >
       <a-list
         :dataSource="dataSource"
@@ -41,7 +41,6 @@ import infiniteScroll from 'vue-infinite-scroll'
 import { EventBus, EventType } from '../../utils/eventBus'
 import processCenter, { EventName } from '../../utils/processCenter'
 import { ArrangeWay, ResourceType, ResourceItem } from '../../api/NasFileModel'
-import { CategoryType } from '../../model/categoryList'
 import ResourceHeader from './ResourceHeader.vue'
 import { SortWay } from '../../model/sortList'
 
@@ -59,11 +58,14 @@ export default Vue.extend({
     },
     arrangeWay: {
       default: ArrangeWay.horizontal
+    },
+    paddingHeight: {
+      default: 94
     }
   },
   data () {
     return {
-      scrollHeight: document.body.clientHeight - 122
+      scrollHeight: document.body.clientHeight - this.paddingHeight
     }
   },
   watch: {
@@ -90,38 +92,43 @@ export default Vue.extend({
   },
   mounted () {
     window.addEventListener('resize', this.observerWindowResize)
-    document.onclick = event => { // click
-     this.$emit('callbackAction', 'click')
-    }
-    document.onkeyup = event => {
-      if (event.keyCode === 13) { // enter
-        event.preventDefault()
-        this.$emit('callbackAction', 'enterRenaming')
-      } else if (event.keyCode === 8) { // esc
-        event.preventDefault()
-        this.$emit('callbackAction', 'deleteItems')
-      }
-    }
-    document.onkeydown = event => {
-      if (event.keyCode === 65 && event.metaKey === true) {
-        event.preventDefault()
-        this.$emit('callbackAction', 'selectAllItems')
-      }
-    }
+    document.addEventListener('keydown', this.handleKeydownAction)
   },
   destroyed () {
     window.addEventListener('resize', this.observerWindowResize)
-    document.onclick = null
-    document.onkeyup = null
-    document.onkeydown = null
+    document.removeEventListener('keydown', this.handleKeydownAction)
   },
   methods: {
     observerWindowResize () {
-      const adjust = this.arrangeWay === ArrangeWay.horizontal ? 122 : 150
+      const height = this.paddingHeight + 28
+      const adjust = this.arrangeWay === ArrangeWay.horizontal ? this.paddingHeight : height
       const newHeight = document.body.clientHeight - adjust
       if (newHeight !== this.scrollHeight) {
         this.scrollHeight = newHeight
       }
+    },
+    handleKeydownAction (event: KeyboardEvent) {
+      const code = event.code
+      if (code === 'Enter') {
+        this.handleEvent(event)
+        this.$emit('callbackAction', 'enterRenaming')
+      } else if (code === 'Backspace') {
+        event.stopPropagation()
+        this.$emit('callbackAction', 'deleteItems')
+      } else if (code === 'KeyA') {
+        const isCommand = process.platform === 'darwin'
+        if (isCommand && event.metaKey === true) {
+          this.handleEvent(event)
+          this.$emit('callbackAction', 'selectAllItems')
+        } else if (event.ctrlKey === true) {
+          this.handleEvent(event)
+          this.$emit('callbackAction', 'selectAllItems')
+        }
+      }
+    },
+    handleEvent (event: Event) {
+      event.preventDefault()
+      event.stopPropagation()
     },
     handleInfiniteOnLoad () {
       if (_.isEmpty(this.dataSource)) return
@@ -133,8 +140,7 @@ export default Vue.extend({
       this.$emit('callbackAction', 'contextMenu', event)
     },
     handleListClick (event: MouseEvent) {
-      // event.stopPropagation()
-      // this.$emit('callbackAction', 'click')
+      this.$emit('callbackAction', 'click')
     }
   }
 })

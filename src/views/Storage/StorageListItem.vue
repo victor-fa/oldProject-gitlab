@@ -3,13 +3,13 @@
     class="storage-item"
     v-bind:class="{ 'storage-item-selected': isSelected }"
   >
-    <img :src="storageModel.showIcon"/>
+    <img :src="model.showIcon"/>
     <div class="content">
-      <label class="title">{{ storageModel.showName }}</label>
-      <label class="size">{{ storageModel.showSize }}</label>
+      <label class="title">{{ model.showName }}</label>
+      <label class="size">{{ model.showSize }}</label>
       <a-progress
         strokeLinecap="square"
-        :percent="storageModel.showProgress"
+        :percent="model.showProgress"
         :showInfo="false"
         :strokeColor="'#06B650'"
         :strokeWidth="12"
@@ -25,12 +25,13 @@ import { StorageInfo, StorageType } from '../../api/NasFileModel'
 export default Vue.extend({
   name: 'storage-list-item',
   props: {
-    storageModel: {
+    model: {
       type: Object,
       required: true
     },
+    index: Number,
     // 为什么不直接在model中绑定isSelected
-    // 在界面元素没有改变情况下，单独改变状态是不会触发界面的样式改变的
+    // 在界面元素没有改变情况下，单独改变状态是不会导致model的改变
     isSelected: {
       default: false
     }

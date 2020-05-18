@@ -46,6 +46,7 @@ export default Vue.extend({
       showArray: items,
       page: 1,
       busy: false,
+      categoryType: ResourceType.all,
       order: OrderType.byNameDesc, // 当前选择的排序规则
       itemContextMenu: resourceContextMenu, // item的右键菜单
       listContextMenu // list的右键菜单
@@ -99,8 +100,33 @@ export default Vue.extend({
       return !result
     },
     fetchResourceList () {
+      if (this.categoryType === ResourceType.all) {
+        this.fetchAllList()
+      } else {
+        this.fetchTypeList(this.categoryType)
+      }
+    },
+    fetchAllList () {
       this.loading = true
-      NasFileAPI.fetchResourceList(this.path, this.uuid, this.page, 20, this.order).then(response => {
+      NasFileAPI.fetchResourceList(this.path, this.uuid, this.page, this.order).then(response => {
+        console.log(response)
+        this.loading = false
+        if (response.data.code !== 200) return
+        this.parseResponse(response.data)
+      }).catch(error => {
+        this.loading = false
+        this.$message.error('网络连接错误，请检测网络')
+        console.log(error)
+      })
+    },
+    fetchTypeList (type: ResourceType) {
+      this.loading = true
+      let utime = 0
+      const lastItem = _.last(this.dataArray)
+      if (this.page > 1 && lastItem !== undefined) {
+        utime = lastItem.utime
+      }
+      NasFileAPI.fetchTlist(this.page, utime, type, this.order).then(response => {
         console.log(response)
         this.loading = false
         if (response.data.code !== 200) return
@@ -131,7 +157,8 @@ export default Vue.extend({
       this.$router.go(-1)
       // update current path
       this.currentPath = StringUtility.pathDirectory(this.currentPath)
-      // TODO: 还没有初始化分类栏
+      const mainView = this.$refs.mainView as any
+      mainView.resetHeaderView()
     },
     handleloadMoreData () {
       if (this.busy) return
@@ -151,7 +178,7 @@ export default Vue.extend({
       })
     },
     handleNewFolderAction () {
-      const newName = this.newFolderName()
+      const newName = ResourceHandler.calculateNewFolderName(this.dataArray)
       const newItem = {
         type: ResourceType.folder,
         name: newName,
@@ -159,20 +186,15 @@ export default Vue.extend({
       } as ResourceItem
       this.dataArray.unshift(newItem)
     },
-    // 计算新建文件夹名称
-    newFolderName (name: string = '新建文件夹') {
-      for (let index = 0; index < this.dataArray.length; index++) {
-        const element = this.dataArray[index]
-        if (element.name === name) {
-          let count = Number(name.substring(5, name.length))
-          count = count === 0 ? 2 : count + 1
-          return this.newFolderName(`新建文件夹${count}`)
-        }
+    handleNewFolderRequestAction (index: number, newName?: string) {
+      if (newName === undefined) {
+        this.dataArray.shift()
+        return
       }
-      return name
-    },
-    handleNewFolderRequestAction (index: number, newName: string) {
-      // TODO: 当前没有对目录名合法性进行校验
+      if (!ResourceHandler.checkFileName(newName)) {
+        this.$message.error('名称包含非法字符')
+        return
+      }
       const item = ResourceHandler.disableRenamingItem(this.dataArray)
       if (item === undefined) return
       const directory = `${this.path}/${newName}`
@@ -206,6 +228,10 @@ export default Vue.extend({
         }
       })
     },
+    handleTabChange (type: ResourceType) {
+      this.categoryType = type
+      this.handleRefreshAction()
+    },
     handleSortWayChangeAction (order: OrderType) {
       this.page = 1
       this.busy = false
@@ -215,11 +241,10 @@ export default Vue.extend({
     handleSearchAction (keyword: string) {
       this.loading = true
       const prefix = `/.ugreen_nas/${(this.user as User).ugreenNo}`
-      const uuid = this.$route.query.uuid as string
-      let path = this.$route.query.path as string
-      path = path.substring(prefix.length, path.length)
-      path = path.length === 0 ? '/' : path
-      NasFileAPI.searchFile(uuid, path, keyword).then(response => {
+      let path = _.trimStart(this.path, prefix)
+      path = _.isEmpty(path) ? '/' : path
+      NasFileAPI.searchFile(this.uuid, path, keyword).then(response => {
+        console.log(response)
         this.loading = false
         if (response.data.code !== 200) return
         const list = _.get(response.data.data, 'list') as Array<ResourceItem>

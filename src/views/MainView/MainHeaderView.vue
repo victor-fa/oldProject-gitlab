@@ -1,6 +1,6 @@
 <template>
   <div class="main-header-view">
-    <basic-tabs :tabs="categorys" v-on:tabChange="handleTabChange"/>
+    <basic-tabs v-if="false" :tabs="categorys" v-on:tabChange="handleTabChange"/>
     <div class="bottom-bar">
       <div class="left-bar">
         <custom-button
@@ -70,12 +70,12 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import BasicTabs from '../../components/BasicTabs/index.vue'
-import { categorys, taskCategorys, Category, CategoryType } from '../../model/categoryList'
+import { categorys, taskCategorys, Category } from '../../model/categoryList'
 import { EventBus, EventType } from '../../utils/eventBus'
 import CustomButton from '../../components/CustomButton/index.vue'
 import SortPopoverList from '../../components/SortPopoverList/index.vue'
 import { SortWay, SortKind, SortType, sortList, uploadSortList } from '../../model/sortList'
-import { ArrangeWay, OrderType } from '../../api/NasFileModel'
+import { ArrangeWay, OrderType, ResourceType } from '../../api/NasFileModel'
 import { commonFuncList, ResourceFuncItem } from './ResourceFuncList'
 
 export default Vue.extend({
@@ -105,11 +105,11 @@ export default Vue.extend({
     funcList: Array,
     popoverList: Object,
     categoryType: {
-      default: CategoryType.all
+      default: ResourceType.all
     }
   },
   data () {
-    let list = _.isEmpty(this.funcList) ? commonFuncList : (this.funcList as ResourceFuncItem[])
+    let list = _.isEmpty(this.funcList) ? _.cloneDeep(commonFuncList) : (this.funcList as ResourceFuncItem[])
     return {
       categorys: _.cloneDeep(categorys),
       backIcon: require('../../assets/back_icon.png'),
@@ -125,11 +125,6 @@ export default Vue.extend({
     },
     popoverList: function (newValue) {
       console.log(newValue)
-    },
-    showSearch: function (newValue: boolean) {
-      const item = this.showFuncList[0]
-      item.isHidden = newValue
-      this.showFuncList.splice(0, 1, item)
     }
   },
   computed: {
@@ -142,13 +137,15 @@ export default Vue.extend({
       return item.command === 'sort'
     },
     showItem (item: ResourceFuncItem) {
-      const show = item.command !== 'sort'
-      const hide = item.isHidden
-      return show && !hide
+      if (item.command === 'sort') return false
+      return item.isHidden !== true
+    },
+    resetCategorys () {
+      this.categorys = _.cloneDeep(categorys)
     },
     handleTabChange (index: number) {
       this.hideSearchInput()
-      const item = categorys[index]
+      const item = this.categorys[index]
       this.$emit('CallbackAction', 'tabChange', item.type)
       this.$emit('handleTabChange', item.type)
     },
@@ -198,8 +195,23 @@ export default Vue.extend({
           break;
       }
     },
-    searchAction () {
+    showSearchInput () {
+      if (this.showSearch === true) return
+      this.keyword = ''
       this.showSearch = true
+      const item = this.showFuncList[0]
+      item.isHidden = true
+      this.showFuncList.splice(0, 1, item)
+    },
+    hideSearchInput () {
+      if (this.showSearch === false) return
+      this.showSearch = false
+      const item = this.showFuncList[0]
+      item.isHidden = false
+      this.showFuncList.splice(0, 1, item)
+    },
+    searchAction () {
+      this.showSearchInput()
     },
     handleSearchFocus (event: FocusEvent) {
       // 监听清除按钮的点击
@@ -217,25 +229,19 @@ export default Vue.extend({
     handleSearchAction () {
       if (_.isEmpty(this.keyword)) {
         this.endSearch()
-        return
+      } else {
+        this.$emit('CallbackAction', 'search', this.keyword)
       }
-      this.$emit('CallbackAction', 'search', this.keyword)
     },
     endSearch () {
-      if (!this.showSearch) return
+      if (this.showSearch === false) return
       this.hideSearchInput()
       this.$emit('CallbackAction', 'endSearch')
     },
-    hideSearchInput () {
-      this.showSearch = false
-      this.keyword = ''
-    },
     refreshAction() {
-      this.hideSearchInput()
       this.$emit('CallbackAction', 'refresh')
     },
     arrangeAction () {
-      this.hideSearchInput()
       const arrangeBtn: any = this.$refs.arrange[0]
       const selected: boolean = arrangeBtn.isSelected
       const arrangeWay = selected ? ArrangeWay.vertical : ArrangeWay.horizontal

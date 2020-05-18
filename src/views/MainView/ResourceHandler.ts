@@ -1,6 +1,5 @@
 import _ from 'lodash'
 import { ResourceItem, ResourceType, ShareStatus, CollectStatus, OrderType, CollectItem, ShareItem } from '@/api/NasFileModel'
-import { CategoryType } from '../../model/categoryList'
 import { OperateGroup } from '@/components/OperateListAlter/operateList'
 import { ClipboardModel } from '@/store/modules/Resource'
 import StringUtility from '@/utils/StringUtility'
@@ -8,43 +7,16 @@ import { TaskMode } from '@/api/NasFileAPI'
 
 export default {
   // 对资源列表进行分类
-  classifyArray (dataSource: Array<ResourceItem>, type: CategoryType) {
-    if (type === CategoryType.all) return dataSource
+  classifyArray (dataSource: Array<ResourceItem>, type: ResourceType) {
+    if (type === ResourceType.all) return dataSource
     let newArray: Array<ResourceItem> = []
     for (let index = 0; index < dataSource.length; index++) {
       const element = dataSource[index] as ResourceItem
-      if (this.isInclude(type, element.type)) {
+      if (element.type === type) {
         newArray.push(element)
       }
     }
     return newArray
-  },
-  isInclude (ctype: CategoryType, rtype: ResourceType) {
-    switch (ctype) {
-      case CategoryType.all:
-        return true
-      case CategoryType.image:
-        if (rtype === ResourceType.image) {
-          return true
-        }
-        break
-      case CategoryType.video:
-        if (rtype === ResourceType.video) {
-          return true
-        }
-        break
-      case CategoryType.audio:
-        if (rtype === ResourceType.audio) {
-          return true
-        }
-        break
-      case CategoryType.document:
-        if (rtype !== ResourceType.image && rtype !== ResourceType.video && rtype !== ResourceType.audio) {
-          return true
-        }
-        break
-    }
-    return false
   },
   // 设置aIndex对应item的选中状态, 有互斥性
   setSingleSelectState (currentShowList: Array<ResourceItem>, aIndex: number, selected: boolean) {
@@ -87,8 +59,16 @@ export default {
   // 在item不可交互的时候，不能重置掉item的状态
   resetSelectState (currentShowList: Array<ResourceItem>) {
     return currentShowList.map(item => {
-      item.disable !== true && (item.isSelected = false)
-      item.disable !== true && (item.renaming = false)
+      // item.disable !== true && (item.isSelected = false)
+      // item.disable !== true && (item.renaming = false)
+      // return item
+      if (item.disable !== true) {
+        if (item.isSelected === true || item.renaming === true) {
+          item.isSelected = false
+          item.renaming = false
+          return _.clone(item)
+        }
+      }
       return item
     })
   },
@@ -206,8 +186,8 @@ export default {
     })
   },
   // 格式化资源列表，用于界面展示
-  formatResourceList (list: ResourceItem[], selectedPath: string) {
-    const path = _.isEmpty(selectedPath) ? '' : selectedPath
+  formatResourceList (list: ResourceItem[], selectedPath?: string) {
+    const path = selectedPath === undefined ? '' : selectedPath
     return list.map(item => {
       item.name = StringUtility.formatName(item.path)
       item.showMtime = StringUtility.formatShowMtime(item.mtime)
@@ -298,7 +278,8 @@ export default {
   },
   // list的右键菜单显示规则
   // 1. 如果剪切板为空，就禁用清空剪切板和粘贴
-  filterOperateList (groups: OperateGroup[], clipboard: ClipboardModel) {
+  // 2. 在所有和目录分类下才能使用新建功能
+  filterOperateList (groups: OperateGroup[], clipboard: ClipboardModel, category: ResourceType) {
     if (_.isEmpty(groups)) return null 
     const disable = _.isEmpty(clipboard.items)
     return groups.map(group => {
@@ -307,6 +288,8 @@ export default {
           item.disable = disable
         } else if (item.command === 'paste') {
           item.disable = disable
+        } else if (item.command === 'newFolder') {
+          item.disable = !(category === ResourceType.all || category === ResourceType.folder)
         }
         return item
       })
@@ -392,7 +375,30 @@ export default {
         return require('../../assets/resource/folder_icon.png')
     }
     return require('../../assets/resource/unkonw_icon.png')
-  }
+  },
+  /**检测文件名合法性 */
+  checkFileName (newName: string) {
+    const illegalCharset = ['\\', '/', ':', '*', '"', '>', '<', '|', '', '?', '.']
+    for (let index = 0; index < newName.length; index++) {
+      const char = newName.charAt(index)
+      if (illegalCharset.indexOf(char) !== -1) {
+        return false
+      }
+    }
+    return true
+  },
+  /**递归计算新建文件夹名称 */
+  calculateNewFolderName (showArray: ResourceItem[], name: string = '新建文件夹'): string {
+    for (let index = 0; index < showArray.length; index++) {
+      const element = showArray[index]
+      if (element.name === name) {
+        let count = Number(name.substring(5, name.length))
+        count = count === 0 ? 2 : count + 1
+        return this.calculateNewFolderName(showArray, `新建文件夹${count}`)
+      }
+    }
+    return name
+  },
 }
 
 enum OrderEnum  {

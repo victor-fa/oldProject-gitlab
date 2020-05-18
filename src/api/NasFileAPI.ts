@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { ResourceItem, UploadParams, CustomInfo, DownloadParams } from '@/api/NasFileModel';
+import { ResourceItem, UploadParams, CustomInfo, DownloadParams, ResourceType } from '@/api/NasFileModel';
 import { BasicResponse } from '@/api/UserModel';
 import Vue from 'vue'
 import { jsonToParams, jsonToParamsForPdf, source } from '../utils/request'
@@ -119,7 +119,7 @@ export default {
   fetchStorages (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.get(nasFileModulePath + '/storages')
   },
-  fetchResourceList (path: string, uuid: string, page: number, size: number, order: OrderType = OrderType.byNameDesc): Promise<AxiosResponse<BasicResponse>> {
+  fetchResourceList (path: string, uuid: string, page: number, order: OrderType = OrderType.byNameDesc, size: number = 40): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.get(nasFileModulePath + '/list', {
       params: {
         path: path,
@@ -145,13 +145,14 @@ export default {
       }
     })
   },
-  fetchUlist (page: number, order: UploadTimeSort = UploadTimeSort.descend, size: number = 20): Promise<AxiosResponse<BasicResponse>> {
+  fetchTlist (page: number, last: number, type: ResourceType, order: OrderType = OrderType.ByModifyAsc,  size: number = 40): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.get(nasFileModulePath + '/tlist', {
+      params: { type, page, size, pos: last, order }
+    })
+  },
+  fetchUlist (page: number, last: number, order: UploadTimeSort = UploadTimeSort.descend, size: number = 40): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.get(nasFileModulePath + '/ulist', {
-      params: {
-        page,
-        size,
-        order
-      }
+      params: { page, size, order, pos: last }
     })
   },
   fetchBackuplist (): Promise<AxiosResponse<BasicResponse>> {

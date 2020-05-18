@@ -9,7 +9,7 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import BasicTabs from '../../components/BasicTabs/index.vue'
-import { taskCategorys } from '../../model/categoryList'
+import { taskCategorys, TaskCategoryType } from '../../model/categoryList'
 
 export default Vue.extend({
   name: 'transport',
@@ -28,7 +28,7 @@ export default Vue.extend({
           const item = this.categorys.filter(item => {
             return item.isSelected
           })[0]
-          this.$router.replace(item.type)
+          this.$router.replace(item.type as TaskCategoryType)
         }
       }
     }
@@ -41,7 +41,7 @@ export default Vue.extend({
   methods: {
     handleTabsChange (index: number) {
       const item = this.categorys[index]
-      if (this.$route.name !== item.type) this.$router.replace(item.type)
+      if (this.$route.name !== item.type) this.$router.replace(item.type as TaskCategoryType)
     }
   }
 })

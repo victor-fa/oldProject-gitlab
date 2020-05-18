@@ -91,7 +91,8 @@ export default Vue.extend({
         this.$router.push({
           name: 'connection-failed',
           params: {
-            errorType: ConnectionErrorType.scanFailed
+            errorType: ConnectionErrorType.scanFailed,
+            type: this.type as string
           }
         })
       })

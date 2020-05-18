@@ -4,7 +4,7 @@ enum ArrangeWay {
 }
 
 enum ResourceType {
-  unknown = 0,
+  all = 0,
   video = 1,
   audio = 2,
   image = 3,
@@ -114,6 +114,7 @@ interface PartitionInfo {
   size: number, // curr partition space
   used: number, // curr partition used spac
   // custom property
+  path: string,
   showName: string,
   showSize: string,
   showProgress: number,

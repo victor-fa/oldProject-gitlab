@@ -19,6 +19,8 @@ import { downloadQueue } from '@/api/Transport/TransportQueue'
 //   }
 // }
 
+let tmpArray: ResourceItem[] | null = null
+
 export default Vue.extend({
   data () {
     return {
@@ -31,14 +33,33 @@ export default Vue.extend({
     ...mapGetters('Resource', ['itemCount'])
   },
   methods: {
+    // 更新当前展示的数据源
+    updateShowArray (items: ResourceItem[]) {
+      const childerns = this.$children
+      for (let index = 0; index < childerns.length; index++) {
+        const element = childerns[index]
+        const name = element.$options.name
+        if (name === 'main-view' && element.hasOwnProperty('updateShowArray')) {
+          (element as any).updateShowArray(items)
+          break
+        }
+      }
+    },
     // handle header view callback actions
     handleHeaderActions (action: string, ...args: any[]) {
       switch (action) {
+        case 'tabChange': 
+          this.handleTabChange(args[0])
+          break;
         case 'back':
           this.handleBackAction()
           break;
         case 'search':
+          tmpArray = this.dataArray
           this.handleSearchAction(args[0])
+          break;
+        case 'endSearch':
+          this.handleEndSerchAction()
           break;
         case 'refresh':
           this.handleRefreshAction()
@@ -50,11 +71,18 @@ export default Vue.extend({
           break;
       }
     },
+    handleTabChange (type: ResourceType) {
+      const items = ResourceHandler.classifyArray(this.dataArray, type)
+      this.updateShowArray(items)
+    },
     handleBackAction () {
       this.$router.go(-1)
     },
     handleSearchAction (keyword: string) {
       this.dataArray = ResourceHandler.searchShowArray(this.dataArray, keyword)
+    },
+    handleEndSerchAction () {
+      tmpArray !== null && (this.dataArray = tmpArray)
     },
     handleRefreshAction () {
     },
@@ -83,6 +111,7 @@ export default Vue.extend({
       const indexs = ResourceHandler.getSelectItemIndexs(this.dataArray)
       if (indexs.length === 1) {
         const item = this.dataArray[indexs[0]]
+        if (item.disable === true) return
         item.renaming = item.renaming === true ? false : true
         this.dataArray.splice(indexs[0], 1, item)
       }
@@ -112,7 +141,7 @@ export default Vue.extend({
       }
     },
     handleRenameRequestAction (index: number, newName: string) {
-      if (!this.checkResourceName(newName)) {
+      if (!ResourceHandler.checkFileName(newName)) {
         this.$message.error('名称包含非法字符')
         return
       }
@@ -131,16 +160,6 @@ export default Vue.extend({
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         this.$message.error('重命名失败')
       })
-    },
-    checkResourceName (newName: string) {
-      const illegalCharset = ['\\', '/', ':', '*', '"', '>', '<', '|', '', '?']
-      for (let index = 0; index < newName.length; index++) {
-        const char = newName.charAt(index)
-        if (illegalCharset.indexOf(char) !== -1) {
-          return false
-        }
-      }
-      return true
     },
     handleNewFolderRequestAction (index: number, newName: string) {
     },

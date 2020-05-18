@@ -25,6 +25,8 @@
           v-focus
           type="text"
           v-model="inputName"
+          placeholder="请输入文件名"
+          @click.stop="handleInputClick"
           @blur="handleBlur($event)"
           @focus="handleFocus($event)"
           v-on:pressEnter="handlePressEnter($event)"
@@ -133,7 +135,17 @@ export default Vue.extend({
     searchResourceIcon (type: ResourceType) {
       return ResourceHandler.searchResourceIcon(type)
     },
+    handleInputClick () {
+      //fix 解决输入框内容点击时，因为透传到list的点击事件，导致输入框异常失去焦点问题
+    },
     handlePressEnter (event: MouseEvent) {
+      if (_.isEmpty(this.inputName)) {
+        this.$emit('callbackAction', 'newFolderRequest', this.index)
+        return
+      }
+      if (_.isEmpty(this.model.uuid)) {
+        this.$emit('callbackAction', 'newFolderRequest', this.index, this.inputName)
+      }
     },
     handleBlur (event: MouseEvent) {
       if (_.isEmpty(this.inputName)) {

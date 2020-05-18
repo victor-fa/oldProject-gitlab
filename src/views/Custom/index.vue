@@ -15,18 +15,14 @@
       v-on:contextMenuCallbackActions="handleContextMenuActions"
     >
     <template v-slot:resourceItem="{ item, index }">
-      <div
-        :key="index"
-        class="custom-item"
-        v-bind:class="{ 'custom-selected-item': item.isSelected }"
-        @click.stop.exact="singleClick(index)"
-        @dblclick.stop.exact="doubleClick(index)"
-        @contextmenu.stop.exact="contextMenuClick($event, index)"
-      >
-        <img :src="item.myself_folder.image_path">
-        <p class="custom-name">{{ item.myself_folder.name }}</p>
-        <p class="custom-desc">{{ item.myself_folder.desc }}</p>
-      </div>
+      <custom-list-item
+        :index="index"
+        :isSelected="item.isSelected"
+        :model="item"
+        @click.stop.native="singleClick(index)"
+        @dblclick.stop.native="doubleClick(index)"
+        @contextmenu.stop.native="contextMenuClick($event, index)"
+      />
     </template>
     </main-view>
     <new-custom-modal ref="newCustomMoal" v-on:creatCompleted="handleCreatedAction"/>
@@ -39,6 +35,7 @@ import Vue from 'vue'
 import axios from 'axios'
 import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
+import CustomListItem from './CustomListItem.vue'
 import NewCustomModal from './NewCustomModal.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
 import { customFuncList } from '../MainView/ResourceFuncList'
@@ -47,12 +44,14 @@ import NasFileAPI from '../../api/NasFileAPI'
 import { customContextMenu, customListContextMenu } from '../../components/OperateListAlter/operateList'
 import { nasServer } from '../../api/NasServer'
 import { NasAccessInfo } from '../../api/ClientModel'
+import CustomHandler from './CustomHandler'
 
 export default Vue.extend({
   name: 'custom',
   components: {
     MainView,
-    NewCustomModal
+    NewCustomModal,
+    CustomListItem
   },
   mixins: [MainViewMixin],
   data () {
@@ -79,32 +78,16 @@ export default Vue.extend({
         this.loading = false
         if (response.data.code !== 200) return
         const list = _.get(response.data.data, 'myself_folder_list') as CustomModule[]
+        const api_token = (this.accessInfo as NasAccessInfo).api_token
         this.dataArray = list.map(item => {
-          this.formatCustomItem(item)
-          return item
+          const newItem = CustomHandler.formatItem(item, api_token)
+          return newItem
         })
       }).catch(error => {
         console.log(error)
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
       })
-    },
-    formatCustomItem (item: CustomModule) {
-      item.name = item.myself_folder.name
-      const api_token = (this.accessInfo as NasAccessInfo).api_token
-      const path = item.myself_folder.background_path
-      if (path.length === 0) {
-        item.myself_folder.image_path = require('../../assets/custom_placeholder.png')
-        return
-      }
-      let image_path = nasServer.defaults.baseURL
-      if (image_path === undefined) {
-        item.myself_folder.image_path = require('../../assets/custom_placeholder.png')
-        return
-      }
-      image_path += '/v1/file/http_download?'
-      image_path += `uuid=${item.uuid}&path=${item.myself_folder.background_path}&api_token=${api_token}`
-      item.myself_folder.image_path = image_path
     },
     showCustomModal (item?: CustomModule) {
       const modal = this.$refs.newCustomMoal as any
@@ -188,44 +171,5 @@ interface PageConfig {
 </script>
 
 <style lang="less" scoped>
-.custom-item {
-  width: 132px;
-  height: 107px;
-  background-color: #f6f8fb;
-  border-radius: 5px;
-  cursor: pointer;
-  img {
-    margin: 5px;
-    width: 122px;
-    height: 69px;
-    border-radius: 4px;
-  }
-  .custom-name {
-    color: #353535;
-    text-align: left;
-    font-size: 10px;
-    font-weight: bolder;
-    margin: 0px 7px;
-    line-height: 10px;
-    margin-bottom: 0px;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-  .custom-desc {
-    color: #b3b6c5;
-    font-size: 8px;
-    line-height: 9px;
-    font-weight: bold;
-    margin: 4px 7px 0px;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-    text-align: left;
-  }
-}
-.custom-selected-item {
-  background-color: #def1ea;
-}
+
 </style>

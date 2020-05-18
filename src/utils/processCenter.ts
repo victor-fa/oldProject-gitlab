@@ -1,6 +1,6 @@
 // 负责main process和render processes之间的通讯
 import { ipcRenderer, ipcMain, BrowserWindow } from 'electron'
-import windowManager from './windowManager'
+import windowManager, { homeWindow } from './windowManager'
 
 enum ChannelName {
   async = 'asynchronous-message',
@@ -16,7 +16,9 @@ enum EventName {
   file = 'present_file',
   mediaInfo = 'media_info',
   jump = 'jump_to_localtion',
-  account = 'account_info'
+  account = 'account_info',
+  moveModal = 'presnet_move_modal',
+  moveCallback = 'move_callback'
 }
 
 // use in main process
@@ -47,6 +49,12 @@ export default {
         case EventName.account:
           windowManager.refreshHomeWindow()
           break
+        case EventName.moveModal: 
+          windowManager.presentMoveModal()
+          break
+        case EventName.moveCallback:
+          homeWindow!.webContents.send(EventName.moveCallback, ...args)
+          break
         default:
           break
       }
@@ -57,11 +65,14 @@ export default {
     })
   },
   // add render process observer
-  renderObserver (eventName: MainEventName, listener: (event: Electron.IpcRendererEvent, ...args: any[]) => void) {
+  renderObserver (eventName: MainEventName | EventName, listener: (event: Electron.IpcRendererEvent, ...args: any[]) => void) {
     ipcRenderer.on(eventName, listener)
   },
+  rednerObserverOnce (eventName: MainEventName | EventName, listener: (event: Electron.IpcRendererEvent, ...args: any[]) => void) {
+    ipcRenderer.once(eventName, listener)
+  },
   //remove render process observer
-  removeRenderObserver (eventName: MainEventName) {
+  removeRenderObserver (eventName: MainEventName | EventName) {
     ipcRenderer.removeAllListeners(eventName)
   },
   // on render process send async message
@@ -70,6 +81,10 @@ export default {
   },
   renderSendSync (evnetName: EventName, ...args: any[]): any {
     return ipcRenderer.sendSync(ChannelName.sync, evnetName, ...args)
+  },
+  // on render process send asynce message to render process
+  renderSendTo (webContentsId: number, eventName: EventName, ...args: any[]) {
+    ipcRenderer.sendTo(webContentsId, ChannelName.async, eventName, ...args)
   },
   // on main process send async message
   mainSend (win: BrowserWindow, eventName: MainEventName, ...args: any[]): void {

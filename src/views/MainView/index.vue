@@ -6,6 +6,7 @@
       :popoverList="popoverList"
     >
       <main-header-view
+        ref="mainHeaderView"
         :directory="currentPath"
         :popoverList="popoverList"
         :funcList="funcList"
@@ -47,7 +48,7 @@
       :style="alterStyle"
       v-on:didSelectItem="handleAlterAction"
     />
-    <move-file-modal v-if="showModal" v-on:moveCompleted="handleMoveCompleted"/>
+    <select-file-path v-if="showSelectModal" v-on:dismiss="handleSelectModalDismiss"/>
   </div>
 </template>
 
@@ -62,12 +63,11 @@ import ResourceListItem from '../../components/ResourceListItem/index.vue'
 import { ResourceItem, ArrangeWay, OrderType, ResourceType } from '../../api/NasFileModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 import ResourceHandler from './ResourceHandler'
-import { CategoryType } from '../../model/categoryList'
 import OperateListAlter from '../../components/OperateListAlter/index.vue'
 import NasFileAPI, { TaskMode } from '../../api/NasFileAPI'
 import { OperateGroup } from '../../components/OperateListAlter/operateList'
 import { sortList } from '../../model/sortList'
-import MoveFileModal from './MoveFileModal/index.vue'
+import SelectFilePath from '../SelectFilePath/index.vue'
 
 export default Vue.extend({
   name: 'main-view',
@@ -77,7 +77,7 @@ export default Vue.extend({
     ResourceList,
     OperateListAlter,
     ResourceListItem,
-    MoveFileModal
+    SelectFilePath
   },
   props: {
     currentPath: { // header中展示的当前路径
@@ -102,13 +102,13 @@ export default Vue.extend({
   },
   data () {
     return {
-      categoryType: CategoryType.all, // 当前数据分类 
+      categoryType: ResourceType.all, // 当前数据分类 
       showArray: this.dataSource as ResourceItem[], // 当前页展示的数据
       arrangeWay: ArrangeWay.horizontal, // list的排列方式
       alterPosition: { left: '0px', top: '0px' }, // 右键菜单样式
       showAlter: false, // 控制右键菜单的显示与隐藏
       showOperateList: [] as OperateGroup[], // 展示的右键菜单数据
-      showModal: false // 控制移动文件弹窗的显示与隐藏
+      showSelectModal: false // 控制路径选择弹窗的显示与隐藏
     }
   },
   computed: {
@@ -130,16 +130,18 @@ export default Vue.extend({
     }
   },
   methods: {
+    // public methods
+    resetHeaderView () {
+      const headerView = this.$refs.mainHeaderView as any
+      headerView.resetCategorys()
+    },
+    updateShowArray (items: ResourceItem[]) {
+      this.showArray = items
+    },
     // handle header view callback actions
     handleHeaderViewAction (action: string, ...args: any[]) {
       this.$emit('headerCallbackActions', action, ...args)
       switch (action) {
-        case 'tabChange': 
-          this.handleTabChange(args[0])
-          break;
-        case 'endSearch':
-          this.handleEndSerchAction()
-          break;
         case 'arrangeChange':
           this.handleArrangeChange(args[0])
           break;
@@ -147,17 +149,13 @@ export default Vue.extend({
           break;
       }
     },
-    handleTabChange (type: CategoryType) {
-      this.showArray = ResourceHandler.classifyArray(this.dataSource as ResourceItem[], type)
-    },
-    handleEndSerchAction () {
-      this.showArray = this.dataSource as ResourceItem[]
-    },
     handleArrangeChange (arrangeWay: ArrangeWay) {
       this.arrangeWay = arrangeWay
     },
     // handle resource list view callback actions
     handleResourceListAction (action: string, ...args: any[]) {
+      // 这里移动弹窗没有使用window，故弹出时需要屏蔽所有快捷键
+      if (this.showSelectModal === true) return 
       this.$emit('listCallbackActions', action, ...args)
       switch (action) {
         case 'contextMenu':
@@ -175,7 +173,7 @@ export default Vue.extend({
     },
     handleListContextMenuAction (event: MouseEvent) {
       this.showArray = ResourceHandler.resetSelectState(this.showArray)
-      const list = ResourceHandler.filterOperateList(this.contextListMenu as OperateGroup[], this.clipboard)
+      const list = ResourceHandler.filterOperateList(this.contextListMenu as OperateGroup[], this.clipboard, this.categoryType)
       this.showContextMenu(list, event)
     },
     showContextMenu (list: Array<OperateGroup> | null, event: MouseEvent) {
@@ -267,10 +265,25 @@ export default Vue.extend({
       }
     },
     handleMoveToAction () {
-      this.showModal = true
+      this.showSelectModal = true
     },
-    handleMoveCompleted () {
-      this.showModal = false
+    handleSelectModalDismiss (path?: string, uuid?: string) {
+      this.showSelectModal = false
+      if (path === undefined || uuid === undefined) return
+      const srcItems = ResourceHandler.disableSelectItems(this.showArray)
+      const destItem = { path, uuid } as ResourceItem
+      NasFileAPI.addMoveTask(srcItems, destItem, TaskMode.rename).then(response => {
+        console.log(response)
+        if (response.data.code !== 200) return
+        this.showArray = ResourceHandler.resetDisableState(this.showArray)
+        this.$message.info('任务添加成功')
+        this.$store.dispatch('Resource/increaseTask')
+        this.$emit('headerCallbackActions', 'refresh')
+      }).catch(error => {
+        console.log(error)
+        this.showArray = ResourceHandler.resetDisableState(this.showArray)
+        this.$message.error('移动失败')
+      })
     }
   }
 })

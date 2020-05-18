@@ -49,7 +49,9 @@ export default Vue.extend({
   methods: {
     fetchUlist () {
       this.loading = true
-      NasFileAPI.fetchUlist(this.page, this.uploadOrder).then(response => {
+      const lastItem = _.last(this.dataArray)
+      const pos = lastItem === undefined ? 0 : lastItem.utime
+      NasFileAPI.fetchUlist(this.page, pos, this.uploadOrder).then(response => {
         this.loading = false
         if (response.data.code !== 200) return
         this.parseResponse(response.data)

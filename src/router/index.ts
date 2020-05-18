@@ -87,7 +87,7 @@ const routes = [
     path: '/disk-setting',
     name: 'DiskSetting',
     component: () => import('../views/Disk/DiskSetting.vue')
-  },
+  }
 ]
 
 const router = new VueRouter({

@@ -18,11 +18,12 @@
     </template>
     <template v-slot:resourceItem="{ item, index }">
       <storage-list-item
-        :storageModel="item"
+        :index="index"
+        :model="item"
         :isSelected="item.isSelected" 
-        @click.native.stop.exact="singleClick(index)"
-        @dblclick.native.stop.exact="doubleClick(index)"
-        @contextmenu.native.stop.exact="contextMenuClick($event, index)"
+        @click.native.stop="singleClick(index)"
+        @dblclick.native.stop="doubleClick(index)"
+        @contextmenu.native.stop="contextMenuClick($event, index)"
       />
     </template>
   </main-view>
@@ -40,7 +41,6 @@ import { StorageInfo, PartitionInfo, ArrangeWay, StorageType, ResourceItem } fro
 import NasFileAPI from '../../api/NasFileAPI'
 import StorageHandler from './StorageHandler'
 import { storageContextMenu } from '../../components/OperateListAlter/operateList'
-import { CategoryType } from '../../model/categoryList'
 import { User } from '../../api/UserModel'
 import StringUtility from '../../utils/StringUtility'
 
@@ -80,30 +80,12 @@ export default Vue.extend({
         console.log(response)
         if (response.data.code !== 200) return
         const storages = _.get(response.data.data, 'storages')
-        this.dataArray = this.formatStorages(storages)
+        this.dataArray = StorageHandler.formatStorages(storages)
         this.$store.dispatch('Resource/updateStorages', this.dataArray)
       }).catch(error => {
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)
-      })
-    },
-    formatStorages (storags: StorageInfo[]) {
-      const internalTypes = [StorageType.internal, StorageType.internal_SSD, StorageType.internal_HDD]
-      return storags.map(item => {
-        item.showName = StorageHandler.matchStorageName(item.type)
-        item.showIcon = StorageHandler.matchStorageIcon(item.type)
-        item.showSize = StorageHandler.matchStorageSize(item.used, item.size)
-        item.showProgress = (item.used / item.size) * 100
-        item.isInternal = internalTypes.indexOf(item.type) !== -1
-        item.partitions.forEach((partition, index) => {
-          partition.showName = `分区${index + 1}`
-          partition.showIcon = item.showIcon
-          partition.showSize = StorageHandler.matchStorageSize(partition.used, partition.size)
-          partition.showProgress = (partition.used / partition.size) * 100
-          partition.isInternal = item.isInternal
-        })
-        return item
       })
     },
     singleClick (aIndex: number) {
@@ -126,8 +108,7 @@ export default Vue.extend({
         this.pushPartitionListPage(item)
       } else {
         const uuid = item.partitions[0].uuid
-        const no = (this.user as User).ugreenNo
-        const path = item.isInternal ? `/.ugreen_nas/${no}` : `/`
+        const path = item.partitions[0].path
         this.pushResourceLitsPage(path, uuid, item.showName)
       }
     },
@@ -154,12 +135,11 @@ export default Vue.extend({
       const path = StringUtility.pathDirectory(item.path)
       const uuid = item.uuid
       const ugreenNo = (this.user as User).ugreenNo
-      const internalPrefix = `/.ugreen_nas/${ugreenNo}/`
-      const extendPrefix = `/${(ugreenNo)}/`
-      const isInternal = path.indexOf(internalPrefix) !== -1
-      const start = isInternal ? internalPrefix.length : extendPrefix.length
+      const prefix = `/.ugreen_nas/${ugreenNo}`
+      const isInternal = _.startsWith(prefix)
+      const start = isInternal ? prefix.length : 1
       let showPath = isInternal ? `${this.currentPath}/内置硬盘` : `${this.currentPath}/扩展硬盘`
-      if (start < path.length) showPath += `/${path.substring(start, path.length)}`
+      showPath += `/${path.substring(start, path.length)}`
       this.$router.push({
         name: 'main-resource-view',
         query: { path, uuid },
