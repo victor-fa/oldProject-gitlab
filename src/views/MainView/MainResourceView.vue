@@ -181,43 +181,42 @@ export default Vue.extend({
       const newName = ResourceHandler.calculateNewFolderName(this.dataArray)
       const newItem = {
         type: ResourceType.folder,
+        isSelected: true,
         name: newName,
         renaming: true
-      } as ResourceItem
-      this.dataArray.unshift(newItem)
+      } as ResourceItem 
+      this.dataArray = [newItem].concat(this.dataArray).map((item, index) => {
+        item.index = index
+        return item
+      })
     },
-    handleNewFolderRequestAction (index: number, newName?: string) {
-      if (newName === undefined) {
-        this.dataArray.shift()
-        return
-      }
+    handleNewFolderRequestAction (index: number, newName: string) {
       if (!ResourceHandler.checkFileName(newName)) {
         this.$message.error('名称包含非法字符')
         return
       }
-      const item = ResourceHandler.disableRenamingItem(this.dataArray)
-      if (item === undefined) return
+      const item = this.updateItemState(index, true, false)
       const directory = `${this.path}/${newName}`
       NasFileAPI.newFolder(directory, this.uuid, newName).then(response => {
-        this.handleNewFolderSuccess(response.data.code, item, newName)
+        if (response.data.code !== 200) {
+          this.updateItemState(index, false, true)
+          return
+        }
+        this.$message.info('新建成功')
+        this.handleRefreshAction()
       }).catch(error => {
         console.log(error)
         this.$message.error('创建失败')
-        this.dataArray.splice(0, 1)
+        this.updateItemState(index, false, true)
       })
     },
-    handleNewFolderSuccess (code: number, item: ResourceItem, newName: string) {
-      if (code !== 200) {
-        this.dataArray.splice(0, 1)
-      } else {
-        item.disable = false
-        item.renaming = false
-        item.uuid = this.uuid
-        item.name = newName
-        item.path = `${this.path}/${newName}`
-        this.dataArray.splice(0, 1, item)
-        this.$message.info('新建成功')
-      }
+    // 更新index对应item的禁用和编辑状态
+    updateItemState (index: number, disable: boolean, renaming: boolean) {
+      const item = this.dataArray[index]
+      item.disable = disable
+      item.renaming = renaming
+      this.dataArray.splice(index, 1, item)
+      return item
     },
     handleDireactoryInfoAction () {
       processCenter.renderSend(EventName.mediaInfo, {
@@ -248,7 +247,7 @@ export default Vue.extend({
         this.loading = false
         if (response.data.code !== 200) return
         const list = _.get(response.data.data, 'list') as Array<ResourceItem>
-        this.dataArray = ResourceHandler.formateResponseList(list)
+        this.dataArray = ResourceHandler.formatResourceList(list)
       }).catch(error => {
         this.loading = false
         console.log(error)

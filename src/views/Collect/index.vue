@@ -45,8 +45,10 @@ export default Vue.extend({
         this.loading = false
         if (response.data.code !== 200) return
         const list = _.get(response.data.data, 'files')
-        this.dataArray = list.map(item => {
-          return ResourceHandler.convertResourceItem(item) as ResourceItem
+        this.dataArray = list.map((item, index) => {
+          const rItme = ResourceHandler.convertResourceItem(item) as ResourceItem
+          rItme.index = index
+          return rItme
         })
       }).catch(error => {
         this.loading = false

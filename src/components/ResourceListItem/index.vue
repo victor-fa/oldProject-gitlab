@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div @click="handleItemClick($event)">
     <div
       v-if="isHorizontalArrange"
       class="horizontal-item"
@@ -26,10 +26,8 @@
           type="text"
           v-model="inputName"
           placeholder="请输入文件名"
-          @click.stop="handleInputClick"
           @blur="handleBlur($event)"
           @focus="handleFocus($event)"
-          v-on:pressEnter="handlePressEnter($event)"
         />
         <p
           v-else
@@ -131,49 +129,84 @@ export default Vue.extend({
       return myThis.index % 2
     }
   },
+  mounted () {
+    document.addEventListener('keyup', this.handleKeyupAction)
+  },
+  destroyed () {
+    document.removeEventListener('keyup', this.handleKeyupAction)
+  },
   methods: {
-    searchResourceIcon (type: ResourceType) {
-      return ResourceHandler.searchResourceIcon(type)
+    handleKeyupAction (event: KeyboardEvent) {
+      const code = event.code
+      if (code === 'Enter') {
+        if (this.isSelected === false) return
+        event.stopPropagation()
+        if (this.isRenaming === false) {
+          this.$emit('callbackAction', 'enterRenaming', this.index)
+          return
+        }
+        const item = this.model as ResourceItem
+        if (_.isEmpty(item.uuid)) {
+          this.handleNewFolderaAction(item)
+        } else {
+          this.handleRenameAction(item)
+        }
+      }
     },
-    handleInputClick () {
-      //fix 解决输入框内容点击时，因为透传到list的点击事件，导致输入框异常失去焦点问题
-    },
-    handlePressEnter (event: MouseEvent) {
-      if (_.isEmpty(this.inputName)) {
-        this.$emit('callbackAction', 'newFolderRequest', this.index)
+    handleRenameAction (item: ResourceItem) {
+      // not change
+      if (this.model.name === this.inputName) {
+        this.$emit('callbackAction', 'leaveRenaming', this.index)
         return
       }
-      if (_.isEmpty(this.model.uuid)) {
-        this.$emit('callbackAction', 'newFolderRequest', this.index, this.inputName)
-      }
-    },
-    handleBlur (event: MouseEvent) {
-      if (_.isEmpty(this.inputName)) {
-        const item = this.model as ResourceItem
+      if (_.isEmpty(this.inputName) || this.inputName.indexOf('.') === 0) {
         const isDirectory = item.type === ResourceType.folder
         const tip = isDirectory ? '目录名不能为空' : '文件名不能为空'
         this.$message.error(tip)
         this.inputName = item.name
+        const element = document.activeElement
+        if (!_.isEmpty(element)) {
+          this.$nextTick(() => {
+            this.selectFileName(element as HTMLInputElement)
+          })
+        }
         return
       }
-      const model = this.model as ResourceItem
-      if (_.isEmpty(model.uuid)) {
-        this.$emit('callbackAction', 'newFolderRequest', this.index, this.inputName)
-      } else {
-        // not change
-        if (this.model.name === this.inputName) return
-        this.$emit('callbackAction', 'renameRequest', this.index, this.inputName)
+      this.$emit('callbackAction', 'renameRequest', this.index, this.inputName)
+    },
+    handleNewFolderaAction (item: ResourceItem) {
+      if (_.isEmpty(this.inputName)) {
+        this.$emit('callbackAction', 'leaveNewFolder', this.index)
+        return
+      }
+      this.$emit('callbackAction', 'newFolderRequest', this.index, this.inputName)
+    },
+    searchResourceIcon (type: ResourceType) {
+      return ResourceHandler.searchResourceIcon(type)
+    },
+    handleItemClick (event: MouseEvent) {
+      if (this.isSelected) {
+        event.stopPropagation()
+      }
+    },
+    handleBlur (event: MouseEvent) {
+      if (_.isEmpty(this.inputName)) {
+        this.$emit('callbackAction', 'leaveNewFolder', this.index)
       }
     },
     handleFocus (event: FocusEvent) {
-      // 输入框聚焦，选中名称字段
-      const target = event.currentTarget as any
+      this.selectFileName(event.currentTarget as any)
+      // 命名中的item必须是选中状态
+      if (this.isSelected !== true) this.singleClick()
+    },
+    // 选中文件名称
+    selectFileName (element: HTMLInputElement) {
       if (this.model.type === ResourceType.folder) {
-        target.select()
+        element.select()
       } else {
         const offset = this.inputName.lastIndexOf('.')
-        target.selectionStart = 0
-        target.selectionEnd = offset
+        element.selectionStart = 0
+        element.selectionEnd = offset
       }
     },
     singleClick () {

@@ -109,13 +109,10 @@ export default Vue.extend({
     },
     handleKeydownAction (event: KeyboardEvent) {
       const code = event.code
-      if (code === 'Enter') {
-        this.handleEvent(event)
-        this.$emit('callbackAction', 'enterRenaming')
-      } else if (code === 'Backspace') {
+      if (code === 'Backspace') { // delete
         event.stopPropagation()
         this.$emit('callbackAction', 'deleteItems')
-      } else if (code === 'KeyA') {
+      } else if (code === 'KeyA') { // cmd + a
         const isCommand = process.platform === 'darwin'
         if (isCommand && event.metaKey === true) {
           this.handleEvent(event)

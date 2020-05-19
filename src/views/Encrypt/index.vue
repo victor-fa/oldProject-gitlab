@@ -280,7 +280,7 @@ export default Vue.extend({
         }
         let list = _.get(response.data.data, 'list')
         if (_.isEmpty(list) || list.length < 20) this.busy = true
-        list = ResourceHandler.formateResponseList(list)
+        list = ResourceHandler.formatResourceList(list)
         this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
         this.alreadyLogin = true
       }).catch(error => {
@@ -384,12 +384,14 @@ export default Vue.extend({
     handleRenameAction () {
       console.log('重命名加密文件');
       const index = ResourceHandler.getFirstSelectItemIndex(this.dataArray)
+      if (index === undefined) return
       const item = this.dataArray[index]
       console.log(JSON.parse(JSON.stringify(item)));
     },
     handleMoveoutAction () {
       console.log('加密文件移出空间');
       const index = ResourceHandler.getFirstSelectItemIndex(this.dataArray)
+      if (index === undefined) return
       const item = this.dataArray[index]
       console.log(JSON.parse(JSON.stringify(item)));
     },

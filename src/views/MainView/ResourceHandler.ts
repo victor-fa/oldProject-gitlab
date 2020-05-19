@@ -45,7 +45,7 @@ export default {
   // 2. 如果当前没有选中， 直接选中当前的item
   shiftMultipleSelection (showList: Array<ResourceItem>, aIndex: number) {
     const firstIndex = this.getFirstSelectItemIndex(showList)
-    if (firstIndex === -1) {
+    if (firstIndex === undefined) {
       return this.setSelectState(showList, aIndex, true)
     }
     const beginIndex = firstIndex > aIndex ? aIndex : firstIndex
@@ -59,14 +59,10 @@ export default {
   // 在item不可交互的时候，不能重置掉item的状态
   resetSelectState (currentShowList: Array<ResourceItem>) {
     return currentShowList.map(item => {
-      // item.disable !== true && (item.isSelected = false)
-      // item.disable !== true && (item.renaming = false)
-      // return item
       if (item.disable !== true) {
         if (item.isSelected === true || item.renaming === true) {
           item.isSelected = false
-          item.renaming = false
-          return _.clone(item)
+          return item
         }
       }
       return item
@@ -84,7 +80,6 @@ export default {
     return showArray.map(item => {
       item.disable = false
       item.isSelected = false
-      item.renaming = false
       return item
     })
   },
@@ -114,7 +109,7 @@ export default {
       const element = showArray[index]
       if (element.isSelected) return index
     }
-    return -1
+    return undefined
   },
   // 获取选中的items
   getSelectItems (showArray: Array<ResourceItem>) {
@@ -174,21 +169,16 @@ export default {
   removeSelectedItems (showArray: Array<ResourceItem>) {
     return showArray.filter(item => {
       return item.isSelected !== true
-    })
-  },
-  // 格式化返回的数据，用于界面展示
-  formateResponseList (list: Array<ResourceItem>) {
-    return list.map(value => {
-      value.name = StringUtility.formatName(value.path)
-      value.showMtime = StringUtility.formatShowMtime(value.mtime)
-      value.showSize = StringUtility.formatShowSize(value.size)
-      return value
+    }).map((item, index) => {
+      item.index = index
+      return item
     })
   },
   // 格式化资源列表，用于界面展示
   formatResourceList (list: ResourceItem[], selectedPath?: string) {
     const path = selectedPath === undefined ? '' : selectedPath
-    return list.map(item => {
+    return list.map((item, index) => {
+      item.index = index
       item.name = StringUtility.formatName(item.path)
       item.showMtime = StringUtility.formatShowMtime(item.mtime)
       item.showSize = StringUtility.formatShowSize(item.size)
@@ -230,8 +220,10 @@ export default {
   // 2. 多选情况下，打开、到文件位置、属性、重命名不可用
   // 3. 多选情况下，如果既包含已分享(收藏)和未分享(收藏)，就展示成不可用的分享(收藏)
   // 4. 目录不支持下载
-  filterItemOperateList (groups: OperateGroup[], showArray: Array<ResourceItem>) {
+  // 5. 如果当前正在命名中，只允许删除
+  filterItemOperateList (groups: OperateGroup[], showArray: Array<ResourceItem>, item: ResourceItem) {
     if (_.isEmpty(groups)) return null 
+    if (item.renaming === true) return this.onlyShowDelete(groups)
     const selectItems = this.getSelectItems(showArray)
     const states = this.calculateOperateItemState(selectItems)
     const multipleDisableItem = ['open', 'jump', 'info', 'rename']
@@ -246,6 +238,15 @@ export default {
         } else if (multipleDisableItem.indexOf(item.command) !== -1) {
           item.disable = states.disable
         }
+        return item
+      })
+      return group
+    })
+  },
+  onlyShowDelete (groups: OperateGroup[]) {
+    return groups.map(group => {
+      group.items.map(item => {
+        item.disable = item.command !== 'delete'
         return item
       })
       return group

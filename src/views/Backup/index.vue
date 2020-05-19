@@ -71,7 +71,7 @@ export default Vue.extend({
     parseResponse (data: BasicResponse) {
       let list = _.get(data.data, 'list') as Array<ResourceItem>
       if (_.isEmpty(list) || list.length < 20) this.busy = true
-      list = ResourceHandler.formateResponseList(list)
+      list = ResourceHandler.formatResourceList(list)
       this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
     },
     // 重写父类中的方法

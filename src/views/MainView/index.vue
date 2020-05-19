@@ -26,7 +26,7 @@
           <slot name="resourceItem" :item="item" :index="index" :arrangeWay="arrangeWay">
             <resource-list-item
               :model="item"
-              :index="index"
+              :index="item.index"
               :isSelected="item.isSelected"
               :isDisable="item.disable"
               :isRenaming="item.renaming"
@@ -203,7 +203,7 @@ export default Vue.extend({
       this.$emit('itemCallbackActions', action, index, ...args)
       switch (action) {
         case 'doubleClick':
-          const item = this.showArray[index]
+          const item = this.dataSource[index]
           this.$emit('contextMenuCallbackActions', 'open', item)
           break;
         case 'singleSelection':
@@ -226,18 +226,21 @@ export default Vue.extend({
       }
     },
     handleSingleSelection (index: number) {
-      if (this.showArray[index].isSelected === true) return
+      const item = this.dataSource[index] as ResourceItem
+      if (item.isSelected === true) return
       this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
     },
     handleCommandSelection (index: number) {
       if (process.platform === 'darwin') {
-        const select = this.showArray[index].isSelected === true
+        const item = this.dataSource[index] as ResourceItem
+        const select = item.isSelected === true
         this.showArray = ResourceHandler.setSelectState(this.showArray, index, !select)
       }
     },
     handleCtrlSelection (index: number) {
       if (process.platform === 'win32') {
-        const select = this.showArray[index].isSelected === true
+        const item = this.dataSource[index] as ResourceItem
+        const select = item.isSelected === true
         this.showArray = ResourceHandler.setSelectState(this.showArray, index, !select)
       }
     },
@@ -245,11 +248,11 @@ export default Vue.extend({
       this.showArray = ResourceHandler.shiftMultipleSelection(this.showArray, index)
     },
     handleItemContextMenu (index: number, event: MouseEvent) {
-      const item = this.showArray[index]
+      const item = this.dataSource[index] as ResourceItem
       if (item.isSelected !== true) {
         this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
       }
-      const list = ResourceHandler.filterItemOperateList(this.contextItemMenu as OperateGroup[], this.showArray)
+      const list = ResourceHandler.filterItemOperateList(this.contextItemMenu as OperateGroup[], this.showArray, item)
       this.showContextMenu(list, event)
     },
     // handle main view context menu actions

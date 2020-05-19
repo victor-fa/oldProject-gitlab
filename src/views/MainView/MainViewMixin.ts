@@ -95,9 +95,6 @@ export default Vue.extend({
         case 'loadmore':
           this.handleLoadmoreAction()
           break;
-        case 'enterRenaming':
-          this.handleEnterRenaming()
-          break;
         case 'deleteItems':
           this.handleDeleteItemsAction()
           break;
@@ -107,38 +104,53 @@ export default Vue.extend({
     },
     handleLoadmoreAction () {
     },
-    handleEnterRenaming () {
-      const indexs = ResourceHandler.getSelectItemIndexs(this.dataArray)
-      if (indexs.length === 1) {
-        const item = this.dataArray[indexs[0]]
-        if (item.disable === true) return
-        item.renaming = item.renaming === true ? false : true
-        this.dataArray.splice(indexs[0], 1, item)
-      }
-    },
     handleDeleteItemsAction () {
-      let canDelete = true
-      for (let index = 0; index < this.dataArray.length; index++) {
-        const element = this.dataArray[index]
-        if (element.renaming === true || element.disable === true) {
-          canDelete = false
-          break 
-        }
+      let hasRenaming = false
+      let hasSelected = false
+      this.dataArray.forEach(item => {
+        if (!hasRenaming && item.renaming === true) hasRenaming = true
+        if (!hasSelected && item.isSelected === true) hasSelected = true
+      })
+      if (!hasSelected) return
+      if (hasRenaming) {
+        this.dataArray = this.dataArray.filter(item => {
+          return item.renaming !== true
+        })
+        return
       }
-      if (!canDelete) return
       this.handleDeletAction()
     },
     handleItemActions (action: string, index: number, ...args: any[]) {
       switch (action) {
+        case 'enterRenaming':
+          this.handleEnterRenaming(index)
+          break;
+        case 'leaveRenaming':
+          this.handleLeaveRenaming(index)
+          break
         case 'renameRequest':
           this.handleRenameRequestAction(index, args[0])
           break;
+        case 'leaveNewFolder':
+          this.handleLeaveNewFolder(index)
+          break
         case 'newFolderRequest':
           this.handleNewFolderRequestAction(index, args[0])
           break;
         default:
           break;
       }
+    },
+    handleEnterRenaming (index: number) {
+      const item = this.dataArray[index]
+      if (item.disable === true || item.renaming === true) return
+      item.renaming = true
+      this.dataArray.splice(index, 1, item)
+    },
+    handleLeaveRenaming (index: number) {
+      const item = this.dataArray[index]
+      item.renaming = false
+      this.dataArray.splice(index, 1, item)
     },
     handleRenameRequestAction (index: number, newName: string) {
       if (!ResourceHandler.checkFileName(newName)) {
@@ -159,6 +171,12 @@ export default Vue.extend({
         console.log(error)
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         this.$message.error('重命名失败')
+      })
+    },
+    handleLeaveNewFolder (aIndex: number) {
+      this.dataArray = this.dataArray.filter((item, index) => {
+        if (index > aIndex) item.index = index - 1
+        return index !== aIndex
       })
     },
     handleNewFolderRequestAction (index: number, newName: string) {
@@ -245,7 +263,6 @@ export default Vue.extend({
     },
     handleOpenAction () {
       const items = ResourceHandler.disableSelectItems(this.dataArray)
-      console.log(items);
       if (_.isEmpty(items)) return
       let srcItem = items[0]
       if (srcItem !== undefined) {
@@ -339,6 +356,10 @@ export default Vue.extend({
     handleDeletAction () {
       const items = ResourceHandler.getSelectItems(this.dataArray)
       if (_.isEmpty(items)) return
+      if (items.length === 1 && items[0].renaming === true) {
+        this.dataArray = ResourceHandler.removeSelectedItems(this.dataArray)
+        return
+      }
       this.showDeleteDialog(items).then(result => {
         if (result === 1) return // filter cancel action
         this.handleDeletRequest(items)
@@ -377,6 +398,7 @@ export default Vue.extend({
     },
     handleRenameAction () {
       const index = ResourceHandler.getFirstSelectItemIndex(this.dataArray)
+      if (index === undefined) return
       const item = this.dataArray[index]
       item.renaming = true
       this.dataArray.splice(index, 1, item)
