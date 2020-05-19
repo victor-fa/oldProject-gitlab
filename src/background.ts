@@ -73,16 +73,26 @@ function createWindow () {
 		}
 	})
 
+	const { spawn } = require('child_process')
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL as string)
-    if (!process.env.IS_TEST) win.webContents.openDevTools()
+		if (!process.env.IS_TEST) win.webContents.openDevTools()
+		if (process.platform === 'win32') {
+			spawn(path.join(__filename, '../../public/tunnel/win/ugreenTunnel.exe'));
+		} else {
+			// TODO：mac平台启动程序
+		}
   } else {
     createProtocol('app')
     // Load the index.html when not in development
 		win.loadURL('app://./index.html')
+		if (process.platform === 'win32') {
+			spawn(path.join(__filename, '../tunnel/win/ugreenTunnel.exe').replace(new RegExp("\\\\", "g"), '/'));
+		} else {
+			// TODO：mac平台启动程序
+		}
   }
-
   win.on('closed', () => {
     win = null
   })
