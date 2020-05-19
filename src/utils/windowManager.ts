@@ -58,7 +58,11 @@ export default {
       if (window !== null && process.platform === 'win32') {	// win环境
         window.setTitle(newOptions.title)
         const { spawn } = require('child_process')
-        spawn(path.join(__filename, '../../public/tunnel/demoTunnel.exe'));
+        if (process.env.WEBPACK_DEV_SERVER_URL) { // 测试环境
+          spawn(path.join(__filename, '../../public/tunnel/win/ugreenTunnel.exe'));
+        } else {  // 生产环境
+          spawn(path.join(__filename, '../tunnel/win/ugreenTunnel.exe').replace(new RegExp("\\\\", "g"), '/'));
+        }
       } else {
         // TODO：mac平台启动程序
       }

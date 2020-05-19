@@ -20,6 +20,7 @@ module.exports = {
         "directories": {
           "output": "./dist_electron"//输出文件路径
         },
+        "asar": false,
         "publish": [
           {
             "provider": "generic",
