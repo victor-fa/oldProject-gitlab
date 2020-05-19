@@ -119,105 +119,107 @@ export default {
       this.closeOtherWindow(homeWindow!)
     })
     // 托盘信息
-    if (process.env.WEBPACK_DEV_SERVER_URL) { // 测试环境
-      appTray = new Tray(path.join(__filename, '../../public/logo.ico'));
-    } else {  // 生产环境
-      appTray = new Tray(path.join(__dirname, '/logo.ico'));
-    }
-    let trayMenuTemplate = [
-      {
-        label: '打开绿联云',
-        click: function() {
-          if (homeWindow) {
-            homeWindow.show();
-            homeWindow.restore();
-            homeWindow.focus();
-          }
-        }
-      },
-      {
-        label: '系统设置',
-        click: function() {
-          if (settingWindow) {
-            return windowControl.active(settingWindow);
-          }
-          settingWindow = windowControl.create({
-            url: 'disk-setting',
-            icon: './src/assets/logo.png',
-            title: '系统设置',
-            width: 600,
-            height: 400,
-            minHeight: 350,
-            minWidth: 500,
-            maximizable: false,
-            resizable: false,
-            onclose: () => {
-              settingWindow = null;
-            }
-          });
-        }
-      },
-      {
-        label: '关于',
-        click: function() {
-          if (aboutWindow) {
-            return windowControl.active(aboutWindow);
-          }
-          aboutWindow = windowControl.create({
-            url: 'disk-about',
-            icon: './src/assets/logo.png',
-            title: '关于uGgreen-Nas',
-            width: 600,
-            height: 330,
-            maximizable: false,
-            minimizable: false,
-            resizable: false,
-            onclose: () => {
-              aboutWindow = null;
-            }
-          });
-        }
-      },
-      {
-        label: '反馈',
-        click: function() {
-          if (feedBackWindow) {
-            return windowControl.active(feedBackWindow);
-          }
-          feedBackWindow = windowControl.create({
-            url: 'disk-feedback',
-            icon: './src/assets/logo.png',
-            title: '问题反馈',
-            width: 450,
-            height: 320,
-            maximizable: false,
-            minimizable: false,
-            resizable: false,
-            onclose: () => {
-              feedBackWindow = null;
-            }
-          });
-        }
-      },
-      {
-        label: '退出',
-        click: function() {
-          if (homeWindow) {
-            homeWindow.show();
-            homeWindow.focus();
-            homeWindow.close();
-          }
-        }
+		if (process.platform === 'win32') { // 仅当windows环境下需要托盘
+      if (process.env.WEBPACK_DEV_SERVER_URL) { // 测试环境
+        appTray = new Tray(path.join(__filename, '../../public/logo.ico'));
+      } else {  // 生产环境
+        appTray = new Tray(path.join(__dirname, '/logo.ico'));
       }
-    ];
-    const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
-    appTray.setToolTip('uGgreen-Nas');  // 设置此托盘图标的悬停提示内容
-    appTray.setContextMenu(contextMenu);  // 设置此图标的上下文菜单
-    appTray.on('click', function() {
-      if (homeWindow) {
-        homeWindow.isVisible() ? homeWindow.hide() : homeWindow.show();
-      }
-    });
+      let trayMenuTemplate = [
+        {
+          label: '打开绿联云',
+          click: function() {
+            if (homeWindow) {
+              homeWindow.show();
+              homeWindow.restore();
+              homeWindow.focus();
+            }
+          }
+        },
+        {
+          label: '系统设置',
+          click: function() {
+            if (settingWindow) {
+              return windowControl.active(settingWindow);
+            }
+            settingWindow = windowControl.create({
+              url: 'disk-setting',
+              icon: './src/assets/logo.png',
+              title: '系统设置',
+              width: 600,
+              height: 400,
+              minHeight: 350,
+              minWidth: 500,
+              maximizable: false,
+              resizable: false,
+              onclose: () => {
+                settingWindow = null;
+              }
+            });
+          }
+        },
+        {
+          label: '关于',
+          click: function() {
+            if (aboutWindow) {
+              return windowControl.active(aboutWindow);
+            }
+            aboutWindow = windowControl.create({
+              url: 'disk-about',
+              icon: './src/assets/logo.png',
+              title: '关于uGgreen-Nas',
+              width: 600,
+              height: 330,
+              maximizable: false,
+              minimizable: false,
+              resizable: false,
+              onclose: () => {
+                aboutWindow = null;
+              }
+            });
+          }
+        },
+        {
+          label: '反馈',
+          click: function() {
+            if (feedBackWindow) {
+              return windowControl.active(feedBackWindow);
+            }
+            feedBackWindow = windowControl.create({
+              url: 'disk-feedback',
+              icon: './src/assets/logo.png',
+              title: '问题反馈',
+              width: 450,
+              height: 320,
+              maximizable: false,
+              minimizable: false,
+              resizable: false,
+              onclose: () => {
+                feedBackWindow = null;
+              }
+            });
+          }
+        },
+        {
+          label: '退出',
+          click: function() {
+            if (homeWindow) {
+              homeWindow.show();
+              homeWindow.focus();
+              homeWindow.close();
+            }
+          }
+        }
+      ];
+      const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
+      appTray.setToolTip('uGgreen-Nas');  // 设置此托盘图标的悬停提示内容
+      appTray.setContextMenu(contextMenu);  // 设置此图标的上下文菜单
+      appTray.on('click', function() {
+        if (homeWindow) {
+          homeWindow.isVisible() ? homeWindow.hide() : homeWindow.show();
+        }
+      });
+		}
 
     return homeWindow
   },

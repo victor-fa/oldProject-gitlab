@@ -202,7 +202,8 @@ let DiskSystem = {
 			}
 		});
 		AboutWindow.webContents.session.on('will-download', (event, item, webContents) => {
-			//设置文件存放位置
+			const savePath = path.join(app.getPath('downloads'), item.getFilename());
+			item.setSavePath(savePath);
 			item.on('updated', (event, state) => {
 				if (state === 'interrupted') {
 					console.log('Download is interrupted but can be resumed')
@@ -217,8 +218,6 @@ let DiskSystem = {
 			item.once('done', (event, state) => {
 				if (state === 'completed') {
 					console.log('Download successfully')
-					const savePath = item.getSavePath()
-					console.log(savePath);
 					const { spawn } = require('child_process')
 					spawn(savePath)	// 打开对应路径
 				} else {
@@ -227,7 +226,7 @@ let DiskSystem = {
 			})
 		})
 		if (data === 'new') {
-			setTimeout(() => { AboutWindow.webContents.send('newVersion', '有新版本') }, 5000);
+			setTimeout(() => { AboutWindow.webContents.send('newVersion', '有新版本') }, 2000);
 		}
 	},
 	AccountWindow: data => {

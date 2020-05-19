@@ -22,7 +22,7 @@
 			</div>
 			<div class="bottom">
 				<p class="release">©2020 uGreen_{{ name }}</p>
-				<a-button @click="checkUpdate">
+				<a-button @click="openUpdateInfo">
 					<span>{{ CheckText }}</span>
 				</a-button>
 				<a-button @click="openLink">
@@ -30,6 +30,16 @@
 				</a-button>
 			</div>
 		</div>
+		<a-modal
+			:visible="updateInfo.visiable" :mask="false" :closable="false" :maskClosable="false" width="450px" style="top: 60px;"
+			okText="下载" cancelText="取消" @ok="doUpdate" @cancel="updateInfo.visiable = false">
+			<p v-show="updateInfo.appName">{{updateInfo.appName}} 有新版本【{{updateInfo.verNo}}】更新！</p>
+			<p v-show="updateInfo.desc">描述：{{updateInfo.desc}}</p>
+			<p>
+				<font v-show="updateInfo.pubTime">时间：{{updateInfo.pubTime | filterTime}}</font>
+				<font v-show="updateInfo.size" style="margin-left: 20px">大小：{{updateInfo.size | filterSize}}</font>
+			</p>
+		</a-modal>
 	</div>
 </template>
 
@@ -63,6 +73,18 @@ export default {
 				Platform: process.platform + ' ' + process.arch,
 				Vue: require('vue/package.json').version,
 				Node: process.versions.node
+			},
+			updateInfo: {
+				visiable: false,
+				pkgUrl: '',
+				appNo: '',
+				appName: '',
+				verNo: '',
+				verName: '',
+				size: '',
+				desc: '',
+				remark: '',
+				pubTime: 0
 			}
 		};
 	},
@@ -78,6 +100,15 @@ export default {
 			return packageInfo.name;
 		}
 	},
+	filters: {
+    filterSize (bytes) {
+      return StringUtility.formatShowSize(bytes)
+		},
+    filterTime (time) {
+      return StringUtility.formatShowMtime(time)
+		}
+		
+	},
 	methods: {
 		bind() {
 			this.$ipc.on('percent', (event, message) => {
@@ -91,7 +122,10 @@ export default {
 				this.CheckText = '点我更新'
 			});
 		},
-		checkUpdate() {
+		openUpdateInfo() {
+			this.getUpdateInfo()
+		},
+		getUpdateInfo() {
 			let appId = ''
 			let appVersion = ''
 			if (process.platform === 'win32') {	// win环境
@@ -107,14 +141,27 @@ export default {
           return
 				}
 				if (response.data.data) {
-					const pkgUrl = _.get(response.data.data, 'pkgUrl')
-					this.$ipc.send('system', 'check-for-update', pkgUrl);
+					this.updateInfo.visiable = true
+					this.updateInfo.pkgUrl = _.get(response.data.data, 'pkgUrl')
+					this.updateInfo.appNo = _.get(response.data.data, 'appNo')
+					this.updateInfo.appName = _.get(response.data.data, 'appName')
+					this.updateInfo.verNo = _.get(response.data.data, 'verNo')
+					this.updateInfo.verName = _.get(response.data.data, 'verName')
+					this.updateInfo.size = _.get(response.data.data, 'size')
+					this.updateInfo.desc = _.get(response.data.data, 'desc')
+					this.updateInfo.remark = _.get(response.data.data, 'remark')
+					this.updateInfo.pubTime = _.get(response.data.data, 'pubTime')
+					console.log(this.updateInfo);
 				} else {
 					this.$message.info("当前已为最新版")
 				}
       }).catch(error => {
         console.log(error)
       })
+		},
+		doUpdate() {
+			this.$ipc.send('system', 'check-for-update', this.updateInfo.pkgUrl);
+			this.updateInfo.visiable = false
 		},
 		openLink() {
 			this.$electron.shell.openExternal('https://www.lulian.cn/');
@@ -128,7 +175,7 @@ export default {
 .cloudSeries-about-win {
 	width: 100%;
 	height: 100%;
-	-webkit-app-region: drag;
+	/* -webkit-app-region: drag; */
 }
 .cloudSeries-about-main {
 	width: 100%;
@@ -238,6 +285,13 @@ export default {
 	float: right;
 	margin-left: 20px;
 	overflow: hidden !important;
-	-webkit-app-region: no-drag;
+	/* -webkit-app-region: no-drag; */
+}
+</style>
+
+<style>
+.ant-modal-body {
+	overflow-y: scroll;
+	height: 175px;
 }
 </style>
