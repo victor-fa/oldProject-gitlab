@@ -56,6 +56,7 @@ import processCenter, { EventName, MainEventName } from '../../utils/processCent
 import { message } from 'ant-design-vue'
 import { ACCESS_TOKEN } from '../../common/constants'
 import StringUtility from '../../utils/StringUtility'
+const packageInfo = require('../../../package');
 
 export default Vue.extend({
   name: 'login',
@@ -87,6 +88,9 @@ export default Vue.extend({
     ...mapGetters('User', ['cacheAccounts', 'user']),
     ...mapGetters('NasServer', ['nasInfo'])
   },
+  created () {
+    this.checkUpdate()
+  },
   mounted () {
     this.observerToastNotify()
     this.dropdownItems = _.cloneDeep(this.cacheAccounts)
@@ -96,6 +100,31 @@ export default Vue.extend({
     processCenter.removeRenderObserver(MainEventName.toast)
   },
   methods: {
+    // 调接口判断是否需要更新
+    checkUpdate () {
+      let appId = ''
+      let appVersion = 0
+      if (process.platform === 'win32') {	// win环境
+        appId = packageInfo.winAppId
+        appVersion = packageInfo.winAppVersion
+      } else {	// mac环境
+        appId = packageInfo.macAppId
+        appVersion = packageInfo.macAppVersion
+      }
+      UserAPI.fetchUpdateInfo(appId, appVersion).then(response => {
+        if (response.data.code !== 200) {
+          console.log('获取更新信息失败');
+          return
+        }
+        if (response.data.data) {
+          const pkgUrl = _.get(response.data.data, 'pkgUrl')
+          const ipcRenderer = require('electron').ipcRenderer
+          ipcRenderer.send('system', 'about', 'new'); // 将更新界面唤醒
+        }
+      }).catch(error => {
+        console.log(error)
+      })
+    },
     checkboxChange() {
       this.rememberPassword = !this.rememberPassword
     },

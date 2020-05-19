@@ -174,7 +174,7 @@ let DiskSystem = {
 			return windowControl.active(MainWindow, data);
 		}
 	},
-	AboutWindow: () => {
+	AboutWindow: data => {
 		if (AboutWindow) {
 			return windowControl.active(AboutWindow);
 		}
@@ -193,8 +193,6 @@ let DiskSystem = {
 		});
 		AboutWindow.webContents.session.on('will-download', (event, item, webContents) => {
 			//设置文件存放位置
-			// const folderpath = 'C:\\Users\\82754\\Desktop'
-			// item.setSavePath(folderpath + `\\${item.getFilename()}`);
 			item.on('updated', (event, state) => {
 				if (state === 'interrupted') {
 					console.log('Download is interrupted but can be resumed')
@@ -202,7 +200,7 @@ let DiskSystem = {
 					if (item.isPaused()) {
 						console.log('Download is paused')
 					} else {
-						console.log(`Received bytes: ${item.getReceivedBytes()}`)
+						AboutWindow.webContents.send('percent', (item.getReceivedBytes() / item.getTotalBytes()));
 					}
 				}
 			})
@@ -218,6 +216,9 @@ let DiskSystem = {
 				}
 			})
 		})
+		if (data === 'new') {
+			setTimeout(() => { AboutWindow.webContents.send('newVersion', '有新版本') }, 5000);
+		}
 	},
 	AccountWindow: data => {
 		if (AccountWindow) {
@@ -438,7 +439,7 @@ function bindIpc() {
 				DiskSystem.AccountWindow(data);
 				break;
 			case 'about':
-				DiskSystem.AboutWindow();
+				DiskSystem.AboutWindow(data);
 				break;
 			case 'feedback':
 				DiskSystem.FeedBackWindow();

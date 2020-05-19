@@ -13,6 +13,13 @@
 					<li v-for="(item, index) in InfoList" :key="index">{{ index }}<span />{{ item }}</li>
 				</ul>
 			</div>
+			<div class="update-info">
+				<p class="tips">{{ message }}</p>
+				<div class="process">
+					<Progress :percent="percent" v-show="percent > 0" />
+					<p class="process-p" v-show="percent > 0">{{ percent }}%</p>
+				</div>
+			</div>
 			<div class="bottom">
 				<p class="release">©2020 uGreen_{{ name }}</p>
 				<a-button @click="checkUpdate">
@@ -29,6 +36,7 @@
 <script>
 import WindowsHeader from '../../components/Disk/WindowHeader.vue'
 import UserAPI from '../../api/UserAPI'
+import StringUtility from '../../utils/StringUtility'
 
 const packageInfo = require('../../../package');
 export default {
@@ -36,6 +44,8 @@ export default {
 	data() {
 		return {
 			CheckText: '检查更新',
+			message: '',
+			percent: 0,
 			header: {
 				color: '#666',
 				title: '',
@@ -57,6 +67,9 @@ export default {
 		};
 	},
 	components: { WindowsHeader },
+	beforeMount() {
+		this.bind();
+	},
 	computed: {
 		version() {
 			return packageInfo.version;
@@ -66,8 +79,19 @@ export default {
 		}
 	},
 	methods: {
+		bind() {
+			this.$ipc.on('percent', (event, message) => {
+				this.percent = Number((message * 100).toFixed(0))
+				if (this.percent === 100) {
+					this.percent = 0
+				}
+			});
+			this.$ipc.on('newVersion', (event, message) => {
+				this.message = '有新版本！'
+				this.CheckText = '点我更新'
+			});
+		},
 		checkUpdate() {
-			console.log(process.platform);
 			let appId = ''
 			let appVersion = ''
 			if (process.platform === 'win32') {	// win环境
@@ -86,7 +110,6 @@ export default {
 					const pkgUrl = _.get(response.data.data, 'pkgUrl')
 					this.$ipc.send('system', 'check-for-update', pkgUrl);
 				} else {
-					// this.$ipc.send('system', 'check-for-update', 'http://192.168.10.21/sys/file/exe/20200512/Nas-uGreen Setup 0.1.3.exe');	// 测试用
 					this.$message.info("当前已为最新版")
 				}
       }).catch(error => {
@@ -180,7 +203,7 @@ export default {
 .update-info .tips {
 	font-size: 14px;
 	font-weight: 400;
-	color: #4f4f4f;
+	color: #d82b2b;
 	text-align: left;
 	margin-bottom: 0;
 }
@@ -188,6 +211,11 @@ export default {
 	padding: 10px 0;
 	height: 35px;
 	text-align: left;
+}
+.update-info .process-p {
+	color: #000;
+	display: inline-block;
+	margin-left: 10px;
 }
 .cloudSeries-about-main .bottom {
 	width: calc(100% - 60px);
