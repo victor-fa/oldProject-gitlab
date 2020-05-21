@@ -130,7 +130,7 @@ export default class DownloadTask extends BaseTask {
     })
   }
   // 下载并写入文件数据
-  private downloadFileChunk (fd: number, fileInfo: FileInfo, completionHandler: (error?: TaskError) => void) {
+  protected downloadFileChunk (fd: number, fileInfo: FileInfo, completionHandler: (error?: TaskError) => void) {
     const params = this.generateDownloadParams(fileInfo)
     NasFileAPI.downloadData(params, this.source).then(response => { // download data
       if (response.status !== 200 && response.status !== 206) {

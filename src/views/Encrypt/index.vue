@@ -59,8 +59,8 @@ import MainViewMixin from '../MainView/MainViewMixin'
 import ResourceHandler from '../MainView/ResourceHandler'
 import NasFileAPI from '@/api/NasFileAPI'
 import EncryptUploadTask from '@/api/Transport/EncryptUploadTask'
-import { encryptUploadQueue, downloadQueue } from '@/api/Transport/TransportQueue'
-import DownloadTask from '@/api/Transport/DownloadTask'
+import { encryptUploadQueue, encryptDownloadQueue } from '@/api/Transport/TransportQueue'
+import EncryptDownloadTask from '@/api/Transport/EncryptDownloadTask'
 import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
 import StringUtility from '../../utils/StringUtility'
 import { encryptContextMenu, encryptResourceContextMenu } from '../../components/OperateListAlter/operateList'
@@ -343,8 +343,8 @@ export default Vue.extend({
       const destPath = directory[0]
       const items = ResourceHandler.getSelectItems(this.dataArray)
       items.forEach(item => {
-        const task = new DownloadTask(item.path, destPath, item.uuid)
-        downloadQueue.addTask(task)
+        const task = new EncryptDownloadTask(item.path, destPath, item.uuid)
+        encryptDownloadQueue.addTask(task)
         this.$store.dispatch('Resource/increaseTask')
       })
     },

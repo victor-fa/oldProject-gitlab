@@ -6,6 +6,7 @@ import UploadTask from './UploadTask'
 import BackupUploadTask from './BackupUploadTask'
 import EncryptUploadTask from './EncryptUploadTask'
 import DownloadTask from './DownloadTask'
+import EncryptDownloadTask from './EncryptDownloadTask'
 
 /**
  * progress (task) 上传进度回调
@@ -70,6 +71,7 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
         db.createObjectStore('BackupQueue', { keyPath: 'index' })
         db.createObjectStore('EncryptQueue', { keyPath: 'index' })
         db.createObjectStore('DownloadQueue', { keyPath: 'index' })
+        db.createObjectStore('EncryptDownloadQueue', { keyPath: 'index' })
       }
     }
     request.onsuccess = event => {
@@ -120,6 +122,8 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
       return new EncryptUploadTask(srcPath, destPath, uuid)
     } else if (this.tableName === 'DownloadQueue') {
       return new DownloadTask(srcPath, destPath, uuid)
+    } else if (this.tableName === 'EncryptDownloadQueue') {
+      return new EncryptDownloadTask(srcPath, destPath, uuid)
     }
     return new BaseTask(srcPath, destPath, uuid)
   }
@@ -216,11 +220,13 @@ const uploadQueue = new TaskQueue<UploadTask>('UploadQueue')
 const backupUploadQueue = new TaskQueue<BackupUploadTask>('BackupQueue')
 const encryptUploadQueue = new TaskQueue<EncryptUploadTask>('EncryptQueue')
 const downloadQueue = new TaskQueue<DownloadTask>('DownloadQueue')
+const encryptDownloadQueue = new TaskQueue<EncryptDownloadTask>('EncryptDownloadQueue')
 
 export {
   TaskQueue,
   uploadQueue,
   backupUploadQueue,
   encryptUploadQueue,
-  downloadQueue
+  downloadQueue,
+  encryptDownloadQueue
 }

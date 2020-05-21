@@ -294,6 +294,19 @@ export default {
       cancelToken: source === undefined ? undefined : source.token
     })
   },
+  encryptDownloadData (params: DownloadParams, source?: CancelTokenSource): Promise<AxiosResponse<ArrayBuffer>> {
+    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
+    if (cryptoJson === null) {
+      return Promise.reject(Error('not find crypto_info'))
+    }
+    const token = JSON.parse(cryptoJson) as CryptoInfo
+    return nasServer.get(nasCryptoModulePath + '/download', {
+      params: { path: params.path, uuid: params.uuid, crypto_token: token.crypto_token },
+      headers: { 'Range': `bytes=${params.start}-${params.end}` },
+      responseType: 'arraybuffer',
+      cancelToken: source === undefined ? undefined : source.token
+    })
+  },
   newFolder (path: string, uuid: string, newName: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(nasFileModulePath + '/add', {
       uuid,
