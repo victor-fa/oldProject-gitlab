@@ -45,7 +45,7 @@
 
 <script>
 import WindowsHeader from '../../components/Disk/WindowHeader.vue'
-import UserAPI from '../../api/UserAPI'
+import UserAPI from '@/api/UserAPI'
 import StringUtility from '../../utils/StringUtility'
 
 const packageInfo = require('../../../package');

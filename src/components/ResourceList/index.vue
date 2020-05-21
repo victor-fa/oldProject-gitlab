@@ -167,4 +167,7 @@ export default Vue.extend({
 .resource-list .ant-list-item {
   margin: 0px;
 }
+.ant-list-grid .ant-col > .ant-list-item {
+  margin-bottom: 0;
+}
 </style>

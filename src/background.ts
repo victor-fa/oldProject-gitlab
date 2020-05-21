@@ -73,26 +73,17 @@ function createWindow () {
 		}
 	})
 
-	const { spawn } = require('child_process')
+	// const { spawn } = require('child_process')
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL as string)
 		if (!process.env.IS_TEST) win.webContents.openDevTools()
-		if (process.platform === 'win32') {
-			spawn(path.join(__filename, '../../public/tunnel/win/ugreenTunnel.exe'));
-		} else {
-			// TODO：mac平台启动程序
-		}
   } else {
     createProtocol('app')
     // Load the index.html when not in development
 		win.loadURL('app://./index.html')
-		if (process.platform === 'win32') {
-			spawn(path.join(__filename, '../tunnel/win/ugreenTunnel.exe').replace(new RegExp("\\\\", "g"), '/'));
-		} else {
-			// TODO：mac平台启动程序
-		}
-  }
+	}
+	awakeTunnel()	// 启动P2P隧道程序
   win.on('closed', () => {
     win = null
   })
@@ -456,8 +447,11 @@ function bindIpc() {
 			case 'setting':
 				DiskSystem.SettingWindow();
 				break;
-			case 'check-for-update' /*检查更新*/:
+			case 'check-for-update':
 				AboutWindow.webContents.downloadURL(data);
+				break;
+			case 'awaken-tunnel':
+				awakeTunnel();
 				break;
 			case 'auto-launch':
 				app.setLoginItemSettings({
@@ -493,7 +487,23 @@ function bindIpc() {
 		}
 	});
 }
-
+// 启动P2P隧道程序
+function awakeTunnel () {
+	const { spawn } = require('child_process')
+  if (process.env.WEBPACK_DEV_SERVER_URL) {	// 开发环境
+		if (process.platform === 'win32') {
+			spawn(path.join(__filename, '../../public/tunnel/win/ugreenTunnel.exe'));
+		} else {
+			// TODO：mac平台启动程序
+		}
+  } else {	// 生产环境
+		if (process.platform === 'win32') {
+			spawn(path.join(__filename, '../tunnel/win/ugreenTunnel.exe').replace(new RegExp("\\\\", "g"), '/'));
+		} else {
+			// TODO：mac平台启动程序
+		}
+  }
+}
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {

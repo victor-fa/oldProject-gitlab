@@ -118,6 +118,11 @@ const HomeRouters = [
     component: () => import('../../views/Share/ShareResourceView.vue')
   },
   {
+    path: '/encrypt-reasource-view',
+    name: 'encrypt-reasource-view',
+    component: () => import('../../views/Encrypt/EncryptResourceView.vue')
+  },
+  {
     path: '/storage-partitions',
     name: 'storage-partitions',
     component: () => import('../../views/Storage/StoragePartitions.vue')

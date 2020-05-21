@@ -1,12 +1,12 @@
 import axios, { AxiosResponse, Canceler } from 'axios';
 import _ from 'lodash'
-import { User, BasicResponse, AccessToken } from './UserModel'
+import { User, BasicResponse } from './UserModel'
 import deviceMgr from '../utils/deviceMgr'
 import JSEncrypt from 'jsencrypt'
 import { NasInfo } from './ClientModel'
 import dgram from 'dgram'
 import { nasServer } from './NasServer';
-import { NAS_ACCESS } from '../common/constants'
+import TunnelAPI from './TunnelAPI';
 
 const userModulePath = '/v1/user'
 
@@ -19,11 +19,11 @@ export default {
     nasServer.defaults.baseURL = url
   },
   // refresh_token过期时调用
-  login (user: User, secretKey: string): Promise<AxiosResponse<BasicResponse>> {
+  login (user: User, secretKey: string, tunnelIP?: string): Promise<AxiosResponse<BasicResponse>> {
     const userBasic = convertNasUser(user)
     const sign = encryptSign(userBasic, secretKey)
     if (sign === null) return Promise.reject(Error('rsa encrypt error'))
-    return nasServer.post(userModulePath + '/login', {
+    return nasServer.post((tunnelIP ? `http://${tunnelIP}${userModulePath}` : userModulePath) + '/login', {
       platform: deviceMgr.getPlatform(),
       user_basic: userBasic,
       sign
@@ -83,10 +83,41 @@ export default {
       failure('not found IP address')
       return
     }
+    
+    if (process.platform === 'win32') { // 仅当windows平台先有
+      const tunnelNas:NasInfo = {
+        active: 1,
+        name: '',
+        model: '',
+        mac: '',
+        ip: '127.0.0.1',
+        sn: '',
+        port: 9001,
+        ssl_port: '000',
+        softversion: 'V1.0.1'
+      }
+      TunnelAPI.tunnelCheck().then(checkRes => {
+        TunnelAPI.queryConnectInfo(sn).then((connectRes: any) => {
+          if (connectRes.result === '0') { // 已有连接
+            success(tunnelNas)
+          } else if (connectRes.result === '18') {
+            TunnelAPI.addConnectFun(sn).then((addConnectRes: any) => {
+              if (addConnectRes.result === '0') {
+                TunnelAPI.getPeerinfoFun(sn).then((peerinfo:any) => {
+                  success(tunnelNas)
+                }).catch(err => failure('tunnel error'))
+              }
+            }).catch(err => failure('tunnel error'))
+          }
+        }).catch(err => failure('tunnel error'))
+      }).catch(err => failure('tunnel error'))
+    }
+    
     client = dgram.createSocket('udp4')
     const msg = generateBoardcastPacket(sn, mac)
     console.log(`start boardcast: sn=${sn}, mac=${mac}`);
     const port = 60000
+
     client.bind(() => {
       client!.setBroadcast(true)
       client!.setTTL(128)
@@ -105,7 +136,7 @@ export default {
       // parse reponse
       const dataJson = msg.toString('utf8')
       const data = JSON.parse(dataJson)
-      console.log(data);
+      console.log(JSON.parse(JSON.stringify(data)));
       if (data.error_code === 0) {
         success(data.data)
       } else {

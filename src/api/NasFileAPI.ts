@@ -333,7 +333,7 @@ export default {
       security_password
     })
   },
-  getEncryptList (): Promise<AxiosResponse<BasicResponse>> {
+  getEncryptList (path?): Promise<AxiosResponse<BasicResponse>> {
     const cryptoJson = localStorage.getItem(CRYPTO_INFO)
     if (cryptoJson === null) {
       return Promise.reject(Error('not find crypto_info'))
@@ -341,6 +341,7 @@ export default {
     const token = JSON.parse(cryptoJson) as CryptoInfo
     return nasServer.get(nasCryptoModulePath + '/list', {
       params: {
+        path,
         crypto_token: token.crypto_token
       }
     })

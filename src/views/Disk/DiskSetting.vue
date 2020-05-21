@@ -131,8 +131,8 @@ import {app} from "electron";
 
 <script>
 import SettingMenu from '../../components/Disk/SettingMenu.vue'
-import UserAPI from '../../api/UserAPI'
-import NasFileAPI from '../../api/NasFileAPI'
+import UserAPI from '@/api/UserAPI'
+import NasFileAPI from '@/api/NasFileAPI'
 import StringUtility from '../../utils/StringUtility'
 import { mapGetters } from 'vuex'
 export default {

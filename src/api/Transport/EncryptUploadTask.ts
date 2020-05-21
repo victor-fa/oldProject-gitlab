@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import fs from 'fs'
 import crypto from 'crypto'
 import UploadTask from './UploadTask'
@@ -8,6 +9,8 @@ import { UploadParams } from '../NasFileModel';
 import { CRYPTO_INFO } from '@/common/constants'
 import { CryptoInfo } from '../ClientModel';
 import { FileInfo } from './BaseTask';
+import store from '@/store'
+import { User } from '@/api/UserModel'
 
 export default class EncryptUploadTask extends UploadTask {
   convertFileStats (path: string, stats: fs.Stats): Promise<FileInfo> {
@@ -47,12 +50,14 @@ export default class EncryptUploadTask extends UploadTask {
   }
   encryptUploadParams (fileInfo: FileInfo, chunkLength: number): UploadParams {
     const cryptoJson = localStorage.getItem(CRYPTO_INFO)
+    const user = _.get(store.getters, 'User/user') as User
     let token
     if (cryptoJson !== null) {
       token = JSON.parse(cryptoJson) as CryptoInfo
     }
     return {
-      path: '/' + fileInfo.name,
+      path: `/.ugreen_nas/${user.ugreenNo}/.safe/${fileInfo.name}`,
+      // path: '/' + fileInfo.name,
       start: fileInfo.completedSize,
       end: fileInfo.completedSize + chunkLength - 1,
       size: fileInfo.totalSize,

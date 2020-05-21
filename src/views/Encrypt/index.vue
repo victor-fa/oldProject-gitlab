@@ -1,9 +1,10 @@
 <template>
   <div>
     <main-view
-      :loading="loading"
       :currentPath="currentPath"
+      :loading="loading"
       :dataSource="dataArray"
+      :busy="busy"
       :contextListMenu="encryptContextMenu"
       :contextItemMenu="encryptResourceContextMenu"
       v-on:headerCallbackActions="handleHeaderActions"
@@ -56,14 +57,14 @@ import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
 import ResourceHandler from '../MainView/ResourceHandler'
-import NasFileAPI from '../../api/NasFileAPI'
-import { ResourceItem, OrderType, UploadTimeSort } from '../../api/NasFileModel'
+import NasFileAPI from '@/api/NasFileAPI'
+import EncryptUploadTask from '@/api/Transport/EncryptUploadTask'
+import { encryptUploadQueue, downloadQueue } from '@/api/Transport/TransportQueue'
+import DownloadTask from '@/api/Transport/DownloadTask'
+import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
 import StringUtility from '../../utils/StringUtility'
 import { encryptContextMenu, encryptResourceContextMenu } from '../../components/OperateListAlter/operateList'
-import EncryptUploadTask from '../../api/Transport/EncryptUploadTask'
-import { encryptUploadQueue } from '../../api/Transport/TransportQueue'
-import DownloadTask from '@/api/Transport/DownloadTask'
-import { downloadQueue } from '@/api/Transport/TransportQueue'
+import { User } from '../../api/UserModel'
 
 
 export default Vue.extend({
@@ -74,6 +75,7 @@ export default Vue.extend({
   mixins: [MainViewMixin],
   computed: {
     ...mapGetters('NasServer', ['cryptoInfo']),
+    ...mapGetters('User', ['user']),
     path: function () {
       const path = this.$route.query.path as string
       return path
@@ -83,7 +85,7 @@ export default Vue.extend({
       return uuid
     },
   },
-  created() {
+  mounted() {
     this.checkEncryptStatus()
     encryptUploadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
       setTimeout(() => { this.getEncryptList() }, 1000);
@@ -163,7 +165,7 @@ export default Vue.extend({
         return false
       }
       this.loading = true
-      NasFileAPI.setEncrypt(this.encryptSet.securityUserPassword).then(response => {
+      NasFileAPI.setEncrypt(StringUtility.encryptPassword(this.encryptSet.securityUserPassword)).then(response => {
         this.loading = false
         if (response.data.code !== 200) return
         this.login()
@@ -204,11 +206,11 @@ export default Vue.extend({
     login() {
       let security_password = ''
       if (this.encryptSet.isVisiable) {
-        security_password = this.encryptSet.securityUserPassword
+        security_password = StringUtility.encryptPassword(this.encryptSet.securityUserPassword)
       } else if (this.encryptLogin.isVisiable) {
-        security_password = this.encryptLogin.securityPassword
+        security_password = StringUtility.encryptPassword(this.encryptLogin.securityPassword)
       } else if (this.encryptModify.isVisiable) {
-        security_password = this.encryptModify.newPassword
+        security_password = StringUtility.encryptPassword(this.encryptModify.newPassword)
       }
       this.loading = true
       NasFileAPI.loginEncrypt(security_password).then(response => {
@@ -252,8 +254,8 @@ export default Vue.extend({
         return false
       }
       const input = {
-        security_user_password: this.encryptModify.oldPassword,
-        security_user_password_new: this.encryptModify.newPassword
+        security_user_password: StringUtility.encryptPassword(this.encryptModify.oldPassword),
+        security_user_password_new: StringUtility.encryptPassword(this.encryptModify.newPassword)
       }
       this.loading = true
       NasFileAPI.modifyEncrypt(input).then(response => {
@@ -268,7 +270,7 @@ export default Vue.extend({
     },
     getEncryptList() {
       this.loading = true
-      NasFileAPI.getEncryptList().then(response => {
+      NasFileAPI.getEncryptList(`/.ugreen_nas/${(this.user as User).ugreenNo}/.safe`).then(response => {
         this.loading = false
         if (response.data.code !== 200) {
           if (response.data.code === 4004) {  // 针对Resource Not Found
@@ -306,6 +308,16 @@ export default Vue.extend({
       this.busy = false
       this.getEncryptList()
     },
+    handleOpenFolderAction (item: ResourceItem) {
+      console.log(item.name);
+      this.$router.push({
+        name: 'encrypt-reasource-view',
+        query: { 
+          ugreenNo: item.path,
+          showPath: `${this.currentPath}/${item.name}`
+        }
+      })
+    },
     handleLoadmoreAction () {
       this.page++
       this.getEncryptList()
@@ -336,16 +348,16 @@ export default Vue.extend({
         this.$store.dispatch('Resource/increaseTask')
       })
     },
-    // handleSortWayChangeAction (order: OrderType) {
-    //   if (order === OrderType.ByUploadDesc) {
-    //     this.uploadOrder = UploadTimeSort.descend
-    //   } else if (order === OrderType.ByUploadAsc) {
-    //     this.uploadOrder = UploadTimeSort.ascend
-    //   }
-    //   this.page = 1
-    //   this.busy = false
-    //   this.getEncryptList()
-    // },
+    handleSortWayChangeAction (order: OrderType) {
+      if (order === OrderType.ByUploadDesc) {
+        this.uploadOrder = UploadTimeSort.descend
+      } else if (order === OrderType.ByUploadAsc) {
+        this.uploadOrder = UploadTimeSort.ascend
+      }
+      this.page = 1
+      this.busy = false
+      this.getEncryptList()
+    },
     handleEncryptAction (filePaths: string[]) {
       console.log(filePaths);
     },

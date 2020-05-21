@@ -50,7 +50,7 @@
 <script>
 import WindowsHeader from '../../components/Disk/WindowHeader.vue'
 import { USER_MODEL } from '../../common/constants'
-import UserAPI from '../../api/UserAPI'
+import UserAPI from '@/api/UserAPI'
 import StringUtility from '../../utils/StringUtility'
 import processCenter, { EventName } from '../../utils/processCenter'
 import { mapGetters } from 'vuex'

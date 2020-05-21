@@ -25,6 +25,8 @@ import UserAPI from '../../api/UserAPI'
 import { DeviceInfo } from '../../api/UserModel'
 import StringUtility from '../../utils/StringUtility'
 import ClientAPI from '../../api/ClientAPI'
+import { nasServer } from '../../api/NasServer';
+import TunnelAPI from '../../api/TunnelAPI'
 import { NasInfo, NasAccessInfo } from '../../api/ClientModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 
@@ -38,7 +40,8 @@ export default Vue.extend({
   data () {
     return {
       loading: false,
-      deviceList: [] as DeviceInfo[]
+      deviceList: [] as DeviceInfo[],
+      currentDevice: 0
     }
   },
   created () {
@@ -64,6 +67,7 @@ export default Vue.extend({
       })
     },
     didSelectItem (index: number) {
+      this.currentDevice = index
       const item = this.deviceList[index]
       const secretKey = StringUtility.filterPublicKey(item.publicKey)
       this.searchNasInLAN(item, secretKey)
@@ -72,9 +76,15 @@ export default Vue.extend({
       timeId = this.beginTimer()
       this.loading = true
       ClientAPI.searchNas(nas.sn, nas.mac, data => {
-        timeId !== null && clearTimeout(timeId)
-        ClientAPI.closeBoardcast()
-        this.loginToNas(data, secretKey)
+        if (data.name === '') { // 隧道登录
+          timeId !== null && clearTimeout(timeId)
+          ClientAPI.closeBoardcast()
+          this.tunnelTryLogin(secretKey, TunnelAPI.getClientIP())
+        } else {
+          timeId !== null && clearTimeout(timeId)
+          ClientAPI.closeBoardcast()
+          this.loginToNas(data, secretKey)
+        }
       }, error => {
         this.loading = false
         timeId !== null && clearTimeout(timeId)
@@ -88,10 +98,37 @@ export default Vue.extend({
         this.$message.error('连接超时')
       }, 10000)
     },
+    tunnelTryLogin (secretKey, tunnelIP) {  // 通过渠道登录
+      ClientAPI.login(this.user, secretKey, tunnelIP).then(response => {
+        if (response.data.code !== 200) return
+        const accessInfo = response.data.data as NasAccessInfo
+        ClientAPI.setBaseUrl(`http://${tunnelIP}`)
+        accessInfo.key = secretKey
+        const nasInfo = this.deviceList[this.currentDevice]
+        const nas = {
+          active: 1,
+          name: nasInfo.name,
+          model: nasInfo.model,
+          mac: nasInfo.mac,
+          ip: '127.0.0.1',
+          sn: nasInfo.sn,
+          port: 9001,
+          ssl_port: 10000,
+          softversion: 'V1.0.1'
+        }
+        this.loading = false
+        this.$store.dispatch('NasServer/updateNasAccess', accessInfo)
+        this.$store.dispatch('NasServer/updateNasInfo', nas)
+        processCenter.renderSend(EventName.home)
+      }).catch(error => {
+        this.loading = false
+        console.log(error);
+      })
+    },
     loginToNas (nas: NasInfo, secretKey: string) {
       ClientAPI.setBaseUrl(`http://${nas.ip}:${nas.port}`)
       ClientAPI.login(this.user, secretKey).then(response => {
-        console.log(response)
+        console.log(response.data)
         this.loading = false
         if (response.data.code !== 200) return
         const accessInfo = response.data.data as NasAccessInfo
