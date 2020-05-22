@@ -63,6 +63,12 @@ export default {
       const paths = state.pathMap[type] as CacheRoute[]
       state.showPaths = paths
     },
+    UPDATE_SHOW_PATHS (state: PathsState, paths: CacheRoute[]) {
+      const type = getCacheType(state)
+      if (type === undefined) return
+      state.pathMap[type] = paths
+      state.showPaths = paths
+    },
     PUSH (state: PathsState, item: CacheRoute) {
       const type = getCacheType(state)
       if (type === undefined) return
@@ -71,18 +77,23 @@ export default {
       state.pathMap[type] = paths
       state.showPaths = paths
     },
-    POP (state: PathsState, index: number) {
+    POP (state: PathsState, index?: number) {
       const type = getCacheType(state)
       if (type === undefined) return
       let paths = _.clone(state.pathMap[type] as CacheRoute[])
-      paths = paths.slice(0, index + 1)
+      if (index === undefined) {
+        paths.pop()
+      } else {
+        paths = paths.slice(0, index + 1)
+      }
       state.pathMap[type] = paths
       state.showPaths = paths
     },
-    UPDATE_SHOW_PATHS (state: PathsState, paths: CacheRoute[]) {
-      const type = getCacheType(state)
-      if (type === undefined) return
-      state.pathMap[type] = paths
+    REPLACE_PATHS (state: PathsState, length: number) {
+      const start = 1
+      const paths = _.cloneDeep(state.showPaths)
+      paths.splice(start + 1, length)
+      paths[start].name = '...'
       state.showPaths = paths
     }
   },
@@ -93,14 +104,17 @@ export default {
     switchShowPaths (context: ActionContext<PathsState, PathsState>, type: RouteCalss) {
       context.commit('SWITCH_SHOW_PATHS', type)
     },
+    updateShowPaths (context: ActionContext<PathsState, PathsState>, paths: CacheRoute[]) {
+      context.commit('UPDATE_SHOW_PATHS', paths)
+    },
     push (context: ActionContext<PathsState, PathsState>, item: CacheRoute) {
       context.commit('PUSH', item)
     },
-    pop (context: ActionContext<PathsState, PathsState>, index: number) {
+    pop (context: ActionContext<PathsState, PathsState>, index?: number) {
       context.commit('POP', index)
     },
-    updateShowPaths (context: ActionContext<PathsState, PathsState>, paths: CacheRoute[]) {
-      context.commit('UPDATE_SHOW_PATHS', paths)
+    replacePaths (context: ActionContext<PathsState, PathsState>, length: number) {
+      context.commit('REPLACE_PATHS', length)
     }
   }
 }

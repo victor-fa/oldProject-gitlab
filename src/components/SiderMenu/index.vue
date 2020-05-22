@@ -45,6 +45,7 @@ export default Vue.extend({
   },
   methods: {
     onSelectAction (aIndex: number) {
+      if (this.selectedIndex === aIndex) return
       this.$emit('change', aIndex)
       this.showItems = this.showItems.map((item, index) => {
         item.meta!.isSelected = index === aIndex

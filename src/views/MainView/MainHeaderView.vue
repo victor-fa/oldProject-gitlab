@@ -132,8 +132,7 @@ export default Vue.extend({
   computed: {
     ...mapGetters('Paths', ['showPaths']),
     key: function () {
-      const item = _.last(this.showPaths) as CacheRoute
-      return item.name
+      return this.$route.name
     },
     disableBack: function () {
       const disable = (this.showPaths.length < 2) as boolean
@@ -152,7 +151,8 @@ export default Vue.extend({
   },
   methods: {
     // public methods
-    resetState () { // 重置header的状态，外部调用
+    // 重置header的状态，外部调用
+    resetState () { 
       this.hideSearchInput()
     },
     // private methods
@@ -163,7 +163,23 @@ export default Vue.extend({
     },
     // 计算路径的截断，中间缩率实现
     calculatePathsTruncate () {
-
+      this.$nextTick(() => {
+        const breadcrumb = this.$refs.breadcrumb as Vue
+        if (breadcrumb === undefined) return
+        const width = breadcrumb.$el.clientWidth
+        if (width >= breadcrumb.$el.scrollWidth) return
+        const childrens = breadcrumb.$children
+        let fixedWidth = (childrens[0].$el as HTMLElement).offsetWidth + 15
+        const count = childrens.length
+        for (let index = count - 1; index >= 0; index--) {
+          const element = childrens[index].$el as HTMLElement
+          fixedWidth += element.offsetWidth
+          if (fixedWidth >= width) {
+            this.$store.dispatch('Paths/replacePaths', index)
+            break
+          }
+        }
+      })
     },
     showPopover (item: ResourceFuncItem) {
       const list = this.popoverList as SortList
@@ -213,7 +229,7 @@ export default Vue.extend({
       if (index === showPaths.length - 1) return
       const item = this.showPaths[index] as CacheRoute
       if (item.name === '...') return
-      RouterUtility.popSpecifiedRoute(index)
+      RouterUtility.pop(index)
     },
     handleItemClick (item: ResourceFuncItem) {
       switch (item.command) {

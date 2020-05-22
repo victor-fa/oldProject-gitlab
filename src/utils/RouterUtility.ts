@@ -12,19 +12,8 @@ export default {
       params: params
     })
   },
-  /**pop到指定的路由 */
-  popSpecifiedRoute (index: number) {
-    let showPaths = _.get(store.getters, 'Paths/showPaths') as CacheRoute[]
-    showPaths = showPaths.slice(0, index + 1)
-    store.dispatch('Paths/updateShowPaths', showPaths).then(() => {
-      this.jumpLastRoute()
-    })
-  },
-  popRoute () {
-    const showPaths = _.get(store.getters, 'Paths/showPaths') as CacheRoute[]
-    let newPaths = _.clone(showPaths) 
-    newPaths.pop()
-    store.dispatch('Paths/updateShowPaths', newPaths).then(() => {
+  pop (index?: number) {
+    store.dispatch('Paths/pop', index).then(() => {
       this.jumpLastRoute()
     })
   },

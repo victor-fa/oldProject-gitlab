@@ -159,7 +159,7 @@ export default Vue.extend({
       this.arrangeWay = arrangeWay
     },
     handleBackAction () {
-      RouterUtility.popRoute()
+      RouterUtility.pop()
     },
     // handle resource list view callback actions
     handleResourceListAction (action: string, ...args: any[]) {

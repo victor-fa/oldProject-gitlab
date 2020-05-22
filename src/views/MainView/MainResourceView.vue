@@ -78,11 +78,9 @@ export default Vue.extend({
   },
   methods: {
     updateView () {
-      if (this.checkQuery()) { 
-        this.fetchResourceList()
-        const mainView = this.$refs.mainView as any
-        mainView.resetHeaderView()
-      }
+      if (this.checkQuery()) this.fetchResourceList()
+      const mainView = this.$refs.mainView as any
+      mainView !== undefined && mainView.resetHeaderView()
     },
     checkQuery () {
       const path = this.$route.query.path
