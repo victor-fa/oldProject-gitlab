@@ -114,7 +114,7 @@ export default {
 		ShowPicture(item, index) {
 			this.NowShow = item;
 			this.NowShow.count = index;
-			if (item.path.indexOf('.ugreen_nas') === -1) {
+			if (item.path.indexOf('.safe') !== -1) {
 				this.NowShow.URL = NasFileAPI.encryptDownload({
 					uuid: item.uuid,
 					path: item.path

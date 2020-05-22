@@ -10,11 +10,11 @@
       @click="handleContentClick"
     >
       <span class="nas-title">扫描设备列表</span>
-      <a-spin :spinning="connectLoading">
+      <a-spin :spinning="connectLoading" style="flex: 1">
         <nas-device-list
           ref="nasDeviceList"
           :dataSource="nasList"
-          :listHeight="380"
+          :listHeight="listHeight"
           v-on:didSelectItem="didSelectItem"
         />
       </a-spin>
@@ -61,7 +61,8 @@ export default Vue.extend({
       nasList: [] as NasInfo[],
       selectNas: {} as NasInfo,
       connectLoading: false,
-      type: this.$route.query.type
+      type: this.$route.query.type,
+      listHeight: 0
     }
   },
   computed: {
@@ -75,11 +76,21 @@ export default Vue.extend({
   },
   mounted () {
     this.scanNasInLan()
+    this.bind()
   },
   destroyed () {
     ClientAPI.closeBoardcast()
   },
   methods: {
+    bind () {
+      this.listHeight = document.body.clientHeight - 250
+      window.onresize = () => {
+        const _this = this as any
+        return (() => {
+          _this.listHeight = document.body.clientHeight - 250
+        })();
+      };
+    },
     scanNasInLan () {
       this.scanLoading = true
       ClientAPI.scanNas(data => {

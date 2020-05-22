@@ -47,6 +47,7 @@
       v-on:didSelectItem="handleAlterAction"
     />
     <select-file-path v-if="showSelectModal" v-on:dismiss="handleSelectModalDismiss"/>
+    <encrypt-pass-model :visiable="showEncryptModal" v-on:passCallback="handleEncryptPassModal"/>
   </div>
 </template>
 
@@ -60,6 +61,7 @@ import ResourceList from '../../components/ResourceList/index.vue'
 import ResourceListItem from '../../components/ResourceListItem/index.vue'
 import { ResourceItem, ArrangeWay, OrderType, ResourceType } from '../../api/NasFileModel'
 import processCenter, { EventName } from '../../utils/processCenter'
+import StringUtility from '../../utils/StringUtility'
 import ResourceHandler from './ResourceHandler'
 import OperateListAlter from '../../components/OperateListAlter/index.vue'
 import NasFileAPI, { TaskMode } from '../../api/NasFileAPI'
@@ -67,6 +69,8 @@ import { OperateGroup } from '../../components/OperateListAlter/operateList'
 import { sortList } from '../../model/sortList'
 import SelectFilePath from '../SelectFilePath/index.vue'
 import RouterUtility from '../../utils/RouterUtility'
+import EncryptPassModel from '../Encrypt/EncryptPassModel.vue'
+import { User } from '@/api/UserModel'
 
 export default Vue.extend({
   name: 'main-view',
@@ -76,7 +80,8 @@ export default Vue.extend({
     ResourceList,
     OperateListAlter,
     ResourceListItem,
-    SelectFilePath
+    SelectFilePath,
+    EncryptPassModel
   },
   props: {
     loading: {
@@ -104,7 +109,8 @@ export default Vue.extend({
       alterPosition: { left: '0px', top: '0px' }, // 右键菜单样式
       showAlter: false, // 控制右键菜单的显示与隐藏
       showOperateList: [] as OperateGroup[], // 展示的右键菜单数据
-      showSelectModal: false // 控制路径选择弹窗的显示与隐藏
+      showSelectModal: false, // 控制路径选择弹窗的显示与隐藏
+      showEncryptModal: false // 控制输入加密密码弹窗的显示与隐藏
     }
   },
   computed: {
@@ -118,7 +124,8 @@ export default Vue.extend({
       const count = this.showArray.length as number
       return count
     },
-    ...mapGetters('Resource', ['clipboard'])
+    ...mapGetters('Resource', ['clipboard']),
+    ...mapGetters('User', ['user'])
   },
   watch: {
     dataSource: function (newValue: Array<ResourceItem>) {
@@ -157,7 +164,7 @@ export default Vue.extend({
     // handle resource list view callback actions
     handleResourceListAction (action: string, ...args: any[]) {
       // 这里移动弹窗没有使用window，故弹出时需要屏蔽所有快捷键
-      if (this.showSelectModal === true) return 
+      if (this.showSelectModal === true || this.showEncryptModal === true) return 
       this.$emit('listCallbackActions', action, ...args)
       switch (action) {
         case 'contextMenu':
@@ -265,6 +272,9 @@ export default Vue.extend({
         case 'moveto':
           this.handleMoveToAction()
           break;
+        case 'encrypt':
+          this.handleEncryptAction()
+          break;
         default:
           break;
       }
@@ -288,6 +298,40 @@ export default Vue.extend({
         console.log(error)
         this.showArray = ResourceHandler.resetDisableState(this.showArray)
         this.$message.error('移动失败')
+      })
+    },
+    handleEncryptAction () {
+      this.showEncryptModal = true
+    },
+    handleEncryptPassModal (callback) {
+      if (callback === 'close') {
+        this.showEncryptModal = false
+        return
+      }
+      NasFileAPI.loginEncrypt(StringUtility.encryptPassword(callback)).then(response => {
+        if (response.data.code !== 200) return
+        const crypto_token = _.get(response.data, 'data')
+        this.handleEncryptFile(crypto_token)
+      }).catch(error => {
+        this.$message.error('网络连接错误，请检测网络')
+        console.log(error)
+      })
+    },
+    handleEncryptFile (crypto_token) {
+      const srcItems = ResourceHandler.disableSelectItems(this.showArray)
+      const ugreenNo = (this.user as User).ugreenNo
+      NasFileAPI.addEncryptMoveIntoTask(srcItems, `/.ugreen_nas/${ugreenNo}/.safe`, TaskMode.rename, crypto_token).then(response => {
+        if (response.data.code !== 200) return
+        this.showArray = ResourceHandler.resetDisableState(this.showArray)
+        setTimeout(() => {
+          this.$message.info('文件已加密')
+          this.$emit('headerCallbackActions', 'refresh')
+        }, 2000);
+        this.showEncryptModal = false
+      }).catch(error => {
+        console.log(error)
+        this.showArray = ResourceHandler.resetDisableState(this.showArray)
+        this.$message.error('移入失败')
       })
     }
   }

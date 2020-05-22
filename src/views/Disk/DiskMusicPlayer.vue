@@ -152,7 +152,7 @@ export default {
 		playCallBack(item, index) {
 			this.NowPlay = item;
 			this.NowPlay.count = index;
-			if (item.path.indexOf('.ugreen_nas') === -1) {
+			if (item.path.indexOf('.safe') !== -1) {
 				this.NowPlay.PlayUrl = NasFileAPI.httpEncryptDownload({
 					uuid: item.uuid,
 					path: item.path

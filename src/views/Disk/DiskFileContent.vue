@@ -46,7 +46,7 @@ export default {
 				data.forEach((item, index) => {
 					this.NowLoad = item;
 					this.header.title = StringUtility.formatName(item.path) + ' 文件查看';
-					if (item.path.indexOf('.ugreen_nas') === -1) {
+					if (item.path.indexOf('.safe') !== -1) {
 						this.LoadUrl =
 							this.$path.join(__static, 'plugins/syntaxhighlighter/index.html?url=') + 
 							`${NasFileAPI.getServerUrl()}/v1/crypto/http_download?uuid=${item.uuid}&path=${item.path}&crypto_token=${cryptoToken}`;

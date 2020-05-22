@@ -114,7 +114,7 @@ export default {
   /**重命名下载完成文件 */
   renameFinishedFile (path: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const newPath = _.trimEnd(path, downloadingSuffix)
+      const newPath = path.substring(0, path.indexOf(downloadingSuffix))
       fs.rename(path, newPath, error => {
         if (error !== null) {
           console.log(error)

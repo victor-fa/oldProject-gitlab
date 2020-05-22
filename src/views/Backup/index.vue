@@ -16,12 +16,12 @@ import _ from 'lodash'
 import Vue from 'vue'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
-import { BasicResponse } from '../../api/UserModel'
-import { ResourceItem, OrderType, UploadTimeSort } from '../../api/NasFileModel'
+import { BasicResponse } from '@/api/UserModel'
+import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
 import ResourceHandler from '../MainView/ResourceHandler'
-import NasFileAPI from '../../api/NasFileAPI'
+import NasFileAPI from '@/api/NasFileAPI'
 import { backupContextMenu, backupResourceContextMenu } from '../../components/OperateListAlter/operateList'
-import UploadTask from '../../api/Transport/UploadTask'
+import UploadTask from '@/api/Transport/UploadTask'
 
 export default Vue.extend({
   name: 'backup',

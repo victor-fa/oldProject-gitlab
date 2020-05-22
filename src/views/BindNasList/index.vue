@@ -8,7 +8,7 @@
       <nas-device-list
         ref="nasDeviceList"
         :dataSource="deviceList"
-        :listHeight="320"
+        :listHeight="listHeight"
         v-on:didSelectItem="didSelectItem"
       />
     </a-spin>
@@ -41,16 +41,27 @@ export default Vue.extend({
     return {
       loading: false,
       deviceList: [] as DeviceInfo[],
-      currentDevice: 0
+      currentDevice: 0,
+      listHeight: 0
     }
   },
-  created () {
+  mounted () {
     this.getBindDevices()
+    this.bind()
   },
   computed: {
     ...mapGetters('User', ['user'])
   },
   methods: {
+    bind () {
+      this.listHeight = document.body.clientHeight - 290
+      window.onresize = () => {
+        const _this = this as any
+        return (() => {
+          _this.listHeight = document.body.clientHeight - 290
+        })();
+      };
+    },
     getBindDevices () {
       this.loading = true
       UserAPI.fetchBindDevices().then(response => {

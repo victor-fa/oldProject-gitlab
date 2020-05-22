@@ -3,7 +3,8 @@ import _ from 'lodash'
 import NasFileAPI from '../NasFileAPI'
 import { CancelTokenSource } from 'axios'
 import { DownloadParams } from '../NasFileModel'
-import DownloadTask, { FileInfo } from './BaseTask'
+import { FileInfo } from './BaseTask'
+import DownloadTask from './DownloadTask'
 
 export default class EncryptDownloadTask extends DownloadTask {
   downloadChunkData (fileInfo: FileInfo, source?: CancelTokenSource) {

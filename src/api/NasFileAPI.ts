@@ -247,6 +247,57 @@ export default {
       data: { mode: 1, files }
     })
   },
+  addEncryptRemoveTask(srcItems: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
+    if (cryptoJson === null) {
+      return Promise.reject(Error('not find crypto_info'))
+    }
+    const token = JSON.parse(cryptoJson) as CryptoInfo
+    const files = srcItems.map(item => {
+      return { path: item.path, uuid: item.uuid }
+    })
+    return nasServer.post(nasTaskModulePath + '/add', {
+      type: 5,
+      data: { mode: 1, files }
+    }, {
+      params: {
+        crypto_token: token.crypto_token
+      }
+    })
+  },
+  addEncryptMoveIntoTask(srcItems: Array<ResourceItem>, dstPath: string, mode: TaskMode, crypto_token: string): Promise<AxiosResponse<BasicResponse>> {
+    const src = srcItems.map(item => {
+      return { path: item.path, uuid: item.uuid }
+    })
+    const dst = { path: dstPath }
+    return nasServer.post(nasTaskModulePath + '/add', {
+      type: 6,
+      data: { mode, src, dst }
+    }, {
+      params: {
+        crypto_token: crypto_token
+      }
+    })
+  },
+  addEncryptMoveOutTask(srcItems: Array<ResourceItem>, dstItem: ResourceItem, mode: TaskMode): Promise<AxiosResponse<BasicResponse>> {
+    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
+    if (cryptoJson === null) {
+      return Promise.reject(Error('not find crypto_info'))
+    }
+    const token = JSON.parse(cryptoJson) as CryptoInfo
+    const src = srcItems.map(item => {
+      return { path: item.path, uuid: item.uuid }
+    })
+    const dst = { path: dstItem.path, uuid: dstItem.uuid }
+    return nasServer.post(nasTaskModulePath + '/add', {
+      type: 7,
+      data: { mode, src, dst }
+    }, {
+      params: {
+        crypto_token: token.crypto_token
+      }
+    })
+  },
   fetchRemoteTaskList (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.get(nasTaskModulePath + '/list')
   },

@@ -211,9 +211,6 @@ export default Vue.extend({
         case 'rename':
           this.handleRenameAction()
           break;
-        case 'encrypt':
-          this.handleEncryptAction(args[0])
-          break;
         case 'info':
           this.handleInfoAction()
           break;
@@ -389,10 +386,6 @@ export default Vue.extend({
       const item = this.dataArray[index]
       item.renaming = true
       this.dataArray.splice(index, 1, item)
-    },
-    handleEncryptAction (filePaths: string[]) {
-      // TODO: 文件加密
-      console.log(filePaths);
     },
     handleInfoAction () {
       const _this = this as any

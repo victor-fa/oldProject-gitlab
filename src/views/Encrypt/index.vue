@@ -46,6 +46,7 @@
       <p>此操作将会清除加密空间所有文件，并注销您原来的密码！一旦重置，您可重新激活使用加密空间。</p>
       <a-checkbox v-model="encryptReset.alreadyKnow">我已经了解</a-checkbox>
     </a-modal>
+    <select-file-path v-if="showSelectModal" v-on:dismiss="handleSelectModalDismiss"/>
   </div>
 </template>
 
@@ -56,7 +57,7 @@ import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
 import ResourceHandler from '../MainView/ResourceHandler'
-import NasFileAPI from '@/api/NasFileAPI'
+import NasFileAPI, { TaskMode } from '@/api/NasFileAPI'
 import EncryptUploadTask from '@/api/Transport/EncryptUploadTask'
 import { encryptUploadQueue, encryptDownloadQueue } from '@/api/Transport/TransportQueue'
 import EncryptDownloadTask from '@/api/Transport/EncryptDownloadTask'
@@ -65,12 +66,13 @@ import StringUtility from '../../utils/StringUtility'
 import { encryptContextMenu, encryptResourceContextMenu } from '../../components/OperateListAlter/operateList'
 import { User } from '../../api/UserModel'
 import RouterUtility from '../../utils/RouterUtility'
-
+import SelectFilePath from '../SelectFilePath/index.vue'
 
 export default Vue.extend({
   name: 'encrypt',
   components: {
-    MainView
+    MainView,
+    SelectFilePath
   },
   mixins: [MainViewMixin],
   computed: {
@@ -88,6 +90,7 @@ export default Vue.extend({
   mounted() {
     this.checkEncryptStatus()
     encryptUploadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
+      this.$store.dispatch('Resource/decreaseTask')
       setTimeout(() => { this.getEncryptList() }, 1000);
     })
   },
@@ -99,7 +102,7 @@ export default Vue.extend({
   data () {
     return {
       loading: false,
-      dataArray: [],
+      dataArray: [] as any,
       page: 1,
       busy: false,
       uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
@@ -125,7 +128,8 @@ export default Vue.extend({
         alreadyKnow: false
       },
       encryptContextMenu, // list右键菜单选项
-      encryptResourceContextMenu // item右键菜单选项
+      encryptResourceContextMenu, // item右键菜单选项
+      showSelectModal: false // 控制路径选择弹窗的显示与隐藏
     }
   },
   methods: {
@@ -326,8 +330,8 @@ export default Vue.extend({
       NasFileAPI.resetEncrypt().then(response => {
         this.loading = false
         if (response.data.code !== 200) return
-        console.log(response);
-        // TODO: 当前加密空间重置接口还没好
+        this.$message.success('重置加密空间成功')
+        this.cancleEncryptReset()
       }).catch(error => {
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
@@ -352,9 +356,6 @@ export default Vue.extend({
       this.page = 1
       this.busy = false
       this.getEncryptList()
-    },
-    handleEncryptAction (filePaths: string[]) {
-      console.log(filePaths);
     },
     handleModifyPassAction () { //  修改加密空间密码
       this.encryptModify.isVisiable = true
@@ -382,11 +383,16 @@ export default Vue.extend({
         this.$message.warning('暂不支持打开该类型文件');
       }
     },
-    handleDeletAction () {
-      console.log('删除加密文件');
-      const items = ResourceHandler.getSelectItems(this.dataArray)
-      if (_.isEmpty(items)) return
-      console.log(JSON.parse(JSON.stringify(items)));
+    handleDeletRequest (items: ResourceItem[]) {
+      ResourceHandler.disableSelectItems(this.dataArray)
+      NasFileAPI.addEncryptRemoveTask(items).then(response => {
+        if (response.data.code !== 200) return
+        this.$message.info('任务添加成功')
+        this.$store.dispatch('Resource/increaseTask')
+        setTimeout(() => this.getEncryptList(), 2000);
+      }).catch(_ => {
+        this.$message.error('删除失败')
+      })
     },
     handleRenameAction () {
       console.log('重命名加密文件');
@@ -396,11 +402,9 @@ export default Vue.extend({
       console.log(JSON.parse(JSON.stringify(item)));
     },
     handleMoveoutAction () {
-      console.log('加密文件移出空间');
-      const index = ResourceHandler.getFirstSelectItemIndex(this.dataArray)
-      if (index === undefined) return
-      const item = this.dataArray[index]
-      console.log(JSON.parse(JSON.stringify(item)));
+      const items = ResourceHandler.getSelectItems(this.dataArray)
+      this.showSelectModal = true
+      console.log(JSON.parse(JSON.stringify(items)));
     },
     handleUploadAction (filePaths: string[]) {
       filePaths.forEach(path => {
@@ -409,6 +413,24 @@ export default Vue.extend({
         this.$store.dispatch('Resource/increaseTask')
       })
     },
+    handleSelectModalDismiss (path?: string, uuid?: string) {
+      this.showSelectModal = false
+      if (path === undefined || uuid === undefined) return
+      const srcItems = ResourceHandler.disableSelectItems(this.dataArray)
+      const destItem = { path, uuid } as ResourceItem
+      NasFileAPI.addEncryptMoveOutTask(srcItems, destItem, TaskMode.rename).then(response => {
+        console.log(response)
+        if (response.data.code !== 200) return
+        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+        this.$message.info('任务添加成功')
+        this.$store.dispatch('Resource/increaseTask')
+        this.$emit('headerCallbackActions', 'refresh')
+      }).catch(error => {
+        console.log(error)
+        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+        this.$message.error('移出失败')
+      })
+    }
   }
 })
 </script>

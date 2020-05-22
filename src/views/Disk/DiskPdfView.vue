@@ -33,7 +33,7 @@ export default {
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
 					this.NowPlay.path = item.path;
-					if (item.path.indexOf('.ugreen_nas') === -1) {
+					if (item.path.indexOf('.safe') !== -1) {
 						this.src = this.$path.join(__static, 'plugins/pdfjs/web/viewer.html?file=') + encodeURIComponent(NasFileAPI.httpEncryptDownload({
 							uuid: item.uuid,
 							path: item.path
