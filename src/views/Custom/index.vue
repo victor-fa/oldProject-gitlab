@@ -4,7 +4,6 @@
       ref="mainView"
       :loading="loading"
       :listGrid="{ gutter: 16, xs: 1, sm: 3, md: 4, lg: 6, xl: 8, xxl: 12 }"
-      :currentPath="currentPath"
       :dataSource="dataArray"
       :funcList="customFuncList"
       :contextItemMenu="customContextMenu"
@@ -45,6 +44,7 @@ import { customContextMenu, customListContextMenu } from '../../components/Opera
 import { nasServer } from '../../api/NasServer'
 import { NasAccessInfo } from '../../api/ClientModel'
 import CustomHandler from './CustomHandler'
+import RouterUtility from '../../utils/RouterUtility'
 
 export default Vue.extend({
   name: 'custom',
@@ -57,7 +57,6 @@ export default Vue.extend({
   data () {
     return {
       loading: false,
-      currentPath: '精选',
       dataArray: [] as CustomModule[],
       customFuncList,
       customContextMenu,
@@ -111,17 +110,10 @@ export default Vue.extend({
       this.pushResourceList(item)
     },
     pushResourceList (item: CustomModule) {
-      const name = item.myself_folder.name
-      this.$router.push({
-        name: 'main-resource-view',
-        query: { 
-          path: item.path, 
-          uuid: item.uuid
-        },
-        params: {
-          showPath: `${this.currentPath}/${name}`
-        }
-      })
+      const name = item.name
+      const path = item.path
+      const uuid = item.uuid
+      RouterUtility.push(name, 'main-resource-view', { path, uuid })
     },
     contextMenuClick (event: MouseEvent, index: number) {
       const mainView: any = this.$refs.mainView
@@ -130,14 +122,6 @@ export default Vue.extend({
     // 覆盖混入中的方法
     handleRefreshAction () {
       this.fetchCustomList()
-    },
-    handleOpenAction () {
-      const items = this.dataArray.filter(item => {
-        return item.isSelected === true
-      })
-      if (_.isEmpty(items)) return
-      const item = items[0]
-      this.pushResourceList(item)
     },
     handleNewCustomAction () {
       this.showCustomModal()

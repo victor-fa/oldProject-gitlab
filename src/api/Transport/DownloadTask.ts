@@ -131,8 +131,7 @@ export default class DownloadTask extends BaseTask {
   }
   // 下载并写入文件数据
   protected downloadFileChunk (fd: number, fileInfo: FileInfo, completionHandler: (error?: TaskError) => void) {
-    const params = this.generateDownloadParams(fileInfo)
-    NasFileAPI.downloadData(params, this.source).then(response => { // download data
+    this.downloadChunkData(fileInfo).then(response => { // download data
       if (response.status !== 200 && response.status !== 206) {
         const error = new TaskError(TaskErrorCode.serverError, response.statusText)
         return Promise.reject(error)
@@ -190,5 +189,10 @@ export default class DownloadTask extends BaseTask {
     const error = new TaskError(code)
     this.status = TaskStatus.error
     this.emit('error', this.index, error)
+  }
+  // protected methods
+  downloadChunkData (fileInfo: FileInfo, source?: CancelTokenSource) {
+    const params = this.generateDownloadParams(fileInfo)
+    return NasFileAPI.downloadData(params, this.source)
   }
 }

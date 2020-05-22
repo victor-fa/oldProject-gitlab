@@ -24,7 +24,11 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
     super()
     this.tableName = tableName
     this.queue = []
-    this.readDBTasks()
+    this.openTransportDB().then(event => {
+      this.readDBTasks(event)
+    }).catch(error => {
+      console.log(error)
+    })
   }
   // public methods
   /**获取全部任务 */
@@ -33,7 +37,7 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
   }
   /**添加新的任务 */
   addTask (task: T) {
-    task.index = this.queue.length
+    task.index = this.generateTaskIndex()
     this.queue.push(task)
     this.checkUploadQueue()
     this.emit('addTask', _.cloneDeep(task))
@@ -61,31 +65,54 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
     this.reloadTaskInDB(task)
   }
   // private methods
-  private readDBTasks () {
-    const request = window.indexedDB.open('nas_transport')
-    request.onupgradeneeded = event => {
-      const target = event.target as IDBOpenDBRequest
-      const db = target.result
-      if (!db.objectStoreNames.contains(this.tableName)) {
-        db.createObjectStore('UploadQueue', { keyPath: 'index' })
-        db.createObjectStore('BackupQueue', { keyPath: 'index' })
-        db.createObjectStore('EncryptQueue', { keyPath: 'index' })
-        db.createObjectStore('DownloadQueue', { keyPath: 'index' })
-        db.createObjectStore('EncryptDownloadQueue', { keyPath: 'index' })
+  private generateTaskIndex () {
+    const task = _.last(this.queue)
+    if (task === undefined) return 0
+    return task.index + 1
+  }
+  private openTransportDB (): Promise<Event> {
+    return new Promise((resolve, reject) => {
+      const packageJson = require('../../../package.json')
+      const version = packageJson.version as string
+      let versionNum = 0
+      version.split('.').reverse().forEach((value, index) => {
+        const pow = Math.pow(10, index * 2)
+        versionNum += Number(value) * pow
+      })
+      const request = window.indexedDB.open('nas_transport', versionNum)
+      request.onupgradeneeded = event => {
+        const target = event.target as IDBOpenDBRequest
+        const db = target.result
+        this.createTable(db, 'UploadQueue')
+        this.createTable(db, 'BackupQueue')
+        this.createTable(db, 'EncryptQueue')
+        this.createTable(db, 'DownloadQueue')
+        this.createTable(db, 'EncryptDownloadQueue')
       }
+      request.onsuccess = event => {
+        resolve(event)
+      }
+      request.onerror = event => {
+        reject(event)
+      }
+    })
+  }
+  private createTable (db: IDBDatabase, name: string) {
+    if (!db.objectStoreNames.contains(name)) {
+      db.createObjectStore(name, { keyPath: 'index' })
     }
-    request.onsuccess = event => {
-      const db = (event.target as IDBOpenDBRequest).result
-      this.db = db
-      if (db.objectStoreNames.length > 0) {
-        const objectStore = this.db.transaction(this.tableName, 'readonly').objectStore(this.tableName)
-        objectStore.openCursor().onsuccess = event => {
-          const cursor = (event.target as IDBRequest).result as IDBCursorWithValue
-          if (cursor !== null) {
-            const task = this.convertObj2Task(cursor.value)
-            this.queue.push(task)
-            cursor.continue()
-          }
+  }
+  private readDBTasks (event: Event) {
+    const db = (event.target as IDBOpenDBRequest).result
+    this.db = db
+    if (db.objectStoreNames.length > 0) {
+      const objectStore = this.db.transaction(this.tableName, 'readonly').objectStore(this.tableName)
+      objectStore.openCursor().onsuccess = event => {
+        const cursor = (event.target as IDBRequest).result as IDBCursorWithValue
+        if (cursor !== null) {
+          const task = this.convertObj2Task(cursor.value)
+          this.queue.push(task)
+          cursor.continue()
         }
       }
     }

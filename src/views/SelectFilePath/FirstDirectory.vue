@@ -9,6 +9,7 @@
       :isSelected="item.isSelected"
       @click.native.stop="diskClick(index)"
       @dblclick.native.stop="diskDoubleClick(index)"
+      @contextmenu.native.stop.prevent="diskContextMenu(index)"
     />
     <span v-show="showCustom" class="separator-tip">精选</span>
     <div class="book-item">
@@ -21,6 +22,7 @@
         :isSelected="item.isSelected"
         @click.native.stop="customClick(index)"
         @dblclick.native.stop="customDoubleClick(index)"
+        @contextmenu.native.stop.prevent="customContextMenu(index)"
       />
     </div>
   </div>
@@ -59,11 +61,17 @@ export default Vue.extend({
     diskDoubleClick (index: number) {
       this.$emit('callbackAction', 'diskDoubleClick', index)
     },
+    diskContextMenu (index: number) {
+      this.$emit('callbackAction', 'diskContextMenu', index)
+    },
     customClick (aIndex: number) {
       this.$emit('callbackAction', 'customClick', aIndex)
     },
     customDoubleClick (index: number) {
       this.$emit('callbackAction', 'customDoubleClick', index)
+    },
+    customContextMenu (index: number) {
+      this.$emit('callbackAction', 'customContextMenu', index)
     }
   }
 })

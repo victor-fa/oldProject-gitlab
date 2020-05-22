@@ -19,8 +19,14 @@ const customFuncList: ResourceFuncItem[] = [
   { icon: require('../../assets/new_custom.png'), command: 'newCustom', iconWidth: '15px' }
 ]
 
+const storageFuncList: ResourceFuncItem[] = [
+  { icon: require('../../assets/search_icon.png'), command: 'search', iconWidth: '13px' },
+  { icon: require('../../assets/refresh_icon.png'), command: 'refresh', iconWidth: '12px' }
+]
+
 export {
   ResourceFuncItem,
   commonFuncList,
-  customFuncList
+  customFuncList,
+  storageFuncList
 }

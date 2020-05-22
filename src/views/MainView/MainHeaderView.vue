@@ -1,16 +1,26 @@
 <template>
-  <div class="main-header-view">
+  <div class="main-header-view" :key="key">
     <basic-tabs v-if="false" :tabs="categorys" v-on:tabChange="handleTabChange"/>
     <div class="bottom-bar">
       <div class="left-bar">
         <custom-button
           :image="backIcon"
+          :disableImage="disableBackIcon"
           :disable="disableBack"
           class="back-icon-style"
           iconWidth="6px"
           @click.native="backAction"
         />
-        <span>{{ directory }}</span>
+        <a-breadcrumb separator=">" class="modal-breadcrumb" ref="breadcrumb">
+          <a-breadcrumb-item
+            v-for=" (item, index) in showPaths"
+            :key="index"
+            :class="{ 'modal-breadcrumb-item': showHover(index) }"
+            @click.native.stop="handleBreadcrumbClick(index)"
+          >
+            {{ item.name }}
+          </a-breadcrumb-item>
+        </a-breadcrumb>
       </div>
       <div class="right-bar">
         <a-input
@@ -69,14 +79,17 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
 import BasicTabs from '../../components/BasicTabs/index.vue'
 import { categorys, taskCategorys, Category } from '../../model/categoryList'
 import { EventBus, EventType } from '../../utils/eventBus'
 import CustomButton from '../../components/CustomButton/index.vue'
 import SortPopoverList from '../../components/SortPopoverList/index.vue'
-import { SortWay, SortKind, SortType, sortList, uploadSortList } from '../../model/sortList'
+import { SortWay, SortKind, SortType, sortList, uploadSortList, SortList } from '../../model/sortList'
 import { ArrangeWay, OrderType, ResourceType } from '../../api/NasFileModel'
 import { commonFuncList, ResourceFuncItem } from './ResourceFuncList'
+import { CacheRoute } from '../../store/modules/Paths'
+import RouterUtility from '../../utils/RouterUtility'
 
 export default Vue.extend({
   name: 'main-header-view',
@@ -98,10 +111,6 @@ export default Vue.extend({
     SortPopoverList
   },
   props: {
-    directory: {
-      type: String,
-      default: ''
-    },
     funcList: Array,
     popoverList: Object,
     categoryType: {
@@ -113,35 +122,59 @@ export default Vue.extend({
     return {
       categorys: _.cloneDeep(categorys),
       backIcon: require('../../assets/back_icon.png'),
+      disableBackIcon: require('../../assets/dis_back_icon.png'),
       showFuncList: list,
       visible: false, // 控制排序气泡弹窗是否显示 
       showSearch: false, // 控制搜索框是否显示
-      keyword: '', // 搜索关键字
+      keyword: '' // 搜索关键字
+    }
+  },
+  computed: {
+    ...mapGetters('Paths', ['showPaths']),
+    key: function () {
+      const item = _.last(this.showPaths) as CacheRoute
+      return item.name
+    },
+    disableBack: function () {
+      const disable = (this.showPaths.length < 2) as boolean
+      return disable
     }
   },
   watch: {
     funcList: function (newValue: ResourceFuncItem[]) {
       this.showFuncList = newValue
     },
-    popoverList: function (newValue) {
-      console.log(newValue)
-    }
-  },
-  computed: {
-    disableBack: function () {
-      return this.directory.indexOf('/') === -1
+    showPaths: function (newValue: CacheRoute[]) {
+      this.$nextTick(() => {
+        this.calculatePathsTruncate()
+      })
     }
   },
   methods: {
+    // public methods
+    resetState () { // 重置header的状态，外部调用
+      this.hideSearchInput()
+    },
+    // private methods
+    showHover (index: number) {
+      if (index === this.showPaths.length - 1) return false
+      const path = this.showPaths[index]
+      return path.name !== '...'
+    },
+    // 计算路径的截断，中间缩率实现
+    calculatePathsTruncate () {
+
+    },
     showPopover (item: ResourceFuncItem) {
+      const list = this.popoverList as SortList
+      if (_.isEmpty(list.kinds) || _.isEmpty(list.types)) {
+        return false
+      }
       return item.command === 'sort'
     },
     showItem (item: ResourceFuncItem) {
       if (item.command === 'sort') return false
       return item.isHidden !== true
-    },
-    resetCategorys () {
-      this.categorys = _.cloneDeep(categorys)
     },
     handleTabChange (index: number) {
       this.hideSearchInput()
@@ -174,6 +207,13 @@ export default Vue.extend({
     backAction () {
       this.hideSearchInput()
       this.$emit('CallbackAction', 'back')
+    },
+    handleBreadcrumbClick (index: number) {
+      const showPaths = this.showPaths as CacheRoute[]
+      if (index === showPaths.length - 1) return
+      const item = this.showPaths[index] as CacheRoute
+      if (item.name === '...') return
+      RouterUtility.popSpecifiedRoute(index)
     },
     handleItemClick (item: ResourceFuncItem) {
       switch (item.command) {
@@ -269,10 +309,15 @@ export default Vue.extend({
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      span {
-        color: #484848;
+      padding-right: 10px;
+      .modal-breadcrumb {
         font-size: 12px;
         line-height: 22px;
+        overflow: hidden;
+        white-space: nowrap;
+        .modal-breadcrumb-item:hover {
+          color: #06b650;
+        }
       }
       .back-icon-style {
         height: 22px;
@@ -315,5 +360,12 @@ export default Vue.extend({
 }
 .main-header-view .right-bar .ant-input-suffix {
   right: 4px;
+}
+.main-header-view .modal-breadcrumb .ant-breadcrumb-separator {
+  margin: 0px;
+  font-size: 10px;
+}
+.main-header-view .modal-breadcrumb .ant-breadcrumb-link {
+  cursor: default;
 }
 </style>

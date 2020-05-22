@@ -1,6 +1,5 @@
 <template>
   <main-view
-    :currentPath="currentPath"
     :loading="loading"
     :dataSource="dataArray"
     :busy="busy"
@@ -24,6 +23,7 @@ import { uploadSortList } from '../../model/sortList'
 import ResourceHandler from '../MainView/ResourceHandler'
 import MainViewMixin from '../MainView/MainViewMixin'
 import { recentContextMenu } from '../../components/OperateListAlter/operateList'
+import RouterUtility from '../../utils/RouterUtility'
 
 export default Vue.extend({
   name: 'recent',
@@ -33,7 +33,6 @@ export default Vue.extend({
   mixins: [MainViewMixin],
   data () {
     return {
-      currentPath: '最近',
       loading: false,
       dataArray: [] as ResourceItem[],
       page: 1,
@@ -68,18 +67,6 @@ export default Vue.extend({
       this.dataArray = this.page === 1 ? ulist : this.dataArray.concat(ulist)
     },
     // 重写父类中的方法
-    handleOpenFolderAction (item: ResourceItem) {
-      this.$router.push({
-        name: 'recent-reasource-view',
-        query: {
-          path: item.path,
-          uuid: item.uuid
-        },
-        params: {
-          showPath: `${this.currentPath}/${item.name}`
-        }
-      })
-    },
     handleRefreshAction () {
       this.page = 1
       this.busy = false

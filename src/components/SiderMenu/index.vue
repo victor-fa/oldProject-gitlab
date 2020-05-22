@@ -1,11 +1,11 @@
 <template>
   <ul>
     <li
-      v-for="(item, index) in showItems"
+      v-for="(item, index) in silderItems"
       :key="index"
       class="item"
       v-bind:class="{ itemSelected: item.meta.isSelected }"
-      @click="onSelectAction(item.meta, item.path)"
+      @click="onSelectAction(index)"
     >
       <img :src="item.meta.isSelected ? item.meta.selectedIcon : item.meta.icon"/>
       <label>{{ item.meta.title }}
@@ -22,56 +22,35 @@
 </template>
 
 <script lang="ts">
-import _ from 'lodash'
 import Vue from 'vue'
-import { mapGetters } from 'vuex'
-import { HomeRouters, FuncListItem } from '../../router/modules/HomeList'
-import { EventBus, EventType } from '../../utils/eventBus'
-import { EventName } from '../../utils/processCenter'
+import { FuncListItem } from '../../router/modules/HomeList'
 
 export default Vue.extend({
   name: 'sider-menu',
-  data () {
-    let showItems = HomeRouters.filter(item => {
-      return !_.isEmpty(item.meta)
-    })
-    return {
-      showItems
+  model: {
+    prop: 'selectedIndex',
+    event: 'change'
+  },
+  props: {
+    silderItems: Array,
+    selectedIndex: Number,
+    taskCount: {
+      default: 0
     }
   },
-  computed: {
-    ...mapGetters('Resource', ['taskCount'])
-  },
-  mounted () {
-    EventBus.$on(EventName.jump, aItem => {
-      // 更新界面
-      this.showItems = this.showItems.map((item, index) => {
-        item.meta!.isSelected = index === 1
-        return item
-      })
-      // 跳转到存储
-      const item = this.showItems[1]
-      if (this.$route.path !== item.path) {
-        const json = JSON.stringify(aItem)
-        this.$router.replace({
-          name: item.name,
-          params: { selectedItem: json }
-        })
-      }
-    })
-  },
-  destroyed () {
-    EventBus.$off(EventName.jump)
+  data () {
+    return {
+      showItems: this.silderItems as FuncListItem[]
+    }
   },
   methods: {
-    onSelectAction: function (item: FuncListItem, path: string) {
-      this.showItems = this.showItems.map(aItem => {
-        aItem.meta!.isSelected = aItem.path === path ? true : false
-        return aItem
+    onSelectAction (aIndex: number) {
+      this.$emit('change', aIndex)
+      this.showItems = this.showItems.map((item, index) => {
+        item.meta!.isSelected = index === aIndex
+        return item
       })
-      EventBus.$emit(EventType.leftMenuChangeAction, path)
-      if (this.$route.path !== path) this.$router.replace(path)
-    }
+    },
   }
 })
 </script>

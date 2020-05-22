@@ -1,7 +1,6 @@
 <template>
   <div>
     <main-view
-      :currentPath="currentPath"
       :loading="loading"
       :dataSource="dataArray"
       :busy="busy"
@@ -65,6 +64,7 @@ import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
 import StringUtility from '../../utils/StringUtility'
 import { encryptContextMenu, encryptResourceContextMenu } from '../../components/OperateListAlter/operateList'
 import { User } from '../../api/UserModel'
+import RouterUtility from '../../utils/RouterUtility'
 
 
 export default Vue.extend({
@@ -99,7 +99,6 @@ export default Vue.extend({
   data () {
     return {
       loading: false,
-      currentPath: '加密',
       dataArray: [],
       page: 1,
       busy: false,
@@ -309,14 +308,10 @@ export default Vue.extend({
       this.getEncryptList()
     },
     handleOpenFolderAction (item: ResourceItem) {
-      console.log(item.name);
-      this.$router.push({
-        name: 'encrypt-reasource-view',
-        query: { 
-          ugreenNo: item.path,
-          showPath: `${this.currentPath}/${item.name}`
-        }
-      })
+      const name = item.name
+      const path = item.path
+      const uuid = item.uuid
+      RouterUtility.push(name, 'encrypt-reasource-view', { path, uuid })
     },
     handleLoadmoreAction () {
       this.page++

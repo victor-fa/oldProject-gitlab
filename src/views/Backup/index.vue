@@ -1,7 +1,6 @@
 <template>
   <main-view
     :loading="loading"
-    :currentPath="currentPath"
     :dataSource="dataArray"
     :contextListMenu="backupContextMenu"
     :contextItemMenu="backupResourceContextMenu"
@@ -36,7 +35,6 @@ export default Vue.extend({
   data () {
     return {
       loading: false,
-      currentPath: '备份',
       dataArray: [] as ResourceItem[],
       page: 1,
       uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式

@@ -84,7 +84,9 @@ export default Vue.extend({
       this.scanLoading = true
       ClientAPI.scanNas(data => {
         this.scanLoading = false
-        this.nasList.push(data)
+        const nasList = _.clone(this.nasList)
+        nasList.push(data)
+        this.nasList = _.uniqBy(nasList, 'sn')
       }, error => {
         this.scanLoading = false
         console.log(error)

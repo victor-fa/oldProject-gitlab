@@ -183,6 +183,7 @@ export default {
       item.showMtime = StringUtility.formatShowMtime(item.mtime)
       item.showSize = StringUtility.formatShowSize(item.size)
       item.isSelected = item.path === path
+      item.custom = 'resource'
       return item
     })
   },

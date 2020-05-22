@@ -5,11 +5,12 @@ import { mapGetters } from 'vuex'
 import ResourceHandler from './ResourceHandler'
 import { ResourceItem, OrderType, ResourceType, ShareStatus, CollectStatus } from '@/api/NasFileModel'
 import NasFileAPI, { TaskMode } from '@/api/NasFileAPI'
-import processCenter, { EventName } from '@/utils/processCenter'
+import { EventName } from '@/utils/processCenter'
 import { EventBus } from '@/utils/eventBus'
 import StringUtility from '@/utils/StringUtility'
 import DownloadTask from '@/api/Transport/DownloadTask'
 import { downloadQueue } from '@/api/Transport/TransportQueue'
+import RouterUtility from '@/utils/RouterUtility'
 
 // declare module 'vue/types/vue' {
 //   interface Vue {
@@ -24,8 +25,7 @@ let tmpArray: ResourceItem[] | null = null
 export default Vue.extend({
   data () {
     return {
-      dataArray: [] as ResourceItem[],
-      currentPath: ''
+      dataArray: [] as ResourceItem[]
     }
   },
   computed: {
@@ -51,9 +51,6 @@ export default Vue.extend({
         case 'tabChange': 
           this.handleTabChange(args[0])
           break;
-        case 'back':
-          this.handleBackAction()
-          break;
         case 'search':
           tmpArray = this.dataArray
           this.handleSearchAction(args[0])
@@ -74,9 +71,6 @@ export default Vue.extend({
     handleTabChange (type: ResourceType) {
       const items = ResourceHandler.classifyArray(this.dataArray, type)
       this.updateShowArray(items)
-    },
-    handleBackAction () {
-      this.$router.go(-1)
     },
     handleSearchAction (keyword: string) {
       this.dataArray = ResourceHandler.searchShowArray(this.dataArray, keyword)
@@ -271,16 +265,9 @@ export default Vue.extend({
       this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
     },
     handleOpenFolderAction (item: ResourceItem) {
-      this.$router.push({
-        name: 'main-resource-view',
-        query: {
-          path: item.path,
-          uuid: item.uuid
-        },
-        params: {
-          showPath: `${this.currentPath}/${item.name}`
-        }
-      })
+      const path = item.path
+      const uuid = item.uuid
+      RouterUtility.push(item.name, 'main-resource-view', { path, uuid })
     },
     handleOpenFileAction (item: ResourceItem) {
       const myThis: any = this

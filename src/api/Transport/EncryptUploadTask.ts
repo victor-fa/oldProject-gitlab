@@ -44,7 +44,6 @@ export default class EncryptUploadTask extends UploadTask {
     })
   }
   uploadChunckData (file: FileInfo, buffer: Buffer, source?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {
-    // temporary code
     const params = this.encryptUploadParams(file, buffer.length) as UploadParams
     return NasFileAPI.uploadEncrypt(params, buffer, source)
   }

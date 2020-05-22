@@ -1,6 +1,5 @@
 <template>
   <main-view
-    :currentPath="currentPath"
     :loading="loading"
     :dataSource="dataArray"
     :contextItemMenu="collectContextMenu"
@@ -20,6 +19,7 @@ import { CollectItem, ResourceItem } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import ResourceHandler from '../MainView/ResourceHandler'
 import { collectContextMenu } from '../../components/OperateListAlter/operateList'
+import RouterUtility from '../../utils/RouterUtility'
 
 export default Vue.extend({
   name: 'collect',
@@ -30,7 +30,6 @@ export default Vue.extend({
   data () {
     return {
       loading: false,
-      currentPath: '收藏',
       dataArray: [] as ResourceItem[],
       collectContextMenu // item的右键菜单列表数据
     }
@@ -57,18 +56,6 @@ export default Vue.extend({
       })
     },
     // 重写父类中的方法
-    handleOpenFolderAction (item: ResourceItem) {
-      this.$router.push({
-        name: 'collect-reasource-view',
-        query: {
-          path: item.path,
-          uuid: item.uuid
-        },
-        params: {
-          showPath: `${this.currentPath}/${item.name}`
-        }
-      })
-    },
     handleRefreshAction () {
       this.fetchCollectList()
     },

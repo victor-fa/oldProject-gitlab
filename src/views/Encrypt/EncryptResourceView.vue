@@ -12,7 +12,6 @@ export default Vue.extend({
   extends: MainResourceView,
   data () {
     return {
-      currentPath: '',
       itemContextMenu: encryptResourceContextMenu,
       loading: false,
       dataArray: [],
@@ -27,20 +26,17 @@ export default Vue.extend({
   },
   methods: {
     // 重写父类中的方法
-    handleRouteChange () {
-      return this.$route.name === 'encrypt-reasource-view'
-    },
     handleOpenFolderAction (item: ResourceItem) {
-      this.$router.push({
-        name: 'encrypt-reasource-view',
-        query: {
-          path: item.path,
-          uuid: item.uuid
-        },
-        params: {
-          showPath: `${this.currentPath}/${item.name}`
-        }
-      })
+      // this.$router.push({
+      //   name: 'encrypt-reasource-view',
+      //   query: {
+      //     path: item.path,
+      //     uuid: item.uuid
+      //   },
+      //   params: {
+      //     showPath: `${this.currentPath}/${item.name}`
+      //   }
+      // })
     },
     fetchAllList () {
       // TODO：处理二级目录

@@ -38,7 +38,7 @@
         <a-breadcrumb-item
           v-for=" (path, index) in showPaths"
           :key="index"
-          href=""
+          :class="{ 'modal-breadcrumb-item': showHover(index) }"
           @click.native.stop="handleBreadcrumbClick(index)"
         >
           {{ path }}
@@ -85,7 +85,7 @@ import { mapGetters } from 'vuex'
 import CustomButton from '../../components/CustomButton/index.vue'
 import FirstDirectory from './FirstDirectory.vue'
 import SecondDirectory from './SecondDirectory.vue'
-import { ResourceItem, CustomModule, StorageInfo, ResourceType, PartitionInfo } from '../../api/NasFileModel'
+import { ResourceItem, CustomModule, StorageInfo, ResourceType, PartitionInfo, CustomInfo } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import StorageHandler from '../Storage/StorageHandler'
 import { NasAccessInfo } from '../../api/ClientModel'
@@ -112,7 +112,7 @@ export default Vue.extend({
       busy: false,
       hideModal: false,
       loading: false,
-      selectedIndex: undefined as number | undefined,
+      selectedItem: undefined as StorageInfo | PartitionInfo | CustomModule | ResourceItem | undefined,
       cacheArray: [{ name: '全部文件', type: CacheType.disk }] as CacheParams[],
       showPaths: ['全部文件'],
       showArray: [] as any[],
@@ -139,7 +139,7 @@ export default Vue.extend({
       return true
     },
     forwardDisable: function () { // 禁用前进按钮
-      const result = (this.selectedIndex === undefined) as boolean
+      const result = (this.selectedItem === undefined) as boolean
       return result
     },
     backwardDisable: function () { // 禁用后退按钮
@@ -154,11 +154,11 @@ export default Vue.extend({
       return true
     },
     moveDisable: function () {
-      if (this.cacheArray.length === 1 && this.selectedIndex === undefined) {
+      if (this.cacheArray.length === 1 && this.selectedItem === undefined) {
         return true
       } else {
         const item = _.last(this.cacheArray)
-        if (item !== undefined && item.type === CacheType.partition && this.selectedIndex === undefined) {
+        if (item!.type === CacheType.partition && this.selectedItem === undefined) {
           return true
         }
       }
@@ -186,6 +186,11 @@ export default Vue.extend({
     document.removeEventListener('keyup', this.handleKeyupAction)
   },
   methods: {
+    showHover (index: number) {
+      if (index === this.showPaths.length - 1) return false
+      const path = this.showPaths[index]
+      return path !== '...'
+    },
     handleKeyupAction (event: KeyboardEvent) {
       const code = (event as any).code
       if (code === 'Enter') {
@@ -272,85 +277,18 @@ export default Vue.extend({
       list = ResourceHandler.formatResourceList(list)
       this.showArray = this.page === 1 ? list : this.showArray.concat(list)
     },
-    openDiskItem (index: number) {
-      const item = this.storages[index]
-      if (item.partitions.length === 1) {
-        const partition = item.partitions[0]
-        this.showResourceView({
-          path: partition.path,
-          uuid: partition.uuid,
-          name: partition.showName
-        })
-      } else {
-        this.showPartitionView(index)
-      }
-    },
-    openCustomItem (index: number) {
-      const item = this.showCustoms[index]
-      this.showResourceView({
-        name: item.name,
-        path: item.path,
-        uuid: item.uuid
-      })
-    },
-    openParatitionItem (index: number) {
-      const item = this.showArray[index] as PartitionInfo
-      this.showResourceView({
-        path: item.path,
-        uuid: item.uuid,
-        name: item.showName
-      })
-    },
-    openResourceItem (index: number) {
-      const item = this.showArray[index] as ResourceItem
-      this.showResourceView({
-        path: item.path,
-        uuid: item.uuid,
-        name: item.name
-      })
-    },
-    showPartitionView (index: number) {
-      // 更新当前缓存的index
-      const cache = _.last(this.cacheArray)
-      if (cache !== undefined) (cache.index = this.selectedIndex)
-      this.selectedIndex = undefined
-      // 添加新的缓存
-      const item = this.storages[index]
-      this.cacheArray.push({
-        index,
-        name: item.showName,
-        type: CacheType.partition
-      })
-      // 更新界面
-      this.showArray = this.storages[index].partitions
-      this.showCustoms = []
-    },
-    showResourceView (params: CacheParams) {
-      // 更新当前缓存的index
-      const cache = _.last(this.cacheArray)
-      if (cache !== undefined) (cache.index = this.selectedIndex)
-      this.selectedIndex = undefined
-      // 添加新的缓存
-      params.type = CacheType.resource
-      this.cacheArray.push(params)
-      // 更新界面
-      this.page = 1
-      this.busy = false
-      this.showArray = []
-      this.fetchResourceList(params.path!, params.uuid!)
-    },
     // 根据cacheArray更新当前界面
     updateViewForCacheArray () {
       const item = _.last(this.cacheArray)
       if (item === undefined) return
-        this.selectedIndex = item.index
+      this.selectedItem = item.selectedItem
       if (item.type === CacheType.disk) {
         this.showArray = this.storages
         this.showCustoms = this.customs
       } else if (item.type === CacheType.partition) {
-        const index = item.index as number
+        const storage = this.cacheArray[0].selectedItem as StorageInfo
         this.showCustoms = []
-        this.showArray = this.storages[index].partitions
+        this.showArray = storage.partitions
       } else {
         this.page = 1
         this.busy = false
@@ -359,29 +297,21 @@ export default Vue.extend({
       }
     },
     handleBackwardAction () {
+      const index = this.cacheArray.length - 1
       this.cacheArray.pop()
       this.updateViewForCacheArray()
     },
     handleForwardAction () {
-      const item = _.last(this.cacheArray)
-      if (item === undefined || this.selectedIndex === undefined) return
-      if (item.type === CacheType.disk) {
-        const newIndex = this.selectedIndex - this.storages.length
-        if (newIndex < 0) {
-          this.openDiskItem(this.selectedIndex)
-        } else {
-          this.openCustomItem(newIndex)
-        }
-      } else if (item.type === CacheType.partition) {
-        this.openParatitionItem(this.selectedIndex)
-      } else {
-        this.openResourceItem(this.selectedIndex)
-      }
+      this.cacheArray = FileModalHandler.pushCache(this.cacheArray, this.selectedItem!)
+      this.updateViewForCacheArray()
     },
     handleCloseAction () {
       this.hideModalAnimate()
     },
     handleBreadcrumbClick (index: number) {
+      if (index === this.showPaths.length - 1) return
+      const item = this.showPaths[index]
+      if (item === '...') return
       this.cacheArray = this.cacheArray.slice(0, index + 1)
       this.updateViewForCacheArray()
     },
@@ -395,7 +325,6 @@ export default Vue.extend({
         renaming: true
       } as ResourceItem
       this.showArray.unshift(newItem)
-      this.selectedIndex !== undefined && this.selectedIndex++
     },
     handleCancelAction () {
       this.hideModalAnimate()
@@ -404,22 +333,16 @@ export default Vue.extend({
       const item = _.last(this.cacheArray)
       if (item === undefined) return
       if (item.type === CacheType.disk) {
-        const index = this.selectedIndex! - this.storages.length
-        if (index < 0) {
-          const partition = this.storages[this.selectedIndex!].partitions[0]
-          this.hideModalAnimate(partition.path, partition.uuid)
-        } else {
-          const item = this.showCustoms[index]
-          this.hideModalAnimate(item.path, item.uuid)
-        }
+        const result = FileModalHandler.parseDiskItem(this.selectedItem as any)
+        this.hideModalAnimate(result.path, result.uuid)
       } else if (item.type === CacheType.partition) { 
-        const item = this.showArray[this.selectedIndex!] as PartitionInfo
+        const item = this.selectedItem as PartitionInfo
         this.hideModalAnimate(item.path, item.uuid)
       } else {
-        if (this.selectedIndex === undefined) {
+        if (this.selectedItem === undefined) {
           this.hideModalAnimate(item.path, item.uuid)
         } else {
-          const selectedItem = this.showArray[this.selectedIndex!] as ResourceItem
+          const selectedItem = this.selectedItem as ResourceItem
           this.hideModalAnimate(selectedItem.path, selectedItem.uuid)
         }
       }
@@ -432,41 +355,58 @@ export default Vue.extend({
         case 'diskDoubleClick':
           this.handleOpenDisk(index)
           break;
+        case 'diskContextMenu':
+          this.handleDiskContextMenu(index)
+          break
         case 'customClick':
           this.handleCustomClick(index)
           break;
         case 'customDoubleClick':
           this.handleOpenCustom(index)
           break;
+        case 'customContextMenu':
+          this.handleCustomContextMenu(index)
+          break
         default:
           break;
       }
     },
     handleDiskClick (index: number) {
-      this.selectedIndex = index
       if (this.cacheArray.length === 1) { // disk
+        this.selectedItem = this.storages[index]
         this.showArray = FileModalHandler.setItemSelected(this.storages, index)
         this.showCustoms = FileModalHandler.resetItemSelected(this.customs)
       } else { // partition
+        this.selectedItem = this.showArray[index]
         this.showArray = FileModalHandler.setItemSelected(this.showArray, index)
       }
     },
     handleOpenDisk (index: number) {
-      this.selectedIndex = index
       if (this.cacheArray.length === 1) {
-        this.openDiskItem(index)
+        this.selectedItem = this.storages[index]
       } else {
-        this.openParatitionItem(index)
+        this.selectedItem = this.showArray[index]
       }
+      this.cacheArray = FileModalHandler.pushCache(this.cacheArray, this.selectedItem!)
+      this.updateViewForCacheArray()
+    },
+    handleDiskContextMenu (index: number) {
+      this.handleDiskClick(index)
+      this.showOpenPopoup()
     },
     handleCustomClick (index: number) {
-      this.selectedIndex = index + this.storages.length
+      this.selectedItem = this.showCustoms[index]
       this.showCustoms = FileModalHandler.setItemSelected(this.customs, index)
       this.showArray = FileModalHandler.resetItemSelected(this.storages)
     },
     handleOpenCustom (index: number) {
-      this.selectedIndex = index + this.storages.length
-      this.openCustomItem(index)
+      this.selectedItem = this.showCustoms[index]
+      this.cacheArray = FileModalHandler.pushCache(this.cacheArray, this.selectedItem!)
+      this.updateViewForCacheArray()
+    },
+    handleCustomContextMenu (index: number) {
+      this.handleCustomClick(index)
+      this.showOpenPopoup()
     },
     handleSecondAction (command: string, ...args: any[]) {
       switch (command) {
@@ -496,15 +436,19 @@ export default Vue.extend({
       this.fetchResourceList(item.path!, item.uuid!)
     },
     handleResourceItemClick (index: number) {
-      this.selectedIndex = index
+      this.selectedItem = this.showArray[index]
       this.showArray = FileModalHandler.setItemSelected(this.showArray, index)
     },
     handleResourceItemDbclick (index: number) {
-      this.openResourceItem(index)
+      this.selectedItem = this.showArray[index]
+      this.cacheArray = FileModalHandler.pushCache(this.cacheArray, this.selectedItem!)
+      this.updateViewForCacheArray()
     },
     handleContextmenu (index: number) {
       this.handleResourceItemClick(index)
-      // show popup
+      this.showOpenPopoup()
+    },
+    showOpenPopoup () {
       const { BrowserWindow } = require('electron').remote
       const currentWindow = BrowserWindow.getFocusedWindow()
       if (currentWindow !== null) {
@@ -512,8 +456,8 @@ export default Vue.extend({
       }
     },
     handleMenuItemClick (item: MenuItem) {
-      if (this.selectedIndex === undefined) return
-      this.handleResourceItemDbclick(this.selectedIndex)
+      this.cacheArray = FileModalHandler.pushCache(this.cacheArray, this.selectedItem!)
+      this.updateViewForCacheArray()
     },
     handleNewFolderRequest (newName: string) {
       const item = this.handlreNewFolderItem()
@@ -613,6 +557,9 @@ const moveModalIcons = {
       overflow: hidden;
       white-space: nowrap;
       border-bottom: 1px solid #e8e8e8;
+      .modal-breadcrumb-item:hover {
+        color: #06b650;
+      }
     }
     .modal-footer {
       height: 36px;

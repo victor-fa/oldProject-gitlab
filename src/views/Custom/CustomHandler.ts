@@ -3,6 +3,7 @@ import { nasServer } from '@/api/NasServer'
 
 export default {
   formatItem (item: CustomModule, apiToken: string) {
+    item.custom = 'custom'
     item.name = item.myself_folder.name
     const path = item.myself_folder.background_path
     let image_path = nasServer.defaults.baseURL

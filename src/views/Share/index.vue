@@ -1,6 +1,5 @@
 <template>
   <main-view
-    :currentPath="currentPath"
     :loading="loading"
     :dataSource="dataArray"
     v-on:headerCallbackActions="handleHeaderActions"
@@ -20,6 +19,7 @@ import { ResourceItem, OrderType, CollectItem, ResourceStatus, ShareUser, Resour
 import NasFileAPI from '../../api/NasFileAPI'
 import { BasicResponse, User } from '../../api/UserModel'
 import ResourceHandler from '../MainView/ResourceHandler'
+import RouterUtility from '../../utils/RouterUtility'
 
 export default Vue.extend({
   name: 'share',
@@ -30,7 +30,6 @@ export default Vue.extend({
   data () {
     return {
       loading: false,
-      currentPath: '分享',
       dataArray: [] as ResourceItem[],
       ugreenNo: '' // 当前选中的用户编号
     }
@@ -74,13 +73,9 @@ export default Vue.extend({
       this.fetchShareUserList()
     },
     handleOpenFolderAction (item: ResourceItem) {
-      this.$router.push({
-        name: 'share-file-page',
-        query: { 
-          ugreenNo: item.path,
-          showPath: `${this.currentPath}/${item.name}`
-        }
-      })
+      const name = item.name
+      const ugreenNo = item.path
+      RouterUtility.push(name, 'share-file-page', { ugreenNo })
     }
   }
 })

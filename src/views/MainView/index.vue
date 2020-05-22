@@ -2,12 +2,10 @@
   <div class="main-view">
     <slot 
       name="header"
-      :directory="currentPath"
       :popoverList="popoverList"
     >
       <main-header-view
         ref="mainHeaderView"
-        :directory="currentPath"
         :popoverList="popoverList"
         :funcList="funcList"
         v-model="categoryType"
@@ -68,6 +66,7 @@ import NasFileAPI, { TaskMode } from '../../api/NasFileAPI'
 import { OperateGroup } from '../../components/OperateListAlter/operateList'
 import { sortList } from '../../model/sortList'
 import SelectFilePath from '../SelectFilePath/index.vue'
+import RouterUtility from '../../utils/RouterUtility'
 
 export default Vue.extend({
   name: 'main-view',
@@ -80,9 +79,6 @@ export default Vue.extend({
     SelectFilePath
   },
   props: {
-    currentPath: { // header中展示的当前路径
-      default: ''
-    },
     loading: {
       default: false
     },
@@ -133,7 +129,7 @@ export default Vue.extend({
     // public methods
     resetHeaderView () {
       const headerView = this.$refs.mainHeaderView as any
-      headerView.resetCategorys()
+      headerView.resetState()
     },
     updateShowArray (items: ResourceItem[]) {
       this.showArray = items
@@ -145,12 +141,18 @@ export default Vue.extend({
         case 'arrangeChange':
           this.handleArrangeChange(args[0])
           break;
+        case 'back':
+          this.handleBackAction()
+          break;
         default:
           break;
       }
     },
     handleArrangeChange (arrangeWay: ArrangeWay) {
       this.arrangeWay = arrangeWay
+    },
+    handleBackAction () {
+      RouterUtility.popRoute()
     },
     // handle resource list view callback actions
     handleResourceListAction (action: string, ...args: any[]) {

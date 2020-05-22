@@ -1,21 +1,14 @@
 <template>
   <main-view
     ref="mainView"
-    :currentPath="currentPath"
     :listGrid="{ column: 2 }"
     :loading="loading"
     :dataSource="dataArray"
+    :funcList="storageFuncList"
     :contextItemMenu="contentMenu"
     v-on:listCallbackActions="handleListActions"
     v-on:contextMenuCallbackActions="handleContextMenuActions"
   >
-    <template v-slot:header="{ directory, popoverList }">
-      <main-header-view
-        :directory="currentPath"
-        :popoverList="popoverList"
-        v-on:CallbackAction="handleHeaderViewAction"
-      />
-    </template>
     <template v-slot:resourceItem="{ item, index }">
       <storage-list-item
         :index="index"
@@ -32,45 +25,35 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
-import MainHeaderView from '../MainView/MainHeaderView.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
+import { storageFuncList } from '../MainView/ResourceFuncList'
 import StorageListItem from './StorageListItem.vue'
 import { StorageInfo, PartitionInfo, ArrangeWay, StorageType, ResourceItem } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import StorageHandler from './StorageHandler'
 import { storageContextMenu } from '../../components/OperateListAlter/operateList'
-import { User } from '../../api/UserModel'
+import RouterUtility from '../../utils/RouterUtility'
 import StringUtility from '../../utils/StringUtility'
+import { SortList, SortKindItem } from '../../model/sortList'
 
 export default Vue.extend({
   name: 'storage',
   mixins: [MainViewMixin],
   components: {
     MainView,
-    MainHeaderView,
     StorageListItem
   },
   data () {
     return {
       loading: false,
       dataArray: [] as StorageInfo[],
-      currentPath: '存储', // 当前页路径 
-      contentMenu: storageContextMenu // item右键菜单选项
+      contentMenu: storageContextMenu, // item右键菜单选项
+      storageFuncList // header中的操作功能集合
     }
-  },
-  computed: {
-    ...mapGetters('User', ['user'])
   },
   mounted () {
-    const json = this.$route.params.selectedItem
-    if (_.isEmpty(json)) {
-      this.fetchStorages()
-    } else { 
-      const item = JSON.parse(json) as ResourceItem
-      this.pushAssignResourceListPage(item)
-    }
+    this.fetchStorages()
   },
   methods: {
     fetchStorages () {
@@ -115,56 +98,16 @@ export default Vue.extend({
     // 跳转分区列表界面
     pushPartitionListPage (item: StorageInfo) {
       item.isSelected = true
-      this.$router.push({
-        name: 'storage-partitions',
-        query: { showPath: `${this.currentPath}/${item.showName}` }
-      })
+      RouterUtility.push(item.showName, 'storage-partitions')
     },
     // 跳转资源列表界面
     pushResourceLitsPage (path: string, uuid: string, name: string) {
-      this.$router.push({
-        name: 'main-resource-view',
-        query: { path, uuid },
-        params: {
-          showPath: `${this.currentPath}/${name}`
-        }
-      })
-    },
-    // 跳转到指定位置的文件列表页(用于跳转到文件指定位置)
-    pushAssignResourceListPage (item: ResourceItem) {
-      const path = StringUtility.pathDirectory(item.path)
-      const uuid = item.uuid
-      const ugreenNo = (this.user as User).ugreenNo
-      const prefix = `/.ugreen_nas/${ugreenNo}`
-      const isInternal = _.startsWith(prefix)
-      const start = isInternal ? prefix.length : 1
-      let showPath = isInternal ? `${this.currentPath}/内置硬盘` : `${this.currentPath}/扩展硬盘`
-      showPath += `/${path.substring(start, path.length)}`
-      this.$router.push({
-        name: 'main-resource-view',
-        query: { path, uuid },
-        params: {
-          showPath,
-          selectedPath: item.path
-        }
-      })
+      RouterUtility.push(name, 'main-resource-view', { path, uuid })
     },
     contextMenuClick (event: MouseEvent, index: number) {
       const mainView: any = this.$refs.mainView
       mainView.handleItemContextMenu(index, event)
     },
-     handleHeaderViewAction (action: string, ...args: any[]) {
-       switch (action) {
-         case 'back':
-           this.$router.go(-1)
-           break;
-         case 'refresh':
-           this.fetchStorages()
-           break;
-         default:
-           break;
-       }
-     },
     handleContextMenuActions (command: string, ...args: any[]) {
       console.log(command)
       switch (command) {
@@ -191,6 +134,10 @@ export default Vue.extend({
       const index = StorageHandler.getFristSelectedIndex(this.dataArray)
       if (index === null) return
       this.openSelectedItem(index)
+    },
+    // 重写父类中的方法
+    handleRefreshAction () {
+      this.fetchStorages()
     }
   }
 })

@@ -98,24 +98,9 @@ const HomeRouters = [
     component: () => import('../../views/MainView/MainResourceView.vue')
   },
   {
-    path: '/recent-resource-view',
-    name: 'recent-resource-view',
-    component: () => import('../../views/Recent/RecentResourceView.vue')
-  },
-  {
-    path: '/collect-reasource-view',
-    name: 'collect-reasource-view',
-    component: () => import('../../views/Collect/CollectResourceView.vue')
-  },
-  {
     path: '/share-file-page',
     name: 'share-file-page',
     component: () => import('../../views/Share/ShareFilePage.vue')
-  },
-  {
-    path: '/share-reasource-view',
-    name: 'share-reasource-view',
-    component: () => import('../../views/Share/ShareResourceView.vue')
   },
   {
     path: '/encrypt-reasource-view',
@@ -130,10 +115,14 @@ const HomeRouters = [
 ]
 
 interface FuncListItem {
-  title: string,
-  icon: any,
-  selectedIcon: any,
-  isSelected: boolean
+  path: string,
+  name: string,
+  meta?: {
+    title: string,
+    icon: any,
+    selectedIcon: any,
+    isSelected: boolean
+  }
 }
 
 export {

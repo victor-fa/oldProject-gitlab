@@ -53,7 +53,8 @@ interface ResourceItem {
   // custom property
   isSelected?: boolean, // 当前item是否是选中状态
   disable?: boolean, // 当前item是否是禁用状态
-  renaming?: boolean // 重命名当前item
+  renaming?: boolean, // 重命名当前item
+  custom: string
 }
 
 interface CollectItem {
@@ -121,7 +122,8 @@ interface PartitionInfo {
   showProgress: number,
   showIcon: any,
   isInternal: boolean,
-  isSelected?: boolean
+  isSelected?: boolean,
+  custom: string
 }
 
 interface StorageInfo {
@@ -140,7 +142,8 @@ interface StorageInfo {
   showProgress: number,
   showIcon: any,
   isInternal: boolean,
-  isSelected?: boolean
+  isSelected?: boolean,
+  custom: string
 }
 
 // 文件上传历史排序规则
@@ -217,7 +220,8 @@ interface CustomModule {
   // custom property
   name: string,
   isSelected?: boolean,
-  disable?: boolean
+  disable?: boolean,
+  custom: string
 }
 
 interface CustomInfo {

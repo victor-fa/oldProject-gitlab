@@ -58,11 +58,12 @@ export default {
     }
     return item
   },
-  formatStorages (storags: StorageInfo[]) {
+  formatStorages (storages: StorageInfo[]) {
     const internalTypes = [StorageType.internal, StorageType.internal_SSD, StorageType.internal_HDD]
     const user = _.get(store.getters, 'User/user') as User
     const ugreenNo = user.ugreenNo
-    return storags.map(item => {
+    return storages.map(item => {
+      item.custom = 'storage'
       item.showName = this.matchStorageName(item.type)
       item.showIcon = this.matchStorageIcon(item.type)
       item.showSize = this.matchStorageSize(item.used, item.size)
@@ -76,6 +77,7 @@ export default {
         partition.showProgress = (partition.used / partition.size) * 100
         partition.isInternal = item.isInternal
         partition.path = path
+        partition.custom = 'partition'
       })
       return item
     })

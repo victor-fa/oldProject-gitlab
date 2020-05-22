@@ -1,7 +1,6 @@
 <template>
   <main-view
     ref="mainView"
-    :currentPath="currentPath"
     :loading="loading"
     :dataSource="dataArray"
     :busy="busy"
@@ -41,7 +40,6 @@ export default Vue.extend({
     let items: Array<ResourceItem> = []
     return {
       loading: false,
-      currentPath: '',
       dataArray: items,
       showArray: items,
       page: 1,
@@ -71,7 +69,6 @@ export default Vue.extend({
   watch: {
     $route: {
       handler: function () {
-        if (!this.handleRouteChange()) return
         this.updateView()
       }
     }
@@ -80,19 +77,18 @@ export default Vue.extend({
     this.updateView()
   },
   methods: {
-    // 处理路由改变，判断当前是否需要更新界面
-    handleRouteChange () {
-      return this.$route.name === 'main-resource-view'
-    },
     updateView () {
-      if (this.checkParams()) this.updateShowPath()
-      if (this.checkQuery()) this.fetchResourceList()
+      if (this.checkQuery()) { 
+        this.fetchResourceList()
+        const mainView = this.$refs.mainView as any
+        mainView.resetHeaderView()
+      }
     },
     checkQuery () {
       const path = this.$route.query.path
       const uuid = this.$route.query.uuid
-      const result = _.isEmpty(path) && !_.isEmpty(uuid)
-      return !result
+      const result = !_.isEmpty(path) && !_.isEmpty(uuid)
+      return result
     },
     checkParams () {
       const showPath = this.$route.params.showPath
@@ -137,9 +133,6 @@ export default Vue.extend({
         console.log(error)
       })
     },
-    updateShowPath () {
-      this.currentPath = this.$route.params.showPath
-    },
     parseResponse (data: BasicResponse) {
       let list = _.get(data.data, 'list') as Array<ResourceItem>
       if (_.isEmpty(list) || list.length < 20) this.busy = true
@@ -153,13 +146,6 @@ export default Vue.extend({
       this.$store.dispatch('Resource/increaseTask')
     },
     // 覆盖混入中的方法
-    handleBackAction () {
-      this.$router.go(-1)
-      // update current path
-      this.currentPath = StringUtility.pathDirectory(this.currentPath)
-      const mainView = this.$refs.mainView as any
-      mainView.resetHeaderView()
-    },
     handleloadMoreData () {
       if (this.busy) return
       this.page++
