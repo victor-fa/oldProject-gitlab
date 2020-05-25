@@ -2,43 +2,85 @@
 	<div class="cd-disk-info-main" @keyup.stop.esc="close" tabindex="-1">
 		<WindowsHeader :data="header" />
 		<div class="cd-disk-info-head">
-			<img draggable="false" :src="DiskData.$icon" alt="" />
-			<span>{{ DiskData.path | filterName }}</span>
+			<span v-if="DiskData.path">{{ DiskData.path | filterName }}</span>
+			<span v-else>{{ DiskData.showName }}</span>
 		</div>
+
+		<div v-if="DiskData.path">
+			<div class="cd-disk-info-item">
+				<span>文件类型:</span>
+				<div :title="DiskData.type | filterNameType">{{ DiskData.type | filterNameType }}</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>文件位置:</span>
+				<div ref="address" :title="DiskData.path">{{ DiskData.path }}</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>文件大小:</span>
+				<div :title="DiskData.size | filterSize">{{ DiskData.size | filterSize }}</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>创建时间:</span>
+				<div :title="DiskData.ctime | filterTime">{{ DiskData.ctime | filterTime }}</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>修改时间:</span>
+				<div v-if="DiskData.mtime === 0">未修改</div>
+				<div v-else :title="DiskData.mtime | filterTime">{{ DiskData.mtime | filterTime }}</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>唯一标识:</span>
+				<div :title="DiskData.uuid">{{ DiskData.uuid }}</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>文件分享:</span>
+				<div>{{ DiskData.shared === 0 ? '未分享' : '已分享' }}</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>文件收藏:</span>
+				<div>{{ DiskData.collected === 0 ? '未收藏' : '已收藏' }}</div>
+			</div>
+		</div>
+		<div v-else>
+			<div class="cd-disk-info-item">
+				<span>名称:</span>
+				<div :title="DiskData.showName">{{ DiskData.showName }}</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>状态:</span>
+				<div :title="DiskData.status === 0 ? '非格式化' : '格式化'">
+					{{ DiskData.status === 0 ? '非格式化' : '格式化' }}
+				</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>当前温度:</span>
+				<div :title="DiskData.temp">{{ DiskData.temp }}</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>硬盘容量:</span>
+				<div :title="DiskData.size | filterSize">{{ DiskData.size | filterSize }}</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>硬盘类型:</span>
+				<div :title="DiskData.type | filterStorageType">{{ DiskData.type | filterStorageType }}</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>SMART状态:</span>
+				<div :title="DiskData.smartStatus">
+					{{ DiskData.smartStatus === 0 ? '未打开' : '已打开' }}
+				</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>坏区数量:</span>
+				<div :title="DiskData.bad">{{ DiskData.bad }}</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span>使用时长:</span>
+				<div :title="DiskData.used | filterTime">{{ DiskData.used | filterTime }}</div>
+			</div>
+		</div>
+
 		<div class="cd-disk-info-item">
-			<span>文件类型:</span>
-			<div :title="DiskData.type | filterNameType">{{ DiskData.type | filterNameType }}</div>
-		</div>
-		<div class="cd-disk-info-item">
-			<span>文件位置:</span>
-			<div ref="address" :title="DiskData.path">{{ DiskData.path }}</div>
-		</div>
-		<div class="cd-disk-info-item">
-			<span>文件大小:</span>
-			<div :title="DiskData.size | filterSize">{{ DiskData.size | filterSize }}</div>
-		</div>
-		<div class="cd-disk-info-item">
-			<span>创建时间:</span>
-			<div :title="DiskData.ctime | filterTime">{{ DiskData.ctime | filterTime }}</div>
-		</div>
-		<div class="cd-disk-info-item">
-			<span>修改时间:</span>
-			<div v-if="DiskData.mtime === 0">未修改</div>
-			<div v-else :title="DiskData.mtime | filterTime">{{ DiskData.mtime | filterTime }}</div>
-		</div>
-		<div class="cd-disk-info-item">
-			<span>唯一标识:</span>
-			<div :title="DiskData.uuid">{{ DiskData.uuid }}</div>
-		</div>
-		<div class="cd-disk-info-item">
-			<span>文件分享:</span>
-			<div>{{ DiskData.shared === 0 ? '未分享' : '已分享' }}</div>
-		</div>
-		<div class="cd-disk-info-item">
-			<span>文件收藏:</span>
-			<div>{{ DiskData.collected === 0 ? '未收藏' : '已收藏' }}</div>
-		</div>
-		<div class="cd-disk-info-item" style="position: absolute;bottom: 15px;right:-30px;">
 			<a-button class="cd-cancel-button" @click="close">关闭</a-button>
 		</div>
 	</div>
@@ -47,6 +89,7 @@
 <script>
 import WindowsHeader from '../../components/Disk/WindowHeader.vue'
 import StringUtility from '../../utils/StringUtility'
+import StorageHandler from '../Storage/StorageHandler';
 export default {
 	name: 'DiskInfo',
 	components: {
@@ -65,6 +108,9 @@ export default {
 		},
 		filterSize (data) {
 			return StringUtility.formatShowSize(data)
+		},
+		filterStorageType (data) {
+			return StorageHandler.matchStorageName(data)
 		}
 	},
 	data() {
@@ -76,7 +122,16 @@ export default {
 				ctime: '',
 				mtime: '',
 				uuid: '',
-				isMyself: false
+				isMyself: false,
+				showName: '',
+				status: 0,
+				temp: 0,
+				status: 0,
+				status: 0,
+				type: 0,
+				smartStatus: 0,
+				bad: 0,
+				used: 0
 			},
 			header: {
 				title: '',
@@ -87,7 +142,7 @@ export default {
 			window: false
 		};
 	},
-	created() {
+	beforeMount () {
 		this.window = this.$electron.remote.getCurrentWindow();
 		this.$ipc.on('win-data', (event, data) => {
 			console.log(JSON.parse(JSON.stringify(data)));
@@ -99,6 +154,7 @@ export default {
 				this.DiskData.ctime = data.myself_folder.mtime
 				this.DiskData.mtime = data.myself_folder.mtime
 			}
+			console.log(JSON.parse(JSON.stringify(this.DiskData)));
 			this.header.title = StringUtility.formatName(data.path) + ' 属性';
 			this.window.setTitle(StringUtility.formatName(data.path) + ' 属性');
 		});
@@ -118,9 +174,9 @@ export default {
 	height: 100%;
 	background: #fff;
 	color: #000;
-	// -webkit-app-region: drag;
 	box-shadow: 0 3px 3px 0 rgba(0, 0, 0, 0.14), 0 1px 7px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -1px rgba(0, 0, 0, 0.2);
 	border: 1px solid #efefef;
+	// -webkit-app-region: drag;
 }
 .cd-disk-info-head {
 	height: 56px;
@@ -131,7 +187,6 @@ export default {
 	}
 	* {
 		display: inline-block;
-		float: left;
 		line-height: 35px;
 		text-indent: 10px;
 		text-overflow: ellipsis;
@@ -149,16 +204,16 @@ export default {
 	padding: 0 50px;
 	font-size: 14px;
 	line-height: 32px;
+	display: flex;
 	span {
-		float: left;
 		height: 30px;
 		display: block;
 		font-size: 14px;
 		font-weight: 600;
 	}
 	div {
-		float: left;
-		width: calc(100% - 105px);
+		flex: 1;
+		width: calc(100% - 60px);
 		height: 30px;
 		line-height: 20px;
 		padding-top: 6px;
@@ -189,6 +244,8 @@ export default {
 		height: 30px;
 		line-height: 30px;
 		padding: 0 10px;
+		position: absolute;
+    right: 35px;
 		// -webkit-app-region: no-drag;
 	}
 }

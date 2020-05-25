@@ -125,6 +125,7 @@ export default {
 	position: absolute;
 	top: 0;
 	right: 0;
+	transition: all 0.35s;
 	-webkit-transition: all 0.35s;
 	-moz-transition: all 0.35s;
 	-o-transition: all 0.35s;

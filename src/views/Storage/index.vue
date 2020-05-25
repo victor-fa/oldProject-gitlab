@@ -110,6 +110,7 @@ export default Vue.extend({
     },
     handleContextMenuActions (command: string, ...args: any[]) {
       console.log(command)
+      const _this = this as any
       switch (command) {
         case 'open': 
           this.handleOpenAction()
@@ -124,7 +125,8 @@ export default Vue.extend({
           
           break;
         case 'info':
-          
+          // 
+          this.handleReadInfo()
           break;
         default:
           break;
@@ -134,6 +136,12 @@ export default Vue.extend({
       const index = StorageHandler.getFristSelectedIndex(this.dataArray)
       if (index === null) return
       this.openSelectedItem(index)
+    },
+    handleReadInfo () {
+      const _this = this as any
+      const index = StorageHandler.getFristSelectedIndex(this.dataArray)
+      if (index === null) return
+      _this.$ipc.send('file-control', 0, this.dataArray[index]);
     },
     // 重写父类中的方法
     handleRefreshAction () {
