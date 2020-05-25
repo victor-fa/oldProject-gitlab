@@ -4,6 +4,8 @@ import { OperateGroup } from '@/components/OperateListAlter/operateList'
 import { ClipboardModel } from '@/store/modules/Resource'
 import StringUtility from '@/utils/StringUtility'
 import { TaskMode } from '@/api/NasFileAPI'
+import store from '@/store'
+import { User } from '@/api/UserModel'
 
 export default {
   // 对资源列表进行分类
@@ -222,6 +224,7 @@ export default {
   // 3. 多选情况下，如果既包含已分享(收藏)和未分享(收藏)，就展示成不可用的分享(收藏)
   // 4. 目录不支持下载
   // 5. 如果当前正在命名中，只允许删除
+  // 6. 外置硬盘不允许分享和收藏
   filterItemOperateList (groups: OperateGroup[], showArray: Array<ResourceItem>, item: ResourceItem) {
     if (_.isEmpty(groups)) return null 
     if (item.renaming === true) return this.onlyShowDelete(groups)
@@ -255,17 +258,20 @@ export default {
   },
   // 计算item的右键菜单列表的显示、隐藏、禁用状态
   calculateOperateItemState (selectItems: Array<ResourceItem>) {
+    const ugreenNo = (_.get(store.getters, 'User/user') as User).ugreenNo
+    const prefix = `/.ugreen_nas/${ugreenNo}`
     const disable = selectItems.length > 1
     let disableShare = false
     let disableCollect = false
     let disableDownload = false
     for (let index = 0; index < selectItems.length; index++) {
       const element = selectItems[index]
-      if (!disableShare && element.shared === ShareStatus.has) {
-        disableShare = true
+      const isInternal = _.startsWith(element.path, prefix)
+      if (!disableShare) {
+        if (element.shared === ShareStatus.has || !isInternal) disableShare = true
       }
-      if (!disableCollect && element.collected === CollectStatus.has) {
-        disableCollect = true
+      if (!disableCollect) {
+        if (element.collected === CollectStatus.has || !isInternal) disableCollect = true
       }
       if (!disableDownload && element.type === ResourceType.folder) {
         disableDownload = true
