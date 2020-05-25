@@ -7,7 +7,7 @@
       <main-header-view
         ref="mainHeaderView"
         :popoverList="popoverList"
-        :funcList="funcList"
+        :funcList="showFuncList"
         v-model="categoryType"
         v-on:CallbackAction="handleHeaderViewAction"
       />
@@ -66,11 +66,12 @@ import ResourceHandler from './ResourceHandler'
 import OperateListAlter from '../../components/OperateListAlter/index.vue'
 import NasFileAPI, { TaskMode } from '../../api/NasFileAPI'
 import { OperateGroup } from '../../components/OperateListAlter/operateList'
-import { sortList } from '../../model/sortList'
+import { sortList, SortList } from '../../model/sortList'
 import SelectFilePath from '../SelectFilePath/index.vue'
 import RouterUtility from '../../utils/RouterUtility'
 import EncryptPassModel from '../Encrypt/EncryptPassModel.vue'
 import { User } from '@/api/UserModel'
+import { ResourceFuncItem, commonFuncList } from './ResourceFuncList'
 
 export default Vue.extend({
   name: 'main-view',
@@ -93,7 +94,7 @@ export default Vue.extend({
     dataSource: Array,
     popoverList: { // header中排序弹窗列表数据
       default: () => {
-        return sortList
+        return _.cloneDeep(sortList)
       }
     },
     funcList: Array, // header中的操作功能按钮集合
@@ -102,18 +103,23 @@ export default Vue.extend({
     contextItemMenu: Array // 右键item菜单数据
   },
   data () {
+    let list = _.isEmpty(this.funcList) ? _.cloneDeep(commonFuncList) : this.funcList
     return {
+      sortList,
+      showFuncList: list as ResourceFuncItem[],
       categoryType: ResourceType.all, // 当前数据分类 
       showArray: this.dataSource as ResourceItem[], // 当前页展示的数据
-      arrangeWay: ArrangeWay.horizontal, // list的排列方式
       alterPosition: { left: '0px', top: '0px' }, // 右键菜单样式
       showAlter: false, // 控制右键菜单的显示与隐藏
+      arrangeWay: ArrangeWay.horizontal, // 列表排列方式
       showOperateList: [] as OperateGroup[], // 展示的右键菜单数据
       showSelectModal: false, // 控制路径选择弹窗的显示与隐藏
       showEncryptModal: false // 控制输入加密密码弹窗的显示与隐藏
     }
   },
   computed: {
+    ...mapGetters('Resource', ['clipboard']),
+    ...mapGetters('User', ['user']),
     alterStyle: function (): object {
       return {
         left: this.alterPosition.left,
@@ -123,14 +129,15 @@ export default Vue.extend({
     itemCount: function () {
       const count = this.showArray.length as number
       return count
-    },
-    ...mapGetters('Resource', ['clipboard']),
-    ...mapGetters('User', ['user'])
+    }
   },
   watch: {
     dataSource: function (newValue: Array<ResourceItem>) {
       this.showArray = ResourceHandler.classifyArray(newValue, this.categoryType)
     }
+  },
+  mounted () {
+    this.updateArrangeWay()
   },
   methods: {
     // public methods
@@ -140,6 +147,23 @@ export default Vue.extend({
     },
     updateShowArray (items: ResourceItem[]) {
       this.showArray = items
+    },
+    updateArrangeWay () {
+      let arrangeIndex = -1
+      for (let index = 0; index < this.showFuncList.length; index++) {
+        const element = this.showFuncList[index]
+        if (element.command === 'arrange') {
+          arrangeIndex = index
+          break
+        }
+      }
+      if (arrangeIndex === -1) return
+      const way = localStorage.getItem('arrangeWay')
+      if (way === null) return
+      this.arrangeWay = Number(way)
+      const item = this.showFuncList[arrangeIndex]
+      item.isSelected = this.arrangeWay === ArrangeWay.vertical
+      this.showFuncList.splice(arrangeIndex, 1, item)
     },
     // handle header view callback actions
     handleHeaderViewAction (action: string, ...args: any[]) {
@@ -157,6 +181,7 @@ export default Vue.extend({
     },
     handleArrangeChange (arrangeWay: ArrangeWay) {
       this.arrangeWay = arrangeWay
+      localStorage.setItem('arrangeWay', arrangeWay.toString())
     },
     handleBackAction () {
       RouterUtility.pop()

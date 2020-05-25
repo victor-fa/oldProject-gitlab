@@ -3,7 +3,8 @@ interface ResourceFuncItem {
   command: string,
   iconWidth: string,
   selectedIcon?: any,
-  isHidden?: boolean
+  isHidden?: boolean,
+  isSelected?: boolean
 }
 
 const commonFuncList: ResourceFuncItem[] = [

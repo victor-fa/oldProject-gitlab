@@ -26,10 +26,17 @@ import Vue from 'vue'
 
 export default Vue.extend({
   name: 'custom-button',
+  model: {
+    prop: 'isSelected',
+    event: 'changeSelect'
+  },
   props: {
     title: String,
     selectedTitle: String,
     iconWidth: String,
+    isSelected: {
+      default: false
+    },
     image: {
       default: null
     },
@@ -60,7 +67,6 @@ export default Vue.extend({
       currentTitle: this.title,
       currentImage: this.image,
       currentBackgroundImage: this.backgroundImage,
-      isSelected: false,
       isHover: false,
       isHighlight: false
     }
@@ -102,7 +108,7 @@ export default Vue.extend({
   },
   methods: {
     clickAction (event: MouseEvent) {
-      this.isSelected = !this.isSelected
+      this.$emit('changeSelect', !this.isSelected)
     },
     mousedownAction () {
       this.isHighlight = true

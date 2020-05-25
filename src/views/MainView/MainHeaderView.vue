@@ -36,7 +36,7 @@
           @pressEnter="handleSearchAction"
         />
         <div
-          v-for="(item, index) in showFuncList"
+          v-for="(item, index) in funcList"
           :key="index"
         >
           <a-popover
@@ -66,9 +66,9 @@
             class="right-item"
             :image="item.icon"
             :selectedImage="item.selectedIcon"
-            :ref="item.command"
+            :isSelected="item.isSelected"
             :iconWidth="item.iconWidth"
-            @click.native="handleItemClick(item)"
+            @click.native="handleItemClick(index)"
           />
         </div>
       </div>
@@ -118,12 +118,10 @@ export default Vue.extend({
     }
   },
   data () {
-    let list = _.isEmpty(this.funcList) ? _.cloneDeep(commonFuncList) : (this.funcList as ResourceFuncItem[])
     return {
       categorys: _.cloneDeep(categorys),
       backIcon: require('../../assets/back_icon.png'),
       disableBackIcon: require('../../assets/dis_back_icon.png'),
-      showFuncList: list,
       visible: false, // 控制排序气泡弹窗是否显示 
       showSearch: false, // 控制搜索框是否显示
       keyword: '' // 搜索关键字
@@ -132,7 +130,7 @@ export default Vue.extend({
   computed: {
     ...mapGetters('Paths', ['showPaths']),
     key: function () {
-      return this.$route.name
+      return this.$route.path
     },
     disableBack: function () {
       const disable = (this.showPaths.length < 2) as boolean
@@ -140,9 +138,6 @@ export default Vue.extend({
     }
   },
   watch: {
-    funcList: function (newValue: ResourceFuncItem[]) {
-      this.showFuncList = newValue
-    },
     showPaths: function (newValue: CacheRoute[]) {
       this.$nextTick(() => {
         this.calculatePathsTruncate()
@@ -231,7 +226,8 @@ export default Vue.extend({
       if (item.name === '...') return
       RouterUtility.pop(index)
     },
-    handleItemClick (item: ResourceFuncItem) {
+    handleItemClick (index: number) {
+      const item = this.funcList[index] as ResourceFuncItem
       switch (item.command) {
         case 'search':
           this.searchAction()
@@ -242,7 +238,7 @@ export default Vue.extend({
         case 'sort':
           break;
         case 'arrange':
-          this.arrangeAction()
+          this.arrangeAction(index)
           break;
         case 'newCustom':
           this.$emit('CallbackAction', 'newCustom')
@@ -255,16 +251,17 @@ export default Vue.extend({
       if (this.showSearch === true) return
       this.keyword = ''
       this.showSearch = true
-      const item = this.showFuncList[0]
-      item.isHidden = true
-      this.showFuncList.splice(0, 1, item)
+      this.setHiddenSearch(true)
     },
     hideSearchInput () {
       if (this.showSearch === false) return
       this.showSearch = false
-      const item = this.showFuncList[0]
-      item.isHidden = false
-      this.showFuncList.splice(0, 1, item)
+      this.setHiddenSearch(false)
+    },
+    setHiddenSearch (hide: boolean) {
+      const item = this.funcList[0] as ResourceFuncItem
+      item.isHidden = hide
+      this.funcList.splice(0, 1, item)
     },
     searchAction () {
       this.showSearchInput()
@@ -297,10 +294,11 @@ export default Vue.extend({
     refreshAction() {
       this.$emit('CallbackAction', 'refresh')
     },
-    arrangeAction () {
-      const arrangeBtn: any = this.$refs.arrange[0]
-      const selected: boolean = arrangeBtn.isSelected
-      const arrangeWay = selected ? ArrangeWay.vertical : ArrangeWay.horizontal
+    arrangeAction (index: number) {
+      const item = this.funcList[index] as ResourceFuncItem
+      item.isSelected = !item.isSelected
+      this.funcList.splice(index, 1, item)
+      const arrangeWay = item.isSelected ? ArrangeWay.vertical : ArrangeWay.horizontal
       this.$emit('CallbackAction', 'arrangeChange', arrangeWay)
     }
   }

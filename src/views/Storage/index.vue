@@ -4,7 +4,7 @@
     :listGrid="{ column: 2 }"
     :loading="loading"
     :dataSource="dataArray"
-    :funcList="storageFuncList"
+    :funcList="showFuncList"
     :contextItemMenu="contentMenu"
     v-on:listCallbackActions="handleListActions"
     v-on:contextMenuCallbackActions="handleContextMenuActions"
@@ -49,7 +49,7 @@ export default Vue.extend({
       loading: false,
       dataArray: [] as StorageInfo[],
       contentMenu: storageContextMenu, // item右键菜单选项
-      storageFuncList // header中的操作功能集合
+      showFuncList: _.clone(storageFuncList) // header中的操作功能集合
     }
   },
   mounted () {
