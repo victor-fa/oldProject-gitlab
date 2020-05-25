@@ -48,9 +48,9 @@ export default Vue.extend({
   methods: {
     fetchUlist () {
       this.loading = true
-      const lastItem = _.last(this.dataArray)
-      const pos = lastItem === undefined ? 0 : lastItem.utime
+      const pos = this.getPositionValue()
       NasFileAPI.fetchUlist(this.page, pos, this.uploadOrder).then(response => {
+        console.log(response)
         this.loading = false
         if (response.data.code !== 200) return
         this.parseResponse(response.data)
@@ -59,6 +59,12 @@ export default Vue.extend({
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
+    },
+    getPositionValue () {
+      if (this.page < 2) return 0
+      const lastItem = _.last(this.dataArray)
+      const pos = lastItem === undefined ? 0 : lastItem.utime
+      return pos
     },
     parseResponse (data: BasicResponse) {
       let ulist = _.get(data.data, 'list') as Array<ResourceItem>

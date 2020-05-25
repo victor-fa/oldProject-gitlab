@@ -84,7 +84,7 @@ export default {
 			this.win.minimize();
 		},
 		close() {
-			this.$store.dispatch('Transform/saveTransInfo'); // 关窗口时，对上传下载的store进行保存
+			// this.$store.dispatch('Transform/saveTransInfo'); // 关窗口时，对上传下载的store进行保存
 			(this.data.close && this.data.close()) || this.win.close();
 		},
 		restore() {

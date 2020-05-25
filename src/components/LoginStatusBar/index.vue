@@ -1,5 +1,5 @@
 <template>
-  <div class="status-bar">
+  <div class="status-bar" style="-webkit-app-region: drag">
     <div class="left-bar">
       <img src="../../assets/logo.png">
       <span>绿联云</span>
@@ -80,6 +80,7 @@ export default Vue.extend({
       width: 20px;
       height: 20px;
       margin-right: 8px;
+      -webkit-app-region: no-drag;
     }
   }
 }
