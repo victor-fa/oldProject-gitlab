@@ -372,7 +372,7 @@ export default {
       case ResourceType.document:
         return require('../../assets/resource/txt_icon.png')
       case ResourceType.archive:
-        return require('../../assets/resource/pdf_icon.png')
+        return require('../../assets/resource/compress_icon.png')
       case ResourceType.folder:
         return require('../../assets/resource/folder_icon.png')
     }

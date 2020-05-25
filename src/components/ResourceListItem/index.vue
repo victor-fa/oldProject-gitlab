@@ -10,7 +10,7 @@
     >
       <div class="icon-wrapper">
         <img
-          :src="searchResourceIcon(model.type)"
+          :src="searchResourceIcon(model)"
           @click.stop.exact="singleClick()"
           @click.meta.stop="multipleClick()"
           @click.ctrl.stop="ctrlMultipleClick()"
@@ -75,9 +75,12 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
 import { ArrangeWay, ResourceItem, ResourceType } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import ResourceHandler from '../../views/MainView/ResourceHandler'
+import { nasServer } from '../../api/NasServer'
+import { NasAccessInfo } from '../../api/ClientModel'
 
 export default Vue.extend({
   name: 'resource-item',
@@ -121,6 +124,7 @@ export default Vue.extend({
     }
   },
   computed: {
+    ...mapGetters('NasServer', ['accessInfo']),
     isHorizontalArrange: function () {
       return this.arrangeWay === ArrangeWay.horizontal
     },
@@ -181,8 +185,18 @@ export default Vue.extend({
       }
       this.$emit('callbackAction', 'newFolderRequest', this.index, this.inputName)
     },
-    searchResourceIcon (type: ResourceType) {
-      return ResourceHandler.searchResourceIcon(type)
+    searchResourceIcon (item: ResourceItem) {
+      let icon = ResourceHandler.searchResourceIcon(item.type)
+      if (_.isEmpty(item.thumbs)) return icon
+      const smallPath = item.thumbs[0]
+      if (_.isEmpty(smallPath)) return icon
+      icon = nasServer.defaults.baseURL
+      if (icon === undefined) return icon
+      const apiToken = (this.accessInfo as NasAccessInfo).api_token
+      if (_.isEmpty(apiToken)) return icon
+      icon += '/v1/file/http_download?'
+      icon += `uuid=${item.uuid}&path=${smallPath}&api_token=${apiToken}`
+      return icon
     },
     handleItemClick (event: MouseEvent) {
       if (this.isSelected) {
