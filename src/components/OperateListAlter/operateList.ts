@@ -161,11 +161,15 @@ const backupContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
-      { title: '上传', command: 'upload' },
-      { title: '刷新', command: 'refresh' },
-      { title: '新建文件夹', command: 'newFolder' },
+      { title: '新建文件夹', command: 'newFolder' }
+    ]
+  },
+  {
+    icon: require('../../assets/delet_accessory.png'),
+    items: [
+      { title: '清空剪切板', command: 'clearClipboard' },
       { title: '粘贴', command: 'paste' },
-      { title: '清空剪切板', command: 'clearClipboard' }
+      { title: '刷新', command: 'refresh' }
     ]
   }
 ]

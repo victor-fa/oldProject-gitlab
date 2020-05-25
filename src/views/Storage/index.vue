@@ -125,7 +125,6 @@ export default Vue.extend({
           
           break;
         case 'info':
-          // 
           this.handleReadInfo()
           break;
         default:

@@ -187,6 +187,7 @@ export default Vue.extend({
     },
     searchResourceIcon (item: ResourceItem) {
       let icon = ResourceHandler.searchResourceIcon(item.type)
+      if (item.path.indexOf('.safe') > -1) return icon
       if (_.isEmpty(item.thumbs)) return icon
       const smallPath = item.thumbs[0]
       if (_.isEmpty(smallPath)) return icon
