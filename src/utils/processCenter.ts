@@ -12,6 +12,7 @@ enum ChannelName {
 enum EventName {
   login = 'present_login',
   connecting = 'present_connecting',
+  bindList = 'bind_device_list',
   home = 'present_home',
   file = 'present_file',
   mediaInfo = 'media_info',
@@ -54,6 +55,9 @@ export default {
           break
         case EventName.moveCallback:
           homeWindow!.webContents.send(EventName.moveCallback, ...args)
+          break
+        case EventName.bindList:
+          windowManager.presentLoginWindow('bind-device-list')
           break
         default:
           break

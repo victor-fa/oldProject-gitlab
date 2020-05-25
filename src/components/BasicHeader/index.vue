@@ -113,8 +113,7 @@ export default Vue.extend({
       })
     },
     switchDevice () {
-      processCenter.renderSend(EventName.connecting)
-      this.$message.success('切换成功！')
+      processCenter.renderSend(EventName.bindList)
       this.$store.dispatch('NasServer/clearCacheNas')
     }
   }
