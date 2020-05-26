@@ -184,21 +184,6 @@ export default {
       }).catch(error => {
         failure('tunnel error')
       })
-      // TunnelAPI.tunnelCheck().then(checkRes => {
-      //   TunnelAPI.queryConnectInfo(sn).then((connectRes: any) => {
-      //     if (connectRes.result === '0') { // 已有连接
-      //       success(tunnelNas)
-      //     } else if (connectRes.result === '18') {
-      //       TunnelAPI.addConnectFun(sn).then((addConnectRes: any) => {
-      //         if (addConnectRes.result === '0') {
-      //           TunnelAPI.getPeerinfoFun(sn).then((peerinfo:any) => {
-      //             success(tunnelNas)
-      //           }).catch(err => failure('tunnel error'))
-      //         }
-      //       }).catch(err => failure('tunnel error'))
-      //     }
-      //   }).catch(err => failure('tunnel error'))
-      // }).catch(err => failure('tunnel error'))
     }
   },
   closeBoardcast () {
@@ -208,7 +193,11 @@ export default {
     }
   },
   closeP2PTunnel () {
-
+    TunnelAPI.closeConnect().then((res: any) => {
+      if (res.result === '0') {
+        console.log('关闭成功');
+      }
+    })
   },
   fetchBindUserList (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/list')

@@ -22,6 +22,10 @@ export default {
       }
     })
   },
+  // 关闭P2P进程
+  closeConnect (): Promise<AxiosResponse<any>> {
+    return tunnelServer.get('/exit?pass=')
+  },
   // 查询连接
   queryConnect (peerid): Promise<AxiosResponse<any>> {
     return tunnelServer.get('/cnntquery', {
@@ -71,6 +75,19 @@ export default {
         }
       }).catch(error => {
         ipcRenderer.send('system', 'awaken-tunnel');
+        reject(error)
+      })
+    })
+  },
+  // 关闭连接
+  closeConnectInfo (sn) {
+    return new Promise((resolve, reject) => {
+      this.closeConnect().then(response => {
+        if (response.status !== 200) return
+        console.log(response.data);
+        const resJson:any = JSON.parse(response.data.substring(5, response.data.length))
+        resolve(resJson)
+      }).catch(error => {
         reject(error)
       })
     })

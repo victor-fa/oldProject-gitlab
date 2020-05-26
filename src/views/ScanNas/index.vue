@@ -125,7 +125,7 @@ export default Vue.extend({
       const boundDevices = this.nasDevices as DeviceInfo[]
       for (let index = 0; index < boundDevices.length; index++) {
         const item = boundDevices[index]
-        if (item.sn === nas.sn && item.mac === nas.mac) return item
+        if (item.sn === nas.sn) return item
       }
       return null
     },
