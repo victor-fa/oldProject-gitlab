@@ -8,6 +8,8 @@ import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import { AccessToken } from '../../api/UserModel'
+import UserAPI from '../../api/UserAPI'
+const packageInfo = require('../../../package');
 
 enum ValidatorResult {
   notLogin,
@@ -23,10 +25,37 @@ export default Vue.extend({
     ...mapGetters('NasServer', ['nasInfo', 'accessInfo'])
   },
   created () {
-    const result = this.validatorToken()
-    this.handleValidatorResult(result)
+    this.checkUpdate()
   },
   methods: {
+    // 调接口判断是否需要更新
+    checkUpdate () {
+      let appId = ''
+      let appVersion = 0
+      if (process.platform === 'win32') {	// win环境
+        appId = packageInfo.winAppId
+        appVersion = packageInfo.winAppVersion
+      } else {	// mac环境
+        appId = packageInfo.macAppId
+        appVersion = packageInfo.macAppVersion
+      }
+      UserAPI.fetchUpdateInfo(appId, appVersion).then(response => {
+        if (response.data.code !== 200) {
+          console.log('获取更新信息失败');
+          return
+        }
+        if (response.data.data) {
+          const pkgUrl = _.get(response.data.data, 'pkgUrl')
+          const ipcRenderer = require('electron').ipcRenderer
+          ipcRenderer.send('system', 'about', 'new'); // 将更新界面唤醒
+        } else {
+          const result = this.validatorToken()
+          this.handleValidatorResult(result)
+        }
+      }).catch(error => {
+        console.log(error)
+      })
+    },
     validatorToken (): ValidatorResult {
       if (_.isEmpty(this.user) || _.isEmpty(this.accessToken)) {
         return ValidatorResult.notLogin
