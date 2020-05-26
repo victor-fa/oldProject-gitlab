@@ -17,7 +17,6 @@ import ClientAPI from '../../api/ClientAPI'
 import { NasInfo, NasAccessInfo } from '../../api/ClientModel'
 import NasFileAPI from '../../api/NasFileAPI'
 
-let timerId: NodeJS.Timeout | null = null
 export default Vue.extend({
   name: 'connecting',
   data () {
@@ -53,7 +52,6 @@ export default Vue.extend({
     }
   },
   destroyed () {
-    if (timerId !== null) window.clearTimeout(timerId as any)
     ClientAPI.closeBoardcast()
   },
   methods: {
@@ -73,17 +71,14 @@ export default Vue.extend({
       return true
     },
     searchNasInLAN () {
-      timerId = this.beginTimer()
       this.loading = true
       ClientAPI.searchNas(this.sn, this.mac, data => {
-        timerId !== null && clearTimeout(timerId)
         ClientAPI.closeBoardcast()
         this.onlineConnectNas(data)
       }, error => {
-        timerId !== null && clearTimeout(timerId)
         this.loading = false
         ClientAPI.closeBoardcast()
-        this.pushFailedPage(ConnectionErrorType.scanFailed)
+        this.pushFailedPage(ConnectionErrorType.notFound)
         console.log(error)
       })
       
@@ -100,13 +95,6 @@ export default Vue.extend({
       //   this.pushFailedPage(ConnectionErrorType.scanFailed)
       //   console.log(error)
       // })
-    },
-    beginTimer () {
-      return setTimeout(() => {
-        ClientAPI.closeBoardcast()
-        this.loading = false
-        this.pushFailedPage(ConnectionErrorType.notFound)
-      }, 10000)
     },
     onlineConnectNas (nasInfo: NasInfo) {
       ClientAPI.setBaseUrl(`http://${nasInfo.ip}:${nasInfo.port}`)

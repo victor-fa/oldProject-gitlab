@@ -74,58 +74,61 @@ export default {
   },
   // scan nas on LAN with UDP
   scanNas (success: (data: NasInfo) => void, failure: (error: string) => void) {
-    this.searchNas('', '', success, failure)
+    const timer = setTimeout(() => {
+      this.closeBoardcast()
+      failure('boardcast time out')
+    }, 5000)
+    this.boardcastInLan('', '', data => {
+      clearTimeout(timer)
+      success(data)
+    }, error => {
+      clearTimeout(timer)
+      failure(error)
+    })
   },
   // search nas on the LAN
   searchNas (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
+    const timer = setTimeout(() => {
+      this.closeBoardcast()
+      this.closeP2PTunnel()
+      failure('search time out')
+    }, 5000)
+    this.boardcastInLan(sn, mac, data => {
+      clearTimeout(timer)
+      this.closeP2PTunnel()
+      success(data)
+    }, error => {
+      clearTimeout(timer)
+      this.closeP2PTunnel()
+      failure(error)
+    })
+    this.initP2PTunnel(sn, mac, data => {
+      clearTimeout(timer)
+      this.closeBoardcast()
+      success(data)
+    }, error => {
+      clearTimeout(timer)
+      this.closeBoardcast()
+      failure(error)
+    })
+  },
+  boardcastInLan (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
     // const host = getBoardcastAddress()
     const host = '255.255.255.255'
     if (host === null) {
       failure('not found IP address')
       return
     }
-    
-    if (process.platform === 'win32') { // 仅当windows平台先有
-      const tunnelNas:NasInfo = {
-        active: 1,
-        name: '',
-        model: '',
-        mac: '',
-        ip: '127.0.0.1',
-        sn: '',
-        port: 9001,
-        ssl_port: '000',
-        softversion: 'V1.0.1'
-      }
-      TunnelAPI.tunnelCheck().then(checkRes => {
-        TunnelAPI.queryConnectInfo(sn).then((connectRes: any) => {
-          if (connectRes.result === '0') { // 已有连接
-            success(tunnelNas)
-          } else if (connectRes.result === '18') {
-            TunnelAPI.addConnectFun(sn).then((addConnectRes: any) => {
-              if (addConnectRes.result === '0') {
-                TunnelAPI.getPeerinfoFun(sn).then((peerinfo:any) => {
-                  success(tunnelNas)
-                }).catch(err => failure('tunnel error'))
-              }
-            }).catch(err => failure('tunnel error'))
-          }
-        }).catch(err => failure('tunnel error'))
-      }).catch(err => failure('tunnel error'))
-    }
-    
     client = dgram.createSocket('udp4')
     const msg = generateBoardcastPacket(sn, mac)
     console.log(`start boardcast: sn=${sn}, mac=${mac}`);
     const port = 60000
-
     client.bind(() => {
       client!.setBroadcast(true)
       client!.setTTL(128)
       client!.send(msg, 0, msg.length, port, host, function(err) {
         if (_.isEmpty(err)) return
         console.log(err)
-        // TODO: 广播报文发送失败，是否考虑重新发送
         failure('boardcast packet message failed')
       })
     })
@@ -145,11 +148,67 @@ export default {
       }
     })
   },
+  initP2PTunnel (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
+    if (process.platform === 'win32') { // 仅当windows平台先有
+      const tunnelNas:NasInfo = {
+        active: 1,
+        name: '',
+        model: '',
+        mac: '',
+        ip: '127.0.0.1',
+        sn: '',
+        port: 9001,
+        ssl_port: '000',
+        softversion: 'V1.0.1'
+      }
+      TunnelAPI.tunnelCheck().then(() => {
+        return TunnelAPI.queryConnectInfo(sn)
+      }).then((connectRes: any) => {
+        if (connectRes.result === '0') {
+          return Promise.resolve(tunnelNas)
+        } else if (connectRes.result === '18') {
+          return TunnelAPI.addConnectFun(sn)
+        } else {
+          return Promise.reject(Error('tunnel error'))
+        }
+      }).then((addConnectRes: any) => {
+        if (addConnectRes === tunnelNas) {
+          return Promise.resolve(tunnelNas)
+        } else if (addConnectRes.result === '0') {
+          return TunnelAPI.getPeerinfoFun(sn)
+        } else {
+          return Promise.reject(Error('tunnel error'))
+        }
+      }).then(() => {
+        success(tunnelNas)
+      }).catch(error => {
+        failure('tunnel error')
+      })
+      // TunnelAPI.tunnelCheck().then(checkRes => {
+      //   TunnelAPI.queryConnectInfo(sn).then((connectRes: any) => {
+      //     if (connectRes.result === '0') { // 已有连接
+      //       success(tunnelNas)
+      //     } else if (connectRes.result === '18') {
+      //       TunnelAPI.addConnectFun(sn).then((addConnectRes: any) => {
+      //         if (addConnectRes.result === '0') {
+      //           TunnelAPI.getPeerinfoFun(sn).then((peerinfo:any) => {
+      //             success(tunnelNas)
+      //           }).catch(err => failure('tunnel error'))
+      //         }
+      //       }).catch(err => failure('tunnel error'))
+      //     }
+      //   }).catch(err => failure('tunnel error'))
+      // }).catch(err => failure('tunnel error'))
+    }
+  },
   closeBoardcast () {
     if (client !== null) {
       client.close()
       client = null
     }
+  },
+  closeP2PTunnel () {
+
   },
   fetchBindUserList (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/list')

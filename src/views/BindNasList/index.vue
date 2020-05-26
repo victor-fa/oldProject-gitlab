@@ -30,8 +30,6 @@ import TunnelAPI from '../../api/TunnelAPI'
 import { NasInfo, NasAccessInfo } from '../../api/ClientModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 
-let timeId: NodeJS.Timeout | null = null
-
 export default Vue.extend({
   name: 'bind-device-list',
   components: {
@@ -84,30 +82,20 @@ export default Vue.extend({
       this.searchNasInLAN(item, secretKey)
     },
     searchNasInLAN (nas: DeviceInfo, secretKey: string) {
-      timeId = this.beginTimer()
       this.loading = true
       ClientAPI.searchNas(nas.sn, nas.mac, data => {
         if (data.name === '') { // 隧道登录
-          timeId !== null && clearTimeout(timeId)
           ClientAPI.closeBoardcast()
           this.tunnelTryLogin(secretKey, TunnelAPI.getClientIP())
         } else {
-          timeId !== null && clearTimeout(timeId)
           ClientAPI.closeBoardcast()
           this.loginToNas(data, secretKey)
         }
       }, error => {
         this.loading = false
-        timeId !== null && clearTimeout(timeId)
         ClientAPI.closeBoardcast()
+        this.$message.error('连接失败')
       })
-    },
-    beginTimer () {
-      return setTimeout(() => {
-        ClientAPI.closeBoardcast()
-        this.loading = false
-        this.$message.error('连接超时')
-      }, 10000)
     },
     tunnelTryLogin (secretKey, tunnelIP) {  // 通过渠道登录
       ClientAPI.login(this.user, secretKey, tunnelIP).then(response => {

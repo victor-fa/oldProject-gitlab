@@ -100,11 +100,10 @@ export default Vue.extend({
         this.nasList = _.uniqBy(nasList, 'sn')
       }, error => {
         this.scanLoading = false
-        console.log(error)
         this.$router.push({
           name: 'connection-failed',
           params: {
-            errorType: ConnectionErrorType.scanFailed,
+            errorType: ConnectionErrorType.notFound,
             type: this.type as string
           }
         })

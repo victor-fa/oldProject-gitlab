@@ -52,8 +52,7 @@ export default Vue.extend({
       return show
     },
     backTitle: function () {
-      const isOffline = (this.qrCodeType === QRCodeType.offline) as boolean
-      return isOffline ? '账号密码登录' : '扫描列表'
+      return this.$route.params.type === 'offline' ? '扫描列表' : '账号密码登录'
     },
     nasInfo: function () {
       const json = this.$route.params.nasInfo
