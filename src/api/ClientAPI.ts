@@ -229,7 +229,8 @@ const getBoardcastAddress = () => {
     const ipAddr = parseInt(ipAddrs[index])
     const netmask = parseInt(netmasks[index])
     const network = ipAddr & netmask
-    const boardcast = netmask === 255 ? netmask : 255 - netmask
+    const reversemask = 255 - netmask
+    const boardcast = network | reversemask
     boardcasts += `${boardcast}.` 
   }
   return _.trim(boardcasts, '.')
@@ -242,7 +243,7 @@ const getIPAddress = (flag: string) => {
     if (netInfo.hasOwnProperty(key)) {
       const interfaces = netInfo[key] as Array<any>
       for (let index = 0; index < interfaces.length; index++) {
-        const alias = interfaces[index];
+        const alias = interfaces[index]
         if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
           if (flag === 'address') { // 返回address以及netmask
             return { address: alias.address, netmask: alias.netmask }
