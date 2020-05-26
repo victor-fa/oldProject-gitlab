@@ -78,7 +78,8 @@ export default {
   },
   // search nas on the LAN
   searchNas (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
-    const host = getBoardcastAddress()
+    // const host = getBoardcastAddress()
+    const host = '255.255.255.255'
     if (host === null) {
       failure('not found IP address')
       return

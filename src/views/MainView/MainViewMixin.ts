@@ -64,6 +64,9 @@ export default Vue.extend({
         case 'sortWayChange':
           this.handleSortWayChangeAction(args[0])
           break;
+        case 'newCustom':
+          this.handleNewCustomAction()
+          break;
         default:
           break;
       }
