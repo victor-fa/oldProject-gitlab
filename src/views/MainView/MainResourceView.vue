@@ -154,6 +154,9 @@ export default Vue.extend({
       this.busy = false
       this.fetchResourceList()
     },
+    handleDropAction (paths: string[]) {
+      this.handleUploadAction(paths)
+    },
     handleUploadAction (filePaths: string[]) {
       filePaths.forEach(path => {
         const task = new UploadTask(path, this.path, this.uuid)

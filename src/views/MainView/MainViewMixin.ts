@@ -95,11 +95,16 @@ export default Vue.extend({
         case 'deleteItems':
           this.handleDeleteItemsAction()
           break;
+        case 'drop':
+          this.handleDropAction(args[0])
+          break
         default:
           break;
       }
     },
     handleLoadmoreAction () {
+    },
+    handleDropAction (paths: string[]) {
     },
     handleDeleteItemsAction () {
       let hasRenaming = false

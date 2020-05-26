@@ -5,7 +5,10 @@
     </slot>
     <div
       class="resource-list"
-      v-bind:class="{ horizontalResourceList: !isShowHeader }"
+      v-bind:class="{
+        horizontalResourceList: !isShowHeader,
+        'drag-style': dragState
+      }"
       :style="{ height: scrollHeight + 'px' }"
       v-infinite-scroll="handleInfiniteOnLoad"
       :infinite-scroll-disabled="busy"
@@ -13,6 +16,10 @@
       :infinite-scroll-immediate-check="false"
       @contextmenu.prevent="handleListContextMenu"
       @click.stop="handleListClick"
+      @drop="handleDropEvent($event)"
+      @dragover="handleDragoverEvent($event)"
+      @dragenter.prevent="handleDragEnterEvent($event)"
+      @dragleave.prevent="handleDragLeaveEvent($event)"
     >
       <a-list
         :dataSource="dataSource"
@@ -65,6 +72,7 @@ export default Vue.extend({
   },
   data () {
     return {
+      dragState: false,
       scrollHeight: document.body.clientHeight - this.paddingHeight
     }
   },
@@ -138,6 +146,39 @@ export default Vue.extend({
     },
     handleListClick (event: MouseEvent) {
       this.$emit('callbackAction', 'click')
+    },
+    isSupportDrag () {
+      const name = this.$route.name
+      return name === 'main-resourve-view' || name === 'custom'
+    },
+    handleDragEnterEvent (event: DragEvent) {
+      if (!this.isSupportDrag()) return
+      this.dragState = true
+    },
+    handleDragLeaveEvent (event: DragEvent) {
+      if (!this.isSupportDrag()) return
+      this.dragState = false
+    },
+    handleDragoverEvent (event: DragEvent) {
+      if (!this.isSupportDrag()) return // 检测是否支持拖拽上传
+      if (!this.dragState) return // 检测是否是外部拖拽
+      event.preventDefault()
+      if (event.dataTransfer === null) return
+      event.dataTransfer.dropEffect = 'copy'
+    },
+    handleDropEvent (event: DragEvent) {
+      if (!this.isSupportDrag()) return
+      if (!this.dragState) return
+      event.preventDefault()
+      this.dragState = false
+      if (event.dataTransfer === null) return
+      const files = event.dataTransfer.files
+      let paths: string[] = []
+      for (let index = 0; index < files.length; index++) {
+        const element = files[index]
+        paths.push(element.path)
+      }
+      this.$emit('callbackAction', 'drop', paths)
     }
   }
 })
@@ -157,6 +198,9 @@ export default Vue.extend({
 .horizontalResourceList {
   padding: 20px;
   background-color: white;
+}
+.drag-style {
+  background-color: #def1ea;
 }
 </style>
 
