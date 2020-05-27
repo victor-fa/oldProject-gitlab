@@ -62,6 +62,7 @@ function createWindow () {
   win = new BrowserWindow({ 
 		width: 420,
     height: 610,
+		minWidth: 420,
     icon: './src/assets/logo.png',
     frame: false,
     resizable: true,

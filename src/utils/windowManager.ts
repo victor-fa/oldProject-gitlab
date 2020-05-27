@@ -83,6 +83,7 @@ export default {
         path,
         width: 420,
         height: 610,
+        minWidth: 420,
         title: '登录',
         backgroundColor: '#f6f8fb',
         resizable: true
