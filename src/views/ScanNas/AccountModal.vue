@@ -87,6 +87,10 @@ export default Vue.extend({
   display: flex;
   justify-content: center;
   align-items: center;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.25);
   .content {
     width: 280px;
     height: 235px;

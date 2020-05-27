@@ -22,7 +22,7 @@
           v-for="(item, index) in selectItems"
           :key="index"
           class="dropdown-item"
-          @click="handleSelect(item)"
+          @click.stop="handleSelect(item)"
         >
           <label>{{ item.account }}</label>
           <custom-button
@@ -166,7 +166,7 @@ export default Vue.extend({
         }
       }
       .dropdown-item:hover {
-        background-color: lightgray;
+        background-color: #DEF1EA;
       }
     }
   }
