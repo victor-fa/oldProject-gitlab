@@ -166,10 +166,12 @@ export default Vue.extend({
         }
         // parse response
         const accessToken = _.get(response.data.data, 'accessToken') as AccessToken
-        const user = _.get(response.data.data, 'user') as User
+        const user = _.get(response.data.data, 'userVo') as User
         if (_.isEmpty(accessToken) || _.isEmpty(user)) {
           // next pull
-          this.pollResult(code)
+          setTimeout(() => {
+            this.pollResult(code)
+          }, 1000);
         } else {
           // cache login info
           this.$store.dispatch('User/updateUser', user)
@@ -192,7 +194,9 @@ export default Vue.extend({
         const nasAccess = response.data.data as NasAccessInfo
         const status = _.get(nasAccess, 'auth_status')
         if (status !== 1) {
-          this.pollResult(session)
+          setTimeout(() => {
+            this.pollResult(session)
+          }, 1000);
         } else {
           // cache nas info
           this.$store.dispatch('NasServer/updateNasAccess', nasAccess)
