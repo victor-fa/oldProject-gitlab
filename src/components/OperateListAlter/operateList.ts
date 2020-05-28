@@ -264,7 +264,6 @@ const customListContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
-      { title: '上传', command: 'upload' },
       { title: '新建', command: 'newCustom' }
     ]
   },

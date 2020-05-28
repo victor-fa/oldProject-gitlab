@@ -139,6 +139,9 @@ export default Vue.extend({
         case 'newFolderRequest':
           this.handleNewFolderRequestAction(index, args[0])
           break;
+        case 'deleteRequest':
+          this.handleDeleteItemsAction()
+          break
         default:
           break;
       }

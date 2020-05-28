@@ -155,6 +155,13 @@ export default Vue.extend({
         } else {
           this.handleRenameAction(item)
         }
+      } else if (code === 'Delete') {
+        if (this.isSelected === false) return
+        event.stopPropagation()
+        const item = this.model as ResourceItem
+        if (!_.isEmpty(item.uuid)) {
+          this.$emit('callbackAction', 'deleteRequest', this.index)
+        }
       }
     },
     handleRenameAction (item: ResourceItem) {
