@@ -55,9 +55,14 @@ export default Vue.extend({
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    // 重写父类中的方法
+    // 重写混入中的方法
     handleRefreshAction () {
       this.fetchCollectList()
+    },
+    handleOpenFolderAction (item: ResourceItem) {
+      const path = item.path
+      const uuid = item.uuid
+      RouterUtility.push(item.name, 'collect-resource-view', { path, uuid })
     },
     handleUnCollectAction () {
       const items = ResourceHandler.disableSelectItems(this.dataArray)

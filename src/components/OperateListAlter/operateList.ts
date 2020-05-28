@@ -194,25 +194,6 @@ const collectContextMenu: Array<OperateGroup> = [
   }
 ]
 
-const collectResourceContextMenu: Array<OperateGroup> = [
-  {
-    icon: require('../../assets/open_accessory.png'),
-    items: [
-      { title: '打开', command: 'open' },
-      { title: '删除', command: 'delete' },
-      { title: '重命名', command: 'rename' },
-      { title: '下载', command: 'download' }
-    ]
-  },
-  {
-    icon: require('../../assets/delet_accessory.png'),
-    items: [
-      { title: '属性', command: 'info' },
-      { title: '到文件位置', command: 'jump' }
-    ]
-  }
-]
-
 const shareContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
@@ -331,7 +312,6 @@ export {
   backupResourceContextMenu,
   backupContextMenu,
   collectContextMenu,
-  collectResourceContextMenu,
   shareContextMenu,
   shareResourceContextMenu,
   customContextMenu,

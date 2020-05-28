@@ -4,8 +4,8 @@
     :loading="loading"
     :dataSource="dataArray"
     :busy="busy"
-    :contextItemMenu="itemContextMenu"
-    :contextListMenu="listContextMenu"
+    :contextItemMenu="itemMenu"
+    :contextListMenu="listMenu"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
     v-on:itemCallbackActions="handleItemActions"
@@ -37,17 +37,15 @@ export default Vue.extend({
   },
   mixins: [MainViewMixin],
   data () {
-    let items: Array<ResourceItem> = []
     return {
       loading: false,
-      dataArray: items,
-      showArray: items,
+      dataArray: [] as ResourceItem[],
       page: 1,
       busy: false,
       categoryType: ResourceType.all,
       order: OrderType.byNameDesc, // 当前选择的排序规则
-      itemContextMenu: resourceContextMenu, // item的右键菜单
-      listContextMenu // list的右键菜单
+      itemMenu: resourceContextMenu, // item的右键菜单
+      listMenu: listContextMenu // list的右键菜单
     }
   },
   computed: {
@@ -242,7 +240,7 @@ export default Vue.extend({
       })
     },
     handlePasteAction (mode: TaskMode) {
-      const srcItems = ResourceHandler.getSelectItems(this.showArray)
+      const srcItems = ResourceHandler.getSelectItems(this.dataArray)
       const destItem = { path: this.path, uuid: this.uuid } as ResourceItem
       const isClip = (this.clipboard as ClipboardModel).isClip
       if (isClip) {

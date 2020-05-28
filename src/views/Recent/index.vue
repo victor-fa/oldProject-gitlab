@@ -82,6 +82,11 @@ export default Vue.extend({
       this.page++
       this.fetchUlist()
     },
+    handleOpenFolderAction (item: ResourceItem) {
+      const path = item.path
+      const uuid = item.uuid
+      RouterUtility.push(item.name, 'recent-resource-view', { path, uuid })
+    },
     handleSortWayChangeAction (order: OrderType) {
       if (order === OrderType.ByUploadDesc) {
         this.uploadOrder = UploadTimeSort.descend

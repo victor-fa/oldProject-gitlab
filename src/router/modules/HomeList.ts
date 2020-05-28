@@ -93,9 +93,35 @@ const HomeRouters = [
     ]
   },
   {
+    path: '/recycle',
+    name: 'recycle',
+    component: () => import('../../views/Recycle/index.vue'),
+    meta: {
+      title: '回收站',
+      icon: require('../../assets/transport_icon.png'),
+      selectedIcon: require('../../assets/transport_icon_selected.png'),
+      isSelected: false
+    }
+  },
+  {
     path: '/main-resource-view',
     name: 'main-resource-view',
     component: () => import('../../views/MainView/MainResourceView.vue')
+  },
+  {
+    path: '/recent-resource-view',
+    name: 'recent-resource-view',
+    component: () => import('../../views/Recent/RecentResourceView.vue')
+  },
+  {
+    path: '/collect-resource-view',
+    name: 'collect-resource-view',
+    component: () => import('../../views/Collect/CollectResourceView.vue')
+  },
+  {
+    path: '/share-resource-view',
+    name: 'share-resource-view',
+    component: () => import('../../views/Share/ShareResourceView.vue')
   },
   {
     path: '/share-file-page',

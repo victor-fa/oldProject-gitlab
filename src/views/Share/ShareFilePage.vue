@@ -19,6 +19,7 @@ import { ResourceItem, ShareItem } from '../../api/NasFileModel'
 import NasFileAPI from '../../api/NasFileAPI'
 import ResourceHandler from '../MainView/ResourceHandler'
 import { shareContextMenu } from '../../components/OperateListAlter/operateList'
+import RouterUtility from '../../utils/RouterUtility'
 
 export default Vue.extend({
   name: 'share-file-page',
@@ -70,15 +71,14 @@ export default Vue.extend({
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    // 移除取消的item
-    removeItems (items: ResourceItem[]) {
-      this.dataArray = this.dataArray.filter(item => {
-        return !item.isSelected
-      })
-    },
     // 覆盖混入中的方法
     handleRefreshAction () {
       this.fetchShareFileList()
+    },
+    handleOpenFolderAction (item: ResourceItem) {
+      const path = item.path
+      const uuid = item.uuid
+      RouterUtility.push(item.name, 'share-resource-view', { path, uuid })
     },
     handleUnshareAction () {
       const items = ResourceHandler.disableSelectItems(this.dataArray)
@@ -90,6 +90,12 @@ export default Vue.extend({
       }).catch(_ => {
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         this.$message.error('取消失败')
+      })
+    },
+    // 移除取消的item
+    removeItems (items: ResourceItem[]) {
+      this.dataArray = this.dataArray.filter(item => {
+        return !item.isSelected
       })
     }
   }
