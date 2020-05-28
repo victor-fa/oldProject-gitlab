@@ -8,7 +8,8 @@
         1.设备已开机<br>2.设备已连接局域网<br>3.电脑连接同一局域网
       </p>
     </div>
-    <a-button @click="handleBtnClick">{{ buttonTitle }}</a-button>
+    <a-button class="scan-btn" @click="handleBtnClick">{{ buttonTitle }}</a-button>
+    <a-button class="bind-list-btn" @click="handleBindClick">绑定设备列表</a-button>
   </div>
 </template>
 
@@ -54,6 +55,9 @@ export default Vue.extend({
           query: { type } 
         })
       }
+    },
+    handleBindClick () {
+      this.$router.push('bind-device-list')
     }
   }
 })
@@ -68,17 +72,17 @@ export default Vue.extend({
   align-items: center;
   img {
     width: 258px;
-    margin-top: 90px;
+    margin-top: 80px;
   }
   .error-tip {
     color: #9c9fa9;
     font-size: 16px;
-    margin-top: 35px;
+    margin-top: 25px;
   }
   .connection-tip {
     color: #9c9fa9;
     font-size: 12px;
-    margin-top: 45px;
+    margin-top: 35px;
     display: flex;
     align-items: flex-start;
     span {
@@ -91,7 +95,7 @@ export default Vue.extend({
       line-height: 24px;
     }
   }
-  .ant-btn {
+  .scan-btn {
     height: 48px;
     width: 300px;
     margin-top: 55px;
@@ -101,6 +105,15 @@ export default Vue.extend({
     border: none;
     border-radius: 24px;
     background-image: linear-gradient(to right, #29cb7a, #4de9b9);
+  }
+  .bind-list-btn {
+    align-self: center;
+    margin-top: 10px;
+    width: 130px;
+    border: none;
+    box-shadow: none;
+    background-color: white;
+    color: #06b650;
   }
 }
 </style>
