@@ -6,6 +6,7 @@ import store from './store/index'
 import './plugins/andt-design-vue'
 import './plugins/vue-lazyload'
 import './plugins/vue-axios'
+import './plugins/repeat-click'
 import './style/index.less'
 
 Vue.config.productionTip = false

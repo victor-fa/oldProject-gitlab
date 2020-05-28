@@ -17,9 +17,9 @@
     </div>
     <div v-if="status === 'doing'" class="right-view">
       <a-button v-show="currentTab === 'backup'" @click="handleBtnClick('backupFolder')">添加备份目录</a-button>
-      <a-button v-show="isAllPause" @click="handleBtnClick('pauseAll')">全部暂停</a-button>
-      <a-button v-show="!isAllPause" @click="handleBtnClick('resumeAll')">全部开始</a-button>
-      <a-button @click="handleBtnClick('cancelAll')">全部取消</a-button>
+      <a-button v-show="isAllPause" @click="handleBtnClick('pauseAll')" v-preventReClick>全部暂停</a-button>
+      <a-button v-show="!isAllPause" @click="handleBtnClick('resumeAll')" v-preventReClick>全部开始</a-button>
+      <a-button @click="handleBtnClick('cancelAll')" v-preventReClick>全部取消</a-button>
     </div>
     <div v-else class="right-view">
       <a-button @click="handleBtnClick('clearAll')">清空所有记录</a-button>
