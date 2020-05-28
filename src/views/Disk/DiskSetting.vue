@@ -12,8 +12,6 @@ import {app} from "electron";
 			<div class="cd-setting-content">
 				<div class="cd-setting-container" v-show="SettingMenuData.Account.active">
 					<p class="cd-setting-title">用户设置</p>
-					<!-- <p class="cd-setting-sec-title">账号当前状态</p>
-					<p class="cd-setting-info">最近登录时间：{{ LoginTime }}<Time :time="LoginTime" :interval="1" /></p> -->
 					<p class="cd-setting-sec-title">修改账号密码</p>
 					<div class="cd-setting-form">
 						<a-input type="password" v-model="ChangePass.oldpass" placeholder="当前密码" clearable style="width: 100%;margin-bottom: 10px;" />
@@ -37,60 +35,16 @@ import {app} from "electron";
 					</template>
 					<p class="cd-setting-title"><br></p>
 				</div>
-				<!-- <div class="cd-setting-container" v-show="SettingMenuData.System.active">
-					<p class="cd-setting-title">系统设置</p>
-					<p class="cd-setting-sec-title">开机自启动</p>
-					<div class="cd-setting-form">
-						<a-checkbox v-model="SettingData.AutoStartFlag">系统启动后自动运行CloudDisk</a-checkbox>
-					</div>
-					<p class="cd-setting-sec-title">自动登录</p>
-					<div class="cd-setting-form" style="width: 100%;text-align: left;">
-						<a-checkbox v-model="SettingData.AutoLogin">打开CloudDisk后自动登录(需勾选记住密码)</a-checkbox>
-					</div>
-				</div> -->
 				<div class="cd-setting-container" v-show="SettingMenuData.Safety.active">
 					<p class="cd-setting-title">邮箱设置</p>
 					<p class="cd-setting-sec-title">修改安全邮箱</p>
 					<p class="cd-setting-info">当前绑定邮箱：{{ SettingData.Email }}<a-button @click="OpenChangeEmailDialog">修改</a-button></p>
 				</div>
-				<!-- <div class="cd-setting-container" v-show="SettingMenuData.Trans.active">
-					<p class="cd-setting-title">传输设置</p>
-					<p class="cd-setting-sec-title">下载目录设置</p>
-					<div class="cd-setting-info">
-						当前目录：{{ SettingData.TransDownFolder }}
-						<a-button @click="ChangeTransAddress">修改</a-button>
-					</div>
-					<p class="cd-setting-sec-title">同时上传数</p>
-					<div class="cd-setting-form">
-						<a-input-number :min="1" :max="5" v-model="SettingData.MaxUpTrans" />
-					</div>
-					<p class="cd-setting-sec-title">同时下载数</p>
-					<div class="cd-setting-form" style="margin-bottom: 0">
-						<a-input-number :min="1" :max="5" v-model="SettingData.MaxDownTrans" />
-					</div>
-					<p class="cd-setting-tips">*请不要在正在下载文件的情况下修改下载目录</p>
-					<p class="cd-setting-tips">*修改目录在下次登录生效</p>
-				</div> -->
-				<!-- <div class="cd-setting-container" v-show="SettingMenuData.Notice.active">
-					<p class="cd-setting-title">提醒设置</p>
-					<p class="cd-setting-sec-title">弹窗提醒</p>
-					<div class="cd-setting-form">
-						<a-checkbox v-model="SettingData.NoticeBubble">传输完成后气泡提示</a-checkbox>
-					</div>
-					<p class="cd-setting-sec-title">声音提醒</p>
-					<div class="cd-setting-form" style="width: 100%">
-						<a-checkbox v-model="SettingData.NoticeFlag">传输完成后声音提醒</a-checkbox>
-						<div class="cd-setting-form" style="width: 100%">
-							<a-radio-group @change="VoiceChange" v-model="SettingData.NoticeVoice">
-								<a-radio :value="1" :disabled="!SettingData.NoticeFlag">音效一</a-radio>
-								<a-radio :value="2" :disabled="!SettingData.NoticeFlag">音效二</a-radio>
-								<a-radio :value="3" :disabled="!SettingData.NoticeFlag">音效三</a-radio>
-								<a-radio :value="4" :disabled="!SettingData.NoticeFlag">音效四</a-radio>
-							</a-radio-group>
-						</div>
-						<audio :src="VoiceSrc" ref="audio" />
-					</div>
-				</div> -->
+				<div class="cd-setting-container" v-show="SettingMenuData.Phone.active">
+					<p class="cd-setting-title">手机号设置</p>
+					<p class="cd-setting-sec-title">修改手机号</p>
+					<p class="cd-setting-info">当前绑定手机号：{{ SettingData.Phone }}<a-button @click="OpenChangePhoneDialog">修改</a-button></p>
+				</div>
 			</div>
 		</div>
 		<a-modal title="更换邮箱" :visible="ShowEmailDialog" width="400px" top="70px" style="top: 50px;" @cancel="ShowEmailDialog = false">
@@ -103,6 +57,16 @@ import {app} from "electron";
 				<a-button class="cd-purple-button" @click="getEmailCode">确 定</a-button>
 			</span>
 		</a-modal>
+		<a-modal title="更换手机号" :visible="ShowPhoneDialog" width="400px" top="70px" style="top: 50px;" @cancel="ShowPhoneDialog = false">
+			<div style="height: 120px;">
+				<p class="cd-setting-sec-title">输入新手机号地址</p>
+				<a-input type="text" v-model="ChangePhoneData.phone" placeholder="您的新手机号地址" clearable style="width: 100%;margin: 10px 0" :number="true" :maxlength="11" />
+			</div>
+			<span slot="footer" class="dialog-footer">
+				<a-button class="cd-button cd-cancel-button" @click="ShowPhoneDialog = false">取 消</a-button>
+				<a-button class="cd-purple-button" @click="getPhoneCode">确 定</a-button>
+			</span>
+		</a-modal>
 		<a-modal
 			:visible="codeVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
 			okText="确定" cancelText="取消" @ok="ChangePassword" @cancel="codeVisiable = false">
@@ -112,6 +76,11 @@ import {app} from "electron";
 			:visible="codeEmailVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
 			okText="确定" cancelText="取消" @ok="ChangeEmail" @cancel="codeEmailVisiable = false">
 			<p>验证码：</p><a-input placeholder="请输入邮箱验证码" v-model="ChangeEmailData.code" />
+		</a-modal>
+		<a-modal
+			:visible="codePhoneVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
+			okText="确定" cancelText="取消" @ok="changePhone" @cancel="codePhoneVisiable = false">
+			<p>验证码：</p><a-input placeholder="请输入验证码" v-model="ChangePhoneData.code" />
 		</a-modal>
 		<a-modal
 			:title="'修改密码'"
@@ -142,7 +111,6 @@ export default {
 		SettingData: {
 			handler() {
 				this.$ipc.send('system', 'auto-launch', this.SettingData.AutoStartFlag);
-				// this.$Api.LocalFile.write('setting', this.SettingData);
 			},
 			deep: true
 		}
@@ -158,26 +126,16 @@ export default {
 					name: '用户',
 					icon: 'sf-icon-user'
 				},
-				// System: {
-				// 	active: '',
-				// 	name: '系统',
-				// 	icon: 'sf-icon-hashtag'
-				// },
 				Safety: {
 					active: '',
 					name: '邮箱',
 					icon: 'sf-icon-lock'
 				},
-				// Trans: {
-				// 	active: '',
-				// 	name: '传输',
-				// 	icon: 'sf-icon-exchange'
-				// },
-				// Notice: {
-				// 	active: '',
-				// 	name: '提醒',
-				// 	icon: 'sf-icon-bell'
-				// }
+				Phone: {
+					active: '',
+					name: '手机',
+					icon: 'sf-icon-phone'
+				},
 			},
 			ChangePass: {
 				oldpass: '',
@@ -197,33 +155,27 @@ export default {
 				email: '',
 				code: ''
 			},
-			LoginTime: 0,
-			VoiceSrc: '', //提醒测试音效.
-			ShowEmailDialog: false,
-			EmailSendFlag: false,
-			SettingData: {
-				AutoLogin: false,
-				AutoStartFlag: false,
-				Email: '',
-				TransDownFolder: '',
-				MaxUpTrans: 1,
-				MaxDownTrans: 1,
-				NoticeBubble: true, //气泡提示
-				NoticeFlag: true, //提醒声音
-				NoticeVoice: '音效一' //哪个提醒声音
+			ChangePhoneData: {
+				phone: '',
+				code: ''
 			},
-			defaultFolder: null,
+			ShowEmailDialog: false,
+			ShowPhoneDialog: false,
+			SettingData: {
+				Email: '',
+				Phone: '',
+			},
 			loading: '',
 			codeVisiable: false,
-			codeEmailVisiable: false
+			codeEmailVisiable: false,
+			codePhoneVisiable: false
 		};
 	},
 	created() {
-		this.defaultFolder = (this.$electron.remote ? this.$electron.remote : this.$electron).app.getPath('downloads');
-		this.LoginTime = localStorage.LoginTime;
 		this.getOfflineName()
 		console.log(JSON.parse(JSON.stringify(this.user)));
 		this.SettingData.Email = this.user.email
+		this.SettingData.Phone = this.user.phoneNo
 	},
 	methods: {
 		change(item, index) {
@@ -294,6 +246,9 @@ export default {
 		OpenChangeEmailDialog() {
 			this.ShowEmailDialog = true;
 		},
+		OpenChangePhoneDialog() {
+			this.ShowPhoneDialog = true;
+		},
 		getEmailCode () {
 			UserAPI.emailCode(this.ChangeEmailData.email).then(response => {	
 				if (response.data.code !== 200) return
@@ -303,6 +258,29 @@ export default {
 				console.log(error)
 				this.$message.error('网络连接错误,请检测网络')
 			})
+		},
+		getPhoneCode () {
+			if (!this.ChangePhoneData.phone.length) {
+				this.$message.warning('请输入新的手机号');
+				return;
+			}
+			if (this.ChangePhoneData.phone && !(/^1[3456789]\d{9}$/.test(this.ChangePhoneData.phone))) {
+				this.$message.error('请输入正确的手机号');
+				return;
+			}
+			if (this.ChangePhoneData.phone === this.user.phoneNo) {
+				this.$message.warning('输入的手机号与已绑定的手机号相同，请输入其他手机号');
+				return;
+			}
+			UserAPI.smsCode(this.ChangePhoneData.phone, 5).then(response => {
+				if (response.data.code !== 200) return
+				this.codePhoneVisiable = true
+        this.$message.success('短信验证码已发送到手机')
+      }).catch(error => {
+				this.loading = false;
+        console.log(error)
+        this.$message.error('网络连接错误,请检测网络')
+      })
 		},
 		ChangeEmail() {
 			if (this.loading) {
@@ -334,50 +312,30 @@ export default {
 				this.$message.error('网络连接错误,请检测网络')
 			})
 		},
-		// VoiceChange(a) {
-		// 	switch (a) {
-		// 		case '音效一':
-		// 			this.VoiceSrc = this.$path.join(__static, 'voice/1.wav');
-		// 			this.PlayVoice();
-		// 			break;
-		// 		case '音效二':
-		// 			this.VoiceSrc = this.$path.join(__static, 'voice/2.wav');
-		// 			this.PlayVoice();
-		// 			break;
-		// 		case '音效三':
-		// 			this.VoiceSrc = this.$path.join(__static, 'voice/3.wav');
-		// 			this.PlayVoice();
-		// 			break;
-		// 		case '音效四':
-		// 			this.VoiceSrc = this.$path.join(__static, 'voice/4.wav');
-		// 			this.PlayVoice();
-		// 			break;
-		// 	}
-		// 	localStorage.NoticeVoice = this.VoiceSrc;
-		// },
-		// PlayVoice() {
-		// 	this.$refs.audio.currentTime = 0;
-		// 	this.$refs.audio.pause();
-		// 	this.$refs.audio.load();
-		// 	setTimeout(() => {
-		// 		this.$refs.audio.play();
-		// 	}, 200);
-		// },
-		ChangeTransAddress() {
-			this.$electron.remote.dialog.showOpenDialog(
-				{
-					//默认路径
-					defaultPath: '../Desktop',
-					//选择操作，此处是打开文件夹
-					properties: ['openDirectory'],
-					filters: [{ name: 'All', extensions: ['*'] }]
-				},
-				res => {
-					res = (res[0] && res[0]) || this.defaultFolder;
-					//回调函数内容，此处是将路径内容显示在input框内
-					this.SettingData.TransDownFolder = res;
-				}
-			);
+		changePhone() {
+			if (this.loading) {
+				this.$message.warning('正在进行其他操作，请等待');
+				return;
+			}
+			if (!this.ChangePhoneData.code.length) {
+				this.$message.warning('请输入短信验证码');
+				return;
+			}
+			const input = { phoneNo: this.ChangePhoneData.phone, code: this.ChangePhoneData.code }
+			UserAPI.updateInfo(input).then(response => {
+				if (response.data.code !== 200) return
+				this.codePhoneVisiable = false;
+				this.ShowPhoneDialog = false;
+				this.ChangePhoneData.phone = '';
+				this.$store.dispatch('User/updateUser', response.data.data.userVO)
+				this.SettingData.Phone = response.data.data.userVO.phoneNo
+        this.$message.success('修改手机号成功')
+      }).catch(error => {
+        console.log(error)
+        this.$message.error('网络连接错误,请检测网络')
+      }).finally(() => {
+				this.ChangePhoneData.code = ''
+			})
 		},
 		close() {
 			this.$electron.remote.getCurrentWindow().close();

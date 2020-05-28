@@ -20,7 +20,7 @@
 				</div>
 				<div class="cd-user-line">
 					<label>手机：</label>
-					<a-input v-model="User.phoneNo" clearable="" style="width: calc(100% - 50px)" placeholder="输入手机" name="phone" :number="true" :maxlength="11" />
+					<p :title="'手机号变更，请到系统设置中进行修改'" style="cursor: pointer">{{ User.phoneNo ? User.phoneNo : '您未绑定手机号' }} <br></p>
 				</div>
 				<div class="cd-user-line">
 					<label>生日：</label>
@@ -36,14 +36,9 @@
 					<label>说说:</label>
 					<a-textarea class="ivu-input" name="userSay" v-model="User.userSay" placeholder="输入说说" :autoSize="{ minRows: 2, maxRows: 2 }"/>
 				</div>
-				<a-button class="cd-purple-button" @click="getMessage">更新</a-button>
+				<a-button class="cd-purple-button" @click="handleUpdate">更新</a-button>
 			</form>
 		</div>
-		<a-modal
-			:visible="codeVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
-			okText="确定" cancelText="取消" @ok="handleUpdate" @cancel="codeVisiable = false">
-			<p>验证码：</p><a-input placeholder="请输入短信验证码" v-model="code" />
-		</a-modal>
 	</div>
 </template>
 
@@ -78,8 +73,6 @@ export default {
 				color: '#000'
 			},
 			dateFormat: 'YYYY/MM/DD',
-			codeVisiable: false,
-			code: ''
 		};
 	},
 	created() {
@@ -116,23 +109,6 @@ export default {
 				})
 			}
 		},
-		getMessage() {
-			this.loading = true;
-			if (this.getInputInfo().changeFlag === 0) {
-				this.$message.error('您未变更任何信息')
-				return
-			}
-			UserAPI.smsCode(this.User.phoneNo, 5).then(response => {
-				this.loading = false;
-				if (response.data.code !== 200) return
-				this.codeVisiable = true
-        this.$message.success('短信验证码已发送到手机')
-      }).catch(error => {
-				this.loading = false;
-        console.log(error)
-        this.$message.error('网络连接错误,请检测网络')
-      })
-		},
 		getInputInfo () {
 			let changeFlag = 0	// 标识是否有数据变更
 			const input = {
@@ -140,8 +116,6 @@ export default {
 				nicName: this.User.nicName ? this.User.nicName : '',
 				userSay: this.User.userSay ? this.User.userSay : '',
 				birthday: this.User.birthday ? (new Date(this.User.birthday)).getTime() : '',
-				phoneNo: this.User.phoneNo ? this.User.phoneNo : '',
-				code: this.code
 			}
 			// 获取用户信息进行比对
 			const userJson = localStorage.getItem(USER_MODEL)
@@ -151,26 +125,22 @@ export default {
 			input.nicName === userObj.nicName ? delete input.nicName : changeFlag++
 			input.userSay === userObj.userSay ? delete input.userSay : changeFlag++
 			input.birthday === userObj.birthday ? delete input.birthday : changeFlag++
-			input.phoneNo === userObj.phoneNo ? delete input.phoneNo : changeFlag++
 			return {input, changeFlag}
 		},
 		handleUpdate() {
-			if (!this.code) {
-				this.$message.error('验证码不能为空')
+			if (this.getInputInfo().changeFlag === 0) {
+				this.$message.info('您未变更任何信息')
 				return
 			}
 			const input = this.getInputInfo().input
 			UserAPI.updateInfo(input).then(response => {
-				this.code = ''
 				if (response.data.code !== 200) return
 				this.$store.dispatch('User/updateUser', response.data.data.userVO)
-				this.codeVisiable = false
 				this.User = response.data.data.userVO
 				processCenter.renderSend(EventName.account);
         this.$message.success('修改成功')
       }).catch(error => {
         console.log(error)
-				this.code = ''
         this.$message.error('网络连接错误,请检测网络')
       })
 		},
@@ -271,6 +241,7 @@ export default {
 	top: 75px;
 	overflow: unset;
 	border-radius: 100%;
+	transition: all 0.35s;
 	-webkit-transition: all 0.35s;
 	-moz-transition: all 0.35s;
 	-o-transition: all 0.35s;
@@ -278,6 +249,7 @@ export default {
 .cd-user-head:hover {
 	box-shadow: 0 0 29px -2px #ffffff;
 	cursor: pointer;
+	transition: all 0.35s;
 	-webkit-transition: all 0.35s;
 	-moz-transition: all 0.35s;
 	-o-transition: all 0.35s;

@@ -6,7 +6,7 @@ import JSEncrypt from 'jsencrypt'
 import { NasInfo } from './ClientModel'
 import dgram from 'dgram'
 import { nasServer } from './NasServer';
-import TunnelAPI from './TunnelAPI';
+import TunnelAPI, { TunnelStatus } from './TunnelAPI';
 
 const userModulePath = '/v1/user'
 
@@ -195,7 +195,7 @@ export default {
   closeP2PTunnel () {
     TunnelAPI.deleteConnectInfo().then((res: any) => {
       if (res.result === '0') {
-        console.log('关闭成功');
+        TunnelAPI.setTunnelStatus(TunnelStatus.stop)
       }
     })
   },

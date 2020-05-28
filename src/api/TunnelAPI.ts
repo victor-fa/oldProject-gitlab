@@ -1,6 +1,11 @@
 import axios, { AxiosResponse } from 'axios';
 import _ from 'lodash'
 
+enum TunnelStatus {
+  continue,
+  stop
+}
+
 const tunnelServer = axios.create({
   baseURL: 'http://127.0.0.1:17881',
   timeout: 10000,
@@ -9,10 +14,18 @@ const tunnelServer = axios.create({
 const ipcRenderer = require('electron').ipcRenderer
 const serverIP = '127.0.0.1:9999'
 const clientIP = '127.0.0.1:9001'
+let status = TunnelStatus.continue
 
 export default {
   getClientIP () {
     return clientIP
+  },
+  getTunnelStatus () {
+    return status
+  },
+  setTunnelStatus (value) {
+    status = value
+    console.log(status);
   },
   // 获取状态
   getStatus (): Promise<AxiosResponse<any>> {
@@ -135,8 +148,10 @@ export default {
           reject()
           return
         }
-        if (resJson.tunnelremote === '') {
-          this.loop(peerid, resolve, reject)  // 递归调用
+        if (resJson.tunnelremote === '' && status === TunnelStatus.continue) {
+          setTimeout(() => {
+            this.loop(peerid, resolve, reject)  // 递归调用
+          }, 1000);
         } else {
           resolve()
         }
@@ -147,3 +162,6 @@ export default {
   }
 }
 
+export {
+  TunnelStatus
+}
