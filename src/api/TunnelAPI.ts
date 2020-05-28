@@ -23,9 +23,8 @@ export default {
   getTunnelStatus () {
     return status
   },
-  setTunnelStatus (value) {
-    status = value
-    console.log(status);
+  changeStatusToStop () {
+    status = TunnelStatus.stop
   },
   // 获取状态
   getStatus (): Promise<AxiosResponse<any>> {
@@ -98,7 +97,7 @@ export default {
       this.deleteConnect().then(response => {
         if (response.status !== 200) return
         console.log(response.data);
-        const resJson:any = JSON.parse(response.data.substring(11, response.data.length))
+        const resJson:any = JSON.parse(response.data.substring(14, response.data.length))
         resolve(resJson)
       }).catch(error => {
         reject(error)
@@ -148,16 +147,18 @@ export default {
           reject()
           return
         }
-        if (resJson.tunnelremote === '' && status === TunnelStatus.continue) {
-          setTimeout(() => {
-            this.loop(peerid, resolve, reject)  // 递归调用
-          }, 1000);
+        if (status !== TunnelStatus.continue) { // 阻止递归并
+          reject()
+          return
+        }
+        if (resJson.tunnelremote === '') {  // 获取到数据则进行登录操作
+          this.loop(peerid, resolve, reject)  // 递归调用
         } else {
           resolve()
         }
       }
     }).catch(error => {
-      console.log(error);
+      reject(error)
     })
   }
 }

@@ -92,7 +92,7 @@ export default {
       this.closeBoardcast()
       this.closeP2PTunnel()
       failure('search time out')
-    }, 5000)
+    }, 7000)
     this.boardcastInLan(sn, mac, data => {
       clearTimeout(timer)
       this.closeP2PTunnel()
@@ -195,7 +195,7 @@ export default {
   closeP2PTunnel () {
     TunnelAPI.deleteConnectInfo().then((res: any) => {
       if (res.result === '0') {
-        TunnelAPI.setTunnelStatus(TunnelStatus.stop)
+        TunnelAPI.changeStatusToStop()
       }
     })
   },

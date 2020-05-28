@@ -363,7 +363,6 @@ export default Vue.extend({
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         if (response.data.code !== 200) return
         this.dataArray = ResourceHandler.removeSelectedItems(this.dataArray)
-        this.$message.info('任务添加成功')
         this.$store.dispatch('Resource/increaseTask')
       }).catch(_ => {
         this.$message.error('删除失败')
