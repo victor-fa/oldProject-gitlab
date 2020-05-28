@@ -193,7 +193,7 @@ export default {
     }
   },
   closeP2PTunnel () {
-    TunnelAPI.closeConnect().then((res: any) => {
+    TunnelAPI.deleteConnectInfo().then((res: any) => {
       if (res.result === '0') {
         console.log('关闭成功');
       }

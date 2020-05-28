@@ -191,7 +191,7 @@ export default Vue.extend({
         if (item.path.indexOf('.safe') > -1) return icon
       }
       if (_.isEmpty(item.thumbs)) return icon
-      const smallPath = item.thumbs[0]
+      const smallPath = item.file_detail ? item.file_detail.thumbs[0] : item.thumbs[0]
       if (_.isEmpty(smallPath)) return icon
       icon = nasServer.defaults.baseURL
       if (icon === undefined) return icon

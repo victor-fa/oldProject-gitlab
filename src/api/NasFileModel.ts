@@ -54,14 +54,16 @@ interface ResourceItem {
   isSelected?: boolean, // 当前item是否是选中状态
   disable?: boolean, // 当前item是否是禁用状态
   renaming?: boolean, // 重命名当前item
-  custom: string
+  custom: string,
+  file_detail?: CollectItem | ShareItem
 }
 
 interface CollectItem {
   uuid: string,
   path: string,
   ugreen_no: number,
-  file_detail: FileDeatil
+  file_detail: FileDeatil,
+  thumbs: Array<string>
 }
 
 interface ShareItem {
@@ -69,7 +71,8 @@ interface ShareItem {
   uuid: string,
   path: string,
   ugreen_no: number,
-  file_detail: FileDeatil
+  file_detail: FileDeatil,
+  thumbs: Array<string>
 }
 
 interface FileDeatil {

@@ -23,8 +23,8 @@ export default {
     })
   },
   // 关闭P2P进程
-  closeConnect (): Promise<AxiosResponse<any>> {
-    return tunnelServer.get('/exit?pass=')
+  deleteConnect (): Promise<AxiosResponse<any>> {
+    return tunnelServer.get(`/cnntlcldelete?clientaddr=${this.getClientIP()}`)
   },
   // 查询连接
   queryConnect (peerid): Promise<AxiosResponse<any>> {
@@ -80,12 +80,12 @@ export default {
     })
   },
   // 关闭连接
-  closeConnectInfo (sn) {
+  deleteConnectInfo () {
     return new Promise((resolve, reject) => {
-      this.closeConnect().then(response => {
+      this.deleteConnect().then(response => {
         if (response.status !== 200) return
         console.log(response.data);
-        const resJson:any = JSON.parse(response.data.substring(5, response.data.length))
+        const resJson:any = JSON.parse(response.data.substring(11, response.data.length))
         resolve(resJson)
       }).catch(error => {
         reject(error)
