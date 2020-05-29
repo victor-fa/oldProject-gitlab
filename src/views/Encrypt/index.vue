@@ -4,7 +4,7 @@
       :loading="loading"
       :dataSource="dataArray"
       :busy="busy"
-      :contextListMenu="encryptContextMenu"
+      :contextListMenu="alreadyLogin ? encryptContextMenu : encryptMisTokenContextMenu"
       :contextItemMenu="encryptResourceContextMenu"
       v-on:headerCallbackActions="handleHeaderActions"
       v-on:listCallbackActions="handleListActions"
@@ -63,7 +63,7 @@ import { encryptUploadQueue, encryptDownloadQueue } from '@/api/Transport/Transp
 import EncryptDownloadTask from '@/api/Transport/EncryptDownloadTask'
 import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
 import StringUtility from '../../utils/StringUtility'
-import { encryptContextMenu, encryptResourceContextMenu } from '../../components/OperateListAlter/operateList'
+import { encryptContextMenu, encryptMisTokenContextMenu, encryptResourceContextMenu } from '../../components/OperateListAlter/operateList'
 import { User } from '../../api/UserModel'
 import RouterUtility from '../../utils/RouterUtility'
 import SelectFilePath from '../SelectFilePath/index.vue'
@@ -93,6 +93,7 @@ export default Vue.extend({
       this.$store.dispatch('Resource/decreaseTask')
       setTimeout(() => { this.getEncryptList() }, 1000);
     })
+    console.log(this.alreadyLogin);
   },
   destroyed() {
     if (this.alreadyLogin === true) { // 已登录情况下才需要登录
@@ -128,6 +129,7 @@ export default Vue.extend({
         alreadyKnow: false
       },
       encryptContextMenu, // list右键菜单选项
+      encryptMisTokenContextMenu, // list未登录时，右键菜单选项
       encryptResourceContextMenu, // item右键菜单选项
       showSelectModal: false // 控制路径选择弹窗的显示与隐藏
     }
@@ -356,6 +358,9 @@ export default Vue.extend({
       this.page = 1
       this.busy = false
       this.getEncryptList()
+    },
+    handleLoginEncryptAction () { // 登录加密空间
+      this.encryptLogin.isVisiable = true
     },
     handleModifyPassAction () { //  修改加密空间密码
       this.encryptModify.isVisiable = true

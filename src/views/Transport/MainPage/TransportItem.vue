@@ -182,7 +182,6 @@ export default Vue.extend({
         text-overflow: ellipsis;
         white-space: nowrap;
         flex: 1;
-        cursor: pointer;
       }
       .operate-item {
         width: 19px;

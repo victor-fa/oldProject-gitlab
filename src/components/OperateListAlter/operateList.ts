@@ -118,6 +118,17 @@ const encryptResourceContextMenu: Array<OperateGroup> = [
   }
 ]
 
+const encryptMisTokenContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '登录空间', command: 'loginEncrypt' },
+      { title: '修改密码', command: 'modifyPass' },
+      { title: '重置空间', command: 'reset' }
+    ]
+  }
+]
+
 const encryptContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
@@ -239,7 +250,6 @@ const customContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
-      { title: '打开', command: 'open' },
       { title: '修改', command: 'modify' },
       { title: '删除', command: 'delete' }
     ]
@@ -330,6 +340,7 @@ export {
   recentContextMenu,
   storageContextMenu,
   encryptResourceContextMenu,
+  encryptMisTokenContextMenu,
   encryptContextMenu,
   backupResourceContextMenu,
   backupContextMenu,
