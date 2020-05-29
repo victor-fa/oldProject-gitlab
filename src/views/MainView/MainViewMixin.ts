@@ -25,6 +25,8 @@ let tmpArray: ResourceItem[] | null = null
 export default Vue.extend({
   data () {
     return {
+      order: OrderType.byNameDesc,
+      loading: false,
       dataArray: [] as ResourceItem[]
     }
   },
@@ -84,6 +86,7 @@ export default Vue.extend({
     handleRefreshAction () {
     },
     handleSortWayChangeAction (order: OrderType) {
+      this.order = order
       this.dataArray = ResourceHandler.orderShowArray(this.dataArray, order)
     },
     // handle resource list view callback actions
@@ -103,10 +106,8 @@ export default Vue.extend({
       }
     },
     handleLoadmoreAction () {
-    },
-    handleDropAction (paths: string[]) {
-    },
-    handleDeleteItemsAction () {
+    },    
+    handleDeleteItemsAction () { // 删除按钮事件
       let hasRenaming = false
       let hasSelected = false
       this.dataArray.forEach(item => {
@@ -122,6 +123,8 @@ export default Vue.extend({
       }
       this.handleDeletAction()
     },
+    handleDropAction (paths: string[]) {
+    },
     handleItemActions (action: string, index: number, ...args: any[]) {
       switch (action) {
         case 'enterRenaming':
@@ -132,7 +135,7 @@ export default Vue.extend({
           break
         case 'renameRequest':
           this.handleRenameRequestAction(index, args[0])
-          break;
+          break
         case 'leaveNewFolder':
           this.handleLeaveNewFolder(index)
           break
@@ -259,6 +262,12 @@ export default Vue.extend({
         case 'modify':
           this.handleModifyAction()
           break;
+        case 'recovery':
+          this.handleRecoveryAction()
+          break;
+        case 'clearTrash':
+          this.handleClearTrashAction()
+          break;
         default:
           break;
       }
@@ -349,45 +358,25 @@ export default Vue.extend({
       this.$store.dispatch('Resource/updateClipboard', { isClip: isClip, items })
     },
     handleDeletAction () {
+      // 删除选中的正在命名中的items
+      this.dataArray = this.dataArray.filter(item => {
+        return !(item.renaming === true && item.isSelected === true)
+      })
       const items = ResourceHandler.getSelectItems(this.dataArray)
       if (_.isEmpty(items)) return
-      if (items.length === 1 && items[0].renaming === true) {
-        this.dataArray = ResourceHandler.removeSelectedItems(this.dataArray)
-        return
-      }
-      this.showDeleteDialog(items).then(result => {
-        if (result === 1) return // filter cancel action
-        this.handleDeletRequest(items)
-      })
+      this.handleDeletRequest(items)
     },
     handleDeletRequest (items: ResourceItem[]) {
-      ResourceHandler.disableSelectItems(this.dataArray)
-      NasFileAPI.addDeleteTask(items).then(response => {
-        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+      this.loading = true
+      NasFileAPI.deleteFile(items).then(response => {
+        console.log(response)
+        this.loading = false
         if (response.data.code !== 200) return
         this.dataArray = ResourceHandler.removeSelectedItems(this.dataArray)
-        this.$store.dispatch('Resource/increaseTask')
-      }).catch(_ => {
+      }).catch(error => {
+        console.log(error)
         this.$message.error('删除失败')
-        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
-      })
-    },
-    showDeleteDialog (items: ResourceItem[]): Promise<number> {
-      return new Promise((resolve, reject) => {
-        const { dialog } = require('electron').remote
-        const message = items.length > 1 ? `你确定要删除所选的${items.length}个项目吗？` : `你确定要删除”${items[0].name}“吗？`
-        setTimeout(() => {
-          dialog.showMessageBox({
-            type: 'info',
-            message,
-            buttons: ['删除', '取消'],
-            cancelId: 1
-          }).then(result => {
-            resolve(result.response)
-          }).catch(error => {
-            reject(error)
-          })
-        }, 100);
+        this.loading = false
       })
     },
     handleRenameAction () {
@@ -432,6 +421,10 @@ export default Vue.extend({
     handleMoveoutAction () {
     },
     handleModifyAction () {
+    },
+    handleRecoveryAction () {
+    },
+    handleClearTrashAction () {
     }
   }
 })

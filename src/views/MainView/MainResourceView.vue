@@ -81,15 +81,11 @@ export default Vue.extend({
       mainView !== undefined && mainView.resetHeaderView()
     },
     checkQuery () {
-      const path = this.$route.query.path
-      const uuid = this.$route.query.uuid
-      const result = !_.isEmpty(path) && !_.isEmpty(uuid)
-      return result
-    },
-    checkParams () {
-      const showPath = this.$route.params.showPath
-      const result = _.isEmpty(showPath)
-      return !result
+      if (_.isEmpty(this.path) || _.isEmpty(this.uuid)) {
+        this.$message.error('缺少参数')
+        return false
+      }
+      return true
     },
     fetchResourceList () {
       if (this.categoryType === ResourceType.all) {

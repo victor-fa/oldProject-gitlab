@@ -1,7 +1,12 @@
 <template>
-  <div @click="handleItemClick($event)">
+  <div
+    @dragstart="handleDragstartEvent($event)"
+    @drop.stop.prevent="handleDropEvent($event)"
+    @click="handleItemClick($event)"
+  >
     <div
       v-if="isHorizontalArrange"
+      draggable="true"
       class="horizontal-item"
       v-bind:class="{
         horizontalSelectedItem: isSelected,
@@ -10,7 +15,7 @@
     >
       <div class="icon-wrapper">
         <img
-          :src="searchResourceIcon(model)"
+          :src="showIcon"
           @click.stop.exact="singleClick()"
           @click.meta.stop="multipleClick()"
           @click.ctrl.stop="ctrlMultipleClick()"
@@ -22,6 +27,7 @@
       <div class="name-wrapper">
         <a-input
           v-if="isRenaming"
+          ref="inputName"
           v-focus
           type="text"
           v-model="inputName"
@@ -45,6 +51,7 @@
     <div
       v-else
       class="vertical-item"
+      draggable="true"
       v-bind:class="{
         verticalSelectedItem: isSelected,
         oddVerticalItem: isOddStyle,
@@ -62,7 +69,7 @@
         align="middle"
       >
         <a-col :span="13">
-          <img :src="searchResourceIcon(model.type)">
+          <img :src="showIcon">
           {{ showName }}
         </a-col>
         <a-col :span="6">{{ model.showMtime }}</a-col>
@@ -81,6 +88,8 @@ import NasFileAPI from '../../api/NasFileAPI'
 import ResourceHandler from '../../views/MainView/ResourceHandler'
 import { nasServer } from '../../api/NasServer'
 import { NasAccessInfo } from '../../api/ClientModel'
+import processCenter, { EventName } from '../../utils/processCenter'
+import { NativeImage } from 'electron'
 
 export default Vue.extend({
   name: 'resource-item',
@@ -131,16 +140,32 @@ export default Vue.extend({
     isOddStyle: function () {
       const myThis = this as any
       return myThis.index % 2
+    },
+    showIcon: function () {
+      const item = this.model as ResourceItem
+      let icon = ResourceHandler.searchResourceIcon(item.type)
+      if (this.arrangeWay === ArrangeWay.vertical) return icon
+      if (item.path !== undefined && item.path.indexOf('.safe') > -1) return icon
+      if (_.isEmpty(item.thumbs)) return icon
+      const smallPath = item.thumbs[0]
+      if (_.isEmpty(smallPath)) return icon
+      icon = nasServer.defaults.baseURL
+      if (icon === undefined) return icon
+      const apiToken = (this.accessInfo as NasAccessInfo).api_token
+      if (_.isEmpty(apiToken)) return icon
+      icon += '/v1/file/http_download?'
+      icon += `uuid=${item.uuid}&path=${smallPath}&api_token=${apiToken}`
+      return icon
     }
   },
   mounted () {
-    document.addEventListener('keyup', this.handleKeyupAction)
+    document.addEventListener('keydown', this.handleKeydownAction)
   },
   destroyed () {
-    document.removeEventListener('keyup', this.handleKeyupAction)
+    document.removeEventListener('keydown', this.handleKeydownAction)
   },
   methods: {
-    handleKeyupAction (event: KeyboardEvent) {
+    handleKeydownAction (event: KeyboardEvent) {
       const code = event.code
       if (code === 'Enter') {
         if (this.isSelected === false) return
@@ -214,8 +239,12 @@ export default Vue.extend({
       }
     },
     handleBlur (event: MouseEvent) {
-      if (_.isEmpty(this.inputName)) {
-        this.$emit('callbackAction', 'leaveNewFolder', this.index)
+      if (_.isEmpty(this.model.uuid)) {
+        if (_.isEmpty(this.inputName)) {
+          this.$emit('callbackAction', 'leaveNewFolder', this.index)
+        }
+      } else {
+        this.$emit('callbackAction', 'leaveRenaming', this.index)
       }
     },
     handleFocus (event: FocusEvent) {
@@ -258,6 +287,29 @@ export default Vue.extend({
       event.stopPropagation()
       if (this.model.disable) return
       this.$emit('callbackAction', 'contextMenu', this.index, event)
+    },
+    handleDragstartEvent (event: DragEvent) {
+      event.preventDefault()
+      // if (this.model.disable) return
+      // if (event.dataTransfer === null) return
+      // event.dataTransfer.setData('text/plain', this.model.path)
+      // this.$emit('callbackAction', 'singleSelection', this.index)
+      const { BrowserWindow } = require('electron').remote
+      const image = NativeImage.createEmpty()
+      console.log(image)
+      const window = BrowserWindow.getFocusedWindow()
+      window!.webContents.startDrag({
+        file: this.model.path,
+        icon: image
+      })
+      // processCenter.renderSend(EventName.drag, this.model.path)
+    },
+    handleDragoverEvent (event: DragEvent) {
+      // if (event.dataTransfer === null) return
+      // event.dataTransfer.dropEffect = 'copy'
+    },
+    handleDropEvent (event: DragEvent) {
+      console.log(event)
     }
   }
 })
@@ -308,6 +360,8 @@ export default Vue.extend({
   }
 }
 .horizontalSelectedItem {
+  // border-radius: 8px;
+  // background-color: #def1ea;
   .icon-wrapper {
     background-color: #DEF1EA;
   }

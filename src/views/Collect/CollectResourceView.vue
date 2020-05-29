@@ -30,17 +30,11 @@ export default Vue.extend({
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         if (response.data.code !== 200) return
         this.$message.info('取消成功')
-        this.removeItems(items)
+        this.dataArray = ResourceHandler.removeSelectedItems(this.dataArray)
       }).catch(error => {
         console.log(error)
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         this.$message.error('取消失败')
-      })
-    },
-    // 移除取消的item
-    removeItems (items: ResourceItem[]) {
-      this.dataArray = this.dataArray.filter(item => {
-        return !item.isSelected
       })
     }
   }

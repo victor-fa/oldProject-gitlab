@@ -132,7 +132,12 @@ const HomeRouters = [
     path: '/storage-partitions',
     name: 'storage-partitions',
     component: () => import('../../views/Storage/StoragePartitions.vue')
-  }
+  },
+ {
+   path: '/recycle-resource-view',
+   name: 'recycle-resource-view',
+   component: () => import('../../views/Recycle/RecycleResourceView.vue')
+ } 
 ]
 
 interface FuncListItem {

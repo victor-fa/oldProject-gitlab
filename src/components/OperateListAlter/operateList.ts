@@ -302,6 +302,29 @@ if (process.platform === 'win32') {
   ]
 }
 
+const recycleContextMenu: OperateGroup[] = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '还原', command: 'recovery' },
+      { title: '删除', command: 'delete' },
+      { title: '重命名', command: 'rename' },
+      { title: '属性', command: 'info' }
+    ]
+  }
+]
+
+const recycleListContextMenu: OperateGroup[] = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '清空回收站', command: 'clearTrash' },
+      { title: '刷新', command: 'refresh' },
+      { title: '属性', command: 'info' }
+    ]
+  }
+]
+
 export {
   resourceContextMenu,
   recentContextMenu,
@@ -316,6 +339,8 @@ export {
   customContextMenu,
   customListContextMenu,
   listContextMenu,
+  recycleContextMenu,
+  recycleListContextMenu,
   OperateItem,
   OperateGroup
 }
