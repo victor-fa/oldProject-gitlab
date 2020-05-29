@@ -21,9 +21,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
-import { TRANSFORM_INFO } from '../../../common/constants'
 import { downloadCategorys } from '../../../model/categoryList'
-import { mapGetters } from 'vuex'
 import StringUtility from '../../../utils/StringUtility'
 import TransportItem from '../MainPage/TransportItem.vue'
 import { TaskStatus } from '../../../api/Transport/BaseTask'
@@ -58,7 +56,7 @@ export default Vue.extend({
     this.resetSelected()
     this.getListData()
     downloadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
-      this.$store.dispatch('Resource/decreaseTask')
+      // this.$store.dispatch('Resource/decreaseTask')
       setTimeout(() => { this.getListData() }, 1000);
     })
   },

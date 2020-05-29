@@ -1,28 +1,31 @@
 <template>
-  <div class="window-menu" style="-webkit-app-region: drag">
-    <custom-button
-      v-if="closable"
-      :image="menuIcons.close"
-      iconWidth="9px"
-      class="close-item"
-      @click.native="closeAction"
-    />
-    <custom-button
-      v-if="resizable"
-      :image="menuIcons.maximize"
-      :selectedImage="menuIcons.minimun"
-      :isSelected="zoomChange"
-      iconWidth="11px"
-      class="resize-item"
-      @click.native="resizeAction"
-    />
-    <custom-button
-      v-if="minimizable"
-      :image="menuIcons.hide"
-      iconWidth="10px"
-      class="hide-item"
-      @click.native="hideAction"
-    />
+  <div>
+    <div class="window-menu" style="-webkit-app-region: drag">
+      <custom-button
+        v-if="closable"
+        :image="menuIcons.close"
+        iconWidth="9px"
+        class="close-item"
+        @click.native="handleCallbackModal('open')"
+      />
+      <custom-button
+        v-if="resizable"
+        :image="menuIcons.maximize"
+        :selectedImage="menuIcons.minimun"
+        :isSelected="zoomChange"
+        iconWidth="11px"
+        class="resize-item"
+        @click.native="resizeAction"
+      />
+      <custom-button
+        v-if="minimizable"
+        :image="menuIcons.hide"
+        iconWidth="10px"
+        class="hide-item"
+        @click.native="hideAction"
+      />
+    </div>
+    <close-choice-model :visiable="showEncryptModal" v-on:choiceCallback="handleCallbackModal"/>
   </div>
 </template>
 
@@ -30,20 +33,23 @@
 import Vue from 'vue'
 import CustomButton from '../CustomButton/index.vue'
 import { menuIcons } from './MenuIcons'
+import CloseChoiceModel from '../WindowMenu/CloseChoiceModel.vue'
 
 const { BrowserWindow } = require('electron').remote
 
 export default Vue.extend({
   name: 'window_menu',
   components: {
-    CustomButton
+    CustomButton,
+    CloseChoiceModel
   },
   data () {
     return {
       menuIcons,
 			ButtonState: 'sf-icon-window-maximize',
       win: false as any,
-      zoomChange: false
+      zoomChange: false,
+      showEncryptModal: false
     }
   },
   computed: {
@@ -100,6 +106,25 @@ export default Vue.extend({
       if (this.win !== null) {
         this.win.isMaximized() ? this.win.restore() : this.win.maximize()
         this.zoomChange = !this.zoomChange
+      }
+    },
+    handleCallbackModal (callback) {
+      switch (callback) {
+        case 'open':  // 仅windows下有托盘概念
+          process.platform === 'win32' ? this.showEncryptModal = true : this.closeAction()
+          break;
+        case 'close':
+          this.showEncryptModal = false
+          break;
+        case 'tray':
+          this.showEncryptModal = false
+          setTimeout(() => this.win.hide(), 500);
+          break;
+        case 'exit':
+          this.closeAction()
+          break;
+        default:
+          break;
       }
     }
   }

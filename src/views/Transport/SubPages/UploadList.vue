@@ -24,7 +24,6 @@ import MainPage from '../MainPage/index.vue'
 import { uploadCategorys } from '../../../model/categoryList'
 import TransportItem from '../MainPage/TransportItem.vue'
 import { uploadQueue } from '../../../api/Transport/TransportQueue'
-import { EventBus, EventType } from '../../../utils/eventBus'
 import { TaskStatus } from '../../../api/Transport/BaseTask'
 import UploadTask from '../../../api/Transport/UploadTask'
 import StringUtility from '../../../utils/StringUtility'
@@ -46,7 +45,7 @@ export default Vue.extend({
     this.resetSelected()
     this.getListData()
     uploadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
-      this.$store.dispatch('Resource/decreaseTask')
+      // this.$store.dispatch('Resource/decreaseTask')
       setTimeout(() => { this.getListData() }, 1000);
     })
   },

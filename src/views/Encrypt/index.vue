@@ -90,7 +90,7 @@ export default Vue.extend({
   mounted() {
     this.checkEncryptStatus()
     encryptUploadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
-      this.$store.dispatch('Resource/decreaseTask')
+      // this.$store.dispatch('Resource/decreaseTask')
       setTimeout(() => { this.getEncryptList() }, 1000);
     })
     console.log(this.alreadyLogin);

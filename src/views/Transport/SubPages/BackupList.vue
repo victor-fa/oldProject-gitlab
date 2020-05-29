@@ -23,14 +23,12 @@
 import _ from 'lodash' 
 import fs from 'fs'
 import Vue from 'vue'
-import crypto from 'crypto'
 import MainPage from '../MainPage/index.vue'
 import { backupCategorys } from '../../../model/categoryList'
 import TransportItem from '../MainPage/TransportItem.vue'
 import { backupUploadQueue } from '../../../api/Transport/TransportQueue'
 import StringUtility from '../../../utils/StringUtility'
 import BackupUploadTask from '../../../api/Transport/BackupUploadTask'
-import ClientAPI from '../../../api/ClientAPI'
 import { TaskStatus } from '../../../api/Transport/BaseTask'
 
 export default Vue.extend({
@@ -59,7 +57,7 @@ export default Vue.extend({
   created () {
     this.getListData()
     backupUploadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
-      this.$store.dispatch('Resource/decreaseTask')
+      // this.$store.dispatch('Resource/decreaseTask')
       setTimeout(() => { this.getListData() }, 1000);
     })
   },
