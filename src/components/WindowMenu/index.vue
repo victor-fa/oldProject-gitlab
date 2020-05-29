@@ -9,9 +9,9 @@
     />
     <custom-button
       v-if="resizable"
-      ref="resizeItem"
       :image="menuIcons.maximize"
       :selectedImage="menuIcons.minimun"
+      :isSelected="zoomChange"
       iconWidth="11px"
       class="resize-item"
       @click.native="resizeAction"
@@ -40,7 +40,10 @@ export default Vue.extend({
   },
   data () {
     return {
-      menuIcons
+      menuIcons,
+			ButtonState: 'sf-icon-window-maximize',
+      win: false as any,
+      zoomChange: false
     }
   },
   computed: {
@@ -66,7 +69,20 @@ export default Vue.extend({
       return true
     }
   },
+	created() {
+    const _this = this as any
+    this.win = _this.$electron.remote.getCurrentWindow();
+		this.bind();
+  },
   methods: {
+		bind() {
+			this.win.on('maximize', () => {
+				this.ButtonState = 'sf-icon-window-restore';
+			});
+			this.win.on('unmaximize', () => {
+				this.ButtonState = 'sf-icon-window-maximize';
+			});
+		},
     closeAction () {
       const win = BrowserWindow.getFocusedWindow()
       if (win !== null) {
@@ -81,11 +97,9 @@ export default Vue.extend({
       }
     },
     resizeAction () {
-      const resize: any = this.$refs.resizeItem
-      const isSelcted: boolean = resize.isSelected
-      const win = BrowserWindow.getFocusedWindow()
-      if (win !== null) {
-        isSelcted ? win.maximize() : win.unmaximize()
+      if (this.win !== null) {
+        this.win.isMaximized() ? this.win.restore() : this.win.maximize()
+        this.zoomChange = !this.zoomChange
       }
     }
   }

@@ -508,7 +508,7 @@ const moveModalIcons = {
   height: 100vh;
   position: absolute;
   left: 0px;
-  top: 0px;
+  top: 50px;
   background-color: rgba(0,0,0,0);
   .move-modal {
     width: 445px;
