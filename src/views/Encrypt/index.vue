@@ -399,13 +399,6 @@ export default Vue.extend({
         this.$message.error('删除失败')
       })
     },
-    handleRenameAction () {
-      console.log('重命名加密文件');
-      const index = ResourceHandler.getFirstSelectItemIndex(this.dataArray)
-      if (index === undefined) return
-      const item = this.dataArray[index]
-      console.log(JSON.parse(JSON.stringify(item)));
-    },
     handleMoveoutAction () {
       const items = ResourceHandler.getSelectItems(this.dataArray)
       this.showSelectModal = true

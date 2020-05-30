@@ -161,14 +161,15 @@ export default Vue.extend({
       this.dataArray.splice(index, 1, item)
     },
     handleRenameRequestAction (index: number, newName: string) {
-      if (!ResourceHandler.checkFileName(newName)) {
+      if (!ResourceHandler.checkFileName(newName.substring(0, newName.indexOf('.')))) {
         this.$message.error('名称包含非法字符')
         return
       }
       const item = ResourceHandler.disableFirstSelectItem(this.dataArray)
       if (item === undefined) return
       const newPath = StringUtility.renamePath(item.path, newName)
-      NasFileAPI.renameResource(item.path, newPath, item.uuid).then(response => {
+      const route = this.$route.name as string
+      NasFileAPI.renameResource(item.path, newPath, item.uuid, route).then(response => {
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         if (response.data.code !== 200) return
         this.$message.info('重命名成功')
