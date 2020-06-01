@@ -6,7 +6,7 @@ import JSEncrypt from 'jsencrypt'
 import { NasInfo } from './ClientModel'
 import dgram from 'dgram'
 import { nasServer } from './NasServer';
-import TunnelAPI, { TunnelStatus } from './TunnelAPI';
+import TunnelAPI from './TunnelAPI';
 
 const userModulePath = '/v1/user'
 

@@ -54,6 +54,9 @@ import electron from 'electron';
 const ipcRenderer = electron.ipcRenderer;
 const path = require('path');
 
+message.config({
+  maxCount: 2
+});
 Vue.prototype.$message = message
 Vue.prototype.$notification = notification
 Vue.prototype.$info = Modal.info

@@ -175,6 +175,9 @@ export default Vue.extend({
         case 'back':
           this.handleBackAction()
           break;
+        case 'refresh':
+          this.handleListClickAction()
+          break;
         default:
           break;
       }
