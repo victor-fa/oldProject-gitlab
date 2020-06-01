@@ -188,11 +188,11 @@ export default Vue.extend({
           this.updateItemState(index, false, true)
           return
         }
-        this.$message.info('新建成功')
+        // this.$message.info('新建成功')
         this.handleRefreshAction()
       }).catch(error => {
         console.log(error)
-        this.$message.error('创建失败')
+        this.$message.error('新建失败')
         this.updateItemState(index, false, true)
       })
     },

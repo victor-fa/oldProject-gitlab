@@ -153,7 +153,7 @@ export default Vue.extend({
       NasFileAPI.renameResource(item.path, newPath, item.uuid, route).then(response => {
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         if (response.data.code !== 200) return
-        this.$message.info('重命名成功')
+        // this.$message.info('重命名成功')
         item.path = newPath
         item.name = newName
         this.dataArray.splice(index, 1, item)

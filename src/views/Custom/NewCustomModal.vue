@@ -2,8 +2,11 @@
   <a-modal
     v-model="visible"
     class="new-custom-modal"
+    :mask="false"
+    :maskClosable="false"
     :destroyOnClose="true"
     :afterClose="handleCloseAction"
+    :getContainer="handleMountNode"
   >
     <template slot="title">
       <p class="modal-title">新建模块</p>
@@ -182,6 +185,10 @@ export default Vue.extend({
           this.$emit('creatCompleted')
         }
       })
+    },
+    handleMountNode () {
+      console.log(this.$parent)
+      return this.$parent.$el
     }
   }
 })
@@ -271,6 +278,8 @@ export default Vue.extend({
   width: 286px !important;
 }
 .new-custom-modal .ant-modal-content {
+  overflow: hidden;
+  border-radius: 4px;
   height: 266px;
 }
 .new-custom-modal .ant-modal-close-x {

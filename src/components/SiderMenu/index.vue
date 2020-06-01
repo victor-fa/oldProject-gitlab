@@ -27,31 +27,34 @@ import { FuncListItem } from '../../router/modules/HomeList'
 
 export default Vue.extend({
   name: 'sider-menu',
-  model: {
-    prop: 'selectedIndex',
-    event: 'change'
-  },
   props: {
     silderItems: Array,
-    selectedIndex: Number,
     taskCount: {
       default: 0
     }
   },
   data () {
     return {
-      showItems: this.silderItems as FuncListItem[]
+      showItems: this.silderItems as FuncListItem[],
+      selectedIndex: 0,
     }
   },
   methods: {
     onSelectAction (aIndex: number) {
-      if (this.selectedIndex === aIndex) return
+      if (this.selectedIndex === aIndex) {
+        this.$emit('popTop', aIndex)
+        return
+      }
+      this.selectedIndex = aIndex
       this.$emit('change', aIndex)
+      this.updateView(aIndex)
+    },
+    updateView (selectedIndex: number) {
       this.showItems = this.showItems.map((item, index) => {
-        item.meta!.isSelected = index === aIndex
+        item.meta!.isSelected = index === selectedIndex
         return item
       })
-    },
+    }
   }
 })
 </script>

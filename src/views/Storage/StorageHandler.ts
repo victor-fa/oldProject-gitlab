@@ -21,20 +21,14 @@ export default {
         return require('../../assets/builtin_disk.png')
     }
   },
-  matchStorageName (type: StorageType) {
+  matchStorageName (type: StorageType, index: number) {
     switch (type) {
       case StorageType.internal:
-        return '内置硬盘'
       case StorageType.internal_SSD:
-        return '内置硬盘'
       case StorageType.internal_HDD:
-        return '内置硬盘'
+        return '内置硬盘' + index
       case StorageType.external:
-        return '扩展硬盘'
-      case StorageType.external_SSD:
-        return '扩展硬盘'
-      case StorageType.external_HDD:
-        return '扩展硬盘'
+        return '扩展硬盘' + index
       case StorageType.external_USB:
         return 'U盘'
       default:
@@ -62,9 +56,9 @@ export default {
     const internalTypes = [StorageType.internal, StorageType.internal_SSD, StorageType.internal_HDD]
     const user = _.get(store.getters, 'User/user') as User
     const ugreenNo = user.ugreenNo
-    return storages.map(item => {
+    return storages.map((item, index) => {
       item.custom = 'storage'
-      item.showName = this.matchStorageName(item.type)
+      item.showName = this.matchStorageName(item.type, index)
       item.showIcon = this.matchStorageIcon(item.type)
       item.showSize = this.matchStorageSize(item.used, item.size)
       item.showProgress = (item.used / item.size) * 100

@@ -183,13 +183,10 @@ export default Vue.extend({
       event.preventDefault()
       if (this.isRenaming === false) {
         this.$emit('callbackAction', 'enterRenaming', this.index)
-        return
-      }
-      const item = this.model as ResourceItem
-      if (_.isEmpty(item.uuid)) {
-        this.handleNewFolderaAction(item)
+        // return
       } else {
-        this.handleRenameAction(item)
+        const input = (this.$refs.inputName as Vue).$el as HTMLInputElement
+        input.blur()
       }
     },
     handleDeleteAction (event: KeyboardEvent) {
@@ -202,34 +199,6 @@ export default Vue.extend({
         event.preventDefault()
         this.$emit('callbackAction', 'leaveNewFolder', this.index)
       }
-    },
-    handleRenameAction (item: ResourceItem) {
-      // not change
-      if (this.model.name === this.inputName) {
-        this.$emit('callbackAction', 'leaveRenaming', this.index)
-        return
-      }
-      if (_.isEmpty(this.inputName) || this.inputName.indexOf('.') === 0) {
-        const isDirectory = item.type === ResourceType.folder
-        const tip = isDirectory ? '目录名不能为空' : '文件名不能为空'
-        this.$message.error(tip)
-        this.inputName = item.name
-        const element = document.activeElement
-        if (!_.isEmpty(element)) {
-          this.$nextTick(() => {
-            this.selectFileName(element as HTMLInputElement)
-          })
-        }
-        return
-      }
-      this.$emit('callbackAction', 'renameRequest', this.index, this.inputName)
-    },
-    handleNewFolderaAction (item: ResourceItem) {
-      if (_.isEmpty(this.inputName)) {
-        this.$emit('callbackAction', 'leaveNewFolder', this.index)
-        return
-      }
-      this.$emit('callbackAction', 'newFolderRequest', this.index, this.inputName)
     },
     searchResourceIcon (item: ResourceItem) {
       let icon = ResourceHandler.searchResourceIcon(item.type)
@@ -253,11 +222,30 @@ export default Vue.extend({
       }
     },
     handleBlur (event: MouseEvent) {
-      if (_.isEmpty(this.model.uuid)) {
-        this.$emit('callbackAction', 'leaveNewFolder', this.index)
+      const item = this.model as ResourceItem
+      if (_.isEmpty(item.uuid)) {
+        this.handleNewFolderaAction(item)
       } else {
+        this.handleRenameAction(item)
+      }
+    },
+    handleNewFolderaAction (item: ResourceItem) {
+      if (_.isEmpty(this.inputName)) {
+        this.$emit('callbackAction', 'newFolderRequest', this.index, item.name)
+        return
+      }
+      this.$emit('callbackAction', 'newFolderRequest', this.index, this.inputName)
+    },
+    handleRenameAction (item: ResourceItem) {
+      // not change
+      if (item.name === this.inputName) {
         this.$emit('callbackAction', 'leaveRenaming', this.index)
-        this.inputName = this.model.name
+        return
+      }
+      if (_.isEmpty(this.inputName) || this.inputName.indexOf('.') === 0) {
+        this.$emit('callbackAction', 'leaveRenaming', this.index)
+      } else {
+        this.$emit('callbackAction', 'renameRequest', this.index, this.inputName)
       }
     },
     handleFocus (event: FocusEvent) {

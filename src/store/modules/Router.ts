@@ -24,8 +24,8 @@ export {
   CacheRoute
 }
 
-interface PathsState {
-  showPaths: CacheRoute[],
+interface RouterState {
+  showRoutes: CacheRoute[],
   pathMap: {
     recent: CacheRoute[],
     storage: CacheRoute[],
@@ -39,7 +39,7 @@ interface PathsState {
 export default {
   namespaced: true,
   state: {
-    showPaths: [],
+    showRoutes: [],
     pathMap: {
       recent: [],
       storage: [],
@@ -50,34 +50,34 @@ export default {
     }
   },
   getters: {
-    showPaths: (state: PathsState) => {
-      return state.showPaths
+    showRoutes: (state: RouterState) => {
+      return state.showRoutes
     }
   },
   mutations: {
-    INIT_PATHS (state: PathsState, pathsMap: Dictionary<CacheRoute[]>) {
+    INIT_PATHS (state: RouterState, pathsMap: Dictionary<CacheRoute[]>) {
       state.pathMap = pathsMap as any
-      state.showPaths = pathsMap[RouteCalss.recent]
+      state.showRoutes = pathsMap[RouteCalss.recent]
     },
-    SWITCH_SHOW_PATHS (state: PathsState, type: RouteCalss) {
+    SWITCH_SHOW_PATHS (state: RouterState, type: RouteCalss) {
       const paths = state.pathMap[type] as CacheRoute[]
-      state.showPaths = paths
+      state.showRoutes = paths
     },
-    UPDATE_SHOW_PATHS (state: PathsState, paths: CacheRoute[]) {
+    UPDATE_SHOW_PATHS (state: RouterState, paths: CacheRoute[]) {
       const type = getCacheType(state)
       if (type === undefined) return
       state.pathMap[type] = paths
-      state.showPaths = paths
+      state.showRoutes = paths
     },
-    PUSH (state: PathsState, item: CacheRoute) {
+    PUSH (state: RouterState, item: CacheRoute) {
       const type = getCacheType(state)
       if (type === undefined) return
       const paths = _.clone(state.pathMap[type] as CacheRoute[])
       paths.push(item)
       state.pathMap[type] = paths
-      state.showPaths = paths
+      state.showRoutes = paths
     },
-    POP (state: PathsState, index?: number) {
+    POP (state: RouterState, index?: number) {
       const type = getCacheType(state)
       if (type === undefined) return
       let paths = _.clone(state.pathMap[type] as CacheRoute[])
@@ -87,40 +87,52 @@ export default {
         paths = paths.slice(0, index + 1)
       }
       state.pathMap[type] = paths
-      state.showPaths = paths
+      state.showRoutes = paths
     },
-    REPLACE_PATHS (state: PathsState, length: number) {
+    POP_TOP (state: RouterState) {
+      const type = getCacheType(state)
+      if (type === undefined) return
+      const routes = state.showRoutes.filter((item, index) => {
+        return index === 0
+      })
+      state.pathMap[type] = routes
+      state.showRoutes = routes
+    },
+    REPLACE_PATHS (state: RouterState, length: number) {
       const start = 1
-      const paths = _.cloneDeep(state.showPaths)
+      const paths = _.cloneDeep(state.showRoutes)
       paths.splice(start + 1, length)
       paths[start].name = '...'
-      state.showPaths = paths
+      state.showRoutes = paths
     }
   },
   actions: {
-    initPaths (context: ActionContext<PathsState, PathsState>, pathsMap: Dictionary<CacheRoute[]>) {
+    initPaths (context: ActionContext<RouterState, RouterState>, pathsMap: Dictionary<CacheRoute[]>) {
       context.commit('INIT_PATHS', pathsMap)
     },
-    switchShowPaths (context: ActionContext<PathsState, PathsState>, type: RouteCalss) {
+    switchshowRoutes (context: ActionContext<RouterState, RouterState>, type: RouteCalss) {
       context.commit('SWITCH_SHOW_PATHS', type)
     },
-    updateShowPaths (context: ActionContext<PathsState, PathsState>, paths: CacheRoute[]) {
+    updateshowRoutes (context: ActionContext<RouterState, RouterState>, paths: CacheRoute[]) {
       context.commit('UPDATE_SHOW_PATHS', paths)
     },
-    push (context: ActionContext<PathsState, PathsState>, item: CacheRoute) {
+    push (context: ActionContext<RouterState, RouterState>, item: CacheRoute) {
       context.commit('PUSH', item)
     },
-    pop (context: ActionContext<PathsState, PathsState>, index?: number) {
+    pop (context: ActionContext<RouterState, RouterState>, index?: number) {
       context.commit('POP', index)
     },
-    replacePaths (context: ActionContext<PathsState, PathsState>, length: number) {
+    popTop (context: ActionContext<RouterState, RouterState>) {
+      context.commit('POP_TOP')
+    },
+    replacePaths (context: ActionContext<RouterState, RouterState>, length: number) {
       context.commit('REPLACE_PATHS', length)
     }
   }
 }
 
-const getCacheType = (state: PathsState) => {
-  const firstPath = _.head(state.showPaths)
+const getCacheType = (state: RouterState) => {
+  const firstPath = _.head(state.showRoutes)
   if (firstPath === undefined) return undefined
   return firstPath.type
 }

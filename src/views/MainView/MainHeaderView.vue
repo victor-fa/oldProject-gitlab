@@ -13,7 +13,7 @@
         />
         <a-breadcrumb separator=">" class="modal-breadcrumb" ref="breadcrumb">
           <a-breadcrumb-item
-            v-for=" (item, index) in showPaths"
+            v-for=" (item, index) in showRoutes"
             :key="index"
             :class="{ 'modal-breadcrumb-item': showHover(index) }"
             @click.native.stop="handleBreadcrumbClick(index)"
@@ -88,7 +88,7 @@ import SortPopoverList from '../../components/SortPopoverList/index.vue'
 import { SortWay, SortKind, SortType, sortList, uploadSortList, SortList } from '../../model/sortList'
 import { ArrangeWay, OrderType, ResourceType } from '../../api/NasFileModel'
 import { commonFuncList, ResourceFuncItem } from './ResourceFuncList'
-import { CacheRoute } from '../../store/modules/Paths'
+import { CacheRoute } from '../../store/modules/Router'
 import RouterUtility from '../../utils/RouterUtility'
 
 export default Vue.extend({
@@ -128,17 +128,17 @@ export default Vue.extend({
     }
   },
   computed: {
-    ...mapGetters('Paths', ['showPaths']),
+    ...mapGetters('Router', ['showRoutes']),
     key: function () {
       return this.$route.path
     },
     disableBack: function () {
-      const disable = (this.showPaths.length < 2) as boolean
+      const disable = (this.showRoutes.length < 2) as boolean
       return disable
     }
   },
   watch: {
-    showPaths: function (newValue: CacheRoute[]) {
+    showRoutes: function (newValue: CacheRoute[]) {
       this.$nextTick(() => {
         this.calculatePathsTruncate()
       })
@@ -152,8 +152,8 @@ export default Vue.extend({
     },
     // private methods
     showHover (index: number) {
-      if (index === this.showPaths.length - 1) return false
-      const path = this.showPaths[index]
+      if (index === this.showRoutes.length - 1) return false
+      const path = this.showRoutes[index]
       return path.name !== '...'
     },
     // 计算路径的截断，中间缩率实现
@@ -170,7 +170,7 @@ export default Vue.extend({
           const element = childrens[index].$el as HTMLElement
           fixedWidth += element.offsetWidth
           if (fixedWidth >= width) {
-            this.$store.dispatch('Paths/replacePaths', index)
+            this.$store.dispatch('Router/replacePaths', index)
             break
           }
         }
@@ -220,9 +220,9 @@ export default Vue.extend({
       this.$emit('CallbackAction', 'back')
     },
     handleBreadcrumbClick (index: number) {
-      const showPaths = this.showPaths as CacheRoute[]
-      if (index === showPaths.length - 1) return
-      const item = this.showPaths[index] as CacheRoute
+      const showRoutes = this.showRoutes as CacheRoute[]
+      if (index === showRoutes.length - 1) return
+      const item = this.showRoutes[index] as CacheRoute
       if (item.name === '...') return
       RouterUtility.pop(index)
     },

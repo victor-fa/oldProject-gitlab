@@ -14,6 +14,7 @@
     </slot>
     <a-spin :spinning="loading">
       <resource-list
+        ref="resourceList"
         :customGrid="listGrid"
         :dataSource="showArray"
         :busy="busy"
@@ -167,7 +168,6 @@ export default Vue.extend({
     },
     // handle header view callback actions
     handleHeaderViewAction (action: string, ...args: any[]) {
-      this.$emit('headerCallbackActions', action, ...args)
       switch (action) {
         case 'arrangeChange':
           this.handleArrangeChange(args[0])
@@ -176,11 +176,15 @@ export default Vue.extend({
           this.handleBackAction()
           break;
         case 'refresh':
-          this.handleListClickAction()
+          this.handleRefreshAction()
           break;
+        case 'click':
+          this.handleListClickAction()
+          break
         default:
           break;
       }
+      this.$emit('headerCallbackActions', action, ...args)
     },
     handleArrangeChange (arrangeWay: ArrangeWay) {
       this.arrangeWay = arrangeWay
@@ -188,6 +192,10 @@ export default Vue.extend({
     },
     handleBackAction () {
       RouterUtility.pop()
+    },
+    handleRefreshAction() {
+      // const list = this.$refs.resourceList as Vue
+      // console.log(list)
     },
     // handle resource list view callback actions
     handleResourceListAction (action: string, ...args: any[]) {

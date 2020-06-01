@@ -3,10 +3,11 @@
       <a-layout-sider class="base-sider">
         <i-logo/>
         <sider-menu
+          ref="siderMenu"
           :taskCount="taskCount"
           :silderItems="silderItems"
-          v-model="selectedIndex"
           v-on:change="handleSilderChange"
+          v-on:popTop="handlePopTopAction"
         />
       </a-layout-sider>
       <a-layout>
@@ -29,7 +30,7 @@ import SiderMenu from '../components/SiderMenu/index.vue'
 import BasicHeader from '../components/BasicHeader/index.vue'
 import processCenter, { EventName } from '../utils/processCenter'
 import { HomeRouters, FuncListItem } from '../router/modules/HomeList'
-import { CacheRoute, RouteCalss } from '../store/modules/Paths'
+import { CacheRoute, RouteCalss } from '../store/modules/Router'
 import RouterUtility from '../utils/RouterUtility'
 import { EventBus } from '../utils/eventBus'
 import { ResourceItem } from '../api/NasFileModel'
@@ -42,11 +43,6 @@ export default Vue.extend({
     ILogo,
     SiderMenu,
     BasicHeader
-  },
-  data () {
-    return {
-      selectedIndex: 0
-    }
   },
   computed: {
     ...mapGetters('User', ['user']),
@@ -77,18 +73,26 @@ export default Vue.extend({
         }
         pathsMap[item.name] = [route] 
       })
-      this.$store.dispatch('Paths/initPaths', pathsMap)
+      this.$store.dispatch('Router/initPaths', pathsMap)
     },
     handleSilderChange (index: number) {
      const item = this.silderItems[index]
      RouterUtility.switchRoute(item.name as RouteCalss)
     },
+    handlePopTopAction (index: number) {
+      RouterUtility.popTop()
+    },
     jumpSpecifiedPath (item: ResourceItem) {
+      // update view
+      const siderMenu = this.$refs.siderMenu as any
+      siderMenu.updateView(1)
+      // update route
       const path = StringUtility.pathDirectory(item.path)
       const uuid = item.uuid
       const routes = this.calculateMiddlePath(path, uuid)
-      // console.log(routes)
-      // RouterUtility.updateRoutes(routes)
+      const lastRoute = _.last(routes) as CacheRoute
+      lastRoute.params = { selectedPath: item.path }
+      RouterUtility.updateRoutes(routes)
     },
     // 计算中间路径缓存
     calculateMiddlePath (path: string, uuid: string) {
@@ -104,6 +108,7 @@ export default Vue.extend({
       components.forEach((item, index) => {
         const name = item.length === 0 ? diskName : item
         const path = prefix + this.spliceMiddleComponent(components, index)
+        const selectedPath = path
         cacheRoutes.push({
           name,
           path: 'main-resource-view',
