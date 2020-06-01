@@ -127,7 +127,7 @@ export default Vue.extend({
     },
     parseResponse (data: BasicResponse) {
       let list = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(list) || list.length < 20) this.busy = true
+      if (_.isEmpty(list) || list.length < 39) this.busy = true
       list = ResourceHandler.formatResourceList(list, this.selectedPath)
       this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
     },
@@ -138,7 +138,7 @@ export default Vue.extend({
       this.$store.dispatch('Resource/increaseTask')
     },
     // 覆盖混入中的方法
-    handleloadMoreData () {
+    handleLoadmoreAction () {
       if (this.busy) return
       this.page++
       this.fetchResourceList()

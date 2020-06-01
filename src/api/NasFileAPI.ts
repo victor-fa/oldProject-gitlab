@@ -97,7 +97,7 @@ export default {
       }
     })
   },
-  fetchTlist (page: number, last: number, type: ResourceType, order: OrderType = OrderType.ByModifyAsc,  size: number = 40): Promise<AxiosResponse<BasicResponse>> {
+  fetchTlist (page: number, last: number, type: ResourceType, order: OrderType = OrderType.ByModifyAsc, size: number = 40): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.get(fileModule + '/tlist', {
       params: { type, page, size, pos: last, order }
     })
