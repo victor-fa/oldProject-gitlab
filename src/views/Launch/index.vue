@@ -1,6 +1,10 @@
 // 引入启动页是为了解决在主线程中无法访问localStorage，从而导致无法控制加载的根窗口问题
 <template>
-  <div class="launch">launch</div>
+  <div class="launch">
+    <img src="../../assets/launch_icon.png">
+    <span class="title">绿联云</span>
+    <span class="desc">你的故事，我时刻守护着</span>
+  </div>
 </template>
 
 <script lang="ts">
@@ -111,5 +115,24 @@ export default Vue.extend({
 .launch {
   height: 100%;
   background-color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  img {
+    width: 330px;
+    margin-top: 110px;
+  }
+  .title {
+    color: #353535;
+    font-size: 23px;
+    font-weight: bold;
+    margin-top: 144px;
+  }
+  .desc {
+    color: #9c9fa9;
+    font-size: 19px;
+    font-weight: bold;
+    margin-top: 20px;
+  }
 }
 </style>

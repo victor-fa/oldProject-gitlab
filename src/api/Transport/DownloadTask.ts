@@ -7,12 +7,6 @@ import { DownloadParams } from '../NasFileModel'
 import BaseTask, { TaskStatus, TaskError, TaskErrorCode, FileInfo } from './BaseTask'
 import StringUtility from '@/utils/StringUtility'
 
-/** 目前只支持下载文件，不支持文件夹下载
- * progress (index) 上传进度回调
- * fileFinished (index, fileInfo) 单个文件下载完成
- * taskFinished (index) 下载任务完成
- * error (index, error) 任务出错回调
- */
 export default class DownloadTask extends BaseTask {
   readonly maxDownloadSize = 1 * 1024 * 1024 // 单次最大下载字节数
   source?: CancelTokenSource // 下载取消请求标识

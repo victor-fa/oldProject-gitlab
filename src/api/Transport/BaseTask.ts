@@ -2,6 +2,12 @@
 import { EventEmitter } from 'events'
 import StringUtility from '@/utils/StringUtility'
 
+/** 目前只支持下载文件，不支持文件夹下载
+ * progress (index) 上传进度回调
+ * fileFinished (index, fileInfo) 单个文件下载完成
+ * taskFinished (index) 下载任务完成
+ * error (index, error) 任务出错回调
+ */
 export default class BaseTask extends EventEmitter {
   readonly srcPath: string
   readonly destPath: string

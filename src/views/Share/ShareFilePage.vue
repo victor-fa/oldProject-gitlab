@@ -2,7 +2,7 @@
   <main-view
     :loading="loading"
     :dataSource="dataArray"
-    :contextItemMenu="shareContextMenu"
+    :contextItemMenu="itemMenu"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
     v-on:itemCallbackActions="handleItemActions"
@@ -13,6 +13,7 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
 import { ResourceItem, ShareItem } from '../../api/NasFileModel'
@@ -20,6 +21,7 @@ import NasFileAPI from '../../api/NasFileAPI'
 import ResourceHandler from '../MainView/ResourceHandler'
 import { shareContextMenu } from '../../components/OperateListAlter/operateList'
 import RouterUtility from '../../utils/RouterUtility'
+import { User } from '../../api/UserModel'
 
 export default Vue.extend({
   name: 'share-file-page',
@@ -31,13 +33,31 @@ export default Vue.extend({
     let items: Array<ResourceItem> = []
     return {
       loading: false,
-      dataArray: items,
-      shareContextMenu // item的右键菜单列表数据
+      dataArray: items
     }
   },
   computed: {
+    ...mapGetters('User', ['user']),
     ugreenNo: function () {
-      return this.$route.query.ugreenNo as string
+      const ugreenNo = this.$route.query.ugreenNo as string
+      return ugreenNo
+    },
+    isSelf: function () {
+      const isSelf = (this.ugreenNo === (this.user as User).ugreenNo.toString()) as boolean
+      return isSelf
+    },
+    itemMenu: function () {
+      const isSelf = this.ugreenNo === (this.user as User).ugreenNo.toString()
+      let itemMenu = _.cloneDeep(shareContextMenu)
+      itemMenu = itemMenu.map(group => {
+        const items = group.items.map(item => {
+          if (item.command === 'unshare') item.disable = !this.isSelf
+          return item
+        })
+        group.items = items
+        return group
+      })
+      return itemMenu
     }
   },
   mounted () {
@@ -78,7 +98,8 @@ export default Vue.extend({
     handleOpenFolderAction (item: ResourceItem) {
       const path = item.path
       const uuid = item.uuid
-      RouterUtility.push(item.name, 'share-resource-view', { path, uuid })
+      const isSelf = this.isSelf ? 'true' : 'false'
+      RouterUtility.push(item.name, 'share-resource-view', { path, uuid }, { isSelf })
     },
     handleUnshareAction () {
       const items = ResourceHandler.disableSelectItems(this.dataArray)

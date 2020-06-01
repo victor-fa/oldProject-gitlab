@@ -1,7 +1,8 @@
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
 import MainResourceView from '../MainView/MainResourceView.vue'
-import { shareResourceContextMenu } from '../../components/OperateListAlter/operateList'
+import { shareContextMenu, shareResourceContextMenu } from '../../components/OperateListAlter/operateList'
 import { ResourceItem } from '../../api/NasFileModel'
 import RouterUtility from '../../utils/RouterUtility'
 import ResourceHandler from '../MainView/ResourceHandler'
@@ -17,12 +18,19 @@ export default Vue.extend({
       listMenu: []
     }
   },
+  computed: {
+    isSelf: function () {
+      const isSelf = this.$route.params.isSelf as string
+      return isSelf
+    }
+  },
   methods: {
     // 重写父类中的方法
     handleOpenFolderAction (item: ResourceItem) {
       const path = item.path
       const uuid = item.uuid
-      RouterUtility.push(item.name, 'share-resource-view', { path, uuid })
+      const isSelf = this.isSelf
+      RouterUtility.push(item.name, 'share-resource-view', { path, uuid }, { isSelf })
     },
     handleUnshareAction () {
       const items = ResourceHandler.disableSelectItems(this.dataArray)
@@ -38,6 +46,19 @@ export default Vue.extend({
     }
   }
 })
+const generateItemMenu = (isSelf: string) => {
+  const flag = isSelf === 'true' ? true : false
+  let itemMenu = _.cloneDeep(shareContextMenu)
+  itemMenu = itemMenu.map(group => {
+    const items = group.items.map(item => {
+      if (item.command === 'unshare') item.disable = !flag
+      return item
+    })
+    group.items = items
+    return group
+  })
+  return itemMenu
+}
 </script>
 
 <style lang="less" scoped>

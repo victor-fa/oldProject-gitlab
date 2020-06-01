@@ -46,7 +46,6 @@ import { User, BasicResponse, DeviceRole, DeviceInfo } from '../../api/UserModel
 import router from '../../router'
 import axios, { AxiosResponse } from 'axios'
 import StringUtility from '../../utils/StringUtility'
-import { ConnectionErrorType } from '../Connecting/index.vue'
 
 export default Vue.extend({
   name: 'scan-nas',
@@ -61,12 +60,15 @@ export default Vue.extend({
       nasList: [] as NasInfo[],
       selectNas: {} as NasInfo,
       connectLoading: false,
-      type: this.$route.query.type,
       listHeight: 0
     }
   },
   computed: {
     ...mapGetters('User', ['user', 'nasDevices']),
+    type: function () {
+      const type = this.$route.query.type as string
+      return type
+    },
     backBtnTitle: function () {
       if (this.type === 'offlineLogin') {
         return 'Cloud账号登录'
@@ -103,8 +105,9 @@ export default Vue.extend({
         this.$router.push({
           name: 'connection-failed',
           params: {
-            errorType: ConnectionErrorType.notFound,
-            type: this.type as string
+            error: '扫描出错',
+            type: 'scanFailed',
+            scanType: this.type
           }
         })
       })

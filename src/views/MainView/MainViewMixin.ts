@@ -95,9 +95,6 @@ export default Vue.extend({
         case 'loadmore':
           this.handleLoadmoreAction()
           break;
-        case 'deleteItems':
-          this.handleDeleteItemsAction()
-          break;
         case 'drop':
           this.handleDropAction(args[0])
           break
@@ -106,22 +103,6 @@ export default Vue.extend({
       }
     },
     handleLoadmoreAction () {
-    },    
-    handleDeleteItemsAction () { // 删除按钮事件
-      let hasRenaming = false
-      let hasSelected = false
-      this.dataArray.forEach(item => {
-        if (!hasRenaming && item.renaming === true) hasRenaming = true
-        if (!hasSelected && item.isSelected === true) hasSelected = true
-      })
-      if (!hasSelected) return
-      if (hasRenaming) {
-        this.dataArray = this.dataArray.filter(item => {
-          return item.renaming !== true
-        })
-        return
-      }
-      this.handleDeletAction()
     },
     handleDropAction (paths: string[]) {
     },
@@ -142,8 +123,8 @@ export default Vue.extend({
         case 'newFolderRequest':
           this.handleNewFolderRequestAction(index, args[0])
           break;
-        case 'deleteRequest':
-          this.handleDeleteItemsAction()
+        case 'delete':
+          this.handleDeletAction()
           break
         default:
           break;

@@ -27,7 +27,6 @@ export default Vue.extend({
   computed: {
     ...mapGetters('User', ['user']),
     ...mapGetters('NasServer', ['nasInfo', 'accessInfo']),
-    ...mapGetters('Login', ['connectionErrorCount']),
     sn: function () {
       let sn: string = this.$route.params.sn
       if (_.isEmpty(sn)) sn = (this.nasInfo as NasInfo).sn
@@ -48,7 +47,7 @@ export default Vue.extend({
     if (this.checkParams()) {
       this.searchNasInLAN()
     } else {
-      this.pushFailedPage(ConnectionErrorType.missParams)
+      this.pushFailedPage()
     }
   },
   destroyed () {
@@ -78,23 +77,9 @@ export default Vue.extend({
       }, error => {
         this.loading = false
         ClientAPI.closeBoardcast()
-        this.pushFailedPage(ConnectionErrorType.notFound)
+        this.pushFailedPage()
         console.log(error)
       })
-      
-      // ClientAPI.scanNas(data => {
-      //   if (data.sn === this.sn && data.mac === this.mac) {
-      //     this.loading = false
-      //     window.clearTimeout(timerId as any)
-      //     ClientAPI.closeBoardcast()
-      //     this.onlineConnectNas(data)
-      //   }
-      // }, error => {
-      //   this.loading = false
-      //   ClientAPI.closeBoardcast()
-      //   this.pushFailedPage(ConnectionErrorType.scanFailed)
-      //   console.log(error)
-      // })
     },
     onlineConnectNas (nasInfo: NasInfo) {
       ClientAPI.setBaseUrl(`http://${nasInfo.ip}:${nasInfo.port}`)
@@ -102,10 +87,7 @@ export default Vue.extend({
         console.log(response)
         this.loading = false
         if (response.data.code !== 200) {
-          const count = this.connectionErrorCount + 1
-          this.$store.dispatch('Login/updateErrorCount', count)
-          const type = count > 2 ? ConnectionErrorType.timesError : ConnectionErrorType.apiError
-          this.pushFailedPage(type)
+          this.pushFailedPage()
           return
         }
         const accessInfo = response.data.data as NasAccessInfo
@@ -117,31 +99,20 @@ export default Vue.extend({
       }).catch(error => {
         console.log(error)
         this.loading = false
-        const count = this.connectionErrorCount + 1
-        this.$store.dispatch('Login/updateErrorCount', count)
-        const type = count > 2 ? ConnectionErrorType.timesError : ConnectionErrorType.networkError
-        this.pushFailedPage(type)
+        this.pushFailedPage()
       })
     },
-    pushFailedPage (type: ConnectionErrorType) {
+    pushFailedPage () {
       this.$router.push({
         name: 'connection-failed',
-        params: { errorType: type }
+        params: {
+          error: '连接失败',
+          type: 'connectionFaild'
+        }
       })
     }
   }
 })
-enum ConnectionErrorType {
-  missParams = '0',
-  scanFailed = '1',
-  notFound = '2',
-  apiError = '3',
-  networkError = '4',
-  timesError = '5' // 出现多次网络连接错误
-}
-export {
-  ConnectionErrorType
-}
 </script>
 
 <style lang="less" scoped>

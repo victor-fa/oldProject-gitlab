@@ -1,7 +1,6 @@
 <template>
   <div
     @dragstart="handleDragstartEvent($event)"
-    @drop.stop.prevent="handleDropEvent($event)"
     @click="handleItemClick($event)"
   >
     <div
@@ -16,6 +15,7 @@
       <div class="icon-wrapper">
         <img
           :src="showIcon"
+          @error="handleErrorAction()"
           @click.stop.exact="singleClick()"
           @click.meta.stop="multipleClick()"
           @click.ctrl.stop="ctrlMultipleClick()"
@@ -88,8 +88,9 @@ import NasFileAPI from '../../api/NasFileAPI'
 import ResourceHandler from '../../views/MainView/ResourceHandler'
 import { nasServer } from '../../api/NasServer'
 import { NasAccessInfo } from '../../api/ClientModel'
+import path from 'path'
+import fs from 'fs'
 import processCenter, { EventName } from '../../utils/processCenter'
-import { NativeImage } from 'electron'
 
 export default Vue.extend({
   name: 'resource-item',
@@ -121,7 +122,8 @@ export default Vue.extend({
   },
   data () {
     return {
-      inputName: (this.model as ResourceItem).name
+      inputName: this.model.name,
+      showIcon: null as any
     }
   },
   watch: {
@@ -130,6 +132,7 @@ export default Vue.extend({
     },
     model: function (newValue: ResourceItem) {
       this.inputName = newValue.name
+      this.showIcon = this.calculateShowIcon()
     }
   },
   computed: {
@@ -140,8 +143,17 @@ export default Vue.extend({
     isOddStyle: function () {
       const myThis = this as any
       return myThis.index % 2
-    },
-    showIcon: function () {
+    }
+  },
+  mounted () {
+    this.showIcon = this.calculateShowIcon()
+    document.addEventListener('keydown', this.handleKeydownAction)
+  },
+  destroyed () {
+    document.removeEventListener('keydown', this.handleKeydownAction)
+  },
+  methods: {
+    calculateShowIcon () {
       const item = this.model as ResourceItem
       let icon = ResourceHandler.searchResourceIcon(item.type)
       if (this.arrangeWay === ArrangeWay.vertical) return icon
@@ -156,37 +168,39 @@ export default Vue.extend({
       icon += '/v1/file/http_download?'
       icon += `uuid=${item.uuid}&path=${smallPath}&api_token=${apiToken}`
       return icon
-    }
-  },
-  mounted () {
-    document.addEventListener('keydown', this.handleKeydownAction)
-  },
-  destroyed () {
-    document.removeEventListener('keydown', this.handleKeydownAction)
-  },
-  methods: {
+    },
     handleKeydownAction (event: KeyboardEvent) {
+      if (this.isSelected === false) return
       const code = event.code
       if (code === 'Enter') {
-        if (this.isSelected === false) return
-        event.stopPropagation()
-        if (this.isRenaming === false) {
-          this.$emit('callbackAction', 'enterRenaming', this.index)
-          return
-        }
-        const item = this.model as ResourceItem
-        if (_.isEmpty(item.uuid)) {
-          this.handleNewFolderaAction(item)
-        } else {
-          this.handleRenameAction(item)
-        }
-      } else if (code === 'Delete') {
-        if (this.isSelected === false) return
-        event.stopPropagation()
-        const item = this.model as ResourceItem
-        if (!_.isEmpty(item.uuid)) {
-          this.$emit('callbackAction', 'deleteRequest', this.index)
-        }
+        this.handleEnterAction(event)
+      } else if (code === 'Backspace') {
+        this.handleDeleteAction(event)
+      }
+    },
+    handleEnterAction (event: KeyboardEvent) {
+      event.stopPropagation()
+      event.preventDefault()
+      if (this.isRenaming === false) {
+        this.$emit('callbackAction', 'enterRenaming', this.index)
+        return
+      }
+      const item = this.model as ResourceItem
+      if (_.isEmpty(item.uuid)) {
+        this.handleNewFolderaAction(item)
+      } else {
+        this.handleRenameAction(item)
+      }
+    },
+    handleDeleteAction (event: KeyboardEvent) {
+      event.stopPropagation()
+      if (this.isRenaming === true) return
+      event.preventDefault()
+      if (!_.isEmpty(this.model.uuid)) {
+        this.$emit('callbackAction', 'delete', this.index)
+      } else {
+        event.preventDefault()
+        this.$emit('callbackAction', 'leaveNewFolder', this.index)
       }
     },
     handleRenameAction (item: ResourceItem) {
@@ -240,11 +254,10 @@ export default Vue.extend({
     },
     handleBlur (event: MouseEvent) {
       if (_.isEmpty(this.model.uuid)) {
-        if (_.isEmpty(this.inputName)) {
-          this.$emit('callbackAction', 'leaveNewFolder', this.index)
-        }
+        this.$emit('callbackAction', 'leaveNewFolder', this.index)
       } else {
         this.$emit('callbackAction', 'leaveRenaming', this.index)
+        this.inputName = this.model.name
       }
     },
     handleFocus (event: FocusEvent) {
@@ -261,6 +274,9 @@ export default Vue.extend({
         element.selectionStart = 0
         element.selectionEnd = offset
       }
+    },
+    handleErrorAction () {
+      this.showIcon = require('../../assets/img_placeholder.png')
     },
     singleClick () {
       if (this.model.disable) return
@@ -290,26 +306,11 @@ export default Vue.extend({
     },
     handleDragstartEvent (event: DragEvent) {
       event.preventDefault()
-      // if (this.model.disable) return
-      // if (event.dataTransfer === null) return
-      // event.dataTransfer.setData('text/plain', this.model.path)
-      // this.$emit('callbackAction', 'singleSelection', this.index)
-      const { BrowserWindow } = require('electron').remote
-      const image = NativeImage.createEmpty()
-      console.log(image)
-      const window = BrowserWindow.getFocusedWindow()
-      window!.webContents.startDrag({
-        file: this.model.path,
-        icon: image
-      })
-      // processCenter.renderSend(EventName.drag, this.model.path)
-    },
-    handleDragoverEvent (event: DragEvent) {
-      // if (event.dataTransfer === null) return
-      // event.dataTransfer.dropEffect = 'copy'
-    },
-    handleDropEvent (event: DragEvent) {
-      console.log(event)
+      event.stopPropagation()
+      if (event.dataTransfer === null) return
+      event.dataTransfer.dropEffect = 'copy'
+      const url = 'https://image.baidu.com/search/down?tn=download&word=download&ie=utf8&fr=detail&url=https%3A%2F%2Ftimgsa.baidu.com%2Ftimg%3Fimage%26quality%3D80%26size%3Db9999_10000%26sec%3D1590816668066%26di%3Dc7b005c0666f9668a1c5ab445889e1d6%26imgtype%3D0%26src%3Dhttp%253A%252F%252Fa3.att.hudong.com%252F14%252F75%252F01300000164186121366756803686.jpg&thumburl=https%3A%2F%2Fss3.bdstatic.com%2F70cFv8Sh_Q1YnxGkpoWK1HF6hhy%2Fit%2Fu%3D2534506313%2C1688529724%26fm%3D26%26gp%3D0.jpg'
+      processCenter.renderSend(EventName.drag, url)
     }
   }
 })

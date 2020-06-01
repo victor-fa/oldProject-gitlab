@@ -117,10 +117,7 @@ export default Vue.extend({
     },
     handleKeydownAction (event: KeyboardEvent) {
       const code = event.code
-      if (code === 'Backspace') { // delete
-        event.stopPropagation()
-        this.$emit('callbackAction', 'deleteItems')
-      } else if (code === 'KeyA') { // cmd + a
+      if (code === 'KeyA') { // cmd + a
         const isCommand = process.platform === 'darwin'
         if (isCommand && event.metaKey === true) {
           this.handleEvent(event)

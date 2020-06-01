@@ -22,7 +22,7 @@
           v-for="(item, index) in selectItems"
           :key="index"
           class="dropdown-item"
-          @click.stop="handleSelect(item)"
+          @click.stop.prevent="handleSelect(item)"
         >
           <label>{{ item.account }}</label>
           <custom-button

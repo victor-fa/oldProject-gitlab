@@ -1,7 +1,7 @@
 <template>
   <div class="connection-failed">
     <img src="../../assets/network_error_icon.png">
-    <span class="error-tip">{{ errorMessage }}</span>
+    <span class="error-tip">{{ error }}</span>
     <div class="connection-tip">
       <span>请确保：</span>
       <p>
@@ -15,49 +15,48 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { ConnectionErrorType } from './index.vue'
+import { mapGetters } from 'vuex'
 
 export default Vue.extend({
   name: 'connection-failed',
-  data () {
-    return {
-      errorType: this.$route.params.errorType as ConnectionErrorType
-    }
-  },
   computed: {
-    errorMessage: function () {
-      switch (this.errorType) {
-        case ConnectionErrorType.scanFailed:
-          return '扫描失败'
-        case ConnectionErrorType.notFound:
-          return '未找到设备'
-        default:
-          return '连接失败'
-      }
+    ...mapGetters('NasServer', ['nasInfo', 'accessInfo']),
+    error: function () {
+      const error = this.$route.params.error as string
+      return error
+    },
+    type: function () {
+      const type = this.$route.params.type as string
+      return type
     },
     buttonTitle: function () {
-      if (this.errorType === ConnectionErrorType.apiError || this.errorType === ConnectionErrorType.networkError) {
-        return '重新连接'
-      }
-      return '局域网扫描'
+      const type = this.type as string
+      return type === 'connectionFaild' ? '重新连接' : '局域网扫描'
     }
   },
   methods: {
     handleBtnClick () {
       if (this.buttonTitle === '重新连接') {
-        this.$router.go(-1)
+        this.$router.replace({
+          name: 'connecting',
+          params: {
+            sn: this.nasInfo.sn,
+            mac: this.nasInfo.mac,
+            secretKey: this.accessInfo.key
+          }
+        })
       } else {
         this.$store.dispatch('Login/updateErrorCount', 0)
-        let type = this.$route.params.type
+        let type = this.$route.params.scanType
         type = type === 'offlineLogin' ? type : 'addDevice'
-        this.$router.push({
+        this.$router.replace({
           name: 'scan-nas',
           query: { type } 
         })
       }
     },
     handleBindClick () {
-      this.$router.push('bind-device-list')
+      this.$router.replace('bind-device-list')
     }
   }
 })

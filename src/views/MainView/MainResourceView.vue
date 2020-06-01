@@ -155,6 +155,11 @@ export default Vue.extend({
       filePaths.forEach(path => {
         const task = new UploadTask(path, this.path, this.uuid)
         uploadQueue.addTask(task)
+        uploadQueue.once('taskFinished', () => {
+          setTimeout(() => {
+            this.handleRefreshAction()
+          }, 1000);
+        })
         this.$store.dispatch('Resource/increaseTask')
       })
     },
