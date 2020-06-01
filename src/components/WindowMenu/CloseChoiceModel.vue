@@ -18,6 +18,11 @@
         <a-radio value="tray">缩小到托盘</a-radio>
         <a-radio value="exit">退出程序</a-radio>
       </a-radio-group>
+      <br>
+      <br>
+      <a-checkbox v-model="rememberChoice">
+        是否记住选择？
+      </a-checkbox>
     </a-modal>
   </div>
 </template>
@@ -33,14 +38,23 @@ export default Vue.extend({
   },
   data () {
     return {
-      choiceValue: 'tray'
+      choiceValue: 'tray',
+      rememberChoice: false
     }
   },
   methods: {
     cancle() {
       this.$emit('choiceCallback', 'close')
+      this.rememberChoice = false
     },
     handleChoice() {
+      if (this.rememberChoice) {  // 选择记住
+        const input = {
+          'remember': true,
+          'trayOrExit': this.choiceValue
+        }
+        this.$store.dispatch('Setting/updateCloseChoiceInfo', input)
+      }
       this.$emit('choiceCallback', this.choiceValue)
     }
   }

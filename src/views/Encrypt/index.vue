@@ -392,7 +392,6 @@ export default Vue.extend({
       ResourceHandler.disableSelectItems(this.dataArray)
       NasFileAPI.addEncryptRemoveTask(items).then(response => {
         if (response.data.code !== 200) return
-        this.$message.info('任务添加成功')
         this.$store.dispatch('Resource/increaseTask')
         setTimeout(() => this.getEncryptList(), 2000);
       }).catch(_ => {

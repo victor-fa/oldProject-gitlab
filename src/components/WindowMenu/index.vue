@@ -6,7 +6,7 @@
         :image="menuIcons.close"
         iconWidth="9px"
         class="close-item"
-        @click.native="handleCallbackModal('open')"
+        @click.native="handleCallbackModal('askClose')"
       />
       <custom-button
         v-if="resizable"
@@ -25,12 +25,13 @@
         @click.native="hideAction"
       />
     </div>
-    <close-choice-model :visiable="showEncryptModal" v-on:choiceCallback="handleCallbackModal"/>
+    <close-choice-model :visiable="showChoiceModal" v-on:choiceCallback="handleCallbackModal"/>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
 import CustomButton from '../CustomButton/index.vue'
 import { menuIcons } from './MenuIcons'
 import CloseChoiceModel from '../WindowMenu/CloseChoiceModel.vue'
@@ -49,7 +50,7 @@ export default Vue.extend({
 			ButtonState: 'sf-icon-window-maximize',
       win: false as any,
       zoomChange: false,
-      showEncryptModal: false
+      showChoiceModal: false
     }
   },
   computed: {
@@ -73,7 +74,8 @@ export default Vue.extend({
         return win.minimizable
       }
       return true
-    }
+    },
+    ...mapGetters('Setting', ['closeInfo'])
   },
 	created() {
     const _this = this as any
@@ -110,14 +112,14 @@ export default Vue.extend({
     },
     handleCallbackModal (callback) {
       switch (callback) {
-        case 'open':  // 仅windows下有托盘概念
-          process.platform === 'win32' ? this.showEncryptModal = true : this.closeAction()
+        case 'askClose':  // 仅windows下有托盘概念
+          this.handleClose()
           break;
         case 'close':
-          this.showEncryptModal = false
+          this.showChoiceModal = false
           break;
         case 'tray':
-          this.showEncryptModal = false
+          this.showChoiceModal = false
           setTimeout(() => this.win.hide(), 500);
           break;
         case 'exit':
@@ -125,6 +127,22 @@ export default Vue.extend({
           break;
         default:
           break;
+      }
+    },
+    handleClose () {
+      console.log(this.closeInfo);
+      if (process.platform === 'win32') {
+        if (this.closeInfo.remember) {
+          if (this.closeInfo.trayOrExit === 'tray') {
+            this.handleCallbackModal('tray')
+          } else {
+            this.closeAction()
+          }
+        } else {
+          this.showChoiceModal = true
+        }
+      } else {
+        this.closeAction()
       }
     }
   }

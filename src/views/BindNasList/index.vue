@@ -52,11 +52,11 @@ export default Vue.extend({
   },
   methods: {
     bind () {
-      this.listHeight = document.body.clientHeight - 290
+      this.listHeight = document.body.clientHeight - 250
       window.onresize = () => {
         const _this = this as any
         return (() => {
-          _this.listHeight = document.body.clientHeight - 290
+          _this.listHeight = document.body.clientHeight - 250
         })();
       };
     },
@@ -176,7 +176,7 @@ export default Vue.extend({
     font-weight: bold;
     border: none;
     border-radius: 20px;
-    margin: 50px 75px 0px;
+    margin: 20px 75px 0px;
     background-image: linear-gradient(to right, #29cb7a, #4de9b9);
   }
 }

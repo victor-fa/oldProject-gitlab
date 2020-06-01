@@ -107,6 +107,7 @@ export default Vue.extend({
         // 清除缓存的用户相关信息
         this.$store.dispatch('User/clearCacheUserInfo')
         this.$store.dispatch('NasServer/clearCacheNas')
+        this.$store.dispatch('Setting/clearCloseChoiceInfo')
       }).catch(error => {
         console.log(error)
         this.$message.error('网络连接错误,请检测网络')
@@ -115,6 +116,7 @@ export default Vue.extend({
     switchDevice () {
       processCenter.renderSend(EventName.bindList)
       this.$store.dispatch('NasServer/clearCacheNas')
+      this.$store.dispatch('Setting/clearCloseChoiceInfo')
     }
   }
 })
