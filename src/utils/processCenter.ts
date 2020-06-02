@@ -19,7 +19,8 @@ enum EventName {
   jump = 'jump_to_localtion',
   account = 'account_info',
   moveModal = 'presnet_move_modal',
-  moveCallback = 'move_callback'
+  moveCallback = 'move_callback',
+  drag = ''
 }
 
 // use in main process

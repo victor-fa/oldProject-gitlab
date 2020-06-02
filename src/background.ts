@@ -23,7 +23,7 @@ let win: BrowserWindow | null,
 	AccountWindow,
 	SettingWindow,
 	FeedBackWindow,
-	PopupWindow
+	ForgetPassWindow
 /*播放按钮*/
 let PlayerIcon = path.join(__filename, 'start_icon');
 let NextBtn = nativeImage.createFromPath(path.join(PlayerIcon, 'start_icon.png'));
@@ -276,25 +276,20 @@ let DiskSystem = {
 			}
 		});
 	},
-	PopupWindow: msg => {
-		if (PopupWindow) {
-			return windowControl.active(PopupWindow, msg);
+	ForgetPassWindow: msg => {
+		if (ForgetPassWindow) {
+			return windowControl.active(ForgetPassWindow, msg);
 		}
-		PopupWindow = windowControl.create({
-			url: 'disk-msg',
+		ForgetPassWindow = windowControl.create({
+			url: 'forget-pass',
 			data: msg,
 			icon: './src/assets/logo.png',
-			width: 300,
-			height: 150,
-			useContentSize: true,
-			resizable: false,
+			width: 420,
+			height: 610,
 			maximizable: false,
-			transparent: true,
-			alwaysOnTop: true,
-			x: screen.getPrimaryDisplay().workAreaSize.width - 305,
-			y: screen.getPrimaryDisplay().workAreaSize.height - 155,
+			resizable: false,
 			onclose: () => {
-				PopupWindow = null;
+				ForgetPassWindow = null;
 			}
 		});
 	},
@@ -433,8 +428,8 @@ function bindIpc() {
 			case 'login':
 				DiskSystem.MainWindow(data);
 				break;
-			case 'popup':
-				DiskSystem.PopupWindow(data);
+			case 'forget-pass':
+				DiskSystem.ForgetPassWindow(data);
 				break;
 			case 'account':
 				DiskSystem.AccountWindow(data);

@@ -79,6 +79,11 @@ const routes = [
     component: () => import('../views/Disk/DiskFeedBack.vue')
   },
   {
+    path: '/forget-pass',
+    name: 'DiskForgetPass',
+    component: () => import('../views/Disk/DiskForgetPass.vue')
+  },
+  {
     path: '/disk-account',
     name: 'DiskAccount',
     component: () => import('../views/Disk/DiskAccount.vue')

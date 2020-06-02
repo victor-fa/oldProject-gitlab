@@ -8,6 +8,7 @@
         :placeholder="placeholder"
         :value="text"
         :allowClear="true"
+        :suffix="suffixContent"
         @change="handleChange($event.target.value)"
         @focus="handleFocus"
         @blur="handleBlur"
@@ -60,6 +61,9 @@ export default Vue.extend({
     isSecure: {
       default: false
     },
+    suffix: {
+      default: ''
+    },
     selectItems: Array
   },
   data () {
@@ -72,6 +76,9 @@ export default Vue.extend({
   computed: {
     inputType: function () {
       return this.isSecure ? 'password' : 'text'
+    },
+    suffixContent: function () {
+      return this.suffix ? this.suffix : ''
     },
     isLoadSelect: function (): boolean {
       if (this.selectItems !== undefined && this.selectItems.length > 0) {

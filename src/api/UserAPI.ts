@@ -85,13 +85,6 @@ export default {
       headers: { 'Authorization': accessToken }
     })
   },
-  resetPassword (userName: string, password: string, code: string) {
-    return nasCloud.post(userModulePath + '/resetPwd', {
-      userName,
-      password,
-      code
-    })
-  },
   refreshToken (refreshToken: string): Promise<AxiosResponse<BasicResponse>> {
     return nasCloud.get(userModulePath + '/token/refresh', {
       params: {

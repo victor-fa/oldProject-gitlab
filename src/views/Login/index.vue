@@ -24,7 +24,7 @@
       </li>
       <li class="password-checkbox">
         <a-checkbox :checked="rememberPassword" @change="checkboxChange">记住密码</a-checkbox>
-        <a-button>忘记密码</a-button>
+        <a-button @click="showForgetPass">忘记密码</a-button>
       </li>
       <li class="login-button">
         <a-button
@@ -56,7 +56,6 @@ import processCenter, { EventName, MainEventName } from '../../utils/processCent
 import { message } from 'ant-design-vue'
 import { ACCESS_TOKEN } from '../../common/constants'
 import StringUtility from '../../utils/StringUtility'
-const packageInfo = require('../../../package');
 
 export default Vue.extend({
   name: 'login',
@@ -71,6 +70,9 @@ export default Vue.extend({
       password: '',
       ciphertext: '',
       rememberPassword: false,
+      forgetPass: {
+        visiable: false
+      },
       dropdownItems: items,
       loading: false
     }
@@ -99,6 +101,10 @@ export default Vue.extend({
   methods: {
     checkboxChange() {
       this.rememberPassword = !this.rememberPassword
+    },
+    showForgetPass() {
+      const _this = this as any
+      _this.$ipc.send('system', 'forget-pass');
     },
     clearCache () {
       // clear user cache
