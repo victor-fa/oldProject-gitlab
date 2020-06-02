@@ -142,6 +142,8 @@ interface StorageInfo {
   // custom property
   showName: string,
   showSize: string,
+  showUsed: string,
+  showSizeSimple: string,
   showProgress: number,
   showIcon: any,
   isInternal: boolean,

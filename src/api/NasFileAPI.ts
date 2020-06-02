@@ -20,6 +20,7 @@ const myselfModule = '/v1/myself'
 const userModule = '/v1/user'
 const cryptoModule = '/v1/crypto'
 const recycleModule = '/v1/recycle'
+const settingModule = '/setting/v1/sys'
 
 const CancelToken = axios.CancelToken
 let cancelCustomRequest: Canceler | null = null
@@ -457,7 +458,16 @@ export default {
       return { path: item.path, uuid: item.uuid }
     })
     return nasServer.post(fileModule + '/delete', params)
-  }
+  },
+  shutdown (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.put(settingModule + '/shutdown')
+  },
+  reboot (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.put(settingModule + '/reboot')
+  },
+  factory (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.put(settingModule + '/reboot')
+  },
 }
 
 const filterParams = (params: object) => {

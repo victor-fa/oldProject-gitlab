@@ -54,7 +54,7 @@ nasServer.interceptors.response.use((response: AxiosResponse) => {
 const refreshTokenCodes = [8024, 8013]
 const reconnectCodes = [8044, 8045]
 const reLoginCodes = [8052]
-const whiteListCodes = [8048, 8049]
+const whiteListCodes = [8048, 8049, 40103]
 const handleExceptionSence = (response: AxiosResponse) => {
   if (response.status === 200) {
     const basicData = response.data as BasicResponse

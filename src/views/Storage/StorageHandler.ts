@@ -61,6 +61,8 @@ export default {
       item.showName = this.matchStorageName(item.type, index)
       item.showIcon = this.matchStorageIcon(item.type)
       item.showSize = this.matchStorageSize(item.used, item.size)
+      item.showUsed = StringUtility.formatShowSize(item.used)
+      item.showSizeSimple = StringUtility.formatShowSize(item.size)
       item.showProgress = (item.used / item.size) * 100
       item.isInternal = internalTypes.indexOf(item.type) !== -1
       const path = item.isInternal === true ? `/.ugreen_nas/${ugreenNo}` : '/'

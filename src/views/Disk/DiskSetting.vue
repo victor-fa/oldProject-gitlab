@@ -11,7 +11,12 @@ import {app} from "electron";
 			<SettingMenu :data="SettingMenuData" @change="change" />
 			<div class="cd-setting-content">
 				<div class="cd-setting-container" v-show="SettingMenuData.Account.active">
-					<p class="cd-setting-title">用户设置</p>
+					<p class="cd-setting-info">
+						<img style="width: 25px; height: 30px; margin: 15px 0 0 10px;" :src="loginIcons.account">
+					</p>
+					<p class="cd-setting-info">昵称：{{user.nicName}}</p>
+					<p class="cd-setting-info">手机号：{{user.phoneNo}}</p>
+					<p class="cd-setting-title">密码设置</p>
 					<p class="cd-setting-sec-title">修改账号密码</p>
 					<div class="cd-setting-form">
 						<a-input type="password" v-model="changePass.oldpass" placeholder="当前密码" clearable style="width: 100%;margin-bottom: 10px;" />
@@ -19,11 +24,7 @@ import {app} from "electron";
 						<a-input type="password" v-model="changePass.againPass" placeholder="再次输入密码" clearable style="width: 100%;margin-bottom: 10px;" />
 						<a-button @click="ChangePassword">修改</a-button>
 					</div>
-					<p class="cd-setting-title"><br></p>
-					<p class="cd-setting-title">邮箱设置</p>
-					<p class="cd-setting-sec-title">修改安全邮箱</p>
-					<p class="cd-setting-info">当前绑定邮箱：{{ settingData.Email }}<a-button @click="OpenChangeEmailDialog">修改</a-button></p>
-					<p class="cd-setting-title"><br></p>
+					<p class="cd-setting-title"><br><br></p>
 				</div>
 				
 				<div class="cd-setting-container" v-show="SettingMenuData.Currency.active">
@@ -40,13 +41,19 @@ import {app} from "electron";
 							<a-radio value="tray">最小化到托盘</a-radio>
 							<a-radio value="exit">退出程序</a-radio>
 						</a-radio-group>
-						<a-button>修改</a-button>
+						<a-button @click="handleCloseChoice">修改</a-button>
 					</p>
 				</div>
 
 				<div class="cd-setting-container" v-show="SettingMenuData.User.active">
-					<div>
-						img
+					<div style="display: flex;" v-for="(item, index) in [1, 2, 3, 4]" :key="index">
+						<img style="width: 25px; height: 30px; margin: 15px 0 0 10px;" :src="loginIcons.account">
+						<div style="flex: 1; display: flex; flex-flow: column; text-align: left; padding: 10px;">
+							<span>管理员</span>
+							<span>2020-02-03 12:34:56</span>
+						</div>
+						<span style="margin: 20px 10px 0 0;">在线</span>
+						<img style="width: 10px; height: 14px; margin: 23px 10px 0px 0px;" :src="loginIcons.open">
 					</div>
 				</div>
 				
@@ -57,7 +64,19 @@ import {app} from "electron";
 					<p class="cd-setting-info">IP地址：{{nasInfo.ip}}</p>
 					<p class="cd-setting-info">MAC地址：{{nasInfo.mac}}</p>
 					<p class="cd-setting-title">磁盘信息</p>
-					<p class="cd-setting-title"><br></p>
+					<div style="display: flex;" v-for="(item, index) in storages" :key="index">
+						<div style="flex: 1; display: flex; flex-flow: column; text-align: left; padding: 10px;">
+							<span>盘位{{index}}   <font style="color: #06B650;">正常</font></span>
+							<img style="width: 60px; height: 60px; margin: 0px;" :src="loginIcons.disk">
+						</div>
+						<div style="flex: 1; display: flex; flex-flow: column; text-align: left; padding: 10px;">
+							<span>disk_a</span>
+							<span>{{item.showName}}</span>
+							<span>容量 {{item.showSizeSimple}}</span>
+							<span>已使用 {{item.showUsed}}</span>
+						</div>
+						<a-button style="margin: 30px 10px 0 0;">格式化</a-button>
+					</div>
 					<p class="cd-setting-title">存储模式</p>
 					<p class="cd-setting-title">
 						<a-radio-group v-model="loginSetting.closeChoice">
@@ -66,9 +85,9 @@ import {app} from "electron";
 						</a-radio-group>
 					</p>
 					<p class="cd-setting-title">
-						<a-button class="cd-purple-button">关机</a-button>
-						<a-button class="cd-purple-button">重启</a-button>
-						<a-button class="cd-purple-button">恢复出厂设置</a-button>
+						<a-button class="cd-purple-button" @click="handleDangerousOperation('shutdown')">关机</a-button>
+						<a-button class="cd-purple-button" @click="handleDangerousOperation('reboot')">重启</a-button>
+						<a-button class="cd-purple-button" @click="handleDangerousOperation('factory')">恢复出厂设置</a-button>
 					</p>
 					<p class="cd-setting-title"><br></p>
 				</div>
@@ -91,16 +110,6 @@ import {app} from "electron";
 				</div>
 			</div>
 		</div>
-		<a-modal title="更换邮箱" :visible="showEmailDialog" width="400px" top="70px" style="top: 50px;" @cancel="showEmailDialog = false">
-			<div style="height: 120px;">
-				<p class="cd-setting-sec-title">输入新邮箱地址</p>
-				<a-input type="text" v-model="changeEmailData.email" placeholder="您的新邮箱地址" clearable style="width: 100%;margin: 10px 0" />
-			</div>
-			<span slot="footer" class="dialog-footer">
-				<a-button class="cd-button cd-cancel-button" @click="showEmailDialog = false">取 消</a-button>
-				<a-button @click="getEmailCode">确 定</a-button>
-			</span>
-		</a-modal>
 		<a-modal title="更换手机号" :visible="showPhoneDialog" width="400px" top="70px" style="top: 50px;" @cancel="showPhoneDialog = false">
 			<div style="height: 120px;">
 				<p class="cd-setting-sec-title">输入新手机号地址</p>
@@ -115,11 +124,6 @@ import {app} from "electron";
 			:visible="codeVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
 			okText="确定" cancelText="取消" @ok="ChangePassword" @cancel="codeVisiable = false">
 			<p>验证码：</p><a-input placeholder="请输入短信验证码" v-model="changePass.code" />
-		</a-modal>
-		<a-modal
-			:visible="codeEmailVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
-			okText="确定" cancelText="取消" @ok="ChangeEmail" @cancel="codeEmailVisiable = false">
-			<p>验证码：</p><a-input placeholder="请输入邮箱验证码" v-model="changeEmailData.code" />
 		</a-modal>
 		<a-modal
 			:visible="codePhoneVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
@@ -143,11 +147,15 @@ import {app} from "electron";
 </template>
 
 <script>
+import _ from 'lodash'
 import SettingMenu from '../../components/Disk/SettingMenu.vue'
 import UserAPI from '@/api/UserAPI'
 import NasFileAPI from '@/api/NasFileAPI'
 import StringUtility from '../../utils/StringUtility'
+import { loginIcons } from '../../views/Login/iconList'
 import { mapGetters } from 'vuex'
+import StorageHandler from '../Storage/StorageHandler'
+
 export default {
 	name: 'DiskSetting',
 	components: { SettingMenu },
@@ -166,6 +174,7 @@ export default {
 	},
 	data() {
 		return {
+      loginIcons,
 			SettingMenuData: {
 				Account: {
 					active: 'active',
@@ -208,30 +217,24 @@ export default {
 				offline_modify_visiable: false,
 				already_set: false
 			},
-			changeEmailData: {
-				email: '',
-				code: ''
-			},
 			changePhoneData: {
 				phone: '',
 				code: ''
 			},
-			showEmailDialog: false,
 			showPhoneDialog: false,
 			settingData: {
-				Email: '',
 				Phone: '',
 			},
 			loading: '',
 			codeVisiable: false,
-			codeEmailVisiable: false,
-			codePhoneVisiable: false
+			codePhoneVisiable: false,
+			storages: []
 		};
 	},
 	created() {
 		this.getOfflineName()
+		this.fetchStorages()
 		console.log(JSON.parse(JSON.stringify(this.user)));
-		this.settingData.Email = this.user.email
 		this.settingData.Phone = this.user.phoneNo
 		this.loginSetting.closeChoice = this.closeInfo.trayOrExit
 	},
@@ -248,7 +251,7 @@ export default {
 				return;
 			}
 			if (!this.changePass.oldpass.length) {
-				this.$message.warning('请先输入原密码');
+				this.$message.warning('请先输入当前密码');
 				return;
 			}
 			if (!this.changePass.newpass.length) {
@@ -301,21 +304,8 @@ export default {
         this.$message.error('网络连接错误,请检测网络')
       })
 		},
-		OpenChangeEmailDialog() {
-			this.showEmailDialog = true;
-		},
 		OpenChangePhoneDialog() {
 			this.showPhoneDialog = true;
-		},
-		getEmailCode () {
-			UserAPI.emailCode(this.changeEmailData.email).then(response => {	
-				if (response.data.code !== 200) return
-				this.codeEmailVisiable = true
-				this.$message.success('认证邮件已发送，授权码24小时有效')
-			}).catch(error => {
-				console.log(error)
-				this.$message.error('网络连接错误,请检测网络')
-			})
 		},
 		getPhoneCode () {
 			if (!this.changePhoneData.phone.length) {
@@ -339,36 +329,6 @@ export default {
         console.log(error)
         this.$message.error('网络连接错误,请检测网络')
       })
-		},
-		ChangeEmail() {
-			if (this.loading) {
-				this.$message.warning('正在进行其他操作，请等待');
-				return;
-			}
-			if (!this.changeEmailData.email.length) {
-				this.$message.warning('请输入新的邮箱地址');
-				return;
-			}
-			if (this.changeEmailData.email && !/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.test(this.changeEmailData.email)) {
-				this.$message.error('请输入正确的邮箱');
-				return;
-			}
-			const input = {
-				email: this.changeEmailData.email,
-				code: this.changeEmailData.code
-			}
-			UserAPI.changeEmail(input).then(response => {	
-				if (response.data.code !== 200) return
-				this.codeEmailVisiable = false;
-				this.showEmailDialog = false;
-				this.changeEmailData.email = '';
-				this.$store.dispatch('User/updateUser', response.data.data.userVO)
-				this.settingData.Email = response.data.data.userVO.email
-				this.$message.success('修改邮箱成功')
-			}).catch(error => {
-				console.log(error)
-				this.$message.error('网络连接错误,请检测网络')
-			})
 		},
 		changePhone() {
 			if (this.loading) {
@@ -487,6 +447,60 @@ export default {
 				console.log(error)
 				this.$message.error('网络连接错误,请检测网络')
 			})
+		},
+		handleCloseChoice () {
+			const input = {
+				'remember': true,
+				'trayOrExit': this.loginSetting.closeChoice
+			}
+			this.$store.dispatch('Setting/updateCloseChoiceInfo', input)
+			this.$message.success('修改成功')
+		},
+    fetchStorages () {
+      this.loading = true
+      NasFileAPI.fetchStorages().then(response => {
+        this.loading = false
+        if (response.data.code !== 200) return
+        const storages = _.get(response.data.data, 'storages')
+				this.storages = StorageHandler.formatStorages(storages)
+				console.log(JSON.parse(JSON.stringify(this.storages)));
+      }).catch(error => {
+        this.loading = false
+        this.$message.error('网络连接错误，请检测网络')
+        console.log(error)
+      })
+		},
+		handleDangerousOperation (flag) {
+			let message = ''
+			const { dialog } = require('electron').remote
+			if (flag === 'shutdown') {
+				message = `关机会导致所有正在进行的任务停止，\n并且绿联云设备断开与桌面端之间的连接`
+			} else if (flag === 'reboot') {
+				message = `重启会导致所有正在进行的任务停止，\n并且绿联云设备断开与桌面端之间的连接，\n直到绿联云设备重启成功！`
+			} else if (flag === 'factory') {
+				message = `1、恢复出厂设置将会清除所有用户信息与缓存数据，并重新同步数据。\n2、操作并不会删除您硬盘里面的文件。\n3、恢复出厂过程可能会比较长，请耐心等待！`
+			}
+			setTimeout(() => {
+				dialog.showMessageBox({
+					type: 'info',
+					message,
+					buttons: ['确定', '取消'],
+					cancelId: 1
+				}).then(result => {
+					if (result.response === 0) {
+						NasFileAPI.shutdown().then(response => {
+							if (response.data.code !== 200) {
+								this.$message.error(
+									`您不是管理员，无法操作设备${flag === 'shutdown' ? '关机' : flag === 'reboot' ? '重启' : '恢复出厂设置'}`
+								)
+							}
+						}).catch(error => {
+							this.$message.error('网络连接错误，请检测网络')
+							console.log(error)
+						})
+					}
+				}).catch(error => reject(error))
+			}, 100);
 		},
 	}
 };
