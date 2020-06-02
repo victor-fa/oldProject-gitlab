@@ -1,7 +1,6 @@
 <template>
 	<ul class="cd-setting-menu">
 		<li v-for="(item, index) in data" :key="index" :class="item.active" @click="change(item, index)">
-			<span :class="item.icon" />
 			<p>{{ item.name }}</p>
 		</li>
 	</ul>
@@ -42,13 +41,13 @@ export default {
 }
 .cd-setting-menu li * {
 	float: left;
-	line-height: 35px;
+	line-height: 41px;
 }
 .cd-setting-menu li.active {
 	width: calc(100% + 1px);
 	border: 1px solid #eee;
 	border-right: none;
-	color: #6e6e6e !important;
+	color: #06B650 !important;
 	cursor: default !important;
 }
 .cd-setting-menu li:hover {
@@ -61,6 +60,7 @@ export default {
 	text-align: center;
 }
 .cd-setting-menu li p {
-	width: calc(100% - 60px);
+	width: 100%;
+	margin-bottom: 0;
 }
 </style>

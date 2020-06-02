@@ -13,9 +13,22 @@
             v-for="(item, index) in settingList"
             :key="index"
             class="setting-item"
-            @click="didSettingItemClick(item)"
+            @click.stop="didSettingItemClick(item)"
+            @mouseenter="handleMouseEnter(item)"
           >
-          {{ item.title }}
+            {{ item.title }}
+            <img v-show="item.title !== '退出'" src="../../assets/operate_icon.png">
+            <span v-show="item.title === '退出'">CTRL+Q</span>
+            <ul v-show="item.childrens && showChildren" class="operate-children">
+              <li
+                v-for="(cell, index) in item.childrens"
+                :key="index"
+                @click="didSettingItemClick(cell)"
+                class="operate-item"
+              >
+                {{ cell.title }}
+              </li>
+            </ul>
           </li>
         </ul>
       </template>
@@ -49,9 +62,27 @@ export default Vue.extend({
     WindowMenu
   },
   data () {
+    let items: Array<any> = []
     return {
       visible: false,
+      showItems: items,
+      showChildren: false,
       settingList
+    }
+  },
+  watch: {
+    settingList: function (newVlaue: Array<any>) {
+      this.showChildren = false // 重置children
+      this.showItems = newVlaue.filter(group => {
+        let items: Array<any> = []
+        for (let index = 0; index < group.items.length; index++) {
+          const element = group.items[index]
+          if (!element.isHidden) items.push(element)
+        }
+        if (items.length === 0) return false
+        group.items = items
+        return true
+      })
     }
   },
   computed: {
@@ -69,6 +100,12 @@ export default Vue.extend({
     ...mapGetters('User', ['user'])
   },
   methods: {
+    handleMouseEnter (item: Setting) {
+      this.showChildren = !_.isEmpty(item.childrens)
+      if (!this.showChildren) return
+      const rightPadding = 10; const secondListWidth = 79
+      // this.isChildPosLeft = (this.$el as HTMLElement).offsetLeft + this.listWidth + rightPadding + secondListWidth <= document.body.clientWidth
+    },
     didSettingItemClick (sender: Setting) {
       const _this = this as any
       _this.visible = false
@@ -90,6 +127,9 @@ export default Vue.extend({
           break
         case SettingType.quit:
           _this.$electron.remote.getCurrentWindow().close();
+          break
+        case SettingType.help:
+          console.log('help');
           break
         default:
           break
@@ -181,12 +221,34 @@ export default Vue.extend({
   cursor: pointer;
 }
 .settingPopover .setting-item {
-  padding: 0px 16px;
+  padding: 0px 10px 0px 16px;
   font-size: 12px;
   color: #484848;
   line-height: 24px;
+  position: relative;
 }
 .settingPopover .setting-item:hover {
   background-color: #F3F3F3;
+}
+.settingPopover .setting-item img {
+  width: 7px;
+  height: 10px;
+  margin: 7px 0 0 55px;
+  float: right;
+}
+.settingPopover .setting-item span {
+  float: right;
+}
+.operate-children {
+  top: -1px;
+  left: -96px;
+  flex: 1 1 0%;
+  padding: 3px 12px;
+  position: absolute;
+  width: 95px;
+  background-color: #fff;
+  background-clip: padding-box;
+  border-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 </style>

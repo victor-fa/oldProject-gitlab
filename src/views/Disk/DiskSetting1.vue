@@ -14,66 +14,12 @@ import {app} from "electron";
 					<p class="cd-setting-title">用户设置</p>
 					<p class="cd-setting-sec-title">修改账号密码</p>
 					<div class="cd-setting-form">
-						<a-input type="password" v-model="changePass.oldpass" placeholder="当前密码" clearable style="width: 100%;margin-bottom: 10px;" />
-						<a-input type="password" v-model="changePass.newpass" placeholder="新密码" clearable style="width: 100%;margin-bottom: 10px;" />
-						<a-input type="password" v-model="changePass.againPass" placeholder="再次输入密码" clearable style="width: 100%;margin-bottom: 10px;" />
-						<a-button @click="ChangePassword">修改</a-button>
+						<a-input type="password" v-model="ChangePass.oldpass" placeholder="当前密码" clearable style="width: 100%;margin-bottom: 10px;" />
+						<a-input type="password" v-model="ChangePass.newpass" placeholder="新密码" clearable style="width: 100%;margin-bottom: 10px;" />
+						<a-input type="password" v-model="ChangePass.againPass" placeholder="再次输入密码" clearable style="width: 100%;margin-bottom: 10px;" />
+						<a-button class="cd-purple-button" @click="ChangePassword">修改</a-button>
 					</div>
 					<p class="cd-setting-title"><br></p>
-					<p class="cd-setting-title">邮箱设置</p>
-					<p class="cd-setting-sec-title">修改安全邮箱</p>
-					<p class="cd-setting-info">当前绑定邮箱：{{ settingData.Email }}<a-button @click="OpenChangeEmailDialog">修改</a-button></p>
-					<p class="cd-setting-title"><br></p>
-				</div>
-				
-				<div class="cd-setting-container" v-show="SettingMenuData.Currency.active">
-					<p class="cd-setting-title">登录设置</p>
-					<p class="cd-setting-title">
-						<a-checkbox v-model="loginSetting.rememberPass">记住密码</a-checkbox>
-						<a-checkbox v-model="loginSetting.autoLogin">自动登录</a-checkbox>
-						<a-checkbox v-model="loginSetting.autoPowerOn">开机自启动</a-checkbox>
-						<a-button>修改</a-button>
-					</p>
-					<p class="cd-setting-title">当关闭窗口时</p>
-					<p class="cd-setting-title">
-						<a-radio-group v-model="loginSetting.closeChoice">
-							<a-radio value="tray">最小化到托盘</a-radio>
-							<a-radio value="exit">退出程序</a-radio>
-						</a-radio-group>
-						<a-button>修改</a-button>
-					</p>
-				</div>
-
-				<div class="cd-setting-container" v-show="SettingMenuData.User.active">
-					<div>
-						img
-					</div>
-				</div>
-				
-				<div class="cd-setting-container" v-show="SettingMenuData.Device.active">
-					<p class="cd-setting-title">设备信息</p>
-					<p class="cd-setting-info">序列号：{{nasInfo.sn}}</p>
-					<p class="cd-setting-info">固件版本：{{nasInfo.softversion}}</p>
-					<p class="cd-setting-info">IP地址：{{nasInfo.ip}}</p>
-					<p class="cd-setting-info">MAC地址：{{nasInfo.mac}}</p>
-					<p class="cd-setting-title">磁盘信息</p>
-					<p class="cd-setting-title"><br></p>
-					<p class="cd-setting-title">存储模式</p>
-					<p class="cd-setting-title">
-						<a-radio-group v-model="loginSetting.closeChoice">
-							<a-radio value="tray">双盘备份模式</a-radio>
-							<a-radio value="exit">普通存储模式</a-radio>
-						</a-radio-group>
-					</p>
-					<p class="cd-setting-title">
-						<a-button class="cd-purple-button">关机</a-button>
-						<a-button class="cd-purple-button">重启</a-button>
-						<a-button class="cd-purple-button">恢复出厂设置</a-button>
-					</p>
-					<p class="cd-setting-title"><br></p>
-				</div>
-				
-				<div class="cd-setting-container" v-show="SettingMenuData.LocalAccount.active">
 					<p class="cd-setting-title">用户离线设置</p>
 					<p class="cd-setting-title"><a-switch v-model="offlinePass.isUsed" defaultChecked @change="onOfflineChange"/></p>
 					<template v-if="offlinePass.isUsed">
@@ -82,49 +28,61 @@ import {app} from "electron";
 							<a-input v-if="!offlinePass.already_set" type="text" v-model="offlinePass.offline_username" placeholder="离线账号" clearable style="width: 100%;margin-bottom: 10px;" />
 							<p v-if="offlinePass.already_set" class="cd-setting-info">当前离线账号：{{ offlinePass.offline_username }}</p>
 							<a-input v-if="!offlinePass.already_set" type="password" v-model="offlinePass.offline_password" placeholder="离线密码" clearable style="width: 100%;margin-bottom: 10px;" />
-							<a-button v-if="offlinePass.already_set" @click="showModifyOffline">修改密码</a-button>
-							<a-button v-if="!offlinePass.already_set" @click="setOfflineAccount">保存</a-button>
+							<a-button v-if="offlinePass.already_set" class="cd-purple-button" @click="showModifyOffline">修改密码</a-button>
+							<a-button v-if="!offlinePass.already_set" class="cd-purple-button" @click="setOfflineAccount">保存</a-button>
 						</div>
 						<p class="cd-setting-title"><br></p>
 					</template>
 					<p class="cd-setting-title"><br></p>
 				</div>
+				
+				<div class="cd-setting-container" v-show="SettingMenuData.Safety.active">
+					<p class="cd-setting-title">邮箱设置</p>
+					<p class="cd-setting-sec-title">修改安全邮箱</p>
+					<p class="cd-setting-info">当前绑定邮箱：{{ SettingData.Email }}<a-button @click="OpenChangeEmailDialog">修改</a-button></p>
+				</div>
+
+				<div class="cd-setting-container" v-show="SettingMenuData.Phone.active">
+					<p class="cd-setting-title">手机号设置</p>
+					<p class="cd-setting-sec-title">修改手机号</p>
+					<p class="cd-setting-info">当前绑定手机号：{{ SettingData.Phone }}<a-button @click="OpenChangePhoneDialog">修改</a-button></p>
+				</div>
 			</div>
 		</div>
-		<a-modal title="更换邮箱" :visible="showEmailDialog" width="400px" top="70px" style="top: 50px;" @cancel="showEmailDialog = false">
+		<a-modal title="更换邮箱" :visible="ShowEmailDialog" width="400px" top="70px" style="top: 50px;" @cancel="ShowEmailDialog = false">
 			<div style="height: 120px;">
 				<p class="cd-setting-sec-title">输入新邮箱地址</p>
-				<a-input type="text" v-model="changeEmailData.email" placeholder="您的新邮箱地址" clearable style="width: 100%;margin: 10px 0" />
+				<a-input type="text" v-model="ChangeEmailData.email" placeholder="您的新邮箱地址" clearable style="width: 100%;margin: 10px 0" />
 			</div>
 			<span slot="footer" class="dialog-footer">
-				<a-button class="cd-button cd-cancel-button" @click="showEmailDialog = false">取 消</a-button>
-				<a-button @click="getEmailCode">确 定</a-button>
+				<a-button class="cd-button cd-cancel-button" @click="ShowEmailDialog = false">取 消</a-button>
+				<a-button class="cd-purple-button" @click="getEmailCode">确 定</a-button>
 			</span>
 		</a-modal>
-		<a-modal title="更换手机号" :visible="showPhoneDialog" width="400px" top="70px" style="top: 50px;" @cancel="showPhoneDialog = false">
+		<a-modal title="更换手机号" :visible="ShowPhoneDialog" width="400px" top="70px" style="top: 50px;" @cancel="ShowPhoneDialog = false">
 			<div style="height: 120px;">
 				<p class="cd-setting-sec-title">输入新手机号地址</p>
-				<a-input type="text" v-model="changePhoneData.phone" placeholder="您的新手机号地址" clearable style="width: 100%;margin: 10px 0" :number="true" :maxlength="11" />
+				<a-input type="text" v-model="ChangePhoneData.phone" placeholder="您的新手机号地址" clearable style="width: 100%;margin: 10px 0" :number="true" :maxlength="11" />
 			</div>
 			<span slot="footer" class="dialog-footer">
-				<a-button class="cd-button cd-cancel-button" @click="showPhoneDialog = false">取 消</a-button>
-				<a-button @click="getPhoneCode">确 定</a-button>
+				<a-button class="cd-button cd-cancel-button" @click="ShowPhoneDialog = false">取 消</a-button>
+				<a-button class="cd-purple-button" @click="getPhoneCode">确 定</a-button>
 			</span>
 		</a-modal>
 		<a-modal
 			:visible="codeVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
 			okText="确定" cancelText="取消" @ok="ChangePassword" @cancel="codeVisiable = false">
-			<p>验证码：</p><a-input placeholder="请输入短信验证码" v-model="changePass.code" />
+			<p>验证码：</p><a-input placeholder="请输入短信验证码" v-model="ChangePass.code" />
 		</a-modal>
 		<a-modal
 			:visible="codeEmailVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
 			okText="确定" cancelText="取消" @ok="ChangeEmail" @cancel="codeEmailVisiable = false">
-			<p>验证码：</p><a-input placeholder="请输入邮箱验证码" v-model="changeEmailData.code" />
+			<p>验证码：</p><a-input placeholder="请输入邮箱验证码" v-model="ChangeEmailData.code" />
 		</a-modal>
 		<a-modal
 			:visible="codePhoneVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
 			okText="确定" cancelText="取消" @ok="changePhone" @cancel="codePhoneVisiable = false">
-			<p>验证码：</p><a-input placeholder="请输入验证码" v-model="changePhoneData.code" />
+			<p>验证码：</p><a-input placeholder="请输入验证码" v-model="ChangePhoneData.code" />
 		</a-modal>
 		<a-modal
 			:title="'修改密码'"
@@ -152,53 +110,40 @@ export default {
 	name: 'DiskSetting',
 	components: { SettingMenu },
 	watch: {
-		settingData: {
+		SettingData: {
 			handler() {
-				this.$ipc.send('system', 'auto-launch', this.settingData.AutoStartFlag);
+				this.$ipc.send('system', 'auto-launch', this.SettingData.AutoStartFlag);
 			},
 			deep: true
 		}
 	},
 	computed: {
 		...mapGetters('User', ['user']),
-		...mapGetters('NasServer', ['nasInfo']),
-		...mapGetters('Setting', ['closeInfo']),
 	},
 	data() {
 		return {
 			SettingMenuData: {
 				Account: {
 					active: 'active',
-					name: '我的账号'
+					name: '用户',
+					icon: 'sf-icon-user'
 				},
-				Currency: {
+				Safety: {
 					active: '',
-					name: '通用设置'
+					name: '邮箱',
+					icon: 'sf-icon-lock'
 				},
-				User: {
+				Phone: {
 					active: '',
-					name: '用户管理'
-				},
-				Device: {
-					active: '',
-					name: '设备信息'
-				},
-				LocalAccount: {
-					active: '',
-					name: '本地账号'
+					name: '手机',
+					icon: 'sf-icon-phone'
 				},
 			},
-			changePass: {
+			ChangePass: {
 				oldpass: '',
 				newpass: '',
 				againPass: '',
 				code: ''
-			},
-			loginSetting: {
-				rememberPass: false,
-				autoLogin: false,
-				autoPowerOn: false,
-				closeChoice: 'tray'
 			},
 			offlinePass: {
 				isUsed: false,
@@ -208,17 +153,17 @@ export default {
 				offline_modify_visiable: false,
 				already_set: false
 			},
-			changeEmailData: {
+			ChangeEmailData: {
 				email: '',
 				code: ''
 			},
-			changePhoneData: {
+			ChangePhoneData: {
 				phone: '',
 				code: ''
 			},
-			showEmailDialog: false,
-			showPhoneDialog: false,
-			settingData: {
+			ShowEmailDialog: false,
+			ShowPhoneDialog: false,
+			SettingData: {
 				Email: '',
 				Phone: '',
 			},
@@ -231,9 +176,8 @@ export default {
 	created() {
 		this.getOfflineName()
 		console.log(JSON.parse(JSON.stringify(this.user)));
-		this.settingData.Email = this.user.email
-		this.settingData.Phone = this.user.phoneNo
-		this.loginSetting.closeChoice = this.closeInfo.trayOrExit
+		this.SettingData.Email = this.user.email
+		this.SettingData.Phone = this.user.phoneNo
 	},
 	methods: {
 		change(item, index) {
@@ -247,29 +191,29 @@ export default {
 				this.$message.warning('正在进行其他操作，请等待');
 				return;
 			}
-			if (!this.changePass.oldpass.length) {
+			if (!this.ChangePass.oldpass.length) {
 				this.$message.warning('请先输入原密码');
 				return;
 			}
-			if (!this.changePass.newpass.length) {
+			if (!this.ChangePass.newpass.length) {
 				this.$message.warning('请输入新密码');
 				return;
 			}
-			if (!this.changePass.againPass.length) {
+			if (!this.ChangePass.againPass.length) {
 				this.$message.warning('请再次输入新密码');
 				return;
 			}
-			if (this.changePass.newpass !== this.changePass.againPass) {
+			if (this.ChangePass.newpass !== this.ChangePass.againPass) {
 				this.$message.error('密码不一致，请检查');
 				return;
 			}
-			if (this.changePass.newpass === this.changePass.oldpass) {
+			if (this.ChangePass.newpass === this.ChangePass.oldpass) {
 				this.$message.warning('新旧密码一致，取消操作');
-				this.changePass.newpass = '';
-				this.changePass.againPass = '';
+				this.ChangePass.newpass = '';
+				this.ChangePass.againPass = '';
 				return;
 			}
-			if (this.changePass.code === '') {
+			if (this.ChangePass.code === '') {
 				this.codeVisiable = true
 				UserAPI.smsCode(this.user.userName, 2).then(response => {
 					this.loading = false;
@@ -285,16 +229,16 @@ export default {
 			}
 			const input = {
 				userName: this.user.userName,
-				password: StringUtility.encryptPassword(this.changePass.newpass),
-				code: this.changePass.code
+				password: StringUtility.encryptPassword(this.ChangePass.newpass),
+				code: this.ChangePass.code
 			}
       UserAPI.changePass(input).then(response => {
 				if (response.data.code !== 200) return
 				this.$message.success('修改成功，请牢记密码');
-				this.changePass.oldpass = '';
-				this.changePass.newpass = '';
-				this.changePass.againPass = '';
-				this.changePass.code = '';
+				this.ChangePass.oldpass = '';
+				this.ChangePass.newpass = '';
+				this.ChangePass.againPass = '';
+				this.ChangePass.code = '';
 				this.codeVisiable = false
       }).catch(error => {
         console.log(error)
@@ -302,13 +246,13 @@ export default {
       })
 		},
 		OpenChangeEmailDialog() {
-			this.showEmailDialog = true;
+			this.ShowEmailDialog = true;
 		},
 		OpenChangePhoneDialog() {
-			this.showPhoneDialog = true;
+			this.ShowPhoneDialog = true;
 		},
 		getEmailCode () {
-			UserAPI.emailCode(this.changeEmailData.email).then(response => {	
+			UserAPI.emailCode(this.ChangeEmailData.email).then(response => {	
 				if (response.data.code !== 200) return
 				this.codeEmailVisiable = true
 				this.$message.success('认证邮件已发送，授权码24小时有效')
@@ -318,19 +262,19 @@ export default {
 			})
 		},
 		getPhoneCode () {
-			if (!this.changePhoneData.phone.length) {
+			if (!this.ChangePhoneData.phone.length) {
 				this.$message.warning('请输入新的手机号');
 				return;
 			}
-			if (this.changePhoneData.phone && !(/^1[3456789]\d{9}$/.test(this.changePhoneData.phone))) {
+			if (this.ChangePhoneData.phone && !(/^1[3456789]\d{9}$/.test(this.ChangePhoneData.phone))) {
 				this.$message.error('请输入正确的手机号');
 				return;
 			}
-			if (this.changePhoneData.phone === this.user.phoneNo) {
+			if (this.ChangePhoneData.phone === this.user.phoneNo) {
 				this.$message.warning('输入的手机号与已绑定的手机号相同，请输入其他手机号');
 				return;
 			}
-			UserAPI.smsCode(this.changePhoneData.phone, 5).then(response => {
+			UserAPI.smsCode(this.ChangePhoneData.phone, 5).then(response => {
 				if (response.data.code !== 200) return
 				this.codePhoneVisiable = true
         this.$message.success('短信验证码已发送到手机')
@@ -345,25 +289,25 @@ export default {
 				this.$message.warning('正在进行其他操作，请等待');
 				return;
 			}
-			if (!this.changeEmailData.email.length) {
+			if (!this.ChangeEmailData.email.length) {
 				this.$message.warning('请输入新的邮箱地址');
 				return;
 			}
-			if (this.changeEmailData.email && !/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.test(this.changeEmailData.email)) {
+			if (this.ChangeEmailData.email && !/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.test(this.ChangeEmailData.email)) {
 				this.$message.error('请输入正确的邮箱');
 				return;
 			}
 			const input = {
-				email: this.changeEmailData.email,
-				code: this.changeEmailData.code
+				email: this.ChangeEmailData.email,
+				code: this.ChangeEmailData.code
 			}
 			UserAPI.changeEmail(input).then(response => {	
 				if (response.data.code !== 200) return
 				this.codeEmailVisiable = false;
-				this.showEmailDialog = false;
-				this.changeEmailData.email = '';
+				this.ShowEmailDialog = false;
+				this.ChangeEmailData.email = '';
 				this.$store.dispatch('User/updateUser', response.data.data.userVO)
-				this.settingData.Email = response.data.data.userVO.email
+				this.SettingData.Email = response.data.data.userVO.email
 				this.$message.success('修改邮箱成功')
 			}).catch(error => {
 				console.log(error)
@@ -375,24 +319,24 @@ export default {
 				this.$message.warning('正在进行其他操作，请等待');
 				return;
 			}
-			if (!this.changePhoneData.code.length) {
+			if (!this.ChangePhoneData.code.length) {
 				this.$message.warning('请输入短信验证码');
 				return;
 			}
-			const input = { phoneNo: this.changePhoneData.phone, code: this.changePhoneData.code }
+			const input = { phoneNo: this.ChangePhoneData.phone, code: this.ChangePhoneData.code }
 			UserAPI.updateInfo(input).then(response => {
 				if (response.data.code !== 200) return
 				this.codePhoneVisiable = false;
-				this.showPhoneDialog = false;
-				this.changePhoneData.phone = '';
+				this.ShowPhoneDialog = false;
+				this.ChangePhoneData.phone = '';
 				this.$store.dispatch('User/updateUser', response.data.data.userVO)
-				this.settingData.Phone = response.data.data.userVO.phoneNo
+				this.SettingData.Phone = response.data.data.userVO.phoneNo
         this.$message.success('修改手机号成功')
       }).catch(error => {
         console.log(error)
         this.$message.error('网络连接错误,请检测网络')
       }).finally(() => {
-				this.changePhoneData.code = ''
+				this.ChangePhoneData.code = ''
 			})
 		},
 		close() {
@@ -554,6 +498,9 @@ p {
 	height: 100%;
 	background: #fff;
 }
+.cd-drag-head-big {
+
+}
 .cd-setting-main {
 	width: 100%;
 	height: calc(100% - 50px);
@@ -580,15 +527,18 @@ p {
 	margin-bottom: 10px;
 	color: #06B650;
 }
-.cd-purple-button {
-	margin-right: 10px;
-}
 .cd-setting-sec-title {
 	width: 100%;
 	font-size: 14px;
 	border-left: 2px solid #06B650;
 	text-indent: 5px;
 	margin: 5px 0;
+}
+.cd-setting-tips {
+	color: #e83c3c;
+	width: 100%;
+	font-size: 12px;
+	margin-top: 5px;
 }
 .ivu-input-number,
 .ivu-input-number-input,

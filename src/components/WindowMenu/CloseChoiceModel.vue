@@ -15,7 +15,7 @@
       <br>
       <br>
       <a-radio-group v-model="choiceValue">
-        <a-radio value="tray">缩小到托盘</a-radio>
+        <a-radio value="tray">最小化到托盘</a-radio>
         <a-radio value="exit">退出程序</a-radio>
       </a-radio-group>
       <br>
