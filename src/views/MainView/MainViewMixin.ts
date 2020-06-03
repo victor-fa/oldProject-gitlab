@@ -94,9 +94,12 @@ export default Vue.extend({
       switch (action) {
         case 'loadmore':
           this.handleLoadmoreAction()
-          break;
+          break
         case 'drop':
           this.handleDropAction(args[0])
+          break
+        case "delelteItems":
+          this.handleDeleteItems()
           break
         default:
           break;
@@ -105,6 +108,9 @@ export default Vue.extend({
     handleLoadmoreAction () {
     },
     handleDropAction (paths: string[]) {
+    },
+    handleDeleteItems () {
+      this.handleDeletAction()
     },
     handleItemActions (action: string, index: number, ...args: any[]) {
       switch (action) {
@@ -123,9 +129,6 @@ export default Vue.extend({
         case 'newFolderRequest':
           this.handleNewFolderRequestAction(index, args[0])
           break;
-        case 'delete':
-          this.handleDeletAction()
-          break
         default:
           break;
       }
@@ -149,11 +152,10 @@ export default Vue.extend({
       const item = ResourceHandler.disableFirstSelectItem(this.dataArray)
       if (item === undefined) return
       const newPath = StringUtility.renamePath(item.path, newName)
-      const route = this.$route.name as string
-      NasFileAPI.renameResource(item.path, newPath, item.uuid, route).then(response => {
+      NasFileAPI.renameResource(item.path, newPath, item.uuid).then(response => {
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         if (response.data.code !== 200) return
-        // this.$message.info('重命名成功')
+        this.$message.info('重命名成功')
         item.path = newPath
         item.name = newName
         this.dataArray.splice(index, 1, item)
@@ -367,9 +369,7 @@ export default Vue.extend({
     handleRenameAction () {
       const index = ResourceHandler.getFirstSelectItemIndex(this.dataArray)
       if (index === undefined) return
-      const item = this.dataArray[index]
-      item.renaming = true
-      this.dataArray.splice(index, 1, item)
+      this.handleEnterRenaming(index)
     },
     handleInfoAction () {
       const _this = this as any

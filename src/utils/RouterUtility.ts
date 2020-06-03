@@ -18,6 +18,8 @@ export default {
     })
   },
   popTop () {
+    const showRoutes = _.get(store.getters, 'Router/showRoutes') as CacheRoute[]
+    if (showRoutes.length === 1) return
     store.dispatch('Router/popTop').then(() => {
       this.jumpLastRoute()
     })

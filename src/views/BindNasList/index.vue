@@ -12,7 +12,8 @@
         v-on:didSelectItem="didSelectItem"
       />
     </a-spin>
-    <a-button @click="addAction">添加设备</a-button>
+    <a-button class="add-device-btn" @click="addAction">添加设备</a-button>
+    <a-button class="back-login-btn" @click="handleBackClick">重新登录</a-button>
   </div>
 </template>
 
@@ -148,6 +149,9 @@ export default Vue.extend({
         query: { type: 'addDevice' }
       })
     },
+    handleBackClick () {
+      this.$router.replace('login')
+    },
     handleListClick () {
       const list = this.$refs.nasDeviceList as any
       !_.isEmpty(list) && list.resetSelectedItem()
@@ -167,17 +171,26 @@ export default Vue.extend({
     font-size: 23px;
     color: #353535;
     font-weight: bold;
-    margin: 40px 0px 35px 40px;
+    margin: 30px 0px 25px 40px;
   }
-  .ant-btn {
+  .add-device-btn {
     height: 40px;
     color: white;
     font-size: 15px;
     font-weight: bold;
     border: none;
     border-radius: 20px;
-    margin: 20px 75px 0px;
+    margin: 15px 75px 0px;
     background-image: linear-gradient(to right, #29cb7a, #4de9b9);
+  }
+  .back-login-btn {
+    align-self: center;
+    margin-top: 10px;
+    width: 130px;
+    border: none;
+    box-shadow: none;
+    background-color: white;
+    color: #06b650;
   }
 }
 </style>

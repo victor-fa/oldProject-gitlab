@@ -36,6 +36,7 @@ import { EventBus } from '../utils/eventBus'
 import { ResourceItem } from '../api/NasFileModel'
 import { User } from '../api/UserModel'
 import StringUtility from '../utils/StringUtility'
+import { initQueue } from '../api/Transport/TransportQueue'
 
 export default Vue.extend({
   name: 'base-layout',
@@ -53,6 +54,9 @@ export default Vue.extend({
       })
       return _.cloneDeep(items)
     }
+  },
+  created () {
+    initQueue()
   },
   mounted () {
     this.initCacheRoutes()

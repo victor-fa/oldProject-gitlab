@@ -466,7 +466,7 @@ export default Vue.extend({
       if (cacheItem === undefined) return
       const path = `${cacheItem.path!}/${newName}`
       const uuid = cacheItem.uuid!
-      NasFileAPI.newFolder(path, uuid, newName).then(response => {
+      NasFileAPI.newFolder(path, uuid).then(response => {
         console.log(response)
         item.disable = false
         if (response.data.code !== 200) {

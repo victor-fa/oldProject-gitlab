@@ -56,7 +56,10 @@ interface FileInfo {
   destPath: string,
   totalSize: number,
   completedSize: number,
-  md5?: string
+  md5?: string,
+  isDirectory?: boolean,
+  relativePath?: string,
+  newCompleted?: boolean
 }
 
 enum TaskStatus {

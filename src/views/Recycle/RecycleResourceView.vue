@@ -32,7 +32,6 @@ export default Vue.extend({
   methods: {
     checkQuery () {
       if (_.isEmpty(this.path) || _.isEmpty(this.uuid)) {
-        this.$message.error('缺少参数')
         return false
       }
       return true

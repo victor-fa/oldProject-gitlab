@@ -26,9 +26,9 @@ export default {
       case StorageType.internal:
       case StorageType.internal_SSD:
       case StorageType.internal_HDD:
-        return '内置硬盘' + index
+        return index === 0 ? '内置硬盘' : '内置硬盘' + index
       case StorageType.external:
-        return '扩展硬盘' + index
+        return index === 0 ? '扩展硬盘' : '扩展硬盘' + index
       case StorageType.external_USB:
         return 'U盘'
       default:

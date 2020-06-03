@@ -96,7 +96,11 @@ export default Vue.extend({
         return true
       }
       return false
-    }
+    },
+    isSupportDrag: function () {
+      const name = this.$route.name as string
+      return name === 'main-resource-view' || name === 'custom'
+    },
   },
   mounted () {
     window.addEventListener('resize', this.observerWindowResize)
@@ -118,19 +122,38 @@ export default Vue.extend({
     handleKeydownAction (event: KeyboardEvent) {
       const code = event.code
       if (code === 'KeyA') { // cmd + a
-        const isCommand = process.platform === 'darwin'
-        if (isCommand && event.metaKey === true) {
-          this.handleEvent(event)
-          this.$emit('callbackAction', 'selectAllItems')
-        } else if (event.ctrlKey === true) {
-          this.handleEvent(event)
-          this.$emit('callbackAction', 'selectAllItems')
-        }
+        this.handleCommandAEvent(event)
+      } else if (code === 'Backspace') {
+        this.handleDeleteEvent(event)
       }
     },
-    handleEvent (event: Event) {
-      event.preventDefault()
+    handleCommandAEvent (event: KeyboardEvent) {
+      const isCommand = process.platform === 'darwin'
       event.stopPropagation()
+      if (isCommand && event.metaKey === true) {
+        event.preventDefault()
+        this.$emit('callbackAction', 'selectAllItems')
+      } else if (event.ctrlKey === true) {
+        event.preventDefault()
+        this.$emit('callbackAction', 'selectAllItems')
+      }
+    },
+    handleDeleteEvent (event: KeyboardEvent) {
+      event.stopPropagation()
+      let hasSelected = false
+      let hasRenaming = false
+      for (let index = 0; index < this.dataSource.length; index++) {
+        const item = this.dataSource[index] as ResourceItem
+        if (hasSelected === false && item.isSelected === true) {
+          hasSelected = true
+        }
+        if (hasRenaming === false && item.renaming === true) {
+          hasRenaming = true
+        }
+      }
+      if (hasSelected === false || hasRenaming === true) return
+      event.preventDefault()
+      this.$emit('callbackAction', 'delelteItems')
     },
     handleInfiniteOnLoad () {
       if (_.isEmpty(this.dataSource)) return
@@ -144,27 +167,23 @@ export default Vue.extend({
     handleListClick (event: MouseEvent) {
       this.$emit('callbackAction', 'click')
     },
-    isSupportDrag () {
-      const name = this.$route.name
-      return name === 'main-resourve-view' || name === 'custom'
-    },
     handleDragEnterEvent (event: DragEvent) {
-      if (!this.isSupportDrag()) return
+      if (!this.isSupportDrag) return
       this.dragState = true
     },
     handleDragLeaveEvent (event: DragEvent) {
-      if (!this.isSupportDrag()) return
+      if (!this.isSupportDrag) return
       this.dragState = false
     },
     handleDragoverEvent (event: DragEvent) {
-      if (!this.isSupportDrag()) return // 检测是否支持拖拽上传
+      if (!this.isSupportDrag) return // 检测是否支持拖拽上传
       if (!this.dragState) return // 检测是否是外部拖拽
       event.preventDefault()
       if (event.dataTransfer === null) return
       event.dataTransfer.dropEffect = 'copy'
     },
     handleDropEvent (event: DragEvent) {
-      if (!this.isSupportDrag()) return
+      if (!this.isSupportDrag) return
       if (!this.dragState) return
       event.preventDefault()
       this.dragState = false

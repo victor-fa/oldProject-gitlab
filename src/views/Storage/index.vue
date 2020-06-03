@@ -6,7 +6,9 @@
     :dataSource="dataArray"
     :funcList="showFuncList"
     :contextItemMenu="contentMenu"
+    v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
+    v-on:itemCallbackActions="handleItemActions"
     v-on:contextMenuCallbackActions="handleContextMenuActions"
   >
     <template v-slot:resourceItem="{ item, index }">
@@ -144,6 +146,7 @@ export default Vue.extend({
     },
     // 重写父类中的方法
     handleRefreshAction () {
+      console.log('refresh')
       this.fetchStorages()
     }
   }

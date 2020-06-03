@@ -58,6 +58,8 @@ export default Vue.extend({
         }
       }).catch(error => {
         console.log(error)
+        const result = this.validatorToken()
+        this.handleValidatorResult(result)
       })
     },
     validatorToken (): ValidatorResult {

@@ -174,8 +174,6 @@ export default Vue.extend({
       const code = event.code
       if (code === 'Enter') {
         this.handleEnterAction(event)
-      } else if (code === 'Backspace') {
-        this.handleDeleteAction(event)
       }
     },
     handleEnterAction (event: KeyboardEvent) {
@@ -187,17 +185,6 @@ export default Vue.extend({
       } else {
         const input = (this.$refs.inputName as Vue).$el as HTMLInputElement
         input.blur()
-      }
-    },
-    handleDeleteAction (event: KeyboardEvent) {
-      event.stopPropagation()
-      if (this.isRenaming === true) return
-      event.preventDefault()
-      if (!_.isEmpty(this.model.uuid)) {
-        this.$emit('callbackAction', 'delete', this.index)
-      } else {
-        event.preventDefault()
-        this.$emit('callbackAction', 'leaveNewFolder', this.index)
       }
     },
     searchResourceIcon (item: ResourceItem) {
@@ -244,6 +231,7 @@ export default Vue.extend({
       }
       if (_.isEmpty(this.inputName) || this.inputName.indexOf('.') === 0) {
         this.$emit('callbackAction', 'leaveRenaming', this.index)
+        this.inputName = this.model.name
       } else {
         this.$emit('callbackAction', 'renameRequest', this.index, this.inputName)
       }

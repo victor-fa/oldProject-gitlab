@@ -8,15 +8,19 @@ import FileHandle, { FileHandleError } from '../../utils/FileHandle'
 import axios, { AxiosResponse, CancelTokenSource } from 'axios'
 import { BasicResponse } from '../UserModel'
 import StringUtility from '../../utils/StringUtility'
+import path from 'path'
 
 const CancelToken = axios.CancelToken
+let tmpFileInfos: FileInfo[] = []
 
 export default class UploadTask extends BaseTask {
+  private directory: string // 上传文件的目录
   source? = CancelToken.source() // 下载取消请求标识
   private fileHandle = -1 // 标记当前正在操作的文件句柄
 
   constructor(srcPath: string, destPath: string, uuid: string) {
     super(srcPath, destPath, uuid)
+    this.directory = path.dirname(srcPath)
     this.source = CancelToken.source()
   }
   // public methods
@@ -24,14 +28,10 @@ export default class UploadTask extends BaseTask {
     super.start()
     // 1. 解析当前目录
     _.isEmpty(this.fileInfos) && await this.parseSourcePath(this.srcPath)
-    // 2. 过滤掉空目录
-    if (_.isEmpty(this.fileInfos)) {
-      this.handlerTaskError(TaskErrorCode.pathError)
-      return
-    }
-    // 3. 计算待上传文件的总大小
+    console.log(this.fileInfos)
+    // 2. 计算待上传文件的总大小
     this.calculatorUploadFileSize()
-    // 4. 开始递归上传文件
+    // 3. 开始递归上传文件
     this.uploadFile()
   }
   cancel () {
@@ -56,13 +56,14 @@ export default class UploadTask extends BaseTask {
     super.reload()
     this.source = CancelToken.source()
   }
-  // pricvate methods 
+  // pricvate methods
   // 解析文件源路径
   private async parseSourcePath (path: string) {
     await FileHandle.statFile(path).then(stats => {
       return this.getUploadFileInfos(stats)
     }).then(fileInfos => {
-      this.fileInfos = fileInfos
+      this.fileInfos = _.cloneDeep(fileInfos)
+      tmpFileInfos = []
     }).catch(_ => {
       this.handlerTaskError(TaskErrorCode.readStatError)
     })
@@ -77,30 +78,36 @@ export default class UploadTask extends BaseTask {
           reject(error)
         })
       } else if (stats.isDirectory()) {
-        const fileInfos = this.deepTraverseDirectory(this.srcPath)
-        resolve(fileInfos)
+        this.deepTraverseDirectory(this.srcPath).then(fileInfos => {
+          resolve(fileInfos)
+        }).catch(error => {
+          reject(error)
+        })
       }
     })
   }
   // 深遍历目录文件
   protected deepTraverseDirectory (directory: string): Promise<FileInfo[]> {
-    return new Promise((resolve, reject) => {
-      let fileInfos: FileInfo[] = []
+    return new Promise(async (resolve, reject) => {
+      const stats = fs.statSync(directory)
+      await this.convertFileStats(directory, stats).then(fileInfo => {
+        tmpFileInfos.push(fileInfo)
+      })
       fs.readdirSync(directory).forEach(async filename => {
         const path = StringUtility.convertR2L(directory + '/' + filename)
         const stats = fs.statSync(path)
         if (stats.isDirectory()) {
-          await this.deepTraverseDirectory(path).then(files => {
-            fileInfos = fileInfos.concat(files)
+          await this.deepTraverseDirectory(path).then(fileInfos => {
+            resolve(tmpFileInfos.concat(fileInfos))
           })
         } else {
           await this.convertFileStats(path, stats).then(fileInfo => {
-            fileInfos.push(fileInfo)
+            tmpFileInfos.push(fileInfo)
+            resolve(tmpFileInfos)
           }).catch(error => {
             reject(error)
           })
         }
-        resolve(fileInfos)
       })
     })
   }
@@ -132,7 +139,28 @@ export default class UploadTask extends BaseTask {
       this.emit('taskFinished', this.index)
       return
     }
-    // start upload
+    console.log(fileInfo)
+    if (fileInfo.isDirectory === true || fileInfo.totalSize <= 0) {
+      this.creatFolder(fileInfo)
+    } else {
+      this.startUpload(fileInfo)
+    }    
+  }
+  // 创建文件夹
+  private creatFolder (fileInfo: FileInfo) {
+    NasFileAPI.newFolder(fileInfo.destPath, this.uuid).then(response => {
+      console.log(response)
+      if (response.data.code !== 200) return
+      fileInfo.newCompleted = true
+      this.emit('fileFinished', this.index, _.cloneDeep(fileInfo))
+      this.uploadFile()
+    }).catch(_ => {
+      fileInfo.newCompleted = true
+      this.handlerTaskError(TaskErrorCode.networkError)
+    })
+  }
+  // 开始上传文件数据
+  private startUpload (fileInfo: FileInfo) {
     FileHandle.openReadFileHandle(fileInfo.srcPath).then(fd => { // open file handle success
       this.fileHandle = fd
       return this.uploadSingleFile(fd, fileInfo)
@@ -157,7 +185,11 @@ export default class UploadTask extends BaseTask {
   private getUploadFileInfo () {
     for (let index = 0; index < this.fileInfos!.length; index++) {
       const item = this.fileInfos[index]
-      if (item.completedSize < item.totalSize) return item
+      if (item.isDirectory === true) {
+        if (item.newCompleted !== true) return item
+      } else {
+        if (item.completedSize < item.totalSize) return item
+      }
     }
     return null
   }
@@ -183,6 +215,7 @@ export default class UploadTask extends BaseTask {
       chunkLength = buffer.length
       return this.uploadChunckData(file, buffer, this.source)
     }).then(response => {
+      console.log(response)
       if (this.status !== TaskStatus.progress) return
       if (response.data.code !== 200) {
         const error = new TaskError(TaskErrorCode.serverError, response.data.msg)
@@ -222,12 +255,15 @@ export default class UploadTask extends BaseTask {
   protected convertFileStats (path: string, stats: fs.Stats): Promise<FileInfo> {
     return new Promise(resolve => {
       const name = StringUtility.formatName(path)
+      const relativePath = path.substring(this.directory.length, path.length)
       const fileInfo: FileInfo = {
         name,
+        relativePath,
         srcPath: path,
-        destPath: `${this.destPath}/${name}`,
+        destPath: `${this.destPath}${relativePath}`,
         totalSize: stats.size,
         completedSize: 0,
+        isDirectory: stats.isDirectory()
       }
       resolve(fileInfo)
     })

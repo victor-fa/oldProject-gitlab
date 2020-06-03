@@ -74,6 +74,7 @@ export default {
   resetDisableState (showArray: Array<ResourceItem>) {
     return showArray.map(item => {
       item.disable = false
+      item.renaming = false
       return item
     })
   },

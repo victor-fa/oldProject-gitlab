@@ -168,6 +168,7 @@ export default Vue.extend({
     },
     // handle header view callback actions
     handleHeaderViewAction (action: string, ...args: any[]) {
+      this.$emit('headerCallbackActions', action, ...args)
       switch (action) {
         case 'arrangeChange':
           this.handleArrangeChange(args[0])
@@ -176,7 +177,7 @@ export default Vue.extend({
           this.handleBackAction()
           break;
         case 'refresh':
-          this.handleRefreshAction()
+          this.handleInnerRefreshAction()
           break;
         case 'click':
           this.handleListClickAction()
@@ -184,7 +185,6 @@ export default Vue.extend({
         default:
           break;
       }
-      this.$emit('headerCallbackActions', action, ...args)
     },
     handleArrangeChange (arrangeWay: ArrangeWay) {
       this.arrangeWay = arrangeWay
@@ -193,7 +193,7 @@ export default Vue.extend({
     handleBackAction () {
       RouterUtility.pop()
     },
-    handleRefreshAction() {
+    handleInnerRefreshAction() {
       // const list = this.$refs.resourceList as Vue
       // console.log(list)
     },

@@ -55,6 +55,7 @@ import { User } from '../../api/UserModel'
 import WindowMenu from '../WindowMenu/index.vue'
 import UserAPI from '../../api/UserAPI'
 import ClientAPI from '../../api/ClientAPI'
+import { clearQueueCache } from '../../api/Transport/TransportQueue'
 
 export default Vue.extend({
   name: 'basic-header',
@@ -86,18 +87,19 @@ export default Vue.extend({
     }
   },
   computed: {
+    ...mapGetters('User', ['user']),
     nickName: function () {
-      const myThis: any = this
-      return _.get(myThis.user, 'nicName', '')
+      const nickName = _.get(this.user, 'nicName', '') as string
+      return nickName
     },
     userName: function () {
-      const myThis: any = this
-      return _.get(myThis.user, 'userName', '')
+      const name = _.get(this.user, 'userName', '') as string
+      return name
     },
     imageUrl: function () {
-      return this.user.image
-    },
-    ...mapGetters('User', ['user'])
+      const url = this.user.image as string
+      return url
+    }
   },
   methods: {
     handleMouseEnter (item: Setting) {
@@ -141,22 +143,27 @@ export default Vue.extend({
     },
     switchUser () {
       UserAPI.logout().then(response => {
+        console.log(response)
         if (response.data.code !== 200) return
-        processCenter.renderSend(EventName.login)
-        this.$message.success('切换成功！')
         // 清除缓存的用户相关信息
         this.$store.dispatch('User/clearCacheUserInfo')
         this.$store.dispatch('NasServer/clearCacheNas')
         this.$store.dispatch('Setting/clearCloseChoiceInfo')
+        this.clearTransportTask()
+        processCenter.renderSend(EventName.login)
       }).catch(error => {
         console.log(error)
         this.$message.error('网络连接错误,请检测网络')
       })
     },
     switchDevice () {
-      processCenter.renderSend(EventName.bindList)
       this.$store.dispatch('NasServer/clearCacheNas')
       this.$store.dispatch('Setting/clearCloseChoiceInfo')
+      this.clearTransportTask()
+      processCenter.renderSend(EventName.bindList)
+    },
+    clearTransportTask () {
+      clearQueueCache()
     }
   }
 })

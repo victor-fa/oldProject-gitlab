@@ -74,7 +74,7 @@ export default {
       }
     })
   },
-  renameResource (oldPath: string, newPath: string, uuid: string, route: string): Promise<AxiosResponse<BasicResponse>> {
+  renameResource (oldPath: string, newPath: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(fileModule + '/rename', {
       uuid: uuid,
       old_path: oldPath,
@@ -92,9 +92,7 @@ export default {
       old_path: oldPath,
       new_path: newPath
     }, {
-      params: {
-        crypto_token: token.crypto_token
-      }
+      params: { crypto_token: token.crypto_token }
     })
   },
   fetchMediaInfo (path: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
@@ -318,12 +316,11 @@ export default {
       cancelToken: source === undefined ? undefined : source.token
     })
   },
-  newFolder (path: string, uuid: string, newName: string): Promise<AxiosResponse<BasicResponse>> {
+  newFolder (path: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(fileModule + '/add', {
       uuid,
       path,
-      type: 2,
-      alias: newName
+      type: 2
     })
   },
   setOfflineAccount (data): Promise<AxiosResponse<BasicResponse>> {

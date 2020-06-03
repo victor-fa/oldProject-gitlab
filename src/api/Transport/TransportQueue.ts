@@ -64,6 +64,14 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
     this.checkUploadQueue()
     this.reloadTaskInDB(task)
   }
+  /**清除所有任务 */
+  clearAllTask () {
+    this.queue.forEach(task => {
+      if (task.status === TaskStatus.progress) task.cancel()
+    })
+    this.queue = []
+    this.clearTable(this.db)
+  }
   // private methods
   private generateTaskIndex () {
     const task = _.last(this.queue)
@@ -102,6 +110,13 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
       db.createObjectStore(name, { keyPath: 'index' })
     }
   }
+  private clearTable (db?: IDBDatabase) {
+    if (db === undefined) return
+    if (db.objectStoreNames.contains(this.tableName)) {
+      const objectStore = db.transaction(this.tableName, 'readwrite').objectStore(this.tableName)
+      objectStore.clear()
+    }
+  }
   private readDBTasks (event: Event) {
     const db = (event.target as IDBOpenDBRequest).result
     this.db = db
@@ -118,7 +133,7 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
     }
   }
   // 将task转换成DB可以存储的对象
-  convertTask2Obj (task: T) {
+  private convertTask2Obj (task: T) {
     return {
       srcPath: task.srcPath,
       destPath: task.destPath,
@@ -131,7 +146,7 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
     }
   }
   // 将DB中存储的对象转换成task
-  convertObj2Task (obj: any) {
+  private convertObj2Task (obj: any) {
     const task = this.createTask(obj.srcPath, obj.destPath, obj.uuid)
     task.index = obj.index
     task.countOfBytes = obj.countOfBytes
@@ -140,7 +155,7 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
     task.status = obj.status
     return task as T
   }
-  createTask (srcPath: string, destPath: string, uuid: string) {
+  private createTask (srcPath: string, destPath: string, uuid: string) {
     if (this.tableName === 'UploadQueue') {
       return new UploadTask(srcPath, destPath, uuid)
     } else if (this.tableName === 'BackupQueue') {
@@ -243,11 +258,52 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
   }
 }
 
-const uploadQueue = new TaskQueue<UploadTask>('UploadQueue')
-const backupUploadQueue = new TaskQueue<BackupUploadTask>('BackupQueue')
-const encryptUploadQueue = new TaskQueue<EncryptUploadTask>('EncryptQueue')
-const downloadQueue = new TaskQueue<DownloadTask>('DownloadQueue')
-const encryptDownloadQueue = new TaskQueue<EncryptDownloadTask>('EncryptDownloadQueue')
+let uploadQueue: TaskQueue<UploadTask>
+let backupUploadQueue: TaskQueue<BackupUploadTask>
+let encryptUploadQueue: TaskQueue<EncryptUploadTask>
+let downloadQueue: TaskQueue<DownloadTask>
+let encryptDownloadQueue: TaskQueue<EncryptDownloadTask>
+
+/**初始化传输队列 */
+const initQueue = () => {
+  removeQueueListeners(uploadQueue)
+  uploadQueue = new TaskQueue<UploadTask>('UploadQueue')
+  removeQueueListeners(backupUploadQueue)
+  backupUploadQueue = new TaskQueue<BackupUploadTask>('BackupQueue')
+  removeQueueListeners(encryptUploadQueue)
+  encryptUploadQueue = new TaskQueue<EncryptUploadTask>('EncryptQueue')
+  removeQueueListeners(downloadQueue)
+  downloadQueue = new TaskQueue<DownloadTask>('DownloadQueue')
+  removeQueueListeners(encryptDownloadQueue)
+  encryptDownloadQueue = new TaskQueue<EncryptDownloadTask>('EncryptDownloadQueue')
+}
+
+/**清理传输队列缓存 */
+const clearQueueCache = () => {
+  releaseQueue(uploadQueue)
+  releaseQueue(backupUploadQueue)
+  releaseQueue(encryptUploadQueue)
+  releaseQueue(downloadQueue)
+  releaseQueue(encryptDownloadQueue)
+}
+
+const releaseQueue = <T extends BaseTask>(queue?: TaskQueue<T>) => {
+  removeQueueListeners(queue)
+  if (queue !== undefined) {
+    queue.clearAllTask()
+    queue = undefined
+  }
+}
+
+const removeQueueListeners = <T extends BaseTask>(queue?: TaskQueue<T>) => {
+  if (queue !== undefined) {
+    const tasks = queue.getAllTasks()
+    tasks.forEach(task => {
+      task.removeAllListeners()
+    })
+    queue.removeAllListeners()
+  }
+}
 
 export {
   TaskQueue,
@@ -255,5 +311,7 @@ export {
   backupUploadQueue,
   encryptUploadQueue,
   downloadQueue,
-  encryptDownloadQueue
+  encryptDownloadQueue,
+  initQueue,
+  clearQueueCache
 }

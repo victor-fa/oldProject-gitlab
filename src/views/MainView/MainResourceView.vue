@@ -82,7 +82,6 @@ export default Vue.extend({
     },
     checkQuery () {
       if (_.isEmpty(this.path) || _.isEmpty(this.uuid)) {
-        this.$message.error('缺少参数')
         return false
       }
       return true
@@ -183,7 +182,7 @@ export default Vue.extend({
       }
       const item = this.updateItemState(index, true, false)
       const directory = `${this.path}/${newName}`
-      NasFileAPI.newFolder(directory, this.uuid, newName).then(response => {
+      NasFileAPI.newFolder(directory, this.uuid).then(response => {
         if (response.data.code !== 200) {
           this.updateItemState(index, false, true)
           return
