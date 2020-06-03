@@ -20,17 +20,16 @@ import {app} from "electron";
 							<a-input type="file" name="userhead" @change="changePhoto()" ref="file" />
 						</div>
 					</form>
-					<p class="cd-setting-info">昵称：{{user.nicName}}</p>
-					<p class="cd-setting-info">手机号：{{user.phoneNo}}</p>
-					<p class="cd-setting-title">密码设置</p>
-					<p class="cd-setting-sec-title">修改账号密码</p>
-					<div class="cd-setting-form">
-						<a-input type="password" v-model="changePass.oldpass" placeholder="当前密码" clearable style="width: 100%;margin-bottom: 10px;" />
-						<a-input type="password" v-model="changePass.newpass" placeholder="新密码" clearable style="width: 100%;margin-bottom: 10px;" />
-						<a-input type="password" v-model="changePass.againPass" placeholder="再次输入密码" clearable style="width: 100%;margin-bottom: 10px;" />
-						<a-button @click="ChangePassword">修改</a-button>
-					</div>
-					<p class="cd-setting-title"><br><br></p>
+					<p class="cd-setting-info" style="display: flex;">
+						昵称：<a-input type="text" v-model="user.nicName" placeholder="请输入昵称" clearable style="width: 200px;margin-left: 13px;" />
+					</p>
+					<p class="cd-setting-info">
+						手机号：<a-input type="text" v-model="user.phoneNo" placeholder="请输入手机号" clearable style="width: 200px;" />
+					</p>
+					<p class="cd-setting-info">
+						<a-button @click="ChangePassword">修改密码</a-button>
+					</p>
+					<p class="cd-setting-title"><br></p>
 				</div>
 				
 				<div class="cd-setting-container" v-show="SettingMenuData.Currency.active">
@@ -38,7 +37,6 @@ import {app} from "electron";
 					<p class="cd-setting-title">
 						<a-checkbox v-model="loginSetting.autoLogin">自动登录</a-checkbox>
 						<a-checkbox v-model="loginSetting.autoPowerOn">开机自启动</a-checkbox>
-						<a-button>修改</a-button>
 					</p>
 					<p class="cd-setting-title">当关闭窗口时</p>
 					<p class="cd-setting-title">
@@ -46,7 +44,6 @@ import {app} from "electron";
 							<a-radio value="tray">最小化到托盘</a-radio>
 							<a-radio value="exit">退出程序</a-radio>
 						</a-radio-group>
-						<a-button @click="handleCloseChoice">修改</a-button>
 					</p>
 				</div>
 
@@ -113,23 +110,10 @@ import {app} from "electron";
 					</template>
 					<p class="cd-setting-title"><br></p>
 				</div>
+				
+				<SettingBottom v-if="!SettingMenuData.User.active" @callback="handleBottom" />
 			</div>
 		</div>
-		<a-modal title="更换手机号" :visible="showPhoneDialog" width="400px" top="70px" style="top: 50px;" @cancel="showPhoneDialog = false">
-			<div style="height: 120px;">
-				<p class="cd-setting-sec-title">输入新手机号地址</p>
-				<a-input type="text" v-model="changePhoneData.phone" placeholder="您的新手机号地址" clearable style="width: 100%;margin: 10px 0" :number="true" :maxlength="11" />
-			</div>
-			<span slot="footer" class="dialog-footer">
-				<a-button class="cd-button cd-cancel-button" @click="showPhoneDialog = false">取 消</a-button>
-				<a-button @click="getPhoneCode">确 定</a-button>
-			</span>
-		</a-modal>
-		<a-modal
-			:visible="codeVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
-			okText="确定" cancelText="取消" @ok="ChangePassword" @cancel="codeVisiable = false">
-			<p>验证码：</p><a-input placeholder="请输入短信验证码" v-model="changePass.code" />
-		</a-modal>
 		<a-modal
 			:visible="codePhoneVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
 			okText="确定" cancelText="取消" @ok="changePhone" @cancel="codePhoneVisiable = false">
@@ -154,6 +138,7 @@ import {app} from "electron";
 <script>
 import _ from 'lodash'
 import SettingMenu from '../../components/Disk/SettingMenu.vue'
+import SettingBottom from '../../components/Disk/SettingBottom.vue'
 import UserAPI from '@/api/UserAPI'
 import NasFileAPI from '@/api/NasFileAPI'
 import StringUtility from '../../utils/StringUtility'
@@ -161,10 +146,14 @@ import { loginIcons } from '../../views/Login/iconList'
 import { mapGetters } from 'vuex'
 import StorageHandler from '../Storage/StorageHandler'
 import processCenter, { EventName } from '../../utils/processCenter'
+import { USER_MODEL } from '../../common/constants'
 
 export default {
 	name: 'DiskSetting',
-	components: { SettingMenu },
+	components: {
+		SettingMenu,
+		SettingBottom
+	},
 	watch: {
 		settingData: {
 			handler() {
@@ -182,32 +171,11 @@ export default {
 		return {
       loginIcons,
 			SettingMenuData: {
-				Account: {
-					active: 'active',
-					name: '我的账号'
-				},
-				Currency: {
-					active: '',
-					name: '通用设置'
-				},
-				User: {
-					active: '',
-					name: '用户管理'
-				},
-				Device: {
-					active: '',
-					name: '设备信息'
-				},
-				LocalAccount: {
-					active: '',
-					name: '本地账号'
-				},
-			},
-			changePass: {
-				oldpass: '',
-				newpass: '',
-				againPass: '',
-				code: ''
+				Account: { active: 'active', name: '我的账号' },
+				Currency: { active: '', name: '通用设置' },
+				User: { active: '', name: '用户管理' },
+				Device: { active: '', name: '设备信息' },
+				LocalAccount: { active: '', name: '本地账号' },
 			},
 			loginSetting: {
 				autoLogin: false,
@@ -226,7 +194,6 @@ export default {
 				phone: '',
 				code: ''
 			},
-			showPhoneDialog: false,
 			settingData: {
 				Phone: '',
 			},
@@ -255,67 +222,43 @@ export default {
 			}
 			this.SettingMenuData[index].active = 'active';
 		},
-		ChangePassword() {
-			if (this.loading) {
-				this.$message.warning('正在进行其他操作，请等待');
-				return;
+		handleBottom(data) {
+			switch (data) {
+				case 0:
+					this.handleSave(data)
+					break;
+				case 1:
+					this.close()
+					break;
+				case 2:
+					this.handleSave(data)
+					break;
+				default:
+					break;
 			}
-			if (!this.changePass.oldpass.length) {
-				this.$message.warning('请先输入当前密码');
-				return;
-			}
-			if (!this.changePass.newpass.length) {
-				this.$message.warning('请输入新密码');
-				return;
-			}
-			if (!this.changePass.againPass.length) {
-				this.$message.warning('请再次输入新密码');
-				return;
-			}
-			if (this.changePass.newpass !== this.changePass.againPass) {
-				this.$message.error('密码不一致，请检查');
-				return;
-			}
-			if (this.changePass.newpass === this.changePass.oldpass) {
-				this.$message.warning('新旧密码一致，取消操作');
-				this.changePass.newpass = '';
-				this.changePass.againPass = '';
-				return;
-			}
-			if (this.changePass.code === '') {
-				this.codeVisiable = true
-				UserAPI.smsCode(this.user.userName, 2).then(response => {
-					this.loading = false;
-					if (response.data.code !== 200) return
-					this.codeVisiable = true
-					this.$message.success('短信已发送到手机')
-				}).catch(error => {
-					this.loading = false;
-					console.log(error)
-					this.$message.error('网络连接错误,请检测网络')
-				})
-				return
-			}
-			const input = {
-				userName: this.user.userName,
-				password: StringUtility.encryptPassword(this.changePass.newpass),
-				code: this.changePass.code
-			}
-      UserAPI.changePass(input).then(response => {
-				if (response.data.code !== 200) return
-				this.$message.success('修改成功，请牢记密码');
-				this.changePass.oldpass = '';
-				this.changePass.newpass = '';
-				this.changePass.againPass = '';
-				this.changePass.code = '';
-				this.codeVisiable = false
-      }).catch(error => {
-        console.log(error)
-        this.$message.error('网络连接错误,请检测网络')
-      })
 		},
-		OpenChangePhoneDialog() {
-			this.showPhoneDialog = true;
+		handleSave (data) {
+			if (this.SettingMenuData.Account.active) {
+				const input = { nicName: this.user.nicName ? this.user.nicName : '' }
+				const userJson = localStorage.getItem(USER_MODEL)
+				if (userJson === null) return
+				const userObj = JSON.parse(userJson)
+				if (this.user.nicName !== userObj.nicName) this.handleNickname()
+				if (this.user.phoneNo !== userObj.phoneNo) {
+					this.changePhoneData.phone = this.user.phoneNo
+					this.getPhoneCode()
+				}
+			} else if (this.SettingMenuData.Currency.active) {
+				this.handleCloseChoice()
+			} else if (this.SettingMenuData.Device.active) {
+				
+			} else if (this.SettingMenuData.LocalAccount.active) {
+
+			}
+			// if (data === 0) setTimeout(() => this.close(), 3000);
+		},
+		ChangePassword() {
+			this.$ipc.send('system', 'forget-pass');
 		},
 		getPhoneCode () {
 			if (!this.changePhoneData.phone.length) {
@@ -324,10 +267,6 @@ export default {
 			}
 			if (this.changePhoneData.phone && !(/^1[3456789]\d{9}$/.test(this.changePhoneData.phone))) {
 				this.$message.error('请输入正确的手机号');
-				return;
-			}
-			if (this.changePhoneData.phone === this.user.phoneNo) {
-				this.$message.warning('输入的手机号与已绑定的手机号相同，请输入其他手机号');
 				return;
 			}
 			UserAPI.smsCode(this.changePhoneData.phone, 5).then(response => {
@@ -353,7 +292,6 @@ export default {
 			UserAPI.updateInfo(input).then(response => {
 				if (response.data.code !== 200) return
 				this.codePhoneVisiable = false;
-				this.showPhoneDialog = false;
 				this.changePhoneData.phone = '';
 				this.$store.dispatch('User/updateUser', response.data.data.userVO)
 				this.settingData.Phone = response.data.data.userVO.phoneNo
@@ -365,12 +303,8 @@ export default {
 				this.changePhoneData.code = ''
 			})
 		},
-		close() {
-			this.$electron.remote.getCurrentWindow().close();
-		},
-		mini() {
-			this.$electron.remote.getCurrentWindow().minimize();
-		},
+		close() { this.$electron.remote.getCurrentWindow().close() },
+		mini() { this.$electron.remote.getCurrentWindow().minimize() },
 		getOfflineName () {
 			NasFileAPI.getOfflineName().then(response => {
 				if (response.data.code !== 200) return
@@ -460,7 +394,7 @@ export default {
 		},
 		handleCloseChoice () {
 			const input = {
-				'remember': true,
+				'remember': this.loginSetting.closeChoice ? true : false,
 				'trayOrExit': this.loginSetting.closeChoice
 			}
 			this.$store.dispatch('Setting/updateCloseChoiceInfo', input)
@@ -537,6 +471,19 @@ export default {
 				})
 			}
 		},
+		handleNickname() {
+			const input = { nicName: this.user.nicName ? this.user.nicName : '' }
+			UserAPI.updateInfo(input).then(response => {
+				if (response.data.code !== 200) return
+				this.$store.dispatch('User/updateUser', response.data.data.userVO)
+				this.user = response.data.data.userVO
+				processCenter.renderSend(EventName.account);
+        this.$message.success('修改成功')
+      }).catch(error => {
+        console.log(error)
+        this.$message.error('网络连接错误,请检测网络')
+      })
+		},
 	}
 };
 </script>
@@ -599,7 +546,7 @@ p {
 }
 .cd-setting-main {
 	width: 100%;
-	height: calc(100% - 50px);
+	height: calc(100% - 90px);
 	padding: 10px;
 	display: inline-flex;
 	margin-top: -15px;
@@ -656,7 +603,7 @@ p {
 .cd-setting-info button {
 	background: none;
 	font-size: 14px;
-	margin-left: 10px;
+	margin-right: 10px;
 }
 .cd-setting-form {
 	margin: 8px 0;

@@ -29,7 +29,6 @@ export default {
     UPDATE_CLOSE_CHOICE (state: SettingState, closeInfo: CloseChoiceInfo) {
       state.closeInfo = closeInfo
       const json = JSON.stringify(closeInfo)
-      console.log(json);
       localStorage.setItem(CLOSE_CHOICE, json)
     },
     CLEAR_CLOSE_CHOICE (state: SettingState) {
