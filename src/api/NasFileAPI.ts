@@ -75,20 +75,27 @@ export default {
     })
   },
   renameResource (oldPath: string, newPath: string, uuid: string, route: string): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(fileModule + '/rename', {
+      uuid: uuid,
+      old_path: oldPath,
+      new_path: newPath
+    })
+  },
+  renameEncryptResource (oldPath: string, newPath: string, uuid: string, route: string): Promise<AxiosResponse<BasicResponse>> {
     const cryptoJson = localStorage.getItem(CRYPTO_INFO)
     if (cryptoJson === null) {
       return Promise.reject(Error('not find crypto_info'))
     }
     const token = JSON.parse(cryptoJson) as CryptoInfo
-    let params
-    if (route === 'encrypt') {
-      params = { crypto_token: token.crypto_token }
-    }
     return nasServer.post(fileModule + '/rename', {
       uuid: uuid,
       old_path: oldPath,
       new_path: newPath
-    }, { params })
+    }, {
+      params: {
+        crypto_token: token.crypto_token
+      }
+    })
   },
   fetchMediaInfo (path: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.get(fileModule + '/media', {

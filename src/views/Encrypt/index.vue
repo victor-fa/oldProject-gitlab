@@ -427,6 +427,28 @@ export default Vue.extend({
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         this.$message.error('移出失败')
       })
+    },
+    handleRenameRequestAction (index: number, newName: string) {
+      if (!ResourceHandler.checkFileName(newName.substring(0, newName.indexOf('.')))) {
+        this.$message.error('名称包含非法字符')
+        return
+      }
+      const item = ResourceHandler.disableFirstSelectItem(this.dataArray)
+      if (item === undefined) return
+      const newPath = StringUtility.renamePath(item.path, newName)
+      const route = this.$route.name as string
+      NasFileAPI.renameEncryptResource(item.path, newPath, item.uuid, route).then(response => {
+        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+        if (response.data.code !== 200) return
+        // this.$message.info('重命名成功')
+        item.path = newPath
+        item.name = newName
+        this.dataArray.splice(index, 1, item)
+      }).catch(error => {
+        console.log(error)
+        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+        this.$message.error('重命名失败')
+      })
     }
   }
 })

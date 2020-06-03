@@ -8,12 +8,18 @@ import {app} from "electron";
 			<a-button icon="minus" style="color: #d9d9d9" @click="mini" />
 		</div>
 		<div class="cd-setting-main">
-			<SettingMenu :data="SettingMenuData" @change="change" />
+			<SettingMenu :data="SettingMenuData" @change="changeMenu" />
 			<div class="cd-setting-content">
 				<div class="cd-setting-container" v-show="SettingMenuData.Account.active">
 					<p class="cd-setting-info">
-						<img style="width: 25px; height: 30px; margin: 15px 0 0 10px;" :src="loginIcons.account">
+						<img draggable="false" style="width: 70px; height: 70px; margin: 15px 0 0 -3px;" v-if="UploadSrc" :src="UploadSrc" alt="" />
+						<img draggable="false" style="width: 70px; height: 70px; margin: 15px 0 0 -3px;" v-else-if="user.image" :src="user.image" alt="" />
 					</p>
+					<form @submit.prevent="onSubmit" ref="form">
+						<div class="cd-user-head" onclick="this.childNodes[0].click()">
+							<a-input type="file" name="userhead" @change="changePhoto()" ref="file" />
+						</div>
+					</form>
 					<p class="cd-setting-info">昵称：{{user.nicName}}</p>
 					<p class="cd-setting-info">手机号：{{user.phoneNo}}</p>
 					<p class="cd-setting-title">密码设置</p>
@@ -30,7 +36,6 @@ import {app} from "electron";
 				<div class="cd-setting-container" v-show="SettingMenuData.Currency.active">
 					<p class="cd-setting-title">登录设置</p>
 					<p class="cd-setting-title">
-						<a-checkbox v-model="loginSetting.rememberPass">记住密码</a-checkbox>
 						<a-checkbox v-model="loginSetting.autoLogin">自动登录</a-checkbox>
 						<a-checkbox v-model="loginSetting.autoPowerOn">开机自启动</a-checkbox>
 						<a-button>修改</a-button>
@@ -155,6 +160,7 @@ import StringUtility from '../../utils/StringUtility'
 import { loginIcons } from '../../views/Login/iconList'
 import { mapGetters } from 'vuex'
 import StorageHandler from '../Storage/StorageHandler'
+import processCenter, { EventName } from '../../utils/processCenter'
 
 export default {
 	name: 'DiskSetting',
@@ -204,7 +210,6 @@ export default {
 				code: ''
 			},
 			loginSetting: {
-				rememberPass: false,
 				autoLogin: false,
 				autoPowerOn: false,
 				closeChoice: 'tray'
@@ -228,18 +233,23 @@ export default {
 			loading: '',
 			codeVisiable: false,
 			codePhoneVisiable: false,
-			storages: []
+			storages: [],
+			UploadSrc: false
 		};
 	},
 	created() {
-		this.getOfflineName()
-		this.fetchStorages()
 		console.log(JSON.parse(JSON.stringify(this.user)));
 		this.settingData.Phone = this.user.phoneNo
-		this.loginSetting.closeChoice = this.closeInfo.trayOrExit
 	},
 	methods: {
-		change(item, index) {
+		changeMenu(item, index) {
+			if (item.name === '本地账号') {
+				this.getOfflineName()
+			} else if (item.name === '设备信息') {
+				this.fetchStorages()
+			} else if (item.name === '通用设置') {
+				this.loginSetting.closeChoice = this.closeInfo.trayOrExit
+			}
 			for (let i in this.SettingMenuData) {
 				this.SettingMenuData[i].active = '';
 			}
@@ -502,6 +512,31 @@ export default {
 				}).catch(error => reject(error))
 			}, 100);
 		},
+		changePhoto () {
+			this.UploadSrc = false;
+			let elm = event.target;
+			let user_pic = elm.value;
+			if (user_pic.length > 1 && user_pic) {
+				let type = StringUtility.formatSuffix(user_pic).toLowerCase();
+				if (['png', 'jpg', 'jpeg', 'bmp', 'gif'].indexOf(type) === -1) {
+					return this.$message.error('所选格式为' + type + ' 请重新选择上传的文件');
+				}
+				elm.files && elm.files[0] ? (this.UploadSrc = window.URL.createObjectURL(elm.files[0])) : '';
+				this.loading = true;
+				UserAPI.uploadPhoto(elm.files[0]).then(response => {
+					this.loading = false;
+					if (response.data.code !== 200) return
+					this.user.image = response.data.data.imageUrl
+					this.$message.success('修改头像成功')
+					processCenter.renderSend(EventName.account);
+					this.$store.dispatch('User/updateUser', this.user)
+				}).catch(error => {
+					this.loading = false;
+					console.log(error)
+					this.$message.error('网络连接错误,请检测网络')
+				})
+			}
+		},
 	}
 };
 </script>
@@ -523,12 +558,6 @@ p {
 }
 .cd-drag-head-big *{
 	float: left;
-}
-.cd-drag-head-big img{
-	margin: 8px;
-	width: 32px;
-	height: 32px;
-	border-radius: 100%;
 }
 .cd-drag-head-big i{
 	float: left;
@@ -641,5 +670,26 @@ p {
 .cd-setting-form button {
 	float: right;
 	margin-top: 10px;
+}
+
+.cd-user-head {
+	width: 70px;
+	height: 70px;
+	position: absolute;
+	left: 133px;
+	top: 75px;
+	overflow: unset;
+	transition: all 0.35s;
+}
+.cd-user-head:hover {
+	box-shadow: 0 0 29px -2px #ffffff;
+	cursor: pointer;
+	transition: all 0.35s;
+}
+.cd-user-head input {
+	position: absolute;
+	top: -50px;
+	left: -11px;
+	display: none;
 }
 </style>
