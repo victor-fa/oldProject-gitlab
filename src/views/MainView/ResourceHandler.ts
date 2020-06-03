@@ -6,6 +6,7 @@ import StringUtility from '@/utils/StringUtility'
 import { TaskMode } from '@/api/NasFileAPI'
 import store from '@/store'
 import { User } from '@/api/UserModel'
+import path from 'path'
 
 export default {
   // 对资源列表进行分类
@@ -37,10 +38,6 @@ export default {
       if (aIndex === index) item.isSelected = selected
       return item
     })
-  },
-  // command多选
-  commandMultipleSelection (showList: Array<ResourceItem>, index: number) {
-
   },
   // shift多选规则: 
   // 1. 如果当前有选中：取第一个已选中item的下标bIndex，将aIndex与bIndex之间的所有item全部选中
@@ -368,21 +365,37 @@ export default {
     }
   },
   // 根据文件类型匹配文件icon的占位图
-  searchResourceIcon (type: ResourceType) {
-    switch (type) {
+  searchResourceIcon (item: ResourceItem) {
+    switch (item.type) {
       case ResourceType.video:
         return require('../../assets/resource/video_icon.png')
       case ResourceType.audio:
         return require('../../assets/resource/audio_icon.png')
       case ResourceType.image:
         return require('../../assets/resource/image_icon.png')
-      case ResourceType.document:
-        return require('../../assets/resource/txt_icon.png')
-      case ResourceType.archive:
-        return require('../../assets/resource/compress_icon.png')
       case ResourceType.folder:
         return require('../../assets/resource/folder_icon.png')
+      default:
+        return this.matchMineTypeIcon(item.path)
     }
+  },
+  matchMineTypeIcon (filePath: string) {
+    const type = path.extname(filePath).split('.').pop()
+    if (type === undefined) return require('../../assets/resource/unkonw_icon.png')
+    const mine = type.toLowerCase()
+    console.log(mine)
+    if (mine === 'pdf') return require('../../assets/resource/pdf_icon.png')
+    if (mine === 'html') return require('../../assets/resource/html_icon.png')
+    const textTypes = ['txt', 'md', 'xml', 'json']
+    if (textTypes.indexOf(mine) !== -1) return require('../../assets/resource/txt_icon.png')
+    const excelTypes = ['xls', 'xlsx', 'numbers']
+    if (excelTypes.indexOf(mine) !== -1) return require('../../assets/resource/excel_icon.png')
+    const wordTypes = ['doc', 'docx']
+    if (wordTypes.indexOf(mine) !== -1) return require('../../assets/resource/word_icon.png')
+    const pptTypes = ['ppt', 'pptx', 'key']
+    if (pptTypes.indexOf(mine) !== -1) return require('../../assets/resource/ppt_icon.png')
+    const compressTypes = ['rar', 'zip', 'arj', 'gz', 'iso', 'z']
+    if (compressTypes.indexOf(mine) !== -1) return require('../../assets/resource/compress_icon.png')
     return require('../../assets/resource/unkonw_icon.png')
   },
   /**检测文件名合法性 */

@@ -135,6 +135,7 @@ export default Vue.extend({
       const isClip = (this.clipboard as ClipboardModel).isClip
       if (isClip) this.$store.dispatch('Resource/updateClipboard', { isClip: false, items: [] })
       this.$store.dispatch('Resource/increaseTask')
+      this.handleRefreshAction()
     },
     // 覆盖混入中的方法
     handleLoadmoreAction () {
@@ -240,9 +241,10 @@ export default Vue.extend({
       })
     },
     handlePasteAction (mode: TaskMode) {
-      const srcItems = ResourceHandler.getSelectItems(this.dataArray)
+      const clipboard = this.clipboard as ClipboardModel
+      const srcItems = clipboard.items
       const destItem = { path: this.path, uuid: this.uuid } as ResourceItem
-      const isClip = (this.clipboard as ClipboardModel).isClip
+      const isClip = clipboard.isClip
       if (isClip) {
         NasFileAPI.addMoveTask(srcItems, destItem, mode).then(response => {
           console.log(response)

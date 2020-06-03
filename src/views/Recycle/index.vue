@@ -111,6 +111,9 @@ export default Vue.extend({
         this.handleDeletRequest(items)
       })
     },
+    handleClearTrashAction () {
+      this.handleDeletRequest(this.dataArray)
+    },
     handleDeletRequest (items: ResourceItem[]) {
       this.loading = true
       NasFileAPI.addDeleteTask(items).then(response => {

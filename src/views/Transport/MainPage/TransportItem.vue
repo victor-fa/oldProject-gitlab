@@ -106,7 +106,7 @@ export default Vue.extend({
       } else {  // 远程操作
         type = item.type
       }
-      return ResourceHandler.searchResourceIcon(type)
+      return ResourceHandler.searchResourceIcon(item)
     },
     handleOperationAction (index: number) {
       const item = this.showItems[index]

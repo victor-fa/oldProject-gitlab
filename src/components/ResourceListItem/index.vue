@@ -155,7 +155,7 @@ export default Vue.extend({
   methods: {
     calculateShowIcon () {
       const item = this.model as ResourceItem
-      let icon = ResourceHandler.searchResourceIcon(item.type)
+      let icon = ResourceHandler.searchResourceIcon(item)
       if (this.arrangeWay === ArrangeWay.vertical) return icon
       if (item.path !== undefined && item.path.indexOf('.safe') > -1) return icon
       if (_.isEmpty(item.thumbs)) return icon
@@ -188,7 +188,7 @@ export default Vue.extend({
       }
     },
     searchResourceIcon (item: ResourceItem) {
-      let icon = ResourceHandler.searchResourceIcon(item.type)
+      let icon = ResourceHandler.searchResourceIcon(item)
       if (item.path) {
         if (item.path.indexOf('.safe') > -1) return icon
       }
