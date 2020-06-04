@@ -383,7 +383,6 @@ export default {
     const type = path.extname(filePath).split('.').pop()
     if (type === undefined) return require('../../assets/resource/unkonw_icon.png')
     const mine = type.toLowerCase()
-    console.log(mine)
     if (mine === 'pdf') return require('../../assets/resource/pdf_icon.png')
     if (mine === 'html') return require('../../assets/resource/html_icon.png')
     const textTypes = ['txt', 'md', 'xml', 'json']

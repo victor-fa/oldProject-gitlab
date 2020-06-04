@@ -1,6 +1,7 @@
 // 负责main process和render processes之间的通讯
-import { ipcRenderer, ipcMain, BrowserWindow } from 'electron'
+import { ipcRenderer, ipcMain, BrowserWindow, nativeImage } from 'electron'
 import windowManager, { homeWindow } from './windowManager'
+import path from 'path'
 
 enum ChannelName {
   async = 'asynchronous-message',
@@ -20,7 +21,8 @@ enum EventName {
   account = 'account_info',
   moveModal = 'presnet_move_modal',
   moveCallback = 'move_callback',
-  drag = ''
+  drag = 'ondragstart',
+  setting = 'system_setting'
 }
 
 // use in main process
@@ -59,6 +61,11 @@ export default {
           break
         case EventName.bindList:
           windowManager.presentLoginWindow('bind-device-list')
+          break
+        case EventName.setting:
+          windowManager.presentSettingWindow()
+          break
+        case EventName.drag:
           break
         default:
           break

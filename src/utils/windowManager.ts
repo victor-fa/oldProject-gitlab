@@ -10,7 +10,8 @@ let loginWindow: BrowserWindow | null = null
 let homeWindow: BrowserWindow | null = null
 let mediaWindow: BrowserWindow | null = null
 let moveWindow: BrowserWindow | null = null
-let aboutWindow, feedBackWindow, settingWindow
+let settingWindow: BrowserWindow | null = null
+let aboutWindow, feedBackWindow
 let appTray:any = null;
 const packageInfo = require('../../package.json')
 const path = require('path');
@@ -36,6 +37,7 @@ export default {
       resizable: true,
       frame: false,
       show: false,
+      scrollBounce: true,
       webPreferences: {
         nodeIntegration: true,
         webSecurity: false
@@ -69,7 +71,7 @@ export default {
   refreshWindow (win: BrowserWindow): void {
     win.reload()
   },
-  closeOtherWindow (window: BrowserWindow): void {
+  closeOtherWindow (window?: BrowserWindow) {
     const wins = BrowserWindow.getAllWindows()
     for (let index = 0; index < wins.length; index++) {
       const win = wins[index]
@@ -84,13 +86,14 @@ export default {
         path,
         width: 420,
         height: 610,
-        minWidth: 420,
         title: '登录',
         backgroundColor: '#f6f8fb',
+        maximizable: false,
         resizable: true
       })
     }
-    loginWindow.on('closed', () => {
+    loginWindow.once('closed', () => {
+      loginWindow!.removeAllListeners()
       loginWindow = null
     })
     loginWindow.on('ready-to-show', () => {
@@ -113,7 +116,8 @@ export default {
         title: 'nas_client'
       })
     }
-    homeWindow.on('closed', () => {
+    homeWindow.once('closed', () => {
+      homeWindow!.removeAllListeners()
       homeWindow = null
     })
     homeWindow.on('ready-to-show', () => {
@@ -130,35 +134,11 @@ export default {
       let trayMenuTemplate = [
         {
           label: '打开绿联云',
-          click: function() {
-            if (homeWindow) {
-              homeWindow.show();
-              homeWindow.restore();
-              homeWindow.focus();
-            }
-          }
+          click: () => this.presentHomeWindow()
         },
         {
           label: '系统设置',
-          click: function() {
-            if (settingWindow) {
-              return windowControl.active(settingWindow);
-            }
-            settingWindow = windowControl.create({
-              url: 'disk-setting',
-              icon: './src/assets/logo.png',
-              title: '系统设置',
-              width: 600,
-              height: 400,
-              minHeight: 350,
-              minWidth: 500,
-              maximizable: false,
-              resizable: false,
-              onclose: () => {
-                settingWindow = null;
-              }
-            });
-          }
+          click: () => this.presentSettingWindow()
         },
         {
           label: '关于',
@@ -204,13 +184,7 @@ export default {
         },
         {
           label: '退出',
-          click: function() {
-            if (homeWindow) {
-              homeWindow.show();
-              homeWindow.focus();
-              homeWindow.close();
-            }
-          }
+          click: () => this.closeOtherWindow()
         }
       ];
       const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
@@ -240,7 +214,7 @@ export default {
       backgroundColor: '#f6f8fb',
       parent: homeWindow!
     })
-    mediaWindow.on('closed', () => {
+    mediaWindow.once('closed', () => {
       mediaWindow = null
     })
     mediaWindow.once('ready-to-show', () => {
@@ -275,12 +249,36 @@ export default {
       modal: true,
       show: false
     })
-    moveWindow.on('closed', () => {
+    moveWindow.once('closed', () => {
       moveWindow = null
     })
     moveWindow.once('ready-to-show', () => {
       this.activeWindow(moveWindow!)
     })
     return moveWindow
+  },
+  presentSettingWindow () {
+    if (settingWindow !== null) {
+      this.activeWindow(settingWindow)
+      return settingWindow
+    }
+    settingWindow = this.createWindow({
+      path: 'system-setting',
+      width: 600,
+      height: 400,
+      title: '系统设置',
+      backgroundColor: '#f6f8fb',
+      maximizable: false,
+      resizable: true,
+      parent: homeWindow!,
+      show: false
+    })
+    settingWindow.once('closed', () => {
+      settingWindow!.removeAllListeners()
+      settingWindow = null
+    })
+    settingWindow.on('ready-to-show', () => {
+      this.activeWindow(settingWindow!)
+    })
   }
 }

@@ -113,7 +113,7 @@ export default Vue.extend({
       _this.visible = false
       switch (sender.type) {
         case SettingType.system:
-          _this.$ipc.send('system', 'setting', '');
+          processCenter.renderSend(EventName.setting)
           break
         case SettingType.about:
           _this.$ipc.send('system', 'about', '');

@@ -5,6 +5,7 @@ import LoginLayout from '../layouts/LoginLayout.vue'
 import { HomeRouters } from './modules/HomeList'
 import { LoginRouters } from './modules/LoginList'
 import { MediaRouters } from './modules/MediaList'
+import { SettingRouters } from './modules/SettingList'
 
 Vue.use(VueRouter)
 
@@ -23,6 +24,14 @@ const routes = [
     component: () => import('../layouts/BaseLayout.vue'),
     children: [
       ...HomeRouters
+    ]
+  },
+  {
+    path: '/system-setting',
+    name: 'system-setting',
+    component: () => import('../layouts/SettingLayout.vue'),
+    children: [
+      ...SettingRouters
     ]
   },
   {
