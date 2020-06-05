@@ -194,8 +194,7 @@ export default Vue.extend({
       RouterUtility.pop()
     },
     handleInnerRefreshAction() {
-      // const list = this.$refs.resourceList as Vue
-      // console.log(list)
+      this.showAlter = false
     },
     // handle resource list view callback actions
     handleResourceListAction (action: string, ...args: any[]) {

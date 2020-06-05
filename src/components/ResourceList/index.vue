@@ -230,4 +230,9 @@ export default Vue.extend({
 .ant-list-grid .ant-col > .ant-list-item {
   margin-bottom: 0;
 }
+.ant-layout, .ant-layout * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>

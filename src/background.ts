@@ -20,7 +20,6 @@ let win: BrowserWindow | null,
 	LoginWindow,
 	MainWindow,
 	AboutWindow,
-	AccountWindow,
 	FeedBackWindow,
 	ForgetPassWindow
 /*播放按钮*/
@@ -221,24 +220,6 @@ let DiskSystem = {
 			setTimeout(() => { AboutWindow.webContents.send('newVersion', '有新版本') }, 2000);
 		}
 	},
-	AccountWindow: data => {
-		if (AccountWindow) {
-			return windowControl.active(AccountWindow, data);
-		}
-		AccountWindow = windowControl.create({
-			url: 'disk-account',
-			data: data,
-			icon: './src/assets/logo.png',
-			title: '个人信息',
-			width: 335,
-			height: 500,
-			maximizable: false,
-			resizable: false,
-			onclose: () => {
-				AccountWindow = null;
-			}
-		});
-	},
 	FeedBackWindow: () => {
 		if (FeedBackWindow) {
 			return windowControl.active(FeedBackWindow);
@@ -411,9 +392,6 @@ function bindIpc() {
 				break;
 			case 'forget-pass':
 				DiskSystem.ForgetPassWindow(data);
-				break;
-			case 'account':
-				DiskSystem.AccountWindow(data);
 				break;
 			case 'about':
 				DiskSystem.AboutWindow(data);

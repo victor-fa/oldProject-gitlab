@@ -36,7 +36,7 @@
         <img class="arrow-icon" src="../../assets/arrow_down.png">
       </div>
     </a-popover>
-    <div class="profile" @click="showAccount()">
+    <div class="profile">
       <img class="avatar" :src="imageUrl" alt="" v-if="imageUrl">
       <a-avatar v-else class="avatar" icon="user" size="small"/>
       <label class="nick-name">{{ this.nickName ? this.nickName : this.userName }}</label>
@@ -136,10 +136,6 @@ export default Vue.extend({
           break
       }
     },
-    showAccount () {
-      const _this = this as any
-      _this.$ipc.send('system', 'account', '');
-    },
     switchUser () {
       UserAPI.logout().then(response => {
         console.log(response)
@@ -206,13 +202,11 @@ export default Vue.extend({
       height: 20px;
       margin-right: 4px;
       border-radius: 50%;
-      cursor: pointer;
     }
     .nick-name {
       line-height: 17px;
       font-size: 12px;
       color: #484848;
-      cursor: pointer;
     }
   }
 }
