@@ -123,7 +123,6 @@ const encryptMisTokenContextMenu: Array<OperateGroup> = [
     icon: require('../../assets/open_accessory.png'),
     items: [
       { title: '登录空间', command: 'loginEncrypt' },
-      { title: '修改密码', command: 'modifyPass' },
       { title: '重置空间', command: 'reset' }
     ]
   }

@@ -106,7 +106,7 @@ export default Vue.extend({
         }
         this.autoFocus = false
         this.showDropdown = false
-      }, 100)
+      }, 1000)
     },
     handlePressEnter () {
       this.$emit('pressEnter')

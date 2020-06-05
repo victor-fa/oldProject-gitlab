@@ -204,12 +204,6 @@ export default Vue.extend({
 .resource-list {
   background-color: white;
   overflow: auto;
-  .demo-loading-container {
-    position: absolute;
-    bottom: 40px;
-    width: 100%;
-    text-align: center;
-  }
 }
 .horizontalResourceList {
   padding: 20px;
@@ -217,6 +211,11 @@ export default Vue.extend({
 }
 .drag-style {
   background-color: #def1ea;
+}
+.ant-col {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
 
@@ -229,10 +228,5 @@ export default Vue.extend({
 }
 .ant-list-grid .ant-col > .ant-list-item {
   margin-bottom: 0;
-}
-.ant-layout, .ant-layout * {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 </style>

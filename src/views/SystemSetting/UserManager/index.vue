@@ -1,7 +1,7 @@
 <template>
 	<div class="cd-setting-main">
 		<div class="cd-setting-content">
-			<div style="display: flex;" v-for="(item, index) in nasUsers" :key="index">
+			<div class="content" v-for="(item, index) in nasUsers" :key="index" @contextmenu="rightClick(item)">
 				<img class="userImg" v-if="item.image" :src="item.image">
 				<img class="userImg" v-else :src="loginIcons.account">
 				<div class="userContent">
@@ -17,8 +17,9 @@
 
 <script lang="ts">
 import _ from 'lodash'
-import ClientAPI from '@/api/ClientAPI'
+import NasFileAPI from '@/api/NasFileAPI'
 import { loginIcons } from '../../../views/Login/iconList'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'user-manager',
@@ -29,12 +30,11 @@ export default {
 			UploadSrc: false,
 			loginIcons
 		};
-  },
-	created() {
-		// const _this = this as any
-		// _this.fetchBindUserList()
 	},
-	mounted() {
+  computed: {
+    ...mapGetters('User', ['user'])
+  },
+	beforeMount() {
 		const _this = this as any
 		_this.fetchBindUserList()
 	},
@@ -64,7 +64,7 @@ export default {
     fetchBindUserList () {
 			const _this = this as any
       _this.loading = true
-      ClientAPI.fetchBindUserList().then(response => {
+      NasFileAPI.fetchBindUserList().then(response => {
         _this.loading = false
 				if (response.data.code !== 200) return
         _this.nasUsers = _.get(response.data.data, 'nas_users')
@@ -75,6 +75,59 @@ export default {
         console.log(error)
       })
 		},
+		enableUser (item) {
+			const _this = this as any
+			const status = item.status === 0 ? 1 : 0
+			const ugreen_no = item.ugreen_no
+      NasFileAPI.enableUser(ugreen_no, status).then(response => {
+				if (response.data.code !== 200) return
+				console.log(response.data);
+      }).catch(error => {
+        _this.$message.error('网络连接错误，请检测网络')
+        console.log(error)
+      })
+		},
+		deleteCommonUser (item) {
+			const _this = this as any
+			const ugreen_no = item.ugreen_no
+      NasFileAPI.deleteCommonUser(ugreen_no).then(response => {
+				if (response.data.code !== 200) return
+				console.log(response.data);
+      }).catch(error => {
+        _this.$message.error('网络连接错误，请检测网络')
+        console.log(error)
+      })
+		},
+		deliver (item) {
+			const _this = this as any
+			const ugreen_no = item.ugreen_no
+			const deliver_code = 'code'
+      NasFileAPI.deliver(ugreen_no, deliver_code).then(response => {
+				if (response.data.code !== 200) return
+				console.log(response.data);
+      }).catch(error => {
+        _this.$message.error('网络连接错误，请检测网络')
+        console.log(error)
+      })
+		},
+		rightClick: function(item) {
+      const _this = this
+      const { remote } = require('electron')
+      const { Menu, MenuItem } = remote as any
+      const menu = new Menu()
+			menu.append(new MenuItem({
+				label: '禁用',
+				click: function () { _this.enableUser(item) }
+			}));
+			menu.append(new MenuItem({
+				label: '删除',
+				click: function () { _this.deleteCommonUser(item) }
+			}));
+			menu.append(new MenuItem({label: '提升为管理员',
+				click: function () { _this.deliver(item) }
+			}));
+      menu.popup(remote.getCurrentWindow())
+    },
   }
 }
 </script>
@@ -97,49 +150,10 @@ p {
 		padding: 20px;
 		float: left;
 		overflow-y: scroll;
-		.cd-setting-info {
-			width: 100%;
-			font-size: 14px;
-			padding-left: 5px;
-			line-height: 30px;
-			color: #000;
-			span {
-				background: #06B650;
-				color: #fff;
-				border-radius: 5px;
-				padding: 3px 5px;
-				font-size: 12px;
-				margin-left: 10px;
-			}
-			button {
-				background: none;
-				font-size: 14px;
-				margin-right: 10px;
-			}
-			img {
-				width: 70px;
-				height: 70px;
-				margin: 15px 0 0 -3px;
-			}
-		}
-		.cd-user-head {
-			width: 70px;
-			height: 70px;
-			position: absolute;
-			left: 154px;
-			top: 70px;
-			overflow: unset;
-			transition: all 0.35s;
-			input {
-				position: absolute;
-				top: -50px;
-				left: -11px;
-				display: none;
-			}
+		.content {
+			display: flex;
 			&:hover {
-				box-shadow: 0 0 29px -2px #ffffff;
-				cursor: pointer;
-				transition: all 0.35s;
+				background: lightgray;
 			}
 		}
 		.userImg {

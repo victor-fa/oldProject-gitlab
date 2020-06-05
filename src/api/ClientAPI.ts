@@ -199,9 +199,6 @@ export default {
       }
     })
   },
-  fetchBindUserList (): Promise<AxiosResponse<BasicResponse>> {
-    return nasServer.post(userModulePath + '/list')
-  },
   fetchQrCode (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/login/qr/meta_info')
   },

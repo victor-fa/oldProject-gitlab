@@ -91,51 +91,6 @@ p {
 		float: left;
 		overflow-y: scroll;
 		position: relative;
-		.cd-setting-info {
-			width: 100%;
-			font-size: 14px;
-			padding-left: 5px;
-			line-height: 30px;
-			color: #000;
-			span {
-				background: #06B650;
-				color: #fff;
-				border-radius: 5px;
-				padding: 3px 5px;
-				font-size: 12px;
-				margin-left: 10px;
-			}
-			button {
-				background: none;
-				font-size: 14px;
-				margin-right: 10px;
-			}
-			img {
-				width: 70px;
-				height: 70px;
-				margin: 15px 0 0 -3px;
-			}
-		}
-		.cd-user-head {
-			width: 70px;
-			height: 70px;
-			position: absolute;
-			left: 154px;
-			top: 70px;
-			overflow: unset;
-			transition: all 0.35s;
-			input {
-				position: absolute;
-				top: -50px;
-				left: -11px;
-				display: none;
-			}
-			&:hover {
-				box-shadow: 0 0 29px -2px #ffffff;
-				cursor: pointer;
-				transition: all 0.35s;
-			}
-		}
 	}
 }
 

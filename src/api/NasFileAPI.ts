@@ -472,6 +472,26 @@ export default {
   factory (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.put(settingModule + '/reboot')
   },
+  fetchBindUserList (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(userModule + '/list')
+  },
+  enableUser (ugreen_no, set_status): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(userModule + '/admin/enableUser', {
+      ugreen_no,
+      set_status
+    })
+  },
+  deleteCommonUser (ugreen_no): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(userModule + '/admin/deleteCommonUser', {
+      ugreen_no
+    })
+  },
+  deliver (ugreen_no, deliver_code): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(userModule + '/admin/deliver', {
+      ugreen_no,
+      deliver_code
+    })
+  },
 }
 
 const filterParams = (params: object) => {

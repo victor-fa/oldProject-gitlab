@@ -197,26 +197,6 @@ p {
 				margin-top: 10px;
 			}
 		}
-		.cd-user-head {
-			width: 70px;
-			height: 70px;
-			position: absolute;
-			left: 154px;
-			top: 70px;
-			overflow: unset;
-			transition: all 0.35s;
-			input {
-				position: absolute;
-				top: -50px;
-				left: -11px;
-				display: none;
-			}
-			&:hover {
-				box-shadow: 0 0 29px -2px #ffffff;
-				cursor: pointer;
-				transition: all 0.35s;
-			}
-		}
 	}
 }
 
