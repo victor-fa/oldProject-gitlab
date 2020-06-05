@@ -86,6 +86,8 @@ export default {
         path,
         width: 420,
         height: 610,
+        minWidth: 420,
+        icon: './src/assets/logo.png',
         title: '登录',
         backgroundColor: '#f6f8fb',
         maximizable: false,
@@ -268,7 +270,8 @@ export default {
       height: 400,
       title: '系统设置',
       backgroundColor: '#f6f8fb',
-      maximizable: false,
+      maximizable: true,
+      transparent: false,
       resizable: true,
       parent: homeWindow!,
       show: false

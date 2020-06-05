@@ -53,6 +53,11 @@ export default Vue.extend({
       showChoiceModal: false
     }
   },
+	props: {
+		configure: {
+			type: String
+		}
+	},
   computed: {
     closable: function () {
       const win = BrowserWindow.getFocusedWindow()
@@ -130,7 +135,7 @@ export default Vue.extend({
       }
     },
     handleClose () {
-      console.log(this.closeInfo);
+      console.log(this.configure);
       if (process.platform === 'win32') {
         if (this.closeInfo.remember) {
           if (this.closeInfo.trayOrExit === 'tray') {
@@ -139,7 +144,7 @@ export default Vue.extend({
             this.closeAction()
           }
         } else {
-          this.showChoiceModal = true
+          this.configure === 'unable' ? this.closeAction() : this.showChoiceModal = true
         }
       } else {
         this.closeAction()

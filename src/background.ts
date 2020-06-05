@@ -21,7 +21,6 @@ let win: BrowserWindow | null,
 	MainWindow,
 	AboutWindow,
 	AccountWindow,
-	SettingWindow,
 	FeedBackWindow,
 	ForgetPassWindow
 /*播放按钮*/
@@ -240,25 +239,6 @@ let DiskSystem = {
 			}
 		});
 	},
-	SettingWindow: () => {
-		if (SettingWindow) {
-			return windowControl.active(SettingWindow);
-		}
-		SettingWindow = windowControl.create({
-			url: 'disk-setting',
-			icon: './src/assets/logo.png',
-			title: '系统设置',
-			width: 600,
-			height: 400,
-			minHeight: 350,
-			minWidth: 500,
-			maximizable: false,
-			resizable: false,
-			onclose: () => {
-				SettingWindow = null;
-			}
-		});
-	},
 	FeedBackWindow: () => {
 		if (FeedBackWindow) {
 			return windowControl.active(FeedBackWindow);
@@ -440,9 +420,6 @@ function bindIpc() {
 				break;
 			case 'feedback':
 				DiskSystem.FeedBackWindow();
-				break;
-			case 'setting':
-				DiskSystem.SettingWindow();
 				break;
 			case 'check-for-update':
 				AboutWindow.webContents.downloadURL(data);

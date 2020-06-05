@@ -2,7 +2,7 @@
   <a-layout class="settting-layout">
     <a-layout-header class="setting-header">
       <span>系统设置</span>
-      <window-menu class="window-menu"/>
+      <window-menu :configure="'unable'" class="window-menu"/>
     </a-layout-header>
     <a-layout>
       <a-layout-sider class="setting-sider">
@@ -17,9 +17,7 @@
         </div>
       </a-layout-sider>
       <a-layout-content class="setting-content">
-        <keep-alive>
-          <router-view></router-view>
-        </keep-alive>
+        <router-view></router-view>
       </a-layout-content>
     </a-layout>
   </a-layout>
@@ -73,6 +71,7 @@ export default Vue.extend({
     display: flex;
     align-items: center;
     justify-content: space-between;
+    -webkit-app-region: drag;
     span {
       margin-left: 20px;
     }
@@ -104,7 +103,8 @@ export default Vue.extend({
   }
   .setting-content {
     padding: 0px;
-    border: 1px solid black;
+    background: #fff;
+    height: 100%;
   }
 }
 </style>

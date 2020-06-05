@@ -17,8 +17,7 @@
             @mouseenter="handleMouseEnter(item)"
           >
             {{ item.title }}
-            <img v-show="item.title !== '退出'" src="../../assets/operate_icon.png">
-            <span v-show="item.title === '退出'">CTRL+Q</span>
+            <img src="../../assets/operate_icon.png">
             <ul v-show="item.childrens && showChildren" class="operate-children">
               <li
                 v-for="(cell, index) in item.childrens"
@@ -148,7 +147,6 @@ export default Vue.extend({
         // 清除缓存的用户相关信息
         this.$store.dispatch('User/clearCacheUserInfo')
         this.$store.dispatch('NasServer/clearCacheNas')
-        this.$store.dispatch('Setting/clearCloseChoiceInfo')
         this.clearTransportTask()
         processCenter.renderSend(EventName.login)
       }).catch(error => {
@@ -158,7 +156,6 @@ export default Vue.extend({
     },
     switchDevice () {
       this.$store.dispatch('NasServer/clearCacheNas')
-      this.$store.dispatch('Setting/clearCloseChoiceInfo')
       this.clearTransportTask()
       processCenter.renderSend(EventName.bindList)
     },

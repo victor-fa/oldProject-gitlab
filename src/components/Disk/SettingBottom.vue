@@ -26,10 +26,11 @@ export default {
 .cd-setting-bottom {
 	width: calc(100% - 136px);
 	position: absolute;
+	bottom: 15px;
+	right: 10px;
 	display: flex;
 	flex-direction: row;
 	flex-flow: row-reverse;
-	padding-top: 10px;
 }
 .cd-setting-bottom button {
 	margin-right: 15px;
