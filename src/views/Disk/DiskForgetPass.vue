@@ -137,7 +137,7 @@ export default Vue.extend({
         this.loading = false
         // TODO: 关闭窗口
         const _this = this as any
-        _this.$$message.success('重置成功')
+        _this.$message.success('重置成功')
         setTimeout(() => {
           _this.$electron.remote.getCurrentWindow().close();
         }, 2000);

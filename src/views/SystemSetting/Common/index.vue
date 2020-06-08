@@ -19,6 +19,7 @@
 </template>
 
 <script lang="ts">
+import { mapGetters } from 'vuex'
 import SettingBottom from '../../../components/Disk/SettingBottom.vue'
 
 export default {
@@ -36,7 +37,27 @@ export default {
 			},
 		};
   },
-	created() {
+	computed: {
+    ...mapGetters('Setting', ['autoPowerOn']),
+		...mapGetters('Setting', ['closeInfo']),
+		...mapGetters('Setting', ['autoLogin']),
+	},
+	watch: {
+		loginSetting: {
+			handler() {
+				const _this = this as any
+				_this.$ipc.send('system', 'auto-launch', _this.loginSetting.autoPowerOn);
+        _this.$store.dispatch('Setting/updateAutoPowerOnInfo', { flag: _this.loginSetting.autoPowerOn })
+        _this.$store.dispatch('Setting/updateAutoLoginInfo', { flag: _this.loginSetting.autoLogin })
+			},
+			deep: true
+		}
+	},
+	created () {
+		const _this = this as any
+		_this.loginSetting.autoPowerOn = _this.autoPowerOn ? _this.autoPowerOn.flag : false
+		_this.loginSetting.closeChoice = _this.closeInfo ? _this.closeInfo.trayOrExit : 'tray'
+		_this.loginSetting.autoLogin = _this.autoLogin ? _this.autoLogin.flag : false
 	},
   methods: {
 		handleBottom(data) {
@@ -93,5 +114,4 @@ p {
 		position: relative;
 	}
 }
-
 </style>

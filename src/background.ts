@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain, nativeImage, Tray, Menu, screen } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, nativeImage, shell } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import processCenter from './utils/processCenter'
 import windowControl from './utils/windowControl'
@@ -149,7 +149,7 @@ let VideoButtons = [
 		}
 	}
 ];
-let appTray:any = null; //托盘变量
+
 /*网盘函数*/
 let DiskSystem = {
 	LoginWindow: flag => {
@@ -250,10 +250,16 @@ let DiskSystem = {
 			height: 610,
 			maximizable: false,
 			resizable: false,
+      transparent: false,
+      show: false,
 			onclose: () => {
 				ForgetPassWindow = null;
 			}
 		});
+    ForgetPassWindow.on('blur', () => {
+			ForgetPassWindow.focus()
+      // shell.beep()
+    })
 	},
 	logoff: () => {
 		DiskSystem.LoginWindow(false);

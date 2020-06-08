@@ -87,7 +87,7 @@ export default Vue.extend({
       return uuid
     },
   },
-  mounted() {
+  mounted () {
     this.checkEncryptStatus()
     encryptUploadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
       // this.$store.dispatch('Resource/decreaseTask')
