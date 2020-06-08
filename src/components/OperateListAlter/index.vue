@@ -112,7 +112,7 @@ export default Vue.extend({
     },
     isSpecificItem (item: OperateItem) {
       if (item.command === 'paste') {
-        this.showTaskModeDialog()
+        this.$emit('didSelectItem', 'paste', 'rename')
         return true
       } else if (dialogCommands.indexOf(item.command) !== -1) {
         this.showOpenDialog(item.command)

@@ -1,12 +1,14 @@
-// 上传工具类，支持目录和文件上传、断点续传
+// 传输任务基类
+import _ from 'lodash'
 import { EventEmitter } from 'events'
 import StringUtility from '@/utils/StringUtility'
+import { ResourceItem } from '../NasFileModel'
 
-/** 目前只支持下载文件，不支持文件夹下载
- * progress (index) 上传进度回调
- * fileFinished (index, fileInfo) 单个文件下载完成
- * taskFinished (index) 下载任务完成
- * error (index, error) 任务出错回调
+/** 传输任务事件
+ * progress (index) 上传进度事件
+ * fileFinished (index, fileInfo) 单个文件传输完成事件
+ * taskFinished (index) 任务完成事件
+ * error (index, error) 任务出错事件
  */
 export default class BaseTask extends EventEmitter {
   readonly srcPath: string
@@ -25,12 +27,17 @@ export default class BaseTask extends EventEmitter {
   /**任务状态 */
   status = TaskStatus.pending
 
-  constructor(srcPath: string, destPath: string, uuid: string) {
+  constructor(item: string | ResourceItem, destPath: string, uuid: string) {
     super()
-    this.srcPath = srcPath
+    if (_.isString(item)) {
+      this.srcPath = item
+      this.name = StringUtility.formatName(item)
+    } else {
+      this.srcPath = (item as ResourceItem).path
+      this.name = (item as ResourceItem).name
+    }
     this.destPath = destPath
     this.uuid = uuid
-    this.name = StringUtility.formatName(srcPath)
   }
   // public methods
   async start () {
@@ -96,7 +103,7 @@ class TaskError {
       case TaskErrorCode.pathError:
         return 'upload file directory is empty'
       default:
-        return 'unkown'
+        return 'unkown error'
     }
   }
 }

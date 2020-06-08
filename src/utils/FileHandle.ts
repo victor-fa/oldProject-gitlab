@@ -32,6 +32,16 @@ export default {
       })
     })
   },
+  /**创建目录 */
+  newDirectory (dir: string): Promise<void> {
+    return new Promise((resolve) => {
+      const exist = fs.existsSync(dir)
+      if (!exist) {
+        fs.mkdirSync(dir, { recursive: true })
+      }
+      resolve()
+    })
+  },
   /**打开写文件句柄，(创建中间目录，文件重命名) */
   openWriteFileHandle (path: string): Promise<any> {
     return new Promise((resolve, reject) => {

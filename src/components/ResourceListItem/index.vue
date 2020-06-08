@@ -1,11 +1,9 @@
 <template>
   <div
-    @dragstart="handleDragstartEvent($event)"
     @click="handleItemClick($event)"
   >
     <div
       v-if="isHorizontalArrange"
-      draggable="true"
       class="horizontal-item"
       v-bind:class="{
         horizontalSelectedItem: isSelected,
@@ -155,7 +153,7 @@ export default Vue.extend({
   methods: {
     calculateShowIcon () {
       const item = this.model as ResourceItem
-      let icon = ResourceHandler.searchResourceIcon(item)
+      let icon = ResourceHandler.searchResourceIcon(item.type, item.path)
       if (this.arrangeWay === ArrangeWay.vertical) return icon
       if (item.path !== undefined && item.path.indexOf('.safe') > -1) return icon
       if (_.isEmpty(item.thumbs)) return icon
@@ -166,7 +164,7 @@ export default Vue.extend({
       const apiToken = (this.accessInfo as NasAccessInfo).api_token
       if (_.isEmpty(apiToken)) return icon
       icon += '/v1/file/http_download?'
-      icon += `uuid=${item.uuid}&path=${smallPath}&api_token=${apiToken}`
+      icon += `uuid=${item.uuid}&path=${encodeURIComponent(smallPath)}&api_token=${apiToken}`
       return icon
     },
     handleKeydownAction (event: KeyboardEvent) {
@@ -186,22 +184,6 @@ export default Vue.extend({
         const input = (this.$refs.inputName as Vue).$el as HTMLInputElement
         input.blur()
       }
-    },
-    searchResourceIcon (item: ResourceItem) {
-      let icon = ResourceHandler.searchResourceIcon(item)
-      if (item.path) {
-        if (item.path.indexOf('.safe') > -1) return icon
-      }
-      if (_.isEmpty(item.thumbs)) return icon
-      const smallPath = item.file_detail ? item.file_detail.thumbs[0] : item.thumbs[0]
-      if (_.isEmpty(smallPath)) return icon
-      icon = nasServer.defaults.baseURL
-      if (icon === undefined) return icon
-      const apiToken = (this.accessInfo as NasAccessInfo).api_token
-      if (_.isEmpty(apiToken)) return icon
-      icon += '/v1/file/http_download?'
-      icon += `uuid=${item.uuid}&path=${smallPath}&api_token=${apiToken}`
-      return icon
     },
     handleItemClick (event: MouseEvent) {
       if (this.isSelected) {
@@ -379,5 +361,11 @@ export default Vue.extend({
 }
 .ant-tooltip-arrow {
   border-bottom-color: #eaebee !important;
+}
+.vertical-item .ant-col-13 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 20px;
 }
 </style>

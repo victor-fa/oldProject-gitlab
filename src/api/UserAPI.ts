@@ -4,11 +4,14 @@ import { SmsType, AccessToken, BasicResponse, User } from './UserModel'
 import deviceMgr from '../utils/deviceMgr'
 import store from '@/store'
 import { nasCloud } from './CloudServer'
+import { type } from 'os'
 
 const userModulePath = '/api/user/v1'
 const updateModulePath = '/api/device/v1'
 const CancelToken = axios.CancelToken
 let cancel: Canceler | null = null
+type CloudResponse = Promise<AxiosResponse<BasicResponse>>
+
 const getAccessToken = () => {
   const userAccess = _.get(store.getters, 'User/accessToken') as AccessToken
   const accessToken = userAccess.access_token
@@ -51,7 +54,7 @@ export default {
       code
     })
   },
-  login (userName: string, password: string): Promise<AxiosResponse<BasicResponse>> {
+  login (userName: string, password: string): CloudResponse {
     const platform = deviceMgr.getPlatform()
     return nasCloud.post(userModulePath + '/login', {
       userName,
@@ -59,7 +62,7 @@ export default {
       platform
     })
   },
-  fetchBindDevices (): Promise<AxiosResponse<BasicResponse>> {
+  fetchBindDevices (): CloudResponse {
     const accessToken = getAccessToken()
     if (accessToken === null) return Promise.reject(customError('not find access_token'))
     return nasCloud.get(userModulePath + '/bind/device', {
@@ -78,21 +81,21 @@ export default {
       vcode
     })
   },
-  logout (): Promise<AxiosResponse<BasicResponse>> {
+  logout (): CloudResponse {
     const accessToken = getAccessToken()
     if (accessToken === null) return Promise.reject(customError('not find access_token'))
     return nasCloud.post(userModulePath + '/logout', {}, {
       headers: { 'Authorization': accessToken }
     })
   },
-  refreshToken (refreshToken: string): Promise<AxiosResponse<BasicResponse>> {
+  refreshToken (refreshToken: string): CloudResponse {
     return nasCloud.get(userModulePath + '/token/refresh', {
       params: {
         refreshToken
       }
     })
   },
-  feedback (title: string, context: string, linkUrl: string): Promise<AxiosResponse<BasicResponse>> {
+  feedback (title: string, context: string, linkUrl: string): CloudResponse {
     const user = getUserInfo()
     if (user === null)  return Promise.reject(customError('not find user_info'))
     const accessToken = getAccessToken()
@@ -160,17 +163,17 @@ export default {
       headers: { 'Authorization': accessToken }
     })
   },
-  fetchQrCode (): Promise<AxiosResponse<BasicResponse>> {
+  fetchQrCode (): CloudResponse {
     return nasCloud.get(userModulePath + '/generate/qrcode', {
       params: {
         deviceType: 'pc'
       }
     })
   },
-  fetchQrCodeLogin (qrCode: string): Promise<AxiosResponse<BasicResponse>> {
+  fetchQrCodeLogin (qrCode: string): CloudResponse {
     return nasCloud.post(userModulePath + '/basic/qrCode/login', { qrCode })
   },
-  fetchUpdateInfo (appNo: string, versionNo: number): Promise<AxiosResponse<BasicResponse>> {
+  fetchUpdateInfo (appNo: string, versionNo: number): CloudResponse {
     return nasCloud.post(updateModulePath + '/softVer/latest', { appNo, versionNo })
   }
 }

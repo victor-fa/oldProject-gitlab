@@ -220,9 +220,8 @@ export default {
   // 1. 已分享的显示取消分享，已收藏的显示取消收藏
   // 2. 多选情况下，打开、到文件位置、属性、重命名不可用
   // 3. 多选情况下，如果既包含已分享(收藏)和未分享(收藏)，就展示成不可用的分享(收藏)
-  // 4. 目录不支持下载
-  // 5. 如果当前正在命名中，只允许删除
-  // 6. 外置硬盘不允许分享和收藏
+  // 4. 如果当前正在命名中，只允许删除
+  // 5. 外置硬盘不允许分享、收藏和下载目录
   filterItemOperateList (groups: OperateGroup[], showArray: Array<ResourceItem>, item: ResourceItem) {
     if (_.isEmpty(groups)) return null 
     if (item.renaming === true) return this.onlyShowDelete(groups)
@@ -271,15 +270,13 @@ export default {
       if (!disableCollect) {
         if (element.collected === CollectStatus.has || !isInternal) disableCollect = true
       }
-      if (!disableDownload && element.type === ResourceType.folder) {
-        disableDownload = true
-      }
+      if (!disableDownload && !isInternal && element.type === ResourceType.folder) disableDownload = true
     }
     return {
       disable, // 是否禁用打开、属性、重命名菜单项
       disableShare, // 是否禁用分享菜单项
       disableCollect, // 是否禁用收藏菜单项
-      disableDownload // 是否禁用下载
+      disableDownload // 是否禁用下载菜单项
     }
   },
   // list的右键菜单显示规则
@@ -365,8 +362,8 @@ export default {
     }
   },
   // 根据文件类型匹配文件icon的占位图
-  searchResourceIcon (item: ResourceItem) {
-    switch (item.type) {
+  searchResourceIcon (type: ResourceType, path: string) {
+    switch (type) {
       case ResourceType.video:
         return require('../../assets/resource/video_icon.png')
       case ResourceType.audio:
@@ -376,7 +373,7 @@ export default {
       case ResourceType.folder:
         return require('../../assets/resource/folder_icon.png')
       default:
-        return this.matchMineTypeIcon(item.path)
+        return this.matchMineTypeIcon(path)
     }
   },
   matchMineTypeIcon (filePath: string) {

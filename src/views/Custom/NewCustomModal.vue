@@ -76,6 +76,7 @@ export default Vue.extend({
     handleCloseAction () {
       this.name = ''
       this.desc = ''
+      this.imageData = ''
       this.imageObj = null
       this.item = null
     },
@@ -85,7 +86,7 @@ export default Vue.extend({
     showOpenDialog () {
       const { dialog, BrowserWindow } = require('electron').remote
       dialog.showOpenDialog(BrowserWindow.getFocusedWindow()!, {
-        filters: [ { name: 'Images', extensions: ['jpg', 'png', 'gif', 'webp'] } ],
+        filters: [ { name: 'Images', extensions: ['jpg', 'png', 'gif', 'webp', 'jpeg'] } ],
         buttonLabel: '选择',
         properties: ['openFile']
       }).then(result => {
@@ -187,7 +188,6 @@ export default Vue.extend({
       })
     },
     handleMountNode () {
-      console.log(this.$parent)
       return this.$parent.$el
     }
   }

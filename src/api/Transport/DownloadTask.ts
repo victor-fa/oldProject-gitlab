@@ -3,24 +3,37 @@ import _ from 'lodash'
 import NasFileAPI from '../NasFileAPI'
 import FileHandle, { FileHandleError } from '@/utils/FileHandle'
 import axios, { AxiosResponse, CancelTokenSource } from 'axios'
-import { DownloadParams } from '../NasFileModel'
+import { DownloadParams, ResourceItem, ResourceType } from '../NasFileModel'
 import BaseTask, { TaskStatus, TaskError, TaskErrorCode, FileInfo } from './BaseTask'
+import path from 'path'
 import StringUtility from '@/utils/StringUtility'
 
 export default class DownloadTask extends BaseTask {
   readonly maxDownloadSize = 1 * 1024 * 1024 // 单次最大下载字节数
   source?: CancelTokenSource // 下载取消请求标识
   private fileHandle = -1 // 文件句柄
+  private resourceItem?: ResourceItem
+  private fileCount = 0
 
-  constructor(srcPath: string, destPath: string, uuid: string) {
-    super(srcPath, destPath, uuid)
+  constructor(item: ResourceItem | string, destPath: string, uuid: string) {
+    super(item, destPath, uuid)
     const CancelToken = axios.CancelToken
     this.source = CancelToken.source()
-    this.initFileInfo()
+    if (_.isObject(item)) {
+      this.resourceItem = item
+    }
   }
   // public methods
   async start () {
     super.start()
+    // 1. 转换需要下载的文件对象
+    if (this.resourceItem !== undefined) {
+      await this.fetchFileInfos(this.resourceItem)
+    }
+    console.log(this.fileInfos)
+    // 2. 计算总文件大小
+    this.calculateDownloadSize()
+    // 3. 开始递归下载
     this.downloadFile()
   }
   cancel () {
@@ -42,31 +55,85 @@ export default class DownloadTask extends BaseTask {
     this.source = CancelToken.source()
     this.downloadFile()
   }
-  /**更新待下载的文件对象集合
-   * 下载目录时调用
-   */
-  updateFileInfos (fileInfos: FileInfo[]) {
-    this.fileInfos = fileInfos
-  }
   // private methods
-  // 初始化待上传文件对象
-  private initFileInfo () {
-    const fileName = StringUtility.formatName(this.srcPath)
-    const fileInfo: FileInfo = {
-      srcPath: this.srcPath,
-      destPath: `${this.destPath}/${fileName}`,
-      name: fileName,
-      totalSize: 0,
-      completedSize: 0
-    }
-    this.fileInfos = [fileInfo]
-  }
+  // 获取待下载的文件
+  private fetchFileInfos (item: ResourceItem): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (item.type !== ResourceType.folder) {
+        const fileInfo = this.convertFileInfo(item)
+        this.fileInfos = [fileInfo]
+        resolve()
+      } else {
+        this.recursionFetchTree(1, error => {
+          if (error !== undefined) {
+            this.status = TaskStatus.error
+            this.emit('error', this.index, error)
+          }
+          resolve()
+        })
+      }
+    })
+  } 
   // 删除未完成文件
   private removeUnfinishedFile () {
     this.fileInfos.forEach(item => {
       if (item.completedSize < item.totalSize && item.completedSize > 0) { // not completed
         FileHandle.removeFile(item.destPath)
       }
+    })
+  }
+  // 递归获取文件树
+  recursionFetchTree (page: number, completionHandler: (error?: TaskError) => void) {
+    NasFileAPI.fetchFileTree(this.srcPath, this.uuid, page).then(response => {
+      if (response.data.code !== 200) {
+        const error = new TaskError(TaskErrorCode.serverError, response.data.msg)
+        completionHandler(error)
+      } else {
+        this.fileCount = _.get(response.data.data, 'total')
+        const list = _.get(response.data.data, 'list') as ResourceItem[]
+        const fileInfos = list.map(item => {
+          return this.convertFileInfo(item)
+        })
+        this.fileInfos = page === 1 ? fileInfos : this.fileInfos.concat(fileInfos)
+        if (_.isEmpty(list) || this.fileInfos.length >= this.fileCount) {
+          completionHandler()
+        } else {
+          this.recursionFetchTree(page + 1, completionHandler)
+        }
+      }
+    }).catch(_ => {
+      const error = new TaskError(TaskErrorCode.networkError)
+      completionHandler(error)
+    })
+  }
+  // 将资源对象转换成文件对象
+  private convertFileInfo (item: ResourceItem) {
+    const name = StringUtility.formatName(item.path)
+    let destPath = `${this.destPath}/${name}`
+    let relativePath: string | undefined
+    if (this.resourceItem!.type === ResourceType.folder) {
+      const directory = path.dirname(this.resourceItem!.path)
+      relativePath = item.path.substring(directory.length, item.path.length)
+      destPath = `${this.destPath}${relativePath}`
+    }
+    const fileInfo: FileInfo = {
+      name,
+      relativePath,
+      destPath,
+      srcPath: item.path,
+      totalSize: item.size,
+      completedSize: 0,
+      isDirectory: item.type === ResourceType.folder
+    }
+    return fileInfo
+  }
+  // 计算下载任务总大小
+  private calculateDownloadSize () {
+    this.countOfBytes = 0
+    this.completedBytes = 0
+    this.fileInfos.forEach(item => {
+      this.countOfBytes += item.totalSize
+      this.completedBytes += item.completedSize
     })
   }
   // 递归下载文件
@@ -78,6 +145,25 @@ export default class DownloadTask extends BaseTask {
       this.emit('taskFinished', this.index)
       return
     }
+    if (fileInfo.isDirectory === true) {
+      this.createDirectory(fileInfo)
+    } else {
+      this.startDownloadFile(fileInfo)
+    }
+  }
+  // 创建目录
+  private createDirectory (fileInfo: FileInfo) {
+    FileHandle.newDirectory(fileInfo.destPath).then(() => {
+      fileInfo.newCompleted = true
+      this.emit('fileFinished', this.index, _.cloneDeep(fileInfo))
+      this.downloadFile()
+    }).catch(_ => {
+      fileInfo.newCompleted = true
+      this.downloadFile()
+    })
+  }
+  // 开始文件下载
+  private startDownloadFile (fileInfo: FileInfo) {
     FileHandle.openWriteFileHandle(fileInfo.destPath).then(obj => { // open file handle
       this.fileHandle = obj.fd
       fileInfo.destPath = obj.path 
@@ -91,6 +177,7 @@ export default class DownloadTask extends BaseTask {
       fileInfo.destPath = path
       this.downloadFile()
       this.emit('fileFinished', this.index, _.cloneDeep(fileInfo))
+      console.log(fileInfo)
     }).catch(error => {
       if (error instanceof TaskError) {
         this.handleDownloadError(error.code)
@@ -102,10 +189,14 @@ export default class DownloadTask extends BaseTask {
     })
   }
   // 获取待上传文件对象
-  getNextFileInfo () {
-    for (let index = 0; index < this.fileInfos.length; index++) {
+  private getNextFileInfo () {
+    for (let index = 0; index < this.fileInfos!.length; index++) {
       const item = this.fileInfos[index]
-      if (item.completedSize < item.totalSize || item.completedSize === 0) return item
+      if (item.isDirectory === true) {
+        if (item.newCompleted !== true) return item
+      } else {
+        if (item.completedSize < item.totalSize) return item
+      }
     }
     return null
   }
@@ -179,8 +270,8 @@ export default class DownloadTask extends BaseTask {
     }
   }
   // 处理下载错误回调
-  private handleDownloadError (code: TaskErrorCode) {
-    const error = new TaskError(code)
+  private handleDownloadError (code: TaskErrorCode, desc?: string) {
+    const error = new TaskError(code, desc)
     this.status = TaskStatus.error
     this.emit('error', this.index, error)
   }

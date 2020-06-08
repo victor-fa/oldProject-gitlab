@@ -28,7 +28,6 @@ export default class UploadTask extends BaseTask {
     super.start()
     // 1. 解析当前目录
     _.isEmpty(this.fileInfos) && await this.parseSourcePath(this.srcPath)
-    console.log(this.fileInfos)
     // 2. 计算待上传文件的总大小
     this.calculatorUploadFileSize()
     // 3. 开始递归上传文件
@@ -113,14 +112,12 @@ export default class UploadTask extends BaseTask {
   }
   // 计算待上传文件的总大小
   private calculatorUploadFileSize () {
-    let totalSize = 0
-    this.fileInfos!.forEach(item => {
-      totalSize += item.totalSize
-      if (item.completedSize > 0) {
-        this.completedBytes += item.completedSize
-      }
+    this.countOfBytes = 0
+    this.completedBytes = 0
+    this.fileInfos.forEach(item => {
+      this.countOfBytes += item.totalSize
+      this.completedBytes += item.completedSize
     })
-    this.countOfBytes = totalSize
   }
   // 处理上传错误回调
   private handlerTaskError (code: TaskErrorCode) {
@@ -139,7 +136,6 @@ export default class UploadTask extends BaseTask {
       this.emit('taskFinished', this.index)
       return
     }
-    console.log(fileInfo)
     if (fileInfo.isDirectory === true || fileInfo.totalSize <= 0) {
       this.creatFolder(fileInfo)
     } else {
@@ -156,7 +152,7 @@ export default class UploadTask extends BaseTask {
       this.uploadFile()
     }).catch(_ => {
       fileInfo.newCompleted = true
-      this.handlerTaskError(TaskErrorCode.networkError)
+      this.uploadFile()
     })
   }
   // 开始上传文件数据
@@ -218,7 +214,8 @@ export default class UploadTask extends BaseTask {
       console.log(response)
       if (this.status !== TaskStatus.progress) return
       if (response.data.code !== 200) {
-        const error = new TaskError(TaskErrorCode.serverError, response.data.msg)
+        const desc = response.data.code === 4050 ? `${file.name}已存在，请重命名后再上传` : response.data.msg
+        const error = new TaskError(TaskErrorCode.serverError, desc)
         completionHandler(undefined, error)
       } else {
         file.completedSize += chunkLength

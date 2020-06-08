@@ -16,8 +16,8 @@
       :infinite-scroll-immediate-check="false"
       @contextmenu.prevent="handleListContextMenu"
       @click.stop="handleListClick"
-      @drop="handleDropEvent($event)"
-      @dragover="handleDragoverEvent($event)"
+      @drop.prevent="handleDropEvent($event)"
+      @dragover.prevent="handleDragoverEvent($event)"
       @dragenter.prevent="handleDragEnterEvent($event)"
       @dragleave.prevent="handleDragLeaveEvent($event)"
     >
@@ -177,15 +177,12 @@ export default Vue.extend({
     },
     handleDragoverEvent (event: DragEvent) {
       if (!this.isSupportDrag) return // 检测是否支持拖拽上传
-      if (!this.dragState) return // 检测是否是外部拖拽
-      event.preventDefault()
       if (event.dataTransfer === null) return
+      if (!this.dragState) this.dragState = true
       event.dataTransfer.dropEffect = 'copy'
     },
     handleDropEvent (event: DragEvent) {
       if (!this.isSupportDrag) return
-      if (!this.dragState) return
-      event.preventDefault()
       this.dragState = false
       if (event.dataTransfer === null) return
       const files = event.dataTransfer.files

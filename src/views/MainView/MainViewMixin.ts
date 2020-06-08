@@ -301,7 +301,7 @@ export default Vue.extend({
       const destPath = directory[0]
       const items = ResourceHandler.getSelectItems(this.dataArray)
       items.forEach(item => {
-        const task = new DownloadTask(item.path, destPath, item.uuid)
+        const task = new DownloadTask(item, destPath, item.uuid)
         downloadQueue.addTask(task)
         this.$store.dispatch('Resource/increaseTask')
       })

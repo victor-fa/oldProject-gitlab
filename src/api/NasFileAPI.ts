@@ -9,6 +9,7 @@ import axios, { AxiosResponse, Canceler, CancelTokenSource } from 'axios/index'
 import { OrderType, UploadTimeSort } from './NasFileModel'
 import { nasServer } from './NasServer';
 import store from '@/store';
+import { type } from 'os';
 
 axios.defaults.withCredentials = true;
 
@@ -22,6 +23,7 @@ const cryptoModule = '/v1/crypto'
 const recycleModule = '/v1/recycle'
 const settingModule = '/setting/v1/sys'
 
+type ServerResponse = Promise<AxiosResponse<BasicResponse>>
 const CancelToken = axios.CancelToken
 let cancelCustomRequest: Canceler | null = null
 const host = (() => {
@@ -60,10 +62,10 @@ export default {
     const input = { uuid: option.uuid, path: option.path, crypto_token: token.crypto_token }
     return host + cryptoModule + '/http_download?' + jsonToParams(input)
   },
-  fetchStorages (): Promise<AxiosResponse<BasicResponse>> {
+  fetchStorages (): ServerResponse {
     return nasServer.get(fileModule + '/storages')
   },
-  fetchResourceList (path: string, uuid: string, page: number, order: OrderType = OrderType.byNameDesc, size: number = 40): Promise<AxiosResponse<BasicResponse>> {
+  fetchResourceList (path: string, uuid: string, page: number, order: OrderType = OrderType.byNameDesc, size: number = 40): ServerResponse {
     return nasServer.get(fileModule + '/list', {
       params: {
         path: path,
@@ -74,14 +76,14 @@ export default {
       }
     })
   },
-  renameResource (oldPath: string, newPath: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
+  renameResource (oldPath: string, newPath: string, uuid: string): ServerResponse {
     return nasServer.post(fileModule + '/rename', {
       uuid: uuid,
       old_path: oldPath,
       new_path: newPath
     })
   },
-  renameEncryptResource (oldPath: string, newPath: string, uuid: string, route: string): Promise<AxiosResponse<BasicResponse>> {
+  renameEncryptResource (oldPath: string, newPath: string, uuid: string, route: string): ServerResponse {
     const cryptoJson = localStorage.getItem(CRYPTO_INFO)
     if (cryptoJson === null) {
       return Promise.reject(Error('not find crypto_info'))
@@ -95,7 +97,7 @@ export default {
       params: { crypto_token: token.crypto_token }
     })
   },
-  fetchMediaInfo (path: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
+  fetchMediaInfo (path: string, uuid: string): ServerResponse {
     return nasServer.get(fileModule + '/media', {
       params: {
         path: path,
@@ -103,23 +105,23 @@ export default {
       }
     })
   },
-  fetchTlist (page: number, last: number, type: ResourceType, order: OrderType = OrderType.ByModifyAsc, size: number = 40): Promise<AxiosResponse<BasicResponse>> {
+  fetchTlist (page: number, last: number, type: ResourceType, order: OrderType = OrderType.ByModifyAsc, size: number = 40): ServerResponse {
     return nasServer.get(fileModule + '/tlist', {
       params: { type, page, size, pos: last, order }
     })
   },
-  fetchUlist (page: number, last: number, order: UploadTimeSort = UploadTimeSort.descend, size: number = 40): Promise<AxiosResponse<BasicResponse>> {
+  fetchUlist (page: number, last: number, order: UploadTimeSort = UploadTimeSort.descend, size: number = 40): ServerResponse {
     return nasServer.get(fileModule + '/ulist', {
       params: { page, size, order, pos: last }
     })
   },
-  fetchBackuplist (): Promise<AxiosResponse<BasicResponse>> {
+  fetchBackuplist (): ServerResponse {
     return nasServer.get(fileModule + '/backup/list', {
       params: {
       }
     })
   },
-  searchFile (uuid: string, path: string, keyword: string): Promise<AxiosResponse<BasicResponse>> {
+  searchFile (uuid: string, path: string, keyword: string): ServerResponse {
     return nasServer.get(fileModule + '/search', {
       params: {
         uuid,
@@ -128,10 +130,10 @@ export default {
       }
     })
   },
-  fetchCollectList (): Promise<AxiosResponse<BasicResponse>> {
+  fetchCollectList (): ServerResponse {
     return nasServer.post(collectModule + '/get')
   },
-  collectFile (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+  collectFile (items: Array<ResourceItem>): ServerResponse {
     const files = items.map((item, index) => {
       return {
         uuid: item.uuid,
@@ -140,7 +142,7 @@ export default {
     })
     return nasServer.post(collectModule + '/set', { files })
   },
-  cancelCollect (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+  cancelCollect (items: Array<ResourceItem>): ServerResponse {
     const files = items.map((item) => {
       return {
         uuid: item.uuid,
@@ -150,15 +152,15 @@ export default {
     })
     return nasServer.post(collectModule + '/cancel', { files })
   },
-  fetchShareUserList (): Promise<AxiosResponse<BasicResponse>> {
+  fetchShareUserList (): ServerResponse {
     return nasServer.post(shareModule + '/get_all_users')
   },
-  fetchShareFileList (ugreenNo: string): Promise<AxiosResponse<BasicResponse>> {
+  fetchShareFileList (ugreenNo: string): ServerResponse {
     return nasServer.post(shareModule + '/get_shared_files_of_users', {
       nas_users: [ { ugreen_no: Number(ugreenNo) } ]
     })
   },
-  shareResource (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+  shareResource (items: Array<ResourceItem>): ServerResponse {
     const files = items.map(item => {
       return {
         path: item.path,
@@ -167,7 +169,7 @@ export default {
     })
     return nasServer.post(shareModule + '/share_files', { files })
   },
-  cancelShare (items: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+  cancelShare (items: Array<ResourceItem>): ServerResponse {
     const files = items.map(item => {
       return {
         path: item.path,
@@ -176,7 +178,7 @@ export default {
     })
     return nasServer.post(shareModule + '/cancel_shared_files1', { files })
   },
-  addCopyTask(srcItems: Array<ResourceItem>, dstItem: ResourceItem, mode: TaskMode): Promise<AxiosResponse<BasicResponse>> {
+  addCopyTask(srcItems: Array<ResourceItem>, dstItem: ResourceItem, mode: TaskMode): ServerResponse {
     const src = srcItems.map(item => {
       return { path: item.path, uuid: item.uuid }
     })
@@ -186,7 +188,7 @@ export default {
       data: { mode, src, dst }
     })
   },
-  addMoveTask(srcItems: Array<ResourceItem>, dstItem: ResourceItem, mode: TaskMode): Promise<AxiosResponse<BasicResponse>> {
+  addMoveTask(srcItems: Array<ResourceItem>, dstItem: ResourceItem, mode: TaskMode): ServerResponse {
     const src = srcItems.map(item => {
       return { path: item.path, uuid: item.uuid }
     })
@@ -196,7 +198,7 @@ export default {
       data: { mode, src, dst }
     })
   },
-  addDeleteTask(srcItems: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+  addDeleteTask(srcItems: Array<ResourceItem>): ServerResponse {
     const files = srcItems.map(item => {
       return { path: item.path, uuid: item.uuid }
     })
@@ -205,7 +207,7 @@ export default {
       data: { mode: 1, files }
     })
   },
-  addEncryptRemoveTask(srcItems: Array<ResourceItem>): Promise<AxiosResponse<BasicResponse>> {
+  addEncryptRemoveTask(srcItems: Array<ResourceItem>): ServerResponse {
     const cryptoJson = localStorage.getItem(CRYPTO_INFO)
     if (cryptoJson === null) {
       return Promise.reject(Error('not find crypto_info'))
@@ -223,7 +225,7 @@ export default {
       }
     })
   },
-  addEncryptMoveIntoTask(srcItems: Array<ResourceItem>, dstPath: string, mode: TaskMode, crypto_token: string): Promise<AxiosResponse<BasicResponse>> {
+  addEncryptMoveIntoTask(srcItems: Array<ResourceItem>, dstPath: string, mode: TaskMode, crypto_token: string): ServerResponse {
     const src = srcItems.map(item => {
       return { path: item.path, uuid: item.uuid }
     })
@@ -237,7 +239,7 @@ export default {
       }
     })
   },
-  addEncryptMoveOutTask(srcItems: Array<ResourceItem>, dstItem: ResourceItem, mode: TaskMode): Promise<AxiosResponse<BasicResponse>> {
+  addEncryptMoveOutTask(srcItems: Array<ResourceItem>, dstItem: ResourceItem, mode: TaskMode): ServerResponse {
     const cryptoJson = localStorage.getItem(CRYPTO_INFO)
     if (cryptoJson === null) {
       return Promise.reject(Error('not find crypto_info'))
@@ -256,39 +258,39 @@ export default {
       }
     })
   },
-  fetchRemoteTaskList (): Promise<AxiosResponse<BasicResponse>> {
+  fetchRemoteTaskList (): ServerResponse {
     return nasServer.get(taskModule + '/list')
   },
-  pauseRemoteTask (id: number): Promise<AxiosResponse<BasicResponse>> {
+  pauseRemoteTask (id: number): ServerResponse {
     return nasServer.get(taskModule + '/pause', {
       params: { task_id: id }
     })
   },
-  continueRemoteTask (id: number): Promise<AxiosResponse<BasicResponse>> {
+  continueRemoteTask (id: number): ServerResponse {
     return nasServer.get(taskModule + '/continue', {
       params: { task_id: id }
     })
   },
-  removeRemoteTask (id: number): Promise<AxiosResponse<BasicResponse>> {
+  removeRemoteTask (id: number): ServerResponse {
     return nasServer.get(taskModule + '/remove', {
       params: { task_id: id }
     })
   },
-  uploadData (params: UploadParams, data: Buffer, source?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {
+  uploadData (params: UploadParams, data: Buffer, source?: CancelTokenSource): ServerResponse {
     return nasServer.post(fileModule + '/upload', data, { 
       params,
       headers: { 'Content-Type': ' application/octet-stream' },
       cancelToken: source === undefined ? undefined : source.token
     })
   },
-  uploadBackup (params: UploadParams, data: Buffer, source?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {
+  uploadBackup (params: UploadParams, data: Buffer, source?: CancelTokenSource): ServerResponse {
     return nasServer.post(fileModule + '/backup/upload', data, { 
       params,
       headers: { 'Content-Type': ' application/octet-stream' },
       cancelToken: source === undefined ? undefined : source.token
     })
   },
-  uploadEncrypt (params: UploadParams, data: Buffer, source?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {
+  uploadEncrypt (params: UploadParams, data: Buffer, source?: CancelTokenSource): ServerResponse {
     return nasServer.post(cryptoModule + '/upload', data, { 
       params,
       headers: { 'Content-Type': ' application/octet-stream' },
@@ -316,45 +318,45 @@ export default {
       cancelToken: source === undefined ? undefined : source.token
     })
   },
-  newFolder (path: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
+  newFolder (path: string, uuid: string): ServerResponse {
     return nasServer.post(fileModule + '/add', {
       uuid,
       path,
       type: 2
     })
   },
-  setOfflineAccount (data): Promise<AxiosResponse<BasicResponse>> {
+  setOfflineAccount (data): ServerResponse {
     return nasServer.post(userModule + '/offline/account/set', {
       offline_username: data.offline_username,
       offline_password: data.offline_password
     })
   },
-  modifyOfflineAccount (data): Promise<AxiosResponse<BasicResponse>> {
+  modifyOfflineAccount (data): ServerResponse {
     return nasServer.post(userModule + '/offline/account/update', {
       offline_password: data.offline_password,
       offline_password_new: data.offline_password_new
     })
   },
-  deleteOfflineAccount (): Promise<AxiosResponse<BasicResponse>> {
+  deleteOfflineAccount (): ServerResponse {
     return nasServer.post(userModule + '/offline/account/delete')
   },
-  getOfflineName (): Promise<AxiosResponse<BasicResponse>> {
+  getOfflineName (): ServerResponse {
     return nasServer.post(userModule + '/getOfflineName')
   },
-  getEncryptStatus (): Promise<AxiosResponse<BasicResponse>> {
+  getEncryptStatus (): ServerResponse {
     return nasServer.post(userModule + '/security/statusquery')
   },
-  setEncrypt (security_user_password): Promise<AxiosResponse<BasicResponse>> {
+  setEncrypt (security_user_password): ServerResponse {
     return nasServer.post(userModule + '/security/enable', {
       security_user_password
     })
   },
-  loginEncrypt (security_password): Promise<AxiosResponse<BasicResponse>> {
+  loginEncrypt (security_password): ServerResponse {
     return nasServer.post(userModule + '/security/login', {
       security_password
     })
   },
-  getEncryptList (path?): Promise<AxiosResponse<BasicResponse>> {
+  getEncryptList (path?): ServerResponse {
     const cryptoJson = localStorage.getItem(CRYPTO_INFO)
     if (cryptoJson === null) {
       return Promise.reject(Error('not find crypto_info'))
@@ -367,7 +369,7 @@ export default {
       }
     })
   },
-  modifyEncrypt (data): Promise<AxiosResponse<BasicResponse>> {
+  modifyEncrypt (data): ServerResponse {
     const cryptoJson = localStorage.getItem(CRYPTO_INFO)
     if (cryptoJson === null) {
       return Promise.reject(Error('not find crypto_info'))
@@ -382,10 +384,10 @@ export default {
       }
     })
   },
-  resetEncrypt (): Promise<AxiosResponse<BasicResponse>> {
+  resetEncrypt (): ServerResponse {
     return nasServer.post(userModule + '/security/reset')
   },
-  logoutEncrypt (): Promise<AxiosResponse<BasicResponse>> {
+  logoutEncrypt (): ServerResponse {
     const cryptoJson = localStorage.getItem(CRYPTO_INFO)
     if (cryptoJson === null) {
       return Promise.reject(Error('not find crypto_info'))
@@ -399,7 +401,7 @@ export default {
       }
     })
   },
-  backupCheck (path: string, md5: string): Promise<AxiosResponse<BasicResponse>> {
+  backupCheck (path: string, md5: string): ServerResponse {
     return nasServer.post(fileModule + '/backup/check', {}, {
       params: {
         path,
@@ -408,7 +410,7 @@ export default {
       headers: {'Accept': '*/*'}
     })
   },
-  newCustomFolder (info: CustomInfo): Promise<AxiosResponse<BasicResponse>> {
+  newCustomFolder (info: CustomInfo): ServerResponse {
     const newInfo = filterParams(info)
     return nasServer.post(myselfModule + '/create_myself_folder', {
       uuid: '',
@@ -419,7 +421,7 @@ export default {
       })
     })
   },
-  uploadCustomCover (path: string, uuid: string, img: string): Promise<AxiosResponse<BasicResponse>> {
+  uploadCustomCover (path: string, uuid: string, img: string): ServerResponse {
     return nasServer.post(myselfModule + '/update_background_img', {
       uuid, path, background_img: img
     }, {
@@ -433,65 +435,70 @@ export default {
       cancelCustomRequest()
     }
   },
-  fetchCustomList (): Promise<AxiosResponse<BasicResponse>> {
+  fetchCustomList (): ServerResponse {
     return nasServer.post(myselfModule + '/get_myself_folders')
   },
-  deleteCustomFolder (path: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
+  deleteCustomFolder (path: string, uuid: string): ServerResponse {
     return nasServer.post(myselfModule + '/del_myself_folder', { path, uuid })
   },
-  updateCustomInfo (path: string, uuid: string, info: CustomInfo): Promise<AxiosResponse<BasicResponse>> {
+  updateCustomInfo (path: string, uuid: string, info: CustomInfo): ServerResponse {
     const newInfo = filterParams(info)
     return nasServer.post(myselfModule + '/update_myself_folder', {
       path, uuid, myself_folder: newInfo
     })
   },
-  fetchCustomInfo (path: string, uuid: string): Promise<AxiosResponse<BasicResponse>> {
+  fetchCustomInfo (path: string, uuid: string): ServerResponse {
     return nasServer.post(myselfModule + '/get_myself_folder', { path, uuid })
   },
-  fetchRecycleList (): Promise<AxiosResponse<BasicResponse>> {
+  fetchRecycleList (): ServerResponse {
     return nasServer.post(recycleModule + '/list')
   },
-  recoveryFile (items: ResourceItem[]): Promise<AxiosResponse<BasicResponse>> {
+  recoveryFile (items: ResourceItem[]): ServerResponse {
     const params = items.map(item => {
       return { path: item.path, uuid: item.uuid }
     })
     return nasServer.post(recycleModule + '/recovery', params)
   },
-  deleteFile (items: ResourceItem[]): Promise<AxiosResponse<BasicResponse>> {
+  deleteFile (items: ResourceItem[]): ServerResponse {
     const params = items.map(item => {
       return { path: item.path, uuid: item.uuid }
     })
     return nasServer.post(fileModule + '/delete', params)
   },
-  shutdown (): Promise<AxiosResponse<BasicResponse>> {
+  shutdown (): ServerResponse {
     return nasServer.put(settingModule + '/shutdown')
   },
-  reboot (): Promise<AxiosResponse<BasicResponse>> {
+  reboot (): ServerResponse {
     return nasServer.put(settingModule + '/reboot')
   },
-  factory (): Promise<AxiosResponse<BasicResponse>> {
+  factory (): ServerResponse {
     return nasServer.put(settingModule + '/reboot')
   },
-  fetchBindUserList (): Promise<AxiosResponse<BasicResponse>> {
+  fetchBindUserList (): ServerResponse {
     return nasServer.post(userModule + '/list')
   },
-  enableUser (ugreen_no, set_status): Promise<AxiosResponse<BasicResponse>> {
+  enableUser (ugreen_no, set_status): ServerResponse {
     return nasServer.post(userModule + '/admin/enableUser', {
       ugreen_no,
       set_status
     })
   },
-  deleteCommonUser (ugreen_no): Promise<AxiosResponse<BasicResponse>> {
+  deleteCommonUser (ugreen_no): ServerResponse {
     return nasServer.post(userModule + '/admin/deleteCommonUser', {
       ugreen_no
     })
   },
-  deliver (ugreen_no, deliver_code): Promise<AxiosResponse<BasicResponse>> {
+  deliver (ugreen_no, deliver_code): ServerResponse {
     return nasServer.post(userModule + '/admin/deliver', {
       ugreen_no,
       deliver_code
     })
   },
+  fetchFileTree (path: string, uuid: string, page: number, size: number = 40): ServerResponse {
+    return nasServer.get<BasicResponse>(fileModule + '/tree', {
+      params: { path, uuid, page, size }
+    })
+  }
 }
 
 const filterParams = (params: object) => {
