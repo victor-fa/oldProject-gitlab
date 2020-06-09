@@ -286,7 +286,7 @@ const getIPAddress = (flag: string) => {
   const netInfo = os.networkInterfaces()
   for (const key in netInfo) {
     console.log(key);
-    if (key === 'WLAN') {
+    if (key === 'WLAN' || key.indexOf('以太网') > -1) {
       if (netInfo.hasOwnProperty(key)) {
         const interfaces = netInfo[key] as Array<any>
         for (let index = 0; index < interfaces.length; index++) {
