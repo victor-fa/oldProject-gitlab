@@ -7,6 +7,9 @@ import { NasInfo } from './ClientModel'
 import dgram from 'dgram'
 import { nasServer } from './NasServer';
 import TunnelAPI from './TunnelAPI';
+import { spawn, exec } from 'child_process'
+import path from 'path'
+import processCenter from '@/utils/processCenter';
 
 const userModulePath = '/v1/user'
 
@@ -87,29 +90,29 @@ export default {
     })
   },
   // search nas on the LAN
-  searchNas (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
-    const timer = setTimeout(() => {
-      this.closeBoardcast()
-      this.closeP2PTunnel()
-      failure('search time out')
-    }, 7000)
-    this.boardcastInLan(sn, mac, data => {
-      clearTimeout(timer)
-      this.closeP2PTunnel()
-      success(data)
-    }, error => {
-      clearTimeout(timer)
-      this.closeP2PTunnel()
-      failure(error)
-    })
-    this.initP2PTunnel(sn, mac, data => {
-      clearTimeout(timer)
-      this.closeBoardcast()
-      success(data)
-    }, error => {
-      clearTimeout(timer)
-      this.closeBoardcast()
-      failure(error)
+  searchNas (sn: string, mac: string): Promise<NasInfo> {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.closeBoardcast()
+        this.closeP2PTunnel()
+        reject(Error('search time out'))
+      }, 10000)
+      this.boardcastInLan(sn, mac, data => {
+        clearTimeout(timer)
+        this.closeP2PTunnel()
+        this.closeBoardcast()
+        resolve(data)
+      }, error => {
+        console.log(error)
+        this.closeBoardcast()
+      })
+      this.initP2PTunnel(sn, mac, data => {
+        clearTimeout(timer)
+        this.closeBoardcast()
+        resolve(data)
+      }, error => {
+        console.log(error)
+      })
     })
   },
   boardcastInLan (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
@@ -139,7 +142,6 @@ export default {
       // parse reponse
       const dataJson = msg.toString('utf8')
       const data = JSON.parse(dataJson)
-      console.log(JSON.parse(JSON.stringify(data)));
       if (data.error_code === 0) {
         success(data.data)
       } else {
@@ -147,54 +149,56 @@ export default {
       }
     })
   },
-  initP2PTunnel (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
-    if (process.platform === 'win32') { // 仅当windows平台先有
-      const tunnelNas:NasInfo = {
-        active: 1,
-        name: '',
-        model: '',
-        mac: '',
-        ip: '127.0.0.1',
-        sn: '',
-        port: 9001,
-        ssl_port: '000',
-        softversion: 'V1.0.1'
-      }
-      TunnelAPI.tunnelCheck().then(() => {
-        return TunnelAPI.queryConnectInfo(sn)
-      }).then((connectRes: any) => {
-        if (connectRes.result === '0') {
-          return Promise.resolve(tunnelNas)
-        } else if (connectRes.result === '18') {
-          return TunnelAPI.addConnectFun(sn)
-        } else {
-          return Promise.reject(Error('tunnel error'))
-        }
-      }).then((addConnectRes: any) => {
-        if (addConnectRes === tunnelNas) {
-          return Promise.resolve(tunnelNas)
-        } else if (addConnectRes.result === '0') {
-          return TunnelAPI.getPeerinfoFun(sn)
-        } else {
-          return Promise.reject(Error('tunnel error'))
-        }
-      }).then(() => {
-        success(tunnelNas)
-      }).catch(error => {
-        failure('tunnel error')
-      })
-    }
-  },
   closeBoardcast () {
     if (client !== null) {
       client.close()
       client = null
     }
   },
+  /**启动P2P进程 */
+  launchP2PProcess () {
+  },
+  initP2PTunnel (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
+    const tunnelNas:NasInfo = {
+      active: 1,
+      name: '',
+      model: '',
+      mac: '',
+      ip: '127.0.0.1',
+      sn: '',
+      port: 9001,
+      ssl_port: '000',
+      softversion: 'V1.0.1'
+    }
+    TunnelAPI.tunnelCheck().then(() => {
+      return TunnelAPI.queryConnectInfo(sn)
+    }).then((connectRes: any) => {
+      if (connectRes.result === '0') {
+        return Promise.resolve(tunnelNas)
+      } else if (connectRes.result === '18') {
+        return TunnelAPI.addConnectFun(sn)
+      } else {
+        return Promise.reject(Error('tunnel error'))
+      }
+    }).then((addConnectRes: any) => {
+      if (addConnectRes === tunnelNas) {
+        return Promise.resolve(tunnelNas)
+      } else if (addConnectRes.result === '0') {
+        return TunnelAPI.getPeerinfoFun(sn)
+      } else {
+        return Promise.reject(Error('tunnel error'))
+      }
+    }).then(() => {
+      // TODO: 连接成功需要补全nasInfo
+      success(tunnelNas)
+    }).catch(error => {
+      failure('tunnel error')
+    })
+  },
   closeP2PTunnel () {
-    TunnelAPI.deleteConnectInfo().then((res: any) => {
-      if (res.result === '0') {
-        TunnelAPI.changeStatusToStop()
+    TunnelAPI.deleteConnect().then(response => {
+      if (response.status === 200) {
+        console.log('close p2p tunnel completed')
       }
     })
   },

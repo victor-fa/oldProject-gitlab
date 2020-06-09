@@ -320,6 +320,7 @@ export default Vue.extend({
       RouterUtility.push(name, 'encrypt-reasource-view', { path, uuid })
     },
     handleLoadmoreAction () {
+      if (this.busy) return
       this.page++
       this.getEncryptList()
     },

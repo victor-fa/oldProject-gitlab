@@ -138,16 +138,13 @@ export default {
     })
   },
   loop (peerid, resolve, reject) {
+    if (status !== TunnelStatus.continue) return
     this.getPeerinfo(peerid).then(response => {
       if (response.status !== 200) return
       console.log(response.data);
       const resJson = JSON.parse(response.data.substring(12, response.data.length))
       if (resJson.result === '0') {
         if (resJson.result === '6') {
-          reject()
-          return
-        }
-        if (status !== TunnelStatus.continue) { // 阻止递归并
           reject()
           return
         }

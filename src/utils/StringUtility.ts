@@ -168,4 +168,8 @@ export default {
     } 
     return `${(speed / gByte).toFixed(2)}G/s`
   },
+  // 校验手机号
+  vaildatorPhone (phone: string) {
+    return /^1[3456789]\d{9}$/.test(phone)
+  }
 }

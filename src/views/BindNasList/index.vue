@@ -80,49 +80,16 @@ export default Vue.extend({
       this.currentDevice = index
       const item = this.deviceList[index]
       const secretKey = StringUtility.filterPublicKey(item.publicKey)
-      this.searchNasInLAN(item, secretKey)
+      this.searchNas(item, secretKey)
     },
-    searchNasInLAN (nas: DeviceInfo, secretKey: string) {
+    searchNas (nas: DeviceInfo, secretKey: string) {
       this.loading = true
-      ClientAPI.searchNas(nas.sn, nas.mac, data => {
-        if (data.name === '') { // 隧道登录
-          ClientAPI.closeBoardcast()
-          this.tunnelTryLogin(secretKey, TunnelAPI.getClientIP())
-        } else {
-          ClientAPI.closeBoardcast()
-          this.loginToNas(data, secretKey)
-        }
-      }, error => {
-        this.loading = false
-        ClientAPI.closeBoardcast()
-        this.$message.error('连接失败')
-      })
-    },
-    tunnelTryLogin (secretKey, tunnelIP) {  // 通过渠道登录
-      ClientAPI.login(this.user, secretKey, tunnelIP).then(response => {
-        if (response.data.code !== 200) return
-        const accessInfo = response.data.data as NasAccessInfo
-        ClientAPI.setBaseUrl(`http://${tunnelIP}`)
-        accessInfo.key = secretKey
-        const nasInfo = this.deviceList[this.currentDevice]
-        const nas = {
-          active: 1,
-          name: nasInfo.name,
-          model: nasInfo.model,
-          mac: nasInfo.mac,
-          ip: '127.0.0.1',
-          sn: nasInfo.sn,
-          port: 9001,
-          ssl_port: 10000,
-          softversion: 'V1.0.1'
-        }
-        this.loading = false
-        this.$store.dispatch('NasServer/updateNasAccess', accessInfo)
-        this.$store.dispatch('NasServer/updateNasInfo', nas)
-        processCenter.renderSend(EventName.home)
+      ClientAPI.searchNas(nas.sn, nas.mac).then(data => {
+        this.loginToNas(data, secretKey)
       }).catch(error => {
+        console.log(error)
         this.loading = false
-        console.log(error);
+        this.$message.error('连接失败')
       })
     },
     loginToNas (nas: NasInfo, secretKey: string) {

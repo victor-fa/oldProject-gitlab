@@ -38,16 +38,16 @@ const customError = (error: string): AxiosResponse<BasicResponse> => {
 }
 
 export default {
-  ping () {
+  ping (): CloudResponse {
     return nasCloud.get(userModulePath + '/msg')
   },
-  smsCode (phone: string, smsType: SmsType) {
+  smsCode (phone: string, smsType: SmsType): CloudResponse {
     return nasCloud.post(userModulePath + '/sendSms', {
       phone,
       smsType
     })
   },
-  register (phoneNo: string, password: string, code: string) {
+  register (phoneNo: string, password: string, code: string): CloudResponse {
     return nasCloud.post(userModulePath + '/reg/phone', {
       phoneNo,
       password,

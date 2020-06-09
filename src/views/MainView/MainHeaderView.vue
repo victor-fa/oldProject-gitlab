@@ -57,7 +57,7 @@
                 :ref="item.command"
                 :iconWidth="item.iconWidth"
                 v-show="item.isHidden !== true"
-                @click.native="handleItemClick(item)"
+                @click.native="handleItemClick(index)"
               />
             </span>
           </a-popover>

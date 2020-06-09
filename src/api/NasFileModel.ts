@@ -159,7 +159,7 @@ enum UploadTimeSort {
 
 interface ShareUser {
   ugreen_no: number,
-  nick_name: string
+  nic_name: string
 }
 
 interface TransportTask {

@@ -24,7 +24,7 @@
       </li>
       <li class="password-checkbox">
         <a-checkbox :checked="rememberPassword" @change="checkboxChange">记住密码</a-checkbox>
-        <a-button @click="showForgetPass">忘记密码</a-button>
+        <a-button @click="handleRegisterAction">注册账号</a-button>
       </li>
       <li class="login-button">
         <a-button
@@ -102,9 +102,8 @@ export default Vue.extend({
     checkboxChange() {
       this.rememberPassword = !this.rememberPassword
     },
-    showForgetPass() {
-      const _this = this as any
-      _this.$ipc.send('system', 'forget-pass');
+    handleRegisterAction() {
+      this.$router.push('register')
     },
     clearCache () {
       // clear user cache

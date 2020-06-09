@@ -71,14 +71,13 @@ export default Vue.extend({
     },
     searchNasInLAN () {
       this.loading = true
-      ClientAPI.searchNas(this.sn, this.mac, data => {
-        ClientAPI.closeBoardcast()
+      ClientAPI.searchNas(this.sn, this.mac).then(data => {
+        console.log(data)
         this.onlineConnectNas(data)
-      }, error => {
-        this.loading = false
-        ClientAPI.closeBoardcast()
-        this.pushFailedPage()
+      }).catch(error => {
         console.log(error)
+        this.loading = false
+        this.pushFailedPage()
       })
     },
     onlineConnectNas (nasInfo: NasInfo) {

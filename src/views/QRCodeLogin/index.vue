@@ -23,8 +23,6 @@ import ClientAPI from '../../api/ClientAPI'
 import { NasAccessInfo, NasInfo, NasUser } from '../../api/ClientModel'
 import processCenter, { EventName } from '../../utils/processCenter'
 
-let timeId: NodeJS.Timeout | null = null
-
 enum QRCodeType {
   online,
   offline
@@ -36,7 +34,8 @@ export default Vue.extend({
     return {
       loginIcons,
       loading: false,
-      qrCode: ''
+      qrCode: '',
+      timeId: null as NodeJS.Timeout | null
     }
   },
   computed: {
@@ -67,7 +66,11 @@ export default Vue.extend({
     this.fetchQrCode()
   },
   destroyed () {
-    if (timeId !== null) clearTimeout(timeId)
+    if (this.timeId !== null) {
+      clearTimeout(this.timeId)
+      this.timeId = null
+      this.qrCode = ''
+    }
   },
   methods: {
     backBtnClick () {
@@ -149,13 +152,14 @@ export default Vue.extend({
       })
     },
     pollResult (code: string) {
-      timeId = setTimeout(() => {
+      if (_.isEmpty(this.qrCode)) return
+      this.timeId = setTimeout(() => {
         if (this.qrCodeType === QRCodeType.online) {
           this.pollOnlineResult(code)
         } else {
           this.pollOfflineResult(code)
         }
-      }, 1000);
+      }, 2000);
     },
     pollOnlineResult (code: string) {
       UserAPI.fetchQrCodeLogin(code).then(response => {
@@ -169,9 +173,7 @@ export default Vue.extend({
         const user = _.get(response.data.data, 'userVo') as User
         if (_.isEmpty(accessToken) || _.isEmpty(user)) {
           // next pull
-          setTimeout(() => {
-            this.pollResult(code)
-          }, 1000);
+          this.pollResult(code)
         } else {
           // cache login info
           this.$store.dispatch('User/updateUser', user)
@@ -194,9 +196,7 @@ export default Vue.extend({
         const nasAccess = response.data.data as NasAccessInfo
         const status = _.get(nasAccess, 'auth_status')
         if (status !== 1) {
-          setTimeout(() => {
-            this.pollResult(session)
-          }, 1000);
+          this.pollResult(session)
         } else {
           // cache nas info
           this.$store.dispatch('NasServer/updateNasAccess', nasAccess)

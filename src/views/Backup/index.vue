@@ -79,6 +79,7 @@ export default Vue.extend({
       this.fetchBackupList()
     },
     handleLoadmoreAction () {
+      if (this.busy) return
       this.page++
       this.fetchBackupList()
     },

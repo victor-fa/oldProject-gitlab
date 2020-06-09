@@ -58,7 +58,7 @@ export default Vue.extend({
     // 转换分享用户列表
     convertShareUserList (list: ShareUser[]) {
       return list.map((item, index) => {
-        let name = _.isEmpty(item.nick_name) ? item.ugreen_no.toString() : item.nick_name
+        let name = _.isEmpty(item.nic_name) ? item.ugreen_no.toString() : item.nic_name
         if (item.ugreen_no === (this.user as User).ugreenNo)  name = '我'
         return {
           index,

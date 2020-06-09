@@ -98,8 +98,8 @@ const HomeRouters = [
     component: () => import('../../views/Recycle/index.vue'),
     meta: {
       title: '回收站',
-      icon: require('../../assets/transport_icon.png'),
-      selectedIcon: require('../../assets/transport_icon_selected.png'),
+      icon: require('../../assets/recycle_icon.png'),
+      selectedIcon: require('../../assets/recycle_selected_icon.png'),
       isSelected: false
     }
   },
