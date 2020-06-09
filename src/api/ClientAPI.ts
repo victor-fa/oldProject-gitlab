@@ -113,8 +113,7 @@ export default {
     })
   },
   boardcastInLan (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
-    // const host = getBoardcastAddress()
-    const host = '255.255.255.255'
+    const host = getBoardcastAddress()
     if (host === null) {
       failure('not found IP address')
       return
@@ -286,15 +285,18 @@ const getIPAddress = (flag: string) => {
   const os = require("os")
   const netInfo = os.networkInterfaces()
   for (const key in netInfo) {
-    if (netInfo.hasOwnProperty(key)) {
-      const interfaces = netInfo[key] as Array<any>
-      for (let index = 0; index < interfaces.length; index++) {
-        const alias = interfaces[index]
-        if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
-          if (flag === 'address') { // 返回address以及netmask
-            return { address: alias.address, netmask: alias.netmask }
-          } else if (flag === 'mac') {  // 返回mac地址
-            return alias.mac
+    console.log(key);
+    if (key === 'WLAN') {
+      if (netInfo.hasOwnProperty(key)) {
+        const interfaces = netInfo[key] as Array<any>
+        for (let index = 0; index < interfaces.length; index++) {
+          const alias = interfaces[index]
+          if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
+            if (flag === 'address') { // 返回address以及netmask
+              return { address: alias.address, netmask: alias.netmask }
+            } else if (flag === 'mac') {  // 返回mac地址
+              return alias.mac
+            }
           }
         }
       }

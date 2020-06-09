@@ -12,12 +12,22 @@
 				<img class="userEnter" :src="loginIcons.open">
 			</div>
 		</div>
+		<a-modal
+			:title="'验证码'"
+			:visible="deliver.visiable" :mask="false" :closable="false" :maskClosable="false" width="350px" style="top: 50px;" 
+			okText="确定" cancelText="取消" @ok="handleDeliver" @cancel="deliver.visiable = false">
+			<div style="display: flex;justify-content: space-between;margin-bottom: 15px;">
+				<p>验证码：</p>
+				<a-input placeholder="请输入短信验证码" v-model="deliver.code" style="flex: 1;" />
+			</div>
+		</a-modal>
 	</div>
 </template>
 
 <script lang="ts">
 import _ from 'lodash'
 import NasFileAPI from '@/api/NasFileAPI'
+import UserAPI from '@/api/UserAPI'
 import { loginIcons } from '../../../views/Login/iconList'
 import { mapGetters } from 'vuex'
 
@@ -28,7 +38,12 @@ export default {
 			loading: '',
 			nasUsers: [],
 			UploadSrc: false,
-			loginIcons
+			loginIcons,
+			deliver: {
+				code: '',
+				visiable: false,
+				ugreen_no: ''
+			}
 		};
 	},
   computed: {
@@ -98,12 +113,30 @@ export default {
         console.log(error)
       })
 		},
-		deliver (item) {
+		showDeliver (item) {
 			const _this = this as any
-			const ugreen_no = item.ugreen_no
-			const deliver_code = 'code'
+			_this.deliver.ugreen_no = item.ugreen_no
+			UserAPI.smsCode(_this.user.phoneNo, 6).then(response => {
+				if (response.data.code !== 200) return
+				_this.deliver.visiable = true
+				_this.$message.success('短信已发送到手机')
+			}).catch(error => {
+				console.log(error)
+				_this.$message.error('网络连接错误,请检测网络')
+			})
+		},
+		handleDeliver (item) {
+			const _this = this as any
+			const ugreen_no = _this.deliver.ugreen_no
+			const deliver_code = _this.deliver.code
       NasFileAPI.deliver(ugreen_no, deliver_code).then(response => {
 				if (response.data.code !== 200) return
+				_this.deliver.visiable = false
+				_this.deliver = {
+					code: '',
+					visiable: false,
+					ugreen_no: ''
+				}
 				console.log(response.data);
       }).catch(error => {
         _this.$message.error('网络连接错误，请检测网络')
@@ -124,7 +157,7 @@ export default {
 				click: function () { _this.deleteCommonUser(item) }
 			}));
 			menu.append(new MenuItem({label: '提升为管理员',
-				click: function () { _this.deliver(item) }
+				click: function () { _this.showDeliver(item) }
 			}));
       menu.popup(remote.getCurrentWindow())
     },
