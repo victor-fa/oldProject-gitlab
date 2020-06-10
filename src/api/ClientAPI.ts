@@ -4,12 +4,10 @@ import { User, BasicResponse } from './UserModel'
 import deviceMgr from '../utils/deviceMgr'
 import JSEncrypt from 'jsencrypt'
 import { NasInfo } from './ClientModel'
+import os, { NetworkInterfaceInfo } from 'os'
 import dgram from 'dgram'
 import { nasServer } from './NasServer';
-import TunnelAPI from './TunnelAPI';
-import { spawn, exec } from 'child_process'
-import path from 'path'
-import processCenter from '@/utils/processCenter';
+import TunnelAPI from './TunnelAPI'
 
 const userModulePath = '/v1/user'
 
@@ -104,7 +102,7 @@ export default {
         resolve(data)
       }, error => {
         console.log(error)
-        this.closeBoardcast()
+        // this.closeBoardcast()
       })
       this.initP2PTunnel(sn, mac, data => {
         clearTimeout(timer)
@@ -112,26 +110,30 @@ export default {
         resolve(data)
       }, error => {
         console.log(error)
+        this.closeP2PTunnel()
       })
     })
   },
   boardcastInLan (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
-    const host = getBoardcastAddress()
-    if (host === null) {
+    const hosts = calculateBoardcastAddress()
+    if (hosts === null) {
       failure('not found IP address')
       return
     }
+    console.log(`start boardcast: sn=${sn}, mac=${mac}`);
     client = dgram.createSocket('udp4')
     const msg = generateBoardcastPacket(sn, mac)
-    console.log(`start boardcast: sn=${sn}, mac=${mac}`);
     const port = 60000
     client.bind(() => {
       client!.setBroadcast(true)
       client!.setTTL(128)
-      client!.send(msg, 0, msg.length, port, host, function(err) {
-        if (_.isEmpty(err)) return
-        console.log(err)
-        failure('boardcast packet message failed')
+      hosts.forEach(host => {
+        console.log(host)
+        client!.send(msg, 0, msg.length, port, host, function(err) {
+          if (_.isEmpty(err)) return
+          console.log(err)
+          failure('boardcast packet message failed')
+        })
       })
     })
     client.on('error', (error) => {
@@ -151,6 +153,7 @@ export default {
   },
   closeBoardcast () {
     if (client !== null) {
+      client.removeAllListeners()
       client.close()
       client = null
     }
@@ -220,7 +223,9 @@ export default {
     })
   },
   getMac () {
-    return getIPAddress('mac')
+    const infos = getNetworkInterfaces()
+    if (_.isEmpty(infos)) return ''
+    return infos[0].mac
   }
 }
 
@@ -265,48 +270,43 @@ const encryptSign = (nasUser: any, secretKey: string) => {
   return null
 }
 
-const getBoardcastAddress = () => {
-  const address = getIPAddress('address')
-  if (address === null) {
-    console.log('not found IP address')
-    return null
-  }
-  const ipAddrs = (address.address as string).split('.')
-  const netmasks = (address.netmask as string).split('.')
-  let boardcasts = ''
-  for (let index = 0; index < ipAddrs.length; index++) {
-    const ipAddr = parseInt(ipAddrs[index])
-    const netmask = parseInt(netmasks[index])
-    const network = ipAddr & netmask
-    const reversemask = 255 - netmask
-    const boardcast = network | reversemask
-    boardcasts += `${boardcast}.` 
-  }
-  return _.trim(boardcasts, '.')
+// 计算广播地址
+const calculateBoardcastAddress = () => {
+  const infos = getNetworkInterfaces()
+  if (_.isEmpty(infos)) return null
+  return infos.map(info => {
+    const ipAddrs = (info.address as string).split('.')
+    const netmasks = (info.netmask as string).split('.')
+    let boardcasts = ''
+    for (let index = 0; index < ipAddrs.length; index++) {
+      const ipAddr = parseInt(ipAddrs[index])
+      const netmask = parseInt(netmasks[index])
+      const network = ipAddr & netmask
+      const reversemask = 255 - netmask
+      const boardcast = network | reversemask
+      boardcasts += `${boardcast}.` 
+    }
+    return _.trim(boardcasts, '.')
+  })
 }
 
-const getIPAddress = (flag: string) => {
-  const os = require("os")
+// 获取网口信息
+const getNetworkInterfaces = () => {
   const netInfo = os.networkInterfaces()
+  let infos: NetworkInfo[] = []
   for (const key in netInfo) {
-    console.log(key);
-    if (key === 'WLAN' || key.indexOf('以太网') > -1) {
-      if (netInfo.hasOwnProperty(key)) {
-        const interfaces = netInfo[key] as Array<any>
-        for (let index = 0; index < interfaces.length; index++) {
-          const alias = interfaces[index]
-          if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
-            if (flag === 'address') { // 返回address以及netmask
-              return { address: alias.address, netmask: alias.netmask }
-            } else if (flag === 'mac') {  // 返回mac地址
-              return alias.mac
-            }
-          }
-        }
+    if (netInfo.hasOwnProperty(key)) {
+      const interfaces = netInfo[key] as Array<any>
+      for (let index = 0; index < interfaces.length; index++) {
+        const alias = interfaces[index] as NetworkInfo
+        if (alias.family !== 'IPv4') continue
+        if (alias.address === '127.0.0.1') continue
+        if (alias.internal) continue
+        infos.push(alias)
       }
     }
   }
-  return null
+  return infos
 }
 
 const generateBoardcastPacket = (sn: string, mac: string) => {
@@ -316,4 +316,15 @@ const generateBoardcastPacket = (sn: string, mac: string) => {
   const msgLen = Buffer.alloc(2)
   msgLen.writeUIntBE(msg.length, 0, 2)
   return Buffer.concat([code, msgLen, msg])
+}
+
+interface NetworkInfo {
+  address: string,
+  cidr: string,
+  family: string,
+  internal: boolean,
+  mac: string,
+  netmask: string
+  scopeid: number,
+  boardcastAddress: string
 }

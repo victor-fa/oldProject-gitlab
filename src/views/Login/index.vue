@@ -269,7 +269,9 @@ export default Vue.extend({
         border: none;
         box-shadow: none;
         background-color: white;
-        color: #06b650;
+        font-size: 17px;
+        font-weight: bold;
+        color: #2cd18a;
       }
     }
   }

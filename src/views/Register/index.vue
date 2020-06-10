@@ -243,10 +243,12 @@ const icons = {
   .account-btn {
     margin-top: 50px;
     width: 130px;
+    font-size: 17px;
+    font-weight: bold;
+    color: #2cd18a;
     border: none;
     box-shadow: none;
     background-color: white;
-    color: #06b650;
   }
 }
 </style>
