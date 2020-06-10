@@ -43,7 +43,7 @@ export default Vue.extend({
         appId = packageInfo.macAppId
         appVersion = packageInfo.macAppVersion
       }
-      UserAPI.fetchUpdateInfo(appId, appVersion).then(response => {
+      UserAPI.fetchSoftVerUpdateInfo(appId, appVersion).then(response => {
         if (response.data.code !== 200) {
           console.log('获取更新信息失败');
           return

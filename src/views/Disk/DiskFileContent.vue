@@ -63,7 +63,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 /*文件查看窗口*/
 .cd-main {
 	height: 100%;

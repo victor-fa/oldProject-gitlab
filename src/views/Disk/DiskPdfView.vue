@@ -53,7 +53,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 /*pdf窗口*/
 html,body,#app{
 	height: 100%;

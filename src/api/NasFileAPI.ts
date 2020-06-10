@@ -22,6 +22,7 @@ const userModule = '/v1/user'
 const cryptoModule = '/v1/crypto'
 const recycleModule = '/v1/recycle'
 const settingModule = '/setting/v1/sys'
+const upgradeModule = '/v1/upgrade'
 
 type ServerResponse = Promise<AxiosResponse<BasicResponse>>
 const CancelToken = axios.CancelToken
@@ -472,7 +473,7 @@ export default {
     return nasServer.put(settingModule + '/reboot')
   },
   factory (): ServerResponse {
-    return nasServer.put(settingModule + '/reboot')
+    return nasServer.put(settingModule + '/factory')
   },
   fetchBindUserList (): ServerResponse {
     return nasServer.post(userModule + '/list')
@@ -498,6 +499,12 @@ export default {
     return nasServer.get<BasicResponse>(fileModule + '/tree', {
       params: { path, uuid, page, size }
     })
+  },
+  fetchRomInfo (): ServerResponse {
+    return nasServer.post<BasicResponse>(upgradeModule + '/rom/info')
+  },
+  fetchRomUpgrade (): ServerResponse {
+    return nasServer.post<BasicResponse>(upgradeModule + '/rom/upgrade')
   }
 }
 

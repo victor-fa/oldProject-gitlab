@@ -19,13 +19,18 @@
 			<p class="cd-setting-info">
 				<a-button @click="changePassword">修改密码</a-button>
 			</p>
-			<p class="cd-setting-title"><br></p>
 			<SettingBottom @callback="handleBottom" />
 		</div>
+		<a-modal
+			:visible="codePhoneVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
+			okText="确定" cancelText="取消" @ok="changePhone" @cancel="codePhoneVisiable = false">
+			<p>验证码：</p><a-input placeholder="请输入验证码" v-model="changePhoneData.code" />
+		</a-modal>
 	</div>
 </template>
 
 <script lang="ts">
+import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import StringUtility from '../../../utils/StringUtility'
 import UserAPI from '@/api/UserAPI'
@@ -33,7 +38,7 @@ import SettingBottom from '../../../components/Disk/SettingBottom.vue'
 import processCenter, { EventName } from '../../../utils/processCenter'
 import { USER_MODEL } from '../../../common/constants'
 
-export default {
+export default Vue.extend({
   name: 'profil',
 	components: {
 		SettingBottom
@@ -43,41 +48,40 @@ export default {
 	},
 	data() {
 		return {
-			loading: '',
 			codeVisiable: false,
 			codePhoneVisiable: false,
 			storages: [],
 			nasUsers: [],
-			UploadSrc: false
+			UploadSrc: false as any,
+			changePhoneData: {
+				phone: '',
+				code: ''
+			},
 		};
   },
 	created() {
 	},
   methods: {
 		changePhoto () {
-			const _this = this as any
 			const _event = event as any
-			_this.UploadSrc = false;
+			this.UploadSrc = false;
 			let elm = _event.target;
 			let user_pic = elm.value;
 			if (user_pic.length > 1 && user_pic) {
 				let type = StringUtility.formatSuffix(user_pic).toLowerCase();
 				if (['png', 'jpg', 'jpeg', 'bmp', 'gif'].indexOf(type) === -1) {
-					return _this.$message.error('所选格式为' + type + ' 请重新选择上传的文件');
+					return this.$message.error('所选格式为' + type + ' 请重新选择上传的文件');
 				}
-				elm.files && elm.files[0] ? (_this.UploadSrc = window.URL.createObjectURL(elm.files[0])) : '';
-				_this.loading = true;
+				elm.files && elm.files[0] ? (this.UploadSrc = window.URL.createObjectURL(elm.files[0])) : '';
 				UserAPI.uploadPhoto(elm.files[0]).then(response => {
-					_this.loading = false;
 					if (response.data.code !== 200) return
-					_this.user.image = response.data.data.imageUrl
-					_this.$message.success('修改头像成功')
+					this.user.image = response.data.data.imageUrl
+					this.$message.success('修改头像成功')
 					processCenter.renderSend(EventName.account);
-					_this.$store.dispatch('User/updateUser', _this.user)
+					this.$store.dispatch('User/updateUser', this.user)
 				}).catch(error => {
-					_this.loading = false;
 					console.log(error)
-					_this.$message.error('网络连接错误,请检测网络')
+					this.$message.error('网络连接错误,请检测网络')
 				})
 			}
 		},
@@ -105,20 +109,71 @@ export default {
 			_this.$electron.remote.getCurrentWindow().close()
 		},
 		handleSave (data) {
-			const _this = this as any
-			const input = { nicName: _this.user.nicName ? _this.user.nicName : '' }
+			const input = { nicName: this.user.nicName ? this.user.nicName : '' }
 			const userJson = localStorage.getItem(USER_MODEL)
 			if (userJson === null) return
 			const userObj = JSON.parse(userJson)
-			if (_this.user.nicName !== userObj.nicName) _this.handleNickname()
-			if (_this.user.phoneNo !== userObj.phoneNo) {
-				_this.changePhoneData.phone = _this.user.phoneNo
-				_this.getPhoneCode()
+			if (this.user.nicName !== userObj.nicName) this.handleNickname()
+			if (this.user.phoneNo !== userObj.phoneNo) {
+				this.changePhoneData.phone = this.user.phoneNo
+				this.getPhoneCode()
 			}
-			// if (data === 0) setTimeout(() => _this.close(), 3000);
+			// if (data === 0) setTimeout(() => this.close(), 3000);
+		},
+		handleNickname() {
+			const input = { nicName: this.user.nicName ? this.user.nicName : '' }
+			UserAPI.updateInfo(input).then(response => {
+				if (response.data.code !== 200) return
+				this.$store.dispatch('User/updateUser', response.data.data.userVO)
+				this.user = response.data.data.userVO
+				processCenter.renderSend(EventName.account);
+        this.$message.success('修改成功')
+      }).catch(error => {
+        console.log(error)
+        this.$message.error('网络连接错误,请检测网络')
+      })
+		},
+		getPhoneCode () {
+			if (!this.changePhoneData.phone.length) {
+				this.$message.warning('请输入新的手机号');
+				return;
+			}
+			if (this.changePhoneData.phone && !(/^1[3456789]\d{9}$/.test(this.changePhoneData.phone))) {
+				this.$message.error('请输入正确的手机号');
+				return;
+			}
+			UserAPI.smsCode(this.changePhoneData.phone, 5).then(response => {
+				if (response.data.code !== 200) return
+				this.codePhoneVisiable = true
+        this.$message.success('短信验证码已发送到手机')
+      }).catch(error => {
+        console.log(error)
+        this.$message.error('网络连接错误,请检测网络')
+      })
+		},
+		changePhone() {
+			if (!this.changePhoneData.code.length) {
+				this.$message.warning('请输入短信验证码');
+				return;
+			}
+			const input = { phoneNo: this.changePhoneData.phone, code: this.changePhoneData.code }
+			UserAPI.updateInfo(input).then(response => {
+				if (response.data.code !== 200) return
+				this.codePhoneVisiable = false;
+				this.$store.dispatch('User/updateUser', response.data.data.userVO)
+        this.$message.success('修改手机号成功')
+      }).catch(error => {
+        console.log(error)
+        this.$message.error('网络连接错误,请检测网络')
+      }).finally(() => {
+				this.changePhoneData = {
+					phone: '',
+					code: ''
+				}
+			})
 		},
   }
-}
+})
 </script>
 
 <style lang="less" scoped>

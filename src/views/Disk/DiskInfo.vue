@@ -167,7 +167,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 /*文件属性窗口*/
 .cd-disk-info-main {
 	width: 100%;

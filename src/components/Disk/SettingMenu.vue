@@ -22,7 +22,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="less" scoped>
 .cd-setting-menu {
 	width: 100px;
 	height: 100%;
@@ -30,37 +30,37 @@ export default {
 	overflow: unset !important;
 	z-index: 1;
 	overflow-y: scroll;
-}
-.cd-setting-menu li {
-	width: 100%;
-	height: 44px;
-	background: #fff;
-	color: #6e6e6e;
-	border-radius: 5px 0 0 5px;
-	border: 1px solid #fff;
-}
-.cd-setting-menu li * {
-	float: left;
-	line-height: 41px;
-}
-.cd-setting-menu li.active {
-	width: calc(100% + 1px);
-	border: 1px solid #eee;
-	border-right: none;
-	color: #06B650 !important;
-	cursor: default !important;
-}
-.cd-setting-menu li:hover {
-	color: #06B650;
-	cursor: pointer;
-}
-.cd-setting-menu li span {
-	width: 35px;
-	height: 35px;
-	text-align: center;
-}
-.cd-setting-menu li p {
-	width: 100%;
-	margin-bottom: 0;
+	li {
+		width: 100%;
+		height: 44px;
+		background: #fff;
+		color: #6e6e6e;
+		border-radius: 5px 0 0 5px;
+		border: 1px solid #fff;
+		* {
+			float: left;
+			line-height: 41px;
+		}
+		&:active {
+			width: calc(100% + 1px);
+			border: 1px solid #eee;
+			border-right: none;
+			color: #06B650 !important;
+			cursor: default !important;
+		}
+		&:hover {
+			color: #06B650;
+			cursor: pointer;
+		}
+		span {
+			width: 35px;
+			height: 35px;
+			text-align: center;
+		}
+		p {
+			width: 100%;
+			margin-bottom: 0;
+		}
+	}
 }
 </style>

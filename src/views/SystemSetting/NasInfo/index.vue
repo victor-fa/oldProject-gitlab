@@ -18,7 +18,7 @@
 					<span>容量 {{item.showSizeSimple}}</span>
 					<span>已使用 {{item.showUsed}}</span>
 				</div>
-				<a-button style="margin: 30px 10px 0 0;">格式化</a-button>
+				<a-button v-show="isUserAdmin" style="margin: 30px 10px 0 0;">格式化</a-button>
 			</div>
 			<p class="cd-setting-title">存储模式</p>
 			<p class="cd-setting-title">
@@ -28,49 +28,68 @@
 				</a-radio-group>
 			</p>
 			<p class="cd-setting-title">
-				<a-button class="cd-purple-button" @click="handleDangerousOperation('shutdown')">关机</a-button>
-				<a-button class="cd-purple-button" @click="handleDangerousOperation('reboot')">重启</a-button>
-				<a-button class="cd-purple-button" @click="handleDangerousOperation('factory')">恢复出厂设置</a-button>
+				<a-button class="cd-purple-button" @click="handleDangerousOperation('shutdown')" v-show="isUserAdmin">关机</a-button>
+				<a-button class="cd-purple-button" @click="handleDangerousOperation('reboot')" v-show="isUserAdmin">重启</a-button>
+				<a-button class="cd-purple-button" @click="handleDangerousOperation('factory')" v-show="isUserAdmin">恢复出厂设置</a-button>
+				<a-button class="cd-purple-button" @click="handleDangerousOperation('update')" v-show="isUserAdmin">固件升级</a-button>
+				<a-button class="cd-purple-button" @click="handleDangerousOperation('delete')">删除设备</a-button>
 			</p>
-			<p class="cd-setting-title"><br></p>
 			<SettingBottom @callback="handleBottom" />
 		</div>
+		<a-modal
+			:visible="detach.visiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
+			okText="确定" cancelText="取消" @ok="handleAdminDelete" @cancel="detach.visiable = false">
+			<p>是否删除用户数据？</p>
+			<a-radio-group v-model="detach.choice">
+				<a-radio :value="0">不删除</a-radio>
+				<a-radio :value="1">删除</a-radio>
+			</a-radio-group>
+		</a-modal>
 	</div>
 </template>
 
 <script lang="ts">
 import _ from 'lodash'
+import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import SettingBottom from '../../../components/Disk/SettingBottom.vue'
 import { USER_MODEL } from '../../../common/constants'
 import { loginIcons } from '../../../views/Login/iconList'
 import NasFileAPI from '@/api/NasFileAPI'
+import UserAPI from '@/api/UserAPI'
+import { NasInfo } from '@/api/ClientModel'
 import StorageHandler from '../../Storage/StorageHandler'
+import ClientAPI from '@/api/ClientAPI'
+import { DeviceInfo, DeviceRole, User } from '@/api/UserModel'
 
-export default {
+export default Vue.extend({
   name: 'nas-info',
 	components: {
 		SettingBottom
 	},
 	computed: {
-		...mapGetters('User', ['user']),
+		...mapGetters('User', ['user', 'nasDevices']),
 		...mapGetters('NasServer', ['nasInfo']),
 	},
 	data() {
 		return {
-			loading: '',
-			storages: [],
+			storages: [] as any,
 			loginSetting: {
 				autoLogin: false,
 				autoPowerOn: false,
 				closeChoice: 'tray'
 			},
-      loginIcons,
+			loginIcons,
+			detach: {
+				visiable: false,
+				choice: 0
+			},
+			isUserAdmin: false
 		};
   },
 	created() {
-		const _this = this as any
-		_this.fetchStorages()
+		this.fetchStorages()
+		this.isUserAdmin = this.isRoleAdmin()
 	},
   methods: {
 		handleBottom(data) {
@@ -93,20 +112,9 @@ export default {
 			_this.$electron.remote.getCurrentWindow().close()
 		},
 		handleSave (data) {
-			const _this = this as any
-			const input = { nicName: _this.user.nicName ? _this.user.nicName : '' }
-			const userJson = localStorage.getItem(USER_MODEL)
-			if (userJson === null) return
-			const userObj = JSON.parse(userJson)
-			if (_this.user.nicName !== userObj.nicName) _this.handleNickname()
-			if (_this.user.phoneNo !== userObj.phoneNo) {
-				_this.changePhoneData.phone = _this.user.phoneNo
-				_this.getPhoneCode()
-			}
-			// if (data === 0) setTimeout(() => _this.close(), 3000);
+			// if (data === 0) setTimeout(() => this.close(), 3000);
 		},
 		handleDangerousOperation (flag) {
-			const _this = this as any
 			let message = ''
 			const { dialog } = require('electron').remote
 			if (flag === 'shutdown') {
@@ -115,6 +123,15 @@ export default {
 				message = `重启会导致所有正在进行的任务停止，\n并且绿联云设备断开与桌面端之间的连接，\n直到绿联云设备重启成功！`
 			} else if (flag === 'factory') {
 				message = `1、恢复出厂设置将会清除所有用户信息与缓存数据，并重新同步数据。\n2、操作并不会删除您硬盘里面的文件。\n3、恢复出厂过程可能会比较长，请耐心等待！`
+			} else if (flag === 'update') {
+				message = `确定升级？`
+			} else if (flag === 'delete') {
+				if (this.isUserAdmin) {
+					this.detach.visiable = true
+					return
+				} else {
+					message = `确定删除设备？`
+				}
 			}
 			setTimeout(() => {
 				dialog.showMessageBox({
@@ -124,37 +141,113 @@ export default {
 					cancelId: 1
 				}).then(result => {
 					if (result.response === 0) {
-						NasFileAPI.shutdown().then(response => {
-							if (response.data.code !== 200) {
-								_this.$message.error(
-									`您不是管理员，无法操作设备${flag === 'shutdown' ? '关机' : flag === 'reboot' ? '重启' : '恢复出厂设置'}`
-								)
-							}
-						}).catch(error => {
-							_this.$message.error('网络连接错误，请检测网络')
-							console.log(error)
-						})
+						if (flag === 'shutdown') {
+							this.handleShutdown()
+						} else if (flag === 'reboot') {
+							this.handleReboot()
+						} else if (flag === 'factory') {
+							this.handleFactory()
+						} else if (flag === 'update') {
+							this.fetchUpdateInfo()
+						} else if (flag === 'delete') {
+							this.handleCommonDelete()
+						}
 					}
 				}).catch(error => console.log(error))
 			}, 100);
 		},
+		handleShutdown () {
+			NasFileAPI.shutdown().then(response => {
+				if (response.data.code !== 200) {
+					this.$message.error('您不是管理员，无法操作设备关机')
+				}
+			}).catch(error => {
+				this.$message.error('网络连接错误，请检测网络')
+				console.log(error)
+			})
+		},
+		handleReboot () {
+			NasFileAPI.reboot().then(response => {
+				if (response.data.code !== 200) {
+					this.$message.error('您不是管理员，无法操作设备重启')
+				}
+			}).catch(error => {
+				this.$message.error('网络连接错误，请检测网络')
+				console.log(error)
+			})
+		},
+		handleFactory () {
+			NasFileAPI.factory().then(response => {
+				if (response.data.code !== 200) {
+					this.$message.error('您不是管理员，无法操作设备恢复出厂设置')
+				}
+			}).catch(error => {
+				this.$message.error('网络连接错误，请检测网络')
+				console.log(error)
+			})
+		},
+		fetchUpdateInfo () {
+			NasFileAPI.fetchRomInfo().then(response => {
+				if (response.data.code !== 200) {
+					this.$message.error('您不是管理员，没权限操作固件更新')
+					return
+				}
+				this.handleUpdate()
+			}).catch(error => {
+				this.$message.error('网络连接错误，请检测网络')
+				console.log(error)
+			})
+		},
+		handleUpdate () {
+			NasFileAPI.fetchRomUpgrade().then(response => {
+				if (response.data.code !== 200) return
+				console.log(response);
+			}).catch(error => {
+				this.$message.error('网络连接错误，请检测网络')
+				console.log(error)
+			})
+		},
+		handleCommonDelete () {
+			ClientAPI.commonDetach().then(response => {
+				if (response.data.code !== 200) return
+				console.log(response);
+			}).catch(error => {
+				this.$message.error('网络连接错误，请检测网络')
+				console.log(error)
+			})
+		},
+		handleAdminDelete () {
+			ClientAPI.adminDetach(this.detach.choice).then(response => {
+				if (response.data.code !== 200) return
+				console.log(response);
+			}).catch(error => {
+				this.$message.error('网络连接错误，请检测网络')
+				console.log(error)
+			})
+		},
     fetchStorages () {
-			const _this = this as any
-      _this.loading = true
       NasFileAPI.fetchStorages().then(response => {
-        _this.loading = false
         if (response.data.code !== 200) return
         const storages = _.get(response.data.data, 'storages')
-				_this.storages = StorageHandler.formatStorages(storages)
-				console.log(JSON.parse(JSON.stringify(_this.storages)));
+				this.storages = StorageHandler.formatStorages(storages)
+				console.log(JSON.parse(JSON.stringify(this.storages)));
       }).catch(error => {
-        _this.loading = false
-        _this.$message.error('网络连接错误，请检测网络')
+        this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
 		},
+    isRoleAdmin () {
+			const curNas = this.nasInfo as NasInfo
+			const boundDevices = this.nasDevices as DeviceInfo[]
+			const curUser = this.user as User
+      for (let index = 0; index < boundDevices.length; index++) {
+				const item = boundDevices[index]
+        if (curNas.sn === item.sn && item.uno === curUser.ugreenNo && item.role === DeviceRole.admin) return true
+      }
+      return false
+    }
   }
-}
+})
 </script>
 
 <style lang="less" scoped>

@@ -266,8 +266,9 @@ export default {
     }
     settingWindow = this.createWindow({
       path: 'system-setting',
-      width: 600,
+      width: 680,
       height: 400,
+      minWidth: 680,
       title: '系统设置',
       backgroundColor: '#f6f8fb',
       maximizable: true,

@@ -1,5 +1,3 @@
-import deviceMgr from '../../utils/deviceMgr'
-
 interface OperateItem {
   title: string,
   icon?: any,

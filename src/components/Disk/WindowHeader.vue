@@ -98,7 +98,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="less" scoped>
 /*统一拖拽头部*/
 .cd-drag-head {
 	width: 100%;
@@ -106,16 +106,19 @@ export default {
 	-webkit-app-region: drag;
 	position: relative;
 	z-index: 2;
-}
-.cd-drag-head p {
-	float: left;
-	font-size: 13px;
-	line-height: 30px;
-	text-indent: 5px;
-	max-width: calc(100% - 120px);
-	text-overflow: ellipsis;
-	word-wrap: normal;
-	word-break: break-all;
+	p {
+		float: left;
+		font-size: 13px;
+		line-height: 30px;
+		text-indent: 5px;
+		width: 92%;
+		text-overflow: ellipsis;
+		word-wrap: normal;
+		word-break: break-all;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
 }
 /*窗体操作*/
 .window-actions {
@@ -129,18 +132,18 @@ export default {
 	-webkit-transition: all 0.35s;
 	-moz-transition: all 0.35s;
 	-o-transition: all 0.35s;
-}
-.window-actions li {
-	float: left;
-	width: 32px;
-	height: 28px;
-	margin-left: 5px;
-	line-height: 28px;
-	font-size: 12px;
-	-webkit-app-region: no-drag;
-	cursor: pointer;
-}
-.window-actions li:hover {
-	background: rgba(0, 0, 0, 0.1);
+	li {
+		float: left;
+		width: 32px;
+		height: 28px;
+		margin-left: 5px;
+		line-height: 28px;
+		font-size: 12px;
+		-webkit-app-region: no-drag;
+		cursor: pointer;
+		&:hover {
+			background: rgba(0, 0, 0, 0.1);
+		}
+	}
 }
 </style>

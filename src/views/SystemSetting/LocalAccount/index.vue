@@ -34,12 +34,13 @@
 
 <script lang="ts">
 import _ from 'lodash'
+import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import StringUtility from '../../../utils/StringUtility'
 import { USER_MODEL } from '../../../common/constants'
 import NasFileAPI from '@/api/NasFileAPI'
 
-export default {
+export default Vue.extend({
   name: 'local-account',
 	computed: {
 		...mapGetters('User', ['user']),
@@ -63,8 +64,7 @@ export default {
 		};
   },
 	created() {
-		const _this = this as any
-		_this.getOfflineName()
+		this.getOfflineName()
 	},
   methods: {
 		close() {
@@ -72,16 +72,16 @@ export default {
 			_this.$electron.remote.getCurrentWindow().close()
 		},
 		onOfflineChange(e) {
-			const _this = this as any
-			if (!_this.offlinePass.isUsed && _this.offlinePass.already_set) {
-				_this.offlinePass.isUsed = true
-				_this.$confirm({
+			if (!this.offlinePass.isUsed && this.offlinePass.already_set) {
+				this.offlinePass.isUsed = true
+				this.$confirm({
 					title: '删除',
 					content: '是否删除离线账号？',
 					okText: '删除',
 					okType: 'danger',
 					cancelText: '取消',
 					onOk() {
+						const _this = this as any
 						NasFileAPI.deleteOfflineAccount().then(response => {
 							if (response.data.code !== 200) return
 							_this.$message.success('离线账号删除成功')
@@ -93,78 +93,80 @@ export default {
 					}
 				});
 			} else {
-				_this.offlinePass.offline_username = ''
-				_this.offlinePass.offline_password = ''
+				this.offlinePass = {
+					isUsed: false,
+					offline_username: '',
+					offline_password: '',
+					offline_password_new: '',
+					offline_modify_visiable: false,
+					already_set: false
+				}
 			}
 		},
 		setOfflineAccount () {
-			const _this = this as any
-			if (!_this.offlinePass.offline_username.length) {
-				_this.$message.warning('请输入离线账号');
+			if (!this.offlinePass.offline_username.length) {
+				this.$message.warning('请输入离线账号');
 				return
 			}
-			if (!_this.offlinePass.offline_password.length) {
-				_this.$message.warning('请输入离线密码');
+			if (!this.offlinePass.offline_password.length) {
+				this.$message.warning('请输入离线密码');
 				return
 			}
 			const input = {
-				offline_username: _this.offlinePass.offline_username,
-				offline_password: StringUtility.encryptPassword(_this.offlinePass.offline_password)
+				offline_username: this.offlinePass.offline_username,
+				offline_password: StringUtility.encryptPassword(this.offlinePass.offline_password)
 			}
 			NasFileAPI.setOfflineAccount(input).then(response => {
 				if (response.data.code !== 200) return
-				_this.$message.success('添加离线账号成功')
-				_this.offlinePass.offline_password = ''
-				_this.getOfflineName()
+				this.$message.success('添加离线账号成功')
+				this.offlinePass.offline_password = ''
+				this.getOfflineName()
 			}).catch(error => {
 				console.log(error)
-				_this.$message.error('网络连接错误,请检测网络')
+				this.$message.error('网络连接错误,请检测网络')
 			})
 		},
 		getOfflineName () {
-			const _this = this as any
 			NasFileAPI.getOfflineName().then(response => {
 				if (response.data.code !== 200) return
 				const offline_username = _.get(response.data.data, 'offline_username')
 				if (offline_username) {
-					_this.offlinePass.offline_username = offline_username
-					_this.offlinePass.already_set = true
-					_this.offlinePass.isUsed = true
+					this.offlinePass.offline_username = offline_username
+					this.offlinePass.already_set = true
+					this.offlinePass.isUsed = true
 				} else {
-					_this.offlinePass.isUsed = false
-					_this.offlinePass.already_set = false
+					this.offlinePass.isUsed = false
+					this.offlinePass.already_set = false
 				}
 			}).catch(error => {
 				console.log(error)
-				_this.$message.error('网络连接错误,请检测网络')
+				this.$message.error('网络连接错误,请检测网络')
 			})
 		},
 		showModifyOffline () {
-			const _this = this as any
-			_this.offlinePass.offline_password = ''
-			_this.offlinePass.offline_password_new = ''
-			_this.offlinePass.offline_modify_visiable = true
+			this.offlinePass.offline_password = ''
+			this.offlinePass.offline_password_new = ''
+			this.offlinePass.offline_modify_visiable = true
 		},
 		modifyOfflineAccount () {
-			const _this = this as any
 			const input = {
-				offline_password: StringUtility.encryptPassword(_this.offlinePass.offline_password),
-				offline_password_new: StringUtility.encryptPassword(_this.offlinePass.offline_password_new)
+				offline_password: StringUtility.encryptPassword(this.offlinePass.offline_password),
+				offline_password_new: StringUtility.encryptPassword(this.offlinePass.offline_password_new)
 			}
 			NasFileAPI.modifyOfflineAccount(input).then(response => {
 				if (response.data.code !== 200) return
-				_this.offlinePass.offline_password = ''
-				_this.offlinePass.offline_password_new = ''
-				_this.offlinePass.offline_modify_visiable = false
-				_this.$message.success('修改离线密码成功')
-				_this.getOfflineName()
+				this.offlinePass.offline_password = ''
+				this.offlinePass.offline_password_new = ''
+				this.offlinePass.offline_modify_visiable = false
+				this.$message.success('修改离线密码成功')
+				this.getOfflineName()
 			}).catch(error => {
 				console.log(error)
-				_this.$message.error('网络连接错误,请检测网络')
+				this.$message.error('网络连接错误,请检测网络')
 			})
 		}
   }
-}
+})
 </script>
 
 <style lang="less" scoped>

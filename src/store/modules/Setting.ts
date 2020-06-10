@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import Vue from 'vue'
 import { CloseChoiceInfo, AutoPowerOnInfo, AutoLoginInfo } from '../../api/SettingModel'
 import { CLOSE_CHOICE, AUTO_POWER_ON, AUTO_LOGIN } from '../../common/constants'
 import { ActionContext } from 'vuex'
@@ -57,10 +58,6 @@ export default {
       const json = JSON.stringify(closeInfo)
       localStorage.setItem(CLOSE_CHOICE, json)
     },
-    CLEAR_CLOSE_CHOICE (state: SettingState) {
-      state.closeInfo = undefined
-      localStorage.removeItem(CLOSE_CHOICE)
-    },
     UPDATE_AUTO_POWER_ON (state: SettingState, autoPowerOn: AutoPowerOnInfo) {
       state.autoPowerOn = autoPowerOn
       const json = JSON.stringify(autoPowerOn)
@@ -75,9 +72,6 @@ export default {
   actions: {
     async updateCloseChoiceInfo (context: ActionContext<SettingState, SettingState>, closeInfo: CloseChoiceInfo) {
       context.commit('UPDATE_CLOSE_CHOICE', closeInfo)
-    },
-    async clearCloseChoiceInfo (context: ActionContext<SettingState, SettingState>) {
-      context.commit('CLEAR_CLOSE_CHOICE')
     },
     async updateAutoPowerOnInfo (context: ActionContext<SettingState, SettingState>, autoPowerOnInfo: AutoPowerOnInfo) {
       context.commit('UPDATE_AUTO_POWER_ON', autoPowerOnInfo)

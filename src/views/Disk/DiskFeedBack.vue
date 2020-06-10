@@ -69,88 +69,92 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="less" scoped>
 /*反馈窗口*/
 .cd-feedback-win {
 	width: 100%;
 	height: 100%;
-	-webkit-app-region: drag;
+	.cd-about-main {
+		width: 100%;
+		height: calc(100% - 50px);
+		background: #fff;
+		padding: 0 20px;
+		position: relative;
+		.app-version {
+			.logo {
+				width: 181px;
+				height: 45px;
+				float: left;
+				display: inline-block;
+				vertical-align: bottom;
+				font-size: 30px;
+				color: #4c4c4c;
+				font-family: 'Mistral';
+				font-weight: bold;
+			}
+			span {
+				display: inline-block;
+				vertical-align: bottom;
+				font-size: 14px;
+				margin: 0 10px;
+				color: #4c4c4c;
+				line-height: 45px;
+			}
+		}
+		.cd-feedback-main {
+			height: calc(100% - 50px);
+			background: #fff;
+			float: left;
+			p {
+				font-size: 14px;
+				color: #4f4f4f;
+				margin-bottom: 10px;
+				text-align: left;
+				display: inline-block;
+				width: 100%;
+			}
+			input, textarea {
+				width: 100%;
+				height: 32px;
+				border-radius: 3px;
+				border: 1px solid #eee;
+				padding: 0 5px;
+				margin-bottom: 15px;
+				color: #000; 
+				&:focus {
+					border-color: #06B650;
+					outline: 0;
+					box-shadow: 0 0 0 2px rgba(6,182,80, 0.2);
+				}
+			}
+			textarea {
+				padding: 5px;
+				height: 110px;
+				resize: none;
+			}
+			.release {
+				float: left;
+				font-size: 12px;
+				color: #06B650;
+			}
+			button {
+				float: right;
+				margin-left: 20px;
+				overflow: hidden !important;
+			}
+		}
+		.bottom {
+			width: 91%;
+			position: absolute;
+			bottom: -118px;
+			p {
+				float: left;
+			}
+			button {
+				float: right;
+			}
+		}
+	}
 }
-.cd-about-main {
-	width: 100%;
-	height: calc(100% - 50px);
-	background: #fff;
-	padding: 0 20px;
-	position: relative;
-}
-.app-version .logo {
-	width: 181px;
-	height: 45px;
-	float: left;
-	display: inline-block;
-	vertical-align: bottom;
-	font-size: 30px;
-	color: #4c4c4c;
-	font-family: 'Mistral';
-	font-weight: bold;
-}
-.app-version span {
-	display: inline-block;
-	vertical-align: bottom;
-	font-size: 14px;
-	margin: 0 10px;
-	color: #4c4c4c;
-	line-height: 45px;
-}
-.cd-feedback-main {
-	height: calc(100% - 50px);
-	background: #fff;
-	float: left;
-}
-.cd-feedback-main p {
-	font-size: 14px;
-	color: #4f4f4f;
-	margin-bottom: 10px;
-	text-align: left;
-	display: inline-block;
-	width: 100%;
-}
-.cd-feedback-main input,
-.cd-feedback-main textarea {
-	width: 100%;
-	-webkit-app-region: no-drag;
-	height: 32px;
-	border-radius: 3px;
-	border: 1px solid #eee;
-	padding: 0 5px;
-	margin-bottom: 15px;
-	color: #000; 
-}
-.cd-feedback-main textarea {
-	padding: 5px;
-	height: 110px;
-	resize: none;
-}
-.cd-feedback-main input:focus,
-.cd-feedback-main textarea:focus {
-	border-color: #06B650;
-	outline: 0;
-	box-shadow: 0 0 0 2px rgba(6,182,80, 0.2);
-}
-.cd-about-main .bottom {
-	width: calc(100% - 60px);
-	position: absolute;
-	bottom: 0;
-}
-.cd-about-main .release {
-	float: left;
-	font-size: 12px;
-	color: #06B650;
-}
-.cd-about-main button {
-	float: right;
-	margin-left: 20px;
-	overflow: hidden !important;
-	-webkit-app-region: no-drag;
-}
+
 </style>

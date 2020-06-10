@@ -69,7 +69,7 @@ export default Vue.extend({
       account: '',
       password: '',
       ciphertext: '',
-      rememberPassword: false,
+      rememberPassword: true,
       forgetPass: {
         visiable: false
       },

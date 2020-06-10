@@ -213,13 +213,12 @@ export default {
       login_session: session
     })
   },
-  detach (apiToken: string): Promise<AxiosResponse<BasicResponse>> {
-    return nasServer.post(userModulePath + '/common/detach', {
-      clear_disk_files: 0,
-    }, {
-      params: {
-        api_token: apiToken
-      }
+  commonDetach (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(userModulePath + '/common/detach')
+  },
+  adminDetach (clearDisk: number): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.post(userModulePath + '/admin/detach', {
+      clear_disk_files: clearDisk,
     })
   },
   getMac () {

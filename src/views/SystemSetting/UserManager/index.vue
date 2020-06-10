@@ -26,16 +26,18 @@
 
 <script lang="ts">
 import _ from 'lodash'
+import Vue from 'vue'
 import NasFileAPI from '@/api/NasFileAPI'
 import UserAPI from '@/api/UserAPI'
+import { DeviceInfo, DeviceRole, User } from '@/api/UserModel'
+import { NasInfo } from '@/api/ClientModel'
 import { loginIcons } from '../../../views/Login/iconList'
 import { mapGetters } from 'vuex'
 
-export default {
+export default Vue.extend({
   name: 'user-manager',
 	data() {
 		return {
-			loading: '',
 			nasUsers: [],
 			UploadSrc: false,
 			loginIcons,
@@ -43,15 +45,17 @@ export default {
 				code: '',
 				visiable: false,
 				ugreen_no: ''
-			}
+			},
+			isUserAdmin: false
 		};
 	},
   computed: {
-    ...mapGetters('User', ['user'])
+    ...mapGetters('User', ['user', 'nasDevices']),
+		...mapGetters('NasServer', ['nasInfo']),
   },
 	beforeMount() {
-		const _this = this as any
-		_this.fetchBindUserList()
+		this.fetchBindUserList()
+		this.isUserAdmin = this.isRoleAdmin()
 	},
   methods: {
 		handleBottom(data) {
@@ -74,95 +78,98 @@ export default {
 			_this.$electron.remote.getCurrentWindow().close()
 		},
 		handleSave (data) {
-			// if (data === 0) setTimeout(() => _this.close(), 3000);
+			// if (data === 0) setTimeout(() => this.close(), 3000);
 		},
     fetchBindUserList () {
-			const _this = this as any
-      _this.loading = true
       NasFileAPI.fetchBindUserList().then(response => {
-        _this.loading = false
 				if (response.data.code !== 200) return
-        _this.nasUsers = _.get(response.data.data, 'nas_users')
-				console.log(JSON.parse(JSON.stringify(_this.nasUsers)));
+        this.nasUsers = _.get(response.data.data, 'nas_users')
+				console.log(JSON.parse(JSON.stringify(this.nasUsers)));
       }).catch(error => {
-        _this.loading = false
-        _this.$message.error('网络连接错误，请检测网络')
+        this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
 		},
 		enableUser (item) {
-			const _this = this as any
 			const status = item.status === 0 ? 1 : 0
 			const ugreen_no = item.ugreen_no
       NasFileAPI.enableUser(ugreen_no, status).then(response => {
 				if (response.data.code !== 200) return
 				console.log(response.data);
       }).catch(error => {
-        _this.$message.error('网络连接错误，请检测网络')
+        this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
 		},
 		deleteCommonUser (item) {
-			const _this = this as any
 			const ugreen_no = item.ugreen_no
       NasFileAPI.deleteCommonUser(ugreen_no).then(response => {
 				if (response.data.code !== 200) return
 				console.log(response.data);
       }).catch(error => {
-        _this.$message.error('网络连接错误，请检测网络')
+        this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
 		},
 		showDeliver (item) {
-			const _this = this as any
-			_this.deliver.ugreen_no = item.ugreen_no
-			UserAPI.smsCode(_this.user.phoneNo, 6).then(response => {
+			this.deliver.ugreen_no = item.ugreen_no
+			UserAPI.smsCode(this.user.phoneNo, 6).then(response => {
 				if (response.data.code !== 200) return
-				_this.deliver.visiable = true
-				_this.$message.success('短信已发送到手机')
+				this.deliver.visiable = true
+				this.$message.success('短信已发送到手机')
 			}).catch(error => {
 				console.log(error)
-				_this.$message.error('网络连接错误,请检测网络')
+				this.$message.error('网络连接错误,请检测网络')
 			})
 		},
 		handleDeliver (item) {
-			const _this = this as any
-			const ugreen_no = _this.deliver.ugreen_no
-			const deliver_code = _this.deliver.code
+			const ugreen_no = this.deliver.ugreen_no
+			const deliver_code = this.deliver.code
       NasFileAPI.deliver(ugreen_no, deliver_code).then(response => {
 				if (response.data.code !== 200) return
-				_this.deliver.visiable = false
-				_this.deliver = {
+				this.deliver.visiable = false
+				this.deliver = {
 					code: '',
 					visiable: false,
 					ugreen_no: ''
 				}
 				console.log(response.data);
       }).catch(error => {
-        _this.$message.error('网络连接错误，请检测网络')
+        this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
 		},
 		rightClick: function(item) {
-      const _this = this
       const { remote } = require('electron')
       const { Menu, MenuItem } = remote as any
-      const menu = new Menu()
-			menu.append(new MenuItem({
-				label: '禁用',
-				click: function () { _this.enableUser(item) }
-			}));
-			menu.append(new MenuItem({
-				label: '删除',
-				click: function () { _this.deleteCommonUser(item) }
-			}));
-			menu.append(new MenuItem({label: '提升为管理员',
-				click: function () { _this.showDeliver(item) }
-			}));
+			const menu = new Menu()
+			if (this.isUserAdmin) {
+				menu.append(new MenuItem({
+					label: '禁用',
+					click: function () { this.enableUser(item) }
+				}));
+				menu.append(new MenuItem({
+					label: '删除',
+					click: function () { this.deleteCommonUser(item) }
+				}));
+				menu.append(new MenuItem({label: '提升为管理员',
+					click: function () { this.showDeliver(item) }
+				}));
+			}
       menu.popup(remote.getCurrentWindow())
     },
+    isRoleAdmin () {
+			const curNas = this.nasInfo as NasInfo
+			const boundDevices = this.nasDevices as DeviceInfo[]
+			const curUser = this.user as User
+      for (let index = 0; index < boundDevices.length; index++) {
+				const item = boundDevices[index]
+        if (curNas.sn === item.sn && item.uno === curUser.ugreenNo && item.role === DeviceRole.admin) return true
+      }
+      return false
+    }
   }
-}
+})
 </script>
 
 <style lang="less" scoped>
@@ -185,7 +192,7 @@ p {
 		overflow-y: scroll;
 		.content {
 			display: flex;
-			&:hover {
+			&:hover, &:active, &:focus {
 				background: lightgray;
 			}
 		}

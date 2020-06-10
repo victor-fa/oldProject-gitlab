@@ -19,10 +19,11 @@
 </template>
 
 <script lang="ts">
+import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import SettingBottom from '../../../components/Disk/SettingBottom.vue'
 
-export default {
+export default Vue.extend({
   name: 'common',
 	components: {
 		SettingBottom
@@ -46,18 +47,17 @@ export default {
 		loginSetting: {
 			handler() {
 				const _this = this as any
-				_this.$ipc.send('system', 'auto-launch', _this.loginSetting.autoPowerOn);
-        _this.$store.dispatch('Setting/updateAutoPowerOnInfo', { flag: _this.loginSetting.autoPowerOn })
-        _this.$store.dispatch('Setting/updateAutoLoginInfo', { flag: _this.loginSetting.autoLogin })
+				_this.$ipc.send('system', 'auto-launch', this.loginSetting.autoPowerOn);
+        this.$store.dispatch('Setting/updateAutoPowerOnInfo', { flag: this.loginSetting.autoPowerOn })
+        this.$store.dispatch('Setting/updateAutoLoginInfo', { flag: this.loginSetting.autoLogin })
 			},
 			deep: true
 		}
 	},
 	created () {
-		const _this = this as any
-		_this.loginSetting.autoPowerOn = _this.autoPowerOn ? _this.autoPowerOn.flag : false
-		_this.loginSetting.closeChoice = _this.closeInfo ? _this.closeInfo.trayOrExit : 'tray'
-		_this.loginSetting.autoLogin = _this.autoLogin ? _this.autoLogin.flag : false
+		this.loginSetting.autoPowerOn = this.autoPowerOn ? this.autoPowerOn.flag : false
+		this.loginSetting.closeChoice = this.closeInfo ? this.closeInfo.trayOrExit : 'tray'
+		this.loginSetting.autoLogin = this.autoLogin ? this.autoLogin.flag : false
 	},
   methods: {
 		handleBottom(data) {
@@ -80,17 +80,16 @@ export default {
 			_this.$electron.remote.getCurrentWindow().close()
 		},
 		handleSave (data) {
-			const _this = this as any
 			const input = {
-				'remember': _this.loginSetting.closeChoice ? true : false,
-				'trayOrExit': _this.loginSetting.closeChoice
+				'remember': this.loginSetting.closeChoice ? true : false,
+				'trayOrExit': this.loginSetting.closeChoice
 			}
-			_this.$store.dispatch('Setting/updateCloseChoiceInfo', input)
-			_this.$message.success('修改成功')
-			// if (data === 0) setTimeout(() => _this.close(), 3000);
+			this.$store.dispatch('Setting/updateCloseChoiceInfo', input)
+			this.$message.success('修改成功')
+			// if (data === 0) setTimeout(() => this.close(), 3000);
 		},
   }
-}
+})
 </script>
 
 <style lang="less" scoped>

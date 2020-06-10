@@ -7,6 +7,7 @@ interface NasAccessInfo {
   api_token: string,
   // eslint-disable-next-line camelcase
   refresh_token: string,
+  rom_upgrade: number,
   key: string,
   data: NasUser
 }

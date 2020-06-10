@@ -1,7 +1,7 @@
 {
   "name": "nas_client",
   "version": "1.0.0",
-  "author": "stormfa",
+  "author": "深圳市绿联科技有限公司",
   "private": true,
   "winAppId": "com.ugreenNas.win",
   "winAppVersion": 1000000001,

@@ -135,7 +135,7 @@ export default {
 				appId = packageInfo.macAppId
 				appVersion = packageInfo.macAppVersion
 			}
-      UserAPI.fetchUpdateInfo(appId, appVersion).then(response => {
+      UserAPI.fetchSoftVerUpdateInfo(appId, appVersion).then(response => {
         if (response.data.code !== 200) {
 					this.$message.error('获取更新信息失败')
           return
@@ -170,7 +170,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="less" scoped>
 /*关于信息窗口*/
 .cloudSeries-about-win {
 	width: 100%;
@@ -183,29 +183,51 @@ export default {
 	background: #fff;
 	padding: 0 30px 20px;
 	position: relative;
+	.bottom {
+		width: 90%;
+		position: absolute;
+		bottom: -110px;
+		button {
+			float: right;
+			background: none;
+			font-size: 12px;
+			color: #333;
+		}
+	}
+	.release {
+		float: left;
+		font-size: 12px;
+		color: #4c4c4c;
+		margin-top: 10px;
+	}
+	button {
+		float: right;
+		margin-left: 20px;
+		overflow: hidden !important;
+	}
 }
 .app-version {
 	text-align: left;
-}
-.app-version .logo {
-	width: 190px;
-	height: 45px;
-	float: left;
-	display: inline-block;
-	vertical-align: bottom;
-	font-size: 30px;
-	line-height: 39px;
-	color: #4c4c4c;
-	font-family: 'Mistral';
-	font-weight: bold;
-}
-.app-version span {
-	display: inline-block;
-	vertical-align: bottom;
-	font-size: 14px;
-	margin: 0 10px;
-	color: #4c4c4c;
-	line-height: 45px;
+	.logo {
+		width: 190px;
+		height: 45px;
+		float: left;
+		display: inline-block;
+		vertical-align: bottom;
+		font-size: 30px;
+		line-height: 39px;
+		color: #4c4c4c;
+		font-family: 'Mistral';
+		font-weight: bold;
+	}
+	span {
+		display: inline-block;
+		vertical-align: bottom;
+		font-size: 14px;
+		margin: 0 10px;
+		color: #4c4c4c;
+		line-height: 45px;
+	}
 }
 .app-icon {
 	background: transparent url('../../assets/big_logo.png');
@@ -221,71 +243,48 @@ export default {
 .engine-info {
 	text-align: left;
 	margin: 20px 35% 0 8px;
-}
-.engine-info h4 {
-	font-size: 14px;
-	font-weight: 400;
-	color: #4c4c4c;
-	padding: 15px 0;
-}
-.engine-info ul {
-	font-size: 12px;
-	color: #bdbdbd;
-	list-style: none;
-	padding: 0;
-	line-height: 20px;
-}
-.engine-info ul li {
-	float: left;
-	width: 50%;
-}
-.engine-info ul li span {
-	padding: 5px;
+	h4 {
+		font-size: 14px;
+		font-weight: 400;
+		color: #4c4c4c;
+		padding: 15px 0;
+	}
+	ul {
+		font-size: 12px;
+		color: #bdbdbd;
+		list-style: none;
+		padding: 0;
+		line-height: 20px;
+		li {
+			float: left;
+			width: 50%;
+			span {
+				padding: 5px;
+			}
+		}
+	}
 }
 .update-info {
 	width: 100%;
 	padding: 10px 8px;
 	display: inline-block;
-}
-.update-info .tips {
-	font-size: 14px;
-	font-weight: 400;
-	color: #d82b2b;
-	text-align: left;
-	margin-bottom: 0;
-}
-.update-info .process {
-	padding: 10px 0;
-	height: 35px;
-	text-align: left;
-}
-.update-info .process-p {
-	color: #000;
-	display: inline-block;
-	margin-left: 10px;
-}
-.cloudSeries-about-main .bottom {
-	width: calc(100% - 60px);
-	position: absolute;
-	bottom: 0;
-}
-.bottom button {
-	float: right;
-	background: none;
-	font-size: 12px;
-	color: #333;
-}
-.cloudSeries-about-main .release {
-	float: left;
-	font-size: 12px;
-	color: #4c4c4c;
-	margin-top: 10px;
-}
-.cloudSeries-about-main button {
-	float: right;
-	margin-left: 20px;
-	overflow: hidden !important;
-	/* -webkit-app-region: no-drag; */
+	.tips {
+		font-size: 14px;
+		font-weight: 400;
+		color: #d82b2b;
+		text-align: left;
+		margin-bottom: 0;
+	}
+	.process {
+		padding: 10px 0;
+		height: 35px;
+		text-align: left;
+	}
+	.process-p {
+		color: #000;
+		display: inline-block;
+		margin-left: 10px;
+	}
 }
 </style>
 

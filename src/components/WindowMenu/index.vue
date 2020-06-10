@@ -35,6 +35,7 @@ import { mapGetters } from 'vuex'
 import CustomButton from '../CustomButton/index.vue'
 import { menuIcons } from './MenuIcons'
 import CloseChoiceModel from '../WindowMenu/CloseChoiceModel.vue'
+import { CLOSE_CHOICE } from '../../common/constants'
 
 const { BrowserWindow } = require('electron').remote
 
@@ -135,19 +136,20 @@ export default Vue.extend({
       }
     },
     handleClose () {
-      console.log(this.configure);
-      if (process.platform === 'win32') {
-        if (this.closeInfo.remember) {
-          if (this.closeInfo.trayOrExit === 'tray') {
-            this.handleCallbackModal('tray')
-          } else {
-            this.closeAction()
-          }
-        } else {
-          this.configure === 'unable' ? this.closeAction() : this.showChoiceModal = true
-        }
-      } else {
+      if (process.platform !== 'win32') {
         this.closeAction()
+        return
+      }
+      const closeChoice = localStorage.getItem(CLOSE_CHOICE)
+      if (closeChoice === null) {
+        this.showChoiceModal = true
+        return
+      }
+      const closeChoiceJson = JSON.parse(closeChoice)
+      if (closeChoiceJson.remember) {
+        closeChoiceJson.trayOrExit === 'tray' ? this.handleCallbackModal('tray') : this.closeAction()
+      } else {
+        this.configure === 'unable' ? this.closeAction() : this.showChoiceModal = true
       }
     }
   }

@@ -22,7 +22,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="less" scoped>
 .cd-setting-bottom {
 	width: calc(100% - 136px);
 	position: absolute;
@@ -31,8 +31,8 @@ export default {
 	display: flex;
 	flex-direction: row;
 	flex-flow: row-reverse;
-}
-.cd-setting-bottom button {
-	margin-right: 15px;
+	button {
+		margin-right: 15px;
+	}
 }
 </style>
