@@ -182,7 +182,10 @@ export default Vue.extend({
           // cache login info
           this.$store.dispatch('User/updateUser', user)
           this.$store.dispatch('User/updateAccessToken', accessToken)
-          this.$router.push('bind-device-list')
+          this.$router.push({
+            name: 'bind-device-list',
+            params: { autoLogin: 'true' }
+          })
         }
       }).catch(error => {
         console.log(error)

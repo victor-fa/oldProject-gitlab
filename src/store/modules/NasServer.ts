@@ -63,8 +63,8 @@ export default {
       localStorage.setItem(CRYPTO_INFO, JSON.stringify(cryptoInfo))
     },
     CLEAR_CACHE_NAS (state: NasServerState) {
-      state.nasInfo = undefined
-      localStorage.removeItem(NAS_INFO)
+      // state.nasInfo = undefined
+      // localStorage.removeItem(NAS_INFO)
       state.accessInfo = undefined
       localStorage.removeItem(NAS_ACCESS)
       state.cryptoInfo = undefined

@@ -49,7 +49,12 @@ export default Vue.extend({
     this.bind()
   },
   computed: {
-    ...mapGetters('User', ['user'])
+    ...mapGetters('User', ['user']),
+    ...mapGetters('NasServer', ['nasInfo']),
+    autoLogin: function () {
+      const flag = (this.$route.params.autoLogin === 'true') as boolean
+      return flag
+    }
   },
   methods: {
     bind () {
@@ -70,6 +75,7 @@ export default Vue.extend({
         this.deviceList = _.get(response.data.data, 'userDevices') as DeviceInfo[]
         // cache device list
         this.$store.dispatch('User/updateNasDevices', this.deviceList)
+        if (this.autoLogin) this.handleAutoLogin()
       }).catch((error: any) => {
         console.log(error)
         this.loading = false
@@ -79,12 +85,20 @@ export default Vue.extend({
     didSelectItem (index: number) {
       this.currentDevice = index
       const item = this.deviceList[index]
-      const secretKey = StringUtility.filterPublicKey(item.publicKey)
-      this.searchNas(item, secretKey)
+      this.searchNas(item)
     },
-    searchNas (nas: DeviceInfo, secretKey: string) {
+    handleAutoLogin () {
+      let device = this.deviceList[0]
+      const cacheNas = this.nasInfo as NasInfo
+      this.deviceList.forEach(item => {
+        if (item.sn === cacheNas.sn) device = item
+      })
+      this.searchNas(device)
+    },
+    searchNas (nas: DeviceInfo) {
       this.loading = true
       ClientAPI.searchNas(nas.sn, nas.mac).then(data => {
+        const secretKey = StringUtility.filterPublicKey(nas.publicKey)
         this.loginToNas(data, secretKey)
       }).catch(error => {
         console.log(error)
