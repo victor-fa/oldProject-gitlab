@@ -46,7 +46,6 @@ export default Vue.extend({
           }
         })
       } else {
-        this.$store.dispatch('Login/updateErrorCount', 0)
         let type = this.$route.params.scanType
         type = type === 'offlineLogin' ? type : 'addDevice'
         this.$router.replace({

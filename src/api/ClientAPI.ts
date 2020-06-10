@@ -78,7 +78,7 @@ export default {
     const timer = setTimeout(() => {
       this.closeBoardcast()
       failure('boardcast time out')
-    }, 5000)
+    }, 10000)
     this.boardcastInLan('', '', data => {
       clearTimeout(timer)
       success(data)

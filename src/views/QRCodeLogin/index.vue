@@ -74,10 +74,13 @@ export default Vue.extend({
   },
   methods: {
     backBtnClick () {
-      if (this.qrCodeType === QRCodeType.offline) {
-        this.$router.replace('login')
+      if (this.backTitle === '扫描列表') {
+        this.$router.replace({
+          name: 'scan-nas',
+          query: { type: 'offlineLogin' }
+        })
       } else {
-        this.$router.go(-1)
+        this.$router.replace('login')
       }
     },
     handleRefresh () {
@@ -130,7 +133,8 @@ export default Vue.extend({
             name: this.nasInfo.name,
             model: this.nasInfo.model,
             sn: this.nasInfo.sn
-          }
+          },
+          code
         }
       }
       return codeInfo
