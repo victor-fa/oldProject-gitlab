@@ -6,6 +6,7 @@
       placeholder="请输入手机号"
       v-model="phone"
       class="input-item"
+      @pressEnter="handleEnterAction"
     />
     <basic-form
       :icon="icons.password"
@@ -13,6 +14,7 @@
       placeholder="设置登录密码"
       v-model="password"
       class="input-item"
+      @pressEnter="handleEnterAction"
     />
     <basic-form
       :icon="icons.password"
@@ -20,10 +22,15 @@
       placeholder="再次确认密码"
       v-model="confirmPwd"
       class="input-item"
+      @pressEnter="handleEnterAction"
     />
     <div class="auth-code-item">
       <img :src="icons.authCode">
-      <a-input placeholder="请输入验证码" v-model="authCode"/>
+      <a-input
+        placeholder="请输入验证码"
+        v-model="authCode"
+        @pressEnter="handleEnterAction"
+      />
       <a-button @click="handleCodeAction" :disabled="authDisabled">{{ buttonTitle }}</a-button>
     </div>
     <div class="check-box-item">
@@ -68,6 +75,10 @@ export default Vue.extend({
     }
   },
   methods: {
+    handleEnterAction () {
+      if (this.checkInput() !== undefined) return
+      this.registerRequest()
+    },
     handleCodeAction () {
       const result = this.checkPhoneNumber()
       if (result !== undefined) {
@@ -99,20 +110,7 @@ export default Vue.extend({
         this.$message.error(result)
         return
       }
-      this.loading = true
-      UserAPI.register(this.phone, this.password, this.authCode).then(response => {
-        console.log(response)
-        this.loading = false
-        if (response.data.code !== 200) return
-        const user = response.data.data as LoginResponse
-        this.$store.dispatch('User/updateUser', user.user)
-        this.$store.dispatch('User/updateAccessToken', user.accessToken)
-        this.$router.push('bind-device-list')
-      }).catch(error => {
-        console.log(error)
-        this.loading = false
-        this.$message.error('注册失败')
-      })
+      this.registerRequest()
     },
     handleBackAction () {
       this.$router.replace('login')
@@ -156,6 +154,22 @@ export default Vue.extend({
       setTimeout(() => {
         this.beginCountDown(count - 1)
       }, 1000)
+    },
+    registerRequest () {
+      this.loading = true
+      UserAPI.register(this.phone, this.password, this.authCode).then(response => {
+        console.log(response)
+        this.loading = false
+        if (response.data.code !== 200) return
+        const user = response.data.data as LoginResponse
+        this.$store.dispatch('User/updateUser', user.user)
+        this.$store.dispatch('User/updateAccessToken', user.accessToken)
+        this.$router.push('bind-device-list')
+      }).catch(error => {
+        console.log(error)
+        this.loading = false
+        this.$message.error('注册失败')
+      })
     }
   }
 })
