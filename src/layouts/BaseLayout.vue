@@ -33,10 +33,10 @@ import { HomeRouters, FuncListItem } from '@/router/modules/HomeList'
 import { CacheRoute, RouteCalss } from '@/store/modules/Router'
 import RouterUtility from '@/utils/RouterUtility'
 import { EventBus } from '@/utils/eventBus'
-import { ResourceItem } from '../api/NasFileModel'
-import { User } from '../api/UserModel'
+import { ResourceItem } from '@/api/NasFileModel'
+import { User } from '@/api/UserModel'
 import StringUtility from '@/utils/StringUtility'
-import { initQueue } from '../api/Transport/TransportQueue'
+import { initQueue } from '@/api/Transport/TransportQueue'
 
 export default Vue.extend({
   name: 'base-layout',

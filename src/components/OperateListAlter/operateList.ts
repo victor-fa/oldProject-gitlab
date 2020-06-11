@@ -130,7 +130,7 @@ const encryptContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
     items: [
-      { title: '上传', command: 'uploadFile' },
+      { title: '上传', command: 'upload' },
       { title: '刷新', command: 'refresh' },
       { title: '修改密码', command: 'modifyPass' },
       { title: '重置空间', command: 'reset' }
@@ -304,6 +304,10 @@ const listContextMenu: Array<OperateGroup> = [
 
 if (process.platform === 'win32') {
   listContextMenu[0].items[0].childrens = [
+    { title: '上传文件', command: 'uploadFile' },
+    { title: '上传文件夹', command: 'uploadFolder' }
+  ]
+  encryptContextMenu[0].items[0].childrens = [
     { title: '上传文件', command: 'uploadFile' },
     { title: '上传文件夹', command: 'uploadFolder' }
   ]

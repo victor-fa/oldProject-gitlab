@@ -77,15 +77,7 @@ export default Vue.extend({
   mixins: [MainViewMixin],
   computed: {
     ...mapGetters('NasServer', ['cryptoInfo']),
-    ...mapGetters('User', ['user']),
-    path: function () {
-      const path = this.$route.query.path as string
-      return path
-    },
-    uuid: function () {
-      const uuid = this.$route.query.uuid as string
-      return uuid
-    },
+    ...mapGetters('User', ['user'])
   },
   mounted () {
     this.checkEncryptStatus()
@@ -406,7 +398,7 @@ export default Vue.extend({
     },
     handleUploadAction (filePaths: string[]) {
       filePaths.forEach(path => {
-        const task = new EncryptUploadTask(path, this.path, this.uuid)
+        const task = new EncryptUploadTask(path, path, '')
         encryptUploadQueue.addTask(task)
         this.$store.dispatch('Resource/increaseTask')
       })

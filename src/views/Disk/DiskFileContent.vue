@@ -8,11 +8,10 @@
 </template>
 
 <script>
-import WindowsHeader from '../../components/Disk/WindowHeader.vue'
-import { NAS_ACCESS } from '../../common/constants'
+import WindowsHeader from '@/components/Disk/WindowHeader.vue'
 import NasFileAPI from '@/api/NasFileAPI'
 import StringUtility from '@/utils/StringUtility'
-import { CRYPTO_INFO } from '@/common/constants'
+import { NAS_ACCESS, CRYPTO_INFO } from '@/common/constants'
 export default {
 	name: 'DiskFileContent',
 	components: { WindowsHeader },

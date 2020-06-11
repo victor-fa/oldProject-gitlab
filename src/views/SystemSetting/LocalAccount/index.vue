@@ -73,6 +73,7 @@ export default Vue.extend({
 		},
 		onOfflineChange(e) {
 			console.log(this.offlinePass.already_set);
+			const _this = this as any
 			if (!this.offlinePass.isUsed && this.offlinePass.already_set) {
 				this.offlinePass.isUsed = true
 				this.$confirm({
@@ -82,7 +83,6 @@ export default Vue.extend({
 					okType: 'danger',
 					cancelText: '取消',
 					onOk() {
-						const _this = this as any
 						NasFileAPI.deleteOfflineAccount().then(response => {
 							if (response.data.code !== 200) return
 							_this.$message.success('离线账号删除成功')

@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { ResourceType } from '../api/NasFileModel'
+import { ResourceType } from '@/api/NasFileModel'
 import crypto from 'crypto'
 
 //  字串处理工具类
