@@ -14,31 +14,33 @@ import { User } from '@/api/UserModel'
 
 export default class EncryptUploadTask extends UploadTask {
   convertFileStats (path: string, stats: fs.Stats): Promise<FileInfo> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async resolve => {
       let fileInfo: FileInfo | null = null
-      super.convertFileStats(path, stats).then(info => {
+      await super.convertFileStats(path, stats).then(info => {
         fileInfo = info
-        return this.calculatorFileMD5(path)
+        if (!fileInfo.isDirectory) {
+          return this.calculatorFileMD5(path)
+        } else {
+          return ''
+        }
       }).then(md5 => {
         fileInfo!.md5 = md5
         resolve(fileInfo!)
-      }).catch(error => {
-        reject(error)
       })
     })
   }
   calculatorFileMD5 (path: string): Promise<string> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const stream = fs.createReadStream(path)
       const fsHash = crypto.createHash('md5')
-      stream.on('data', data => {
+      await stream.on('data', data => {
         fsHash.update(data)
       })
-      stream.once('end', () => {
+      await stream.once('end', () => {
         const md5 = fsHash.digest('hex')
         resolve(md5)
       })
-      stream.once('error', error => {
+      await stream.once('error', error => {
         reject(error)
       })
     })

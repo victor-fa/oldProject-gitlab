@@ -24,12 +24,13 @@ import _ from 'lodash'
 import fs from 'fs'
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
-import { backupCategorys } from '../../../model/categoryList'
+import { backupCategorys } from '@/model/categoryList'
 import TransportItem from '../MainPage/TransportItem.vue'
-import { backupUploadQueue } from '../../../api/Transport/TransportQueue'
-import StringUtility from '../../../utils/StringUtility'
-import BackupUploadTask from '../../../api/Transport/BackupUploadTask'
-import { TaskStatus } from '../../../api/Transport/BaseTask'
+import StringUtility from '@/utils/StringUtility'
+import { backupUploadQueue } from '@/api/Transport/TransportQueue'
+import BackupUploadTask from '@/api/Transport/BackupUploadTask'
+import { TaskStatus } from '@/api/Transport/BaseTask'
+import ClientAPI from '@/api/ClientAPI'
 
 export default Vue.extend({
   name: 'backup-list',
@@ -42,16 +43,6 @@ export default Vue.extend({
       dataArray: [] as BackupUploadTask[],
       category: backupCategorys,
       state: TaskStatus.pending
-    }
-  },
-  computed: {
-    path: function () {
-      const path = this.$route.query.path as string
-      return path
-    },
-    uuid: function () {
-      const uuid = this.$route.query.uuid as string
-      return uuid
     }
   },
   created () {
@@ -158,7 +149,6 @@ export default Vue.extend({
         case 'pause': // 暂停 开始
           const refKey = 'renderItem' + item.srcPath
           const cell: any = this.$refs[refKey]
-          console.log(item.status);
           if (item.status === TaskStatus.suspend) {
             item.resume()
             cell.setOperateItemDisable('continue', true)
@@ -200,7 +190,9 @@ export default Vue.extend({
       }).then(result => {
         if (_.isEmpty(result.filePaths)) return
         result.filePaths.forEach(path => {
-          const task = new BackupUploadTask(path, this.path, this.uuid)
+          path = StringUtility.convertR2L(path)
+          const destPath = require("os").hostname() + ClientAPI.getMac() + '/' + path
+          const task = new BackupUploadTask(path, destPath, '')
           backupUploadQueue.addTask(task)
           backupUploadQueue.once('taskFinished', () => {
             setTimeout(() => {

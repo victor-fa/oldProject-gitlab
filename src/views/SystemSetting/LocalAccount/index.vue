@@ -36,8 +36,8 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import StringUtility from '../../../utils/StringUtility'
-import { USER_MODEL } from '../../../common/constants'
+import StringUtility from '@/utils/StringUtility'
+import { USER_MODEL } from '@/common/constants'
 import NasFileAPI from '@/api/NasFileAPI'
 
 export default Vue.extend({
@@ -72,6 +72,7 @@ export default Vue.extend({
 			_this.$electron.remote.getCurrentWindow().close()
 		},
 		onOfflineChange(e) {
+			console.log(this.offlinePass.already_set);
 			if (!this.offlinePass.isUsed && this.offlinePass.already_set) {
 				this.offlinePass.isUsed = true
 				this.$confirm({
@@ -93,14 +94,8 @@ export default Vue.extend({
 					}
 				});
 			} else {
-				this.offlinePass = {
-					isUsed: false,
-					offline_username: '',
-					offline_password: '',
-					offline_password_new: '',
-					offline_modify_visiable: false,
-					already_set: false
-				}
+				this.offlinePass.offline_username = ''
+				this.offlinePass.offline_password = ''
 			}
 		},
 		setOfflineAccount () {
