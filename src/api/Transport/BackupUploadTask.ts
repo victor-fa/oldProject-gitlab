@@ -9,9 +9,11 @@ import StringUtility from '../../utils/StringUtility'
 import ClientAPI from '../ClientAPI'
 import { FileInfo } from './BaseTask';
 
+let fileInfos: FileInfo[] = []
+
 export default class BackupUploadTask extends UploadTask {
   convertFileStats (path: string, stats: fs.Stats): Promise<FileInfo> {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       let fileInfo: FileInfo | null = null
       super.convertFileStats(path, stats).then(info => {
         fileInfo = info
@@ -19,8 +21,6 @@ export default class BackupUploadTask extends UploadTask {
       }).then(md5 => {
         fileInfo!.md5 = md5
         resolve(fileInfo!)
-      }).catch(error => {
-        reject(error)
       })
     })
   }
@@ -58,14 +58,14 @@ export default class BackupUploadTask extends UploadTask {
   }
   // 深遍历目录文件
   deepTraverseDirectory (directory: string): Promise<FileInfo[]> {
-    return new Promise((resolve, reject) => {
-      let fileInfos: FileInfo[] = []
+    directory = StringUtility.convertR2L(directory)
+    return new Promise(async (resolve, reject) => {
       fs.readdirSync(directory).forEach(async filename => {
         const path = StringUtility.convertR2L(directory + '/' + filename)
         const stats = fs.statSync(path)
         if (stats.isDirectory()) {
-          await this.deepTraverseDirectory(path).then(files => {
-            fileInfos = fileInfos.concat(files)
+          await this.deepTraverseDirectory(path).then(fileInfos => {
+            resolve(fileInfos.concat(fileInfos))
           })
         } else {
           await this.convertFileStats(path, stats).then(async fileInfo => {

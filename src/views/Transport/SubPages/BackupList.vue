@@ -202,8 +202,12 @@ export default Vue.extend({
         result.filePaths.forEach(path => {
           const task = new BackupUploadTask(path, this.path, this.uuid)
           backupUploadQueue.addTask(task)
+          backupUploadQueue.once('taskFinished', () => {
+            setTimeout(() => {
+              this.getListData()
+            }, 1000);
+          })
           this.$store.dispatch('Resource/increaseTask')
-          this.getListData()
         })
       })
     },

@@ -6,7 +6,7 @@
 				<img class="userImg" v-else :src="loginIcons.account">
 				<div class="userContent">
 					<span>{{item.nic_name}}（{{item.ugreen_no}}）</span>
-					<span>{{item.atime}}</span>
+					<span>{{item.atime | filterTime}}</span>
 				</div>
 				<span style="margin: 20px 10px 0 0;">{{item.status === 0 ? '禁用' : item.is_connecting === 0 ? '未连接' : '在线'}}</span>
 				<img class="userEnter" :src="loginIcons.open">
@@ -31,6 +31,7 @@ import NasFileAPI from '@/api/NasFileAPI'
 import UserAPI from '@/api/UserAPI'
 import { DeviceInfo, DeviceRole, User } from '@/api/UserModel'
 import { NasInfo } from '@/api/ClientModel'
+import StringUtility from '@/utils/StringUtility'
 import { loginIcons } from '../../../views/Login/iconList'
 import { mapGetters } from 'vuex'
 
@@ -52,7 +53,12 @@ export default Vue.extend({
   computed: {
     ...mapGetters('User', ['user', 'nasDevices']),
 		...mapGetters('NasServer', ['nasInfo']),
-  },
+	},
+	filters: {
+		filterTime(data) {
+			return StringUtility.formatShowMtime(data)
+		}
+	},
 	beforeMount() {
 		this.fetchBindUserList()
 		this.isUserAdmin = this.isRoleAdmin()

@@ -7,7 +7,7 @@ import { UploadParams } from '../NasFileModel'
 import FileHandle, { FileHandleError } from '../../utils/FileHandle'
 import axios, { AxiosResponse, CancelTokenSource } from 'axios'
 import { BasicResponse } from '../UserModel'
-import StringUtility from '../../utils/StringUtility'
+import StringUtility from '@/utils/StringUtility'
 import path from 'path'
 
 const CancelToken = axios.CancelToken
@@ -61,7 +61,9 @@ export default class UploadTask extends BaseTask {
     await FileHandle.statFile(path).then(stats => {
       return this.getUploadFileInfos(stats)
     }).then(fileInfos => {
+      console.log(fileInfos);
       this.fileInfos = _.cloneDeep(fileInfos)
+      console.log(this.fileInfos);
       tmpFileInfos = []
     }).catch(_ => {
       this.handlerTaskError(TaskErrorCode.readStatError)
