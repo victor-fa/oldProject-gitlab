@@ -22,14 +22,14 @@ import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import NasDeviceList from '../ScanNas/NasDeviceList.vue'
-import UserAPI from '../../api/UserAPI'
-import { DeviceInfo } from '../../api/UserModel'
-import StringUtility from '../../utils/StringUtility'
-import ClientAPI from '../../api/ClientAPI'
-import { nasServer } from '../../api/NasServer';
-import TunnelAPI from '../../api/TunnelAPI'
-import { NasInfo, NasAccessInfo } from '../../api/ClientModel'
-import processCenter, { EventName } from '../../utils/processCenter'
+import UserAPI from '@/api/UserAPI'
+import { DeviceInfo } from '@/api/UserModel'
+import StringUtility from '@/utils/StringUtility'
+import ClientAPI from '@/api/ClientAPI'
+import { nasServer } from '@/api/NasServer';
+import TunnelAPI from '@/api/TunnelAPI'
+import { NasInfo, NasAccessInfo } from '@/api/ClientModel'
+import processCenter, { EventName } from '@/utils/processCenter'
 
 export default Vue.extend({
   name: 'bind-device-list',

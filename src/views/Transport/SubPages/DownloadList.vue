@@ -21,12 +21,12 @@
 <script lang="ts">
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
-import { downloadCategorys } from '../../../model/categoryList'
-import StringUtility from '../../../utils/StringUtility'
+import { downloadCategorys } from '@/model/categoryList'
+import StringUtility from '@/utils/StringUtility'
 import TransportItem from '../MainPage/TransportItem.vue'
-import { TaskStatus } from '../../../api/Transport/BaseTask'
-import DownloadTask from '../../../api/Transport/DownloadTask'
-import { downloadQueue } from '../../../api/Transport/TransportQueue'
+import { TaskStatus } from '@/api/Transport/BaseTask'
+import DownloadTask from '@/api/Transport/DownloadTask'
+import { downloadQueue } from '@/api/Transport/TransportQueue'
 
 
 export default Vue.extend({

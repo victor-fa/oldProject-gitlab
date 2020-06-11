@@ -1,9 +1,9 @@
 <script lang="ts">
 import Vue from 'vue'
 import MainResourceView from '../MainView/MainResourceView.vue'
-import { recentContextMenu } from '../../components/OperateListAlter/operateList'
-import { ResourceItem } from '../../api/NasFileModel'
-import RouterUtility from '../../utils/RouterUtility'
+import { recentContextMenu } from '@/components/OperateListAlter/operateList'
+import { ResourceItem } from '@/api/NasFileModel'
+import RouterUtility from '@/utils/RouterUtility'
 
 export default Vue.extend({
   name: 'recent-resource-view',

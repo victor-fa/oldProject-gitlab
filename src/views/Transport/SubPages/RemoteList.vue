@@ -21,10 +21,10 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
-import { remoteCategorys, UploadStatus } from '../../../model/categoryList'
-import { RemoteTask } from '../../../api/NasFileModel'
+import { remoteCategorys, UploadStatus } from '@/model/categoryList'
+import { RemoteTask } from '@/api/NasFileModel'
 import TransportItem from '../MainPage/TransportItem.vue'
-import NasFileAPI from '../../../api/NasFileAPI'
+import NasFileAPI from '@/api/NasFileAPI'
 import { TransportModel } from '../MainPage/TransportModel'
 import TransportHandler from '../TransportHandler'
 

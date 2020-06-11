@@ -1,7 +1,7 @@
 import _, { Dictionary } from 'lodash';
 import router from '@/router';
 import store from '@/store';
-import { CacheRoute, RouteCalss } from '../store/modules/Router'
+import { CacheRoute, RouteCalss } from '@/store/modules/Router'
 
 export default {
   push (name: string, path: string, query?: Dictionary<string>, params?: Dictionary<string>) {

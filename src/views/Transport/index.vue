@@ -8,8 +8,8 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import BasicTabs from '../../components/BasicTabs/index.vue'
-import { taskCategorys, TaskCategoryType } from '../../model/categoryList'
+import BasicTabs from '@/components/BasicTabs/index.vue'
+import { taskCategorys, TaskCategoryType } from '@/model/categoryList'
 
 export default Vue.extend({
   name: 'transport',

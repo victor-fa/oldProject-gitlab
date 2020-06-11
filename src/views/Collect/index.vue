@@ -15,11 +15,11 @@ import _ from 'lodash'
 import Vue from 'vue'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
-import { CollectItem, ResourceItem } from '../../api/NasFileModel'
-import NasFileAPI from '../../api/NasFileAPI'
+import { CollectItem, ResourceItem } from '@/api/NasFileModel'
+import NasFileAPI from '@/api/NasFileAPI'
 import ResourceHandler from '../MainView/ResourceHandler'
-import { collectContextMenu } from '../../components/OperateListAlter/operateList'
-import RouterUtility from '../../utils/RouterUtility'
+import { collectContextMenu } from '@/components/OperateListAlter/operateList'
+import RouterUtility from '@/utils/RouterUtility'
 
 export default Vue.extend({
   name: 'collect',

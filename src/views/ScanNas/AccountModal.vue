@@ -30,7 +30,7 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import CustomButton from '../../components/CustomButton/index.vue'
+import CustomButton from '@/components/CustomButton/index.vue'
 
 export default Vue.extend({
   name: 'account-modal',

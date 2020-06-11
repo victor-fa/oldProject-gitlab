@@ -55,12 +55,12 @@ import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import { loginIcons } from '../Login/iconList'
-import BasicForm from '../../components/BasicForm/index.vue'
-import UserAPI from '../../api/UserAPI'
-import { LoginResponse, Account, User } from '../../api/UserModel'
+import BasicForm from '@/components/BasicForm/index.vue'
+import UserAPI from '@/api/UserAPI'
+import { LoginResponse, Account, User } from '@/api/UserModel'
 import { message } from 'ant-design-vue'
-import StringUtility from '../../utils/StringUtility'
-import WindowsHeader from '../../components/Disk/WindowHeader.vue'
+import StringUtility from '@/utils/StringUtility'
+import WindowsHeader from '@/components/Disk/WindowHeader.vue'
 
 export default Vue.extend({
   name: 'DiskForgetPass',

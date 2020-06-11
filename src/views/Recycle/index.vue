@@ -17,11 +17,11 @@ import _ from 'lodash'
 import Vue from 'vue'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
-import { ResourceItem, OrderType } from '../../api/NasFileModel'
-import NasFileAPI from '../../api/NasFileAPI'
+import { ResourceItem, OrderType } from '@/api/NasFileModel'
+import NasFileAPI from '@/api/NasFileAPI'
 import ResourceHandler from '../MainView/ResourceHandler'
-import { recycleContextMenu, recycleListContextMenu } from '../../components/OperateListAlter/operateList'
-import RouterUtility from '../../utils/RouterUtility'
+import { recycleContextMenu, recycleListContextMenu } from '@/components/OperateListAlter/operateList'
+import RouterUtility from '@/utils/RouterUtility'
 
 export default Vue.extend({
   name: 'recycle',

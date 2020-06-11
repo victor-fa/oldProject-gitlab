@@ -32,11 +32,11 @@
 <script lang="ts">
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import StringUtility from '../../../utils/StringUtility'
+import StringUtility from '@/utils/StringUtility'
 import UserAPI from '@/api/UserAPI'
-import SettingBottom from '../../../components/Disk/SettingBottom.vue'
-import processCenter, { EventName } from '../../../utils/processCenter'
-import { USER_MODEL } from '../../../common/constants'
+import SettingBottom from '@/components/Disk/SettingBottom.vue'
+import processCenter, { EventName } from '@/utils/processCenter'
+import { USER_MODEL } from '@/common/constants'
 
 export default Vue.extend({
   name: 'profil',

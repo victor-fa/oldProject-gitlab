@@ -34,8 +34,8 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import BasicList from '../../components/BasicList/index.vue'
-import { ResourceItem } from '../../api/NasFileModel'
+import BasicList from '@/components/BasicList/index.vue'
+import { ResourceItem } from '@/api/NasFileModel'
 import ResourceHandler from '../MainView/ResourceHandler'
 
 export default Vue.extend({

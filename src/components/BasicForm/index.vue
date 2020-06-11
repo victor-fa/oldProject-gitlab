@@ -40,7 +40,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import CustomButton from '../../components/CustomButton/index.vue'
+import CustomButton from '@/components/CustomButton/index.vue'
 import CloseIcon from '../../assets/close_icon.png'
 
 export default Vue.extend({

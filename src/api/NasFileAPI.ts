@@ -2,7 +2,7 @@ import _ from 'lodash'
 import { ResourceItem, UploadParams, CustomInfo, DownloadParams, ResourceType } from '@/api/NasFileModel';
 import { BasicResponse } from '@/api/UserModel';
 import Vue from 'vue'
-import { jsonToParams, jsonToParamsForPdf, source } from '../utils/request'
+import { jsonToParams, jsonToParamsForPdf, source } from '@/utils/request'
 import { CRYPTO_INFO } from '@/common/constants'
 import { NasInfo, CryptoInfo } from './ClientModel';
 import axios, { AxiosResponse, Canceler, CancelTokenSource } from 'axios/index'

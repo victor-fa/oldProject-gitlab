@@ -1,7 +1,7 @@
 import axios, { AxiosResponse, Canceler } from 'axios';
 import _ from 'lodash'
 import { User, BasicResponse } from './UserModel'
-import deviceMgr from '../utils/deviceMgr'
+import deviceMgr from '@/utils/deviceMgr'
 import JSEncrypt from 'jsencrypt'
 import { NasInfo } from './ClientModel'
 import os, { NetworkInterfaceInfo } from 'os'

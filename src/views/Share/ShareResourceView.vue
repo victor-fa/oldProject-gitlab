@@ -2,11 +2,11 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import MainResourceView from '../MainView/MainResourceView.vue'
-import { shareContextMenu, shareResourceContextMenu } from '../../components/OperateListAlter/operateList'
-import { ResourceItem } from '../../api/NasFileModel'
-import RouterUtility from '../../utils/RouterUtility'
+import { shareContextMenu, shareResourceContextMenu } from '@/components/OperateListAlter/operateList'
+import { ResourceItem } from '@/api/NasFileModel'
+import RouterUtility from '@/utils/RouterUtility'
 import ResourceHandler from '../MainView/ResourceHandler'
-import NasFileAPI from '../../api/NasFileAPI'
+import NasFileAPI from '@/api/NasFileAPI'
 
 export default Vue.extend({
   name: 'share-resource-view',

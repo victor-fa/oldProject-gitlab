@@ -39,9 +39,9 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import NasFileAPI from '../../api/NasFileAPI'
-import { CustomInfo, CustomModule } from '../../api/NasFileModel'
-import ImageUtility from '../../utils/ImageUtility'
+import NasFileAPI from '@/api/NasFileAPI'
+import { CustomInfo, CustomModule } from '@/api/NasFileModel'
+import ImageUtility from '@/utils/ImageUtility'
 
 export default Vue.extend({
   name: 'new-custom-modal',

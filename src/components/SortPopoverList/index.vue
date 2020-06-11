@@ -38,7 +38,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { sortList, SortKindItem, SortTypeItem, SortList } from '../../model/sortList'
+import { sortList, SortKindItem, SortTypeItem, SortList } from '@/model/sortList'
 
 export default Vue.extend({
   name: 'sort-popover',

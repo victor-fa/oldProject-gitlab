@@ -15,11 +15,11 @@ import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
-import { ResourceItem, OrderType, CollectItem, ResourceStatus, ShareUser, ResourceType } from '../../api/NasFileModel'
-import NasFileAPI from '../../api/NasFileAPI'
-import { BasicResponse, User } from '../../api/UserModel'
+import { ResourceItem, OrderType, CollectItem, ResourceStatus, ShareUser, ResourceType } from '@/api/NasFileModel'
+import NasFileAPI from '@/api/NasFileAPI'
+import { BasicResponse, User } from '@/api/UserModel'
 import ResourceHandler from '../MainView/ResourceHandler'
-import RouterUtility from '../../utils/RouterUtility'
+import RouterUtility from '@/utils/RouterUtility'
 
 export default Vue.extend({
   name: 'share',

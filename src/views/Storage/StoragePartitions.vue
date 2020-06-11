@@ -3,9 +3,9 @@ import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import StorageList from './index.vue'
-import { PartitionInfo, StorageInfo } from '../../api/NasFileModel'
-import { User } from '../../api/UserModel'
-import RouterUtility from '../../utils/RouterUtility'
+import { PartitionInfo, StorageInfo } from '@/api/NasFileModel'
+import { User } from '@/api/UserModel'
+import RouterUtility from '@/utils/RouterUtility'
 
 export default Vue.extend({
   name: 'storage-partitions',

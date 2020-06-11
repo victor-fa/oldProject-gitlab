@@ -21,7 +21,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import StringUtility from '../../utils/StringUtility'
+import StringUtility from '@/utils/StringUtility'
 export default Vue.extend({
 	name: 'DiskFile',
 	props: {

@@ -45,7 +45,7 @@
 import _ from 'lodash' 
 import Vue from 'vue'
 import { OperateItem, OperateGroup } from './operateList'
-import StringUtility from '../../utils/StringUtility'
+import StringUtility from '@/utils/StringUtility'
 
 export default Vue.extend({
   name: 'operate-list-alter',

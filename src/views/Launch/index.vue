@@ -11,8 +11,8 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import { AccessToken } from '../../api/UserModel'
-import UserAPI from '../../api/UserAPI'
+import { AccessToken } from '@/api/UserModel'
+import UserAPI from '@/api/UserAPI'
 const packageInfo = require('../../../package');
 
 enum ValidatorResult {

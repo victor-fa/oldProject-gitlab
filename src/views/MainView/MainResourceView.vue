@@ -19,16 +19,16 @@ import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
-import { ResourceItem, OrderType, ResourceType } from '../../api/NasFileModel'
-import NasFileAPI, { TaskMode } from '../../api/NasFileAPI'
-import { BasicResponse, User } from '../../api/UserModel'
+import { ResourceItem, OrderType, ResourceType } from '@/api/NasFileModel'
+import NasFileAPI, { TaskMode } from '@/api/NasFileAPI'
+import { BasicResponse, User } from '@/api/UserModel'
 import ResourceHandler from './ResourceHandler'
-import { ClipboardModel } from '../../store/modules/Resource'
-import { uploadQueue } from '../../api/Transport/TransportQueue'
-import UploadTask from '../../api/Transport/UploadTask'
-import { resourceContextMenu, listContextMenu } from '../../components/OperateListAlter/operateList'
-import StringUtility from '../../utils/StringUtility'
-import processCenter, { EventName } from '../../utils/processCenter'
+import { ClipboardModel } from '@/store/modules/Resource'
+import { uploadQueue } from '@/api/Transport/TransportQueue'
+import UploadTask from '@/api/Transport/UploadTask'
+import { resourceContextMenu, listContextMenu } from '@/components/OperateListAlter/operateList'
+import StringUtility from '@/utils/StringUtility'
+import processCenter, { EventName } from '@/utils/processCenter'
 
 export default Vue.extend({
   name: 'main-resource-view',
@@ -153,6 +153,7 @@ export default Vue.extend({
     },
     handleUploadAction (filePaths: string[]) {
       filePaths.forEach(path => {
+        console.log(path);
         const task = new UploadTask(path, this.path, this.uuid)
         uploadQueue.addTask(task)
         uploadQueue.once('taskFinished', () => {

@@ -1,6 +1,6 @@
 import _ from 'lodash'
-import { TransDownloadInfo, TransUploadInfo, TransBackupInfo } from '../../api/TransformModel'
-import { TRANS_DOWNLOAD, TRANS_UPLOAD, TRANS_BACKUP } from '../../common/constants'
+import { TransDownloadInfo, TransUploadInfo, TransBackupInfo } from '@/api/TransformModel'
+import { TRANS_DOWNLOAD, TRANS_UPLOAD, TRANS_BACKUP } from '@/common/constants'
 import { ActionContext } from 'vuex'
 
 interface TransformState {

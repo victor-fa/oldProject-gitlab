@@ -48,13 +48,13 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import { Setting, settingList, SettingType } from '../../model/settingList'
-import processCenter, { EventName } from '../../utils/processCenter'
-import { User } from '../../api/UserModel'
+import { Setting, settingList, SettingType } from '@/model/settingList'
+import processCenter, { EventName } from '@/utils/processCenter'
+import { User } from '@/api/UserModel'
 import WindowMenu from '../WindowMenu/index.vue'
-import UserAPI from '../../api/UserAPI'
-import ClientAPI from '../../api/ClientAPI'
-import { clearQueueCache } from '../../api/Transport/TransportQueue'
+import UserAPI from '@/api/UserAPI'
+import ClientAPI from '@/api/ClientAPI'
+import { clearQueueCache } from '@/api/Transport/TransportQueue'
 
 export default Vue.extend({
   name: 'basic-header',

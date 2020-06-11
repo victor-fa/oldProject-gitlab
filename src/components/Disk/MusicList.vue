@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import StringUtility from '../../utils/StringUtility'
+import StringUtility from '@/utils/StringUtility'
 export default {
 	name: 'MusicList',
 	props: {

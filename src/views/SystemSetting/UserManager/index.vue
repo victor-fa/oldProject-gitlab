@@ -32,7 +32,7 @@ import UserAPI from '@/api/UserAPI'
 import { DeviceInfo, DeviceRole, User } from '@/api/UserModel'
 import { NasInfo } from '@/api/ClientModel'
 import StringUtility from '@/utils/StringUtility'
-import { loginIcons } from '../../../views/Login/iconList'
+import { loginIcons } from '@/views/Login/iconList'
 import { mapGetters } from 'vuex'
 
 export default Vue.extend({

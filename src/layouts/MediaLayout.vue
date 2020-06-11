@@ -9,8 +9,8 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import WindowMenu from '../components/WindowMenu/index.vue'
-import processCenter, { MainEventName } from '../utils/processCenter'
+import WindowMenu from '@/components/WindowMenu/index.vue'
+import processCenter, { MainEventName } from '@/utils/processCenter'
 
 export default Vue.extend({
   name: 'media-layout',

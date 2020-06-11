@@ -8,9 +8,9 @@
 </template>
 
 <script>
-import WindowsHeader from '../../components/Disk/WindowHeader.vue'
+import WindowsHeader from '@/components/Disk/WindowHeader.vue'
 import NasFileAPI from '@/api/NasFileAPI'
-import StringUtility from '../../utils/StringUtility'
+import StringUtility from '@/utils/StringUtility'
 export default {
 	name: 'DiskPdfView',
 	components: { WindowsHeader },

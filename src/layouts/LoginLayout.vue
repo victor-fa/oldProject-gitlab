@@ -12,7 +12,7 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import LoginStatusBar from '../components/LoginStatusBar/index.vue'
+import LoginStatusBar from '@/components/LoginStatusBar/index.vue'
 
 export default Vue.extend({
   name: 'login',

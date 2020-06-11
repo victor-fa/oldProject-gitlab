@@ -20,7 +20,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { StorageInfo, StorageType } from '../../api/NasFileModel'
+import { StorageInfo, StorageType } from '@/api/NasFileModel'
 
 export default Vue.extend({
   name: 'storage-list-item',

@@ -57,8 +57,8 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { TRANSFORM_INFO } from '../../common/constants'
-import StringUtility from '../../utils/StringUtility'
+import { TRANSFORM_INFO } from '@/common/constants'
+import StringUtility from '@/utils/StringUtility'
 
 export default Vue.extend({
   name: 'TransportList',

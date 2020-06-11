@@ -53,11 +53,11 @@
 </template>
 
 <script>
-import Media from '../../utils/file/media';
-import MusicList from '../../components/Disk/MusicList.vue';
-import WindowsHeader from '../../components/Disk/WindowHeader.vue'
+import Media from '@/utils/file/media';
+import MusicList from '@/components/Disk/MusicList.vue';
+import WindowsHeader from '@/components/Disk/WindowHeader.vue'
 import NasFileAPI from '@/api/NasFileAPI'
-import StringUtility from '../../utils/StringUtility'
+import StringUtility from '@/utils/StringUtility'
 export default {
 	name: 'DiskMusicPlayer',
 	components: { MusicList, WindowsHeader },

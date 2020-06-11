@@ -1,6 +1,6 @@
 import _ from 'lodash'
-import { NasAccessInfo, NasInfo, CryptoInfo } from '../../api/ClientModel'
-import { NAS_INFO, NAS_ACCESS, CRYPTO_INFO } from '../../common/constants'
+import { NasAccessInfo, NasInfo, CryptoInfo } from '@/api/ClientModel'
+import { NAS_INFO, NAS_ACCESS, CRYPTO_INFO } from '@/common/constants'
 import { ActionContext } from 'vuex'
 
 interface NasServerState {

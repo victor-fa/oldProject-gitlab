@@ -21,12 +21,12 @@
 <script lang="ts">
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
-import { uploadCategorys } from '../../../model/categoryList'
+import { uploadCategorys } from '@/model/categoryList'
 import TransportItem from '../MainPage/TransportItem.vue'
-import { uploadQueue } from '../../../api/Transport/TransportQueue'
-import { TaskStatus } from '../../../api/Transport/BaseTask'
-import UploadTask from '../../../api/Transport/UploadTask'
-import StringUtility from '../../../utils/StringUtility'
+import { uploadQueue } from '@/api/Transport/TransportQueue'
+import { TaskStatus } from '@/api/Transport/BaseTask'
+import UploadTask from '@/api/Transport/UploadTask'
+import StringUtility from '@/utils/StringUtility'
 
 export default Vue.extend({
   name: 'upload-list',

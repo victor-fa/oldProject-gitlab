@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import Vue from 'vue'
-import { CloseChoiceInfo, AutoPowerOnInfo, AutoLoginInfo } from '../../api/SettingModel'
-import { CLOSE_CHOICE, AUTO_POWER_ON, AUTO_LOGIN } from '../../common/constants'
+import { CloseChoiceInfo, AutoPowerOnInfo, AutoLoginInfo } from '@/api/SettingModel'
+import { CLOSE_CHOICE, AUTO_POWER_ON, AUTO_LOGIN } from '@/common/constants'
 import { ActionContext } from 'vuex'
 
 interface SettingState {

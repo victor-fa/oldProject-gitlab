@@ -81,14 +81,14 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import { ArrangeWay, ResourceItem, ResourceType } from '../../api/NasFileModel'
-import NasFileAPI from '../../api/NasFileAPI'
-import ResourceHandler from '../../views/MainView/ResourceHandler'
-import { nasServer } from '../../api/NasServer'
-import { NasAccessInfo } from '../../api/ClientModel'
+import { ArrangeWay, ResourceItem, ResourceType } from '@/api/NasFileModel'
+import NasFileAPI from '@/api/NasFileAPI'
+import ResourceHandler from '@/views/MainView/ResourceHandler'
+import { nasServer } from '@/api/NasServer'
+import { NasAccessInfo } from '@/api/ClientModel'
 import path from 'path'
 import fs from 'fs'
-import processCenter, { EventName } from '../../utils/processCenter'
+import processCenter, { EventName } from '@/utils/processCenter'
 
 export default Vue.extend({
   name: 'resource-item',

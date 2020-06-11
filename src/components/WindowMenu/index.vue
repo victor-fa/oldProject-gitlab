@@ -35,7 +35,7 @@ import { mapGetters } from 'vuex'
 import CustomButton from '../CustomButton/index.vue'
 import { menuIcons } from './MenuIcons'
 import CloseChoiceModel from '../WindowMenu/CloseChoiceModel.vue'
-import { CLOSE_CHOICE } from '../../common/constants'
+import { CLOSE_CHOICE } from '@/common/constants'
 
 const { BrowserWindow } = require('electron').remote
 

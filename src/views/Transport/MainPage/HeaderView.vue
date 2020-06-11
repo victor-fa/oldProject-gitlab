@@ -29,7 +29,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { TransportCategory } from '../../../model/categoryList'
+import { TransportCategory } from '@/model/categoryList'
 export default Vue.extend({
   name: 'transport-header-view',
   props: {

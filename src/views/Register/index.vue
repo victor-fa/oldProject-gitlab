@@ -51,10 +51,10 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import BasicForm from '../../components/BasicForm/index.vue'
-import StringUtility from '../../utils/StringUtility'
-import UserAPI from '../../api/UserAPI'
-import { SmsType, LoginResponse } from '../../api/UserModel'
+import BasicForm from '@/components/BasicForm/index.vue'
+import StringUtility from '@/utils/StringUtility'
+import UserAPI from '@/api/UserAPI'
+import { SmsType, LoginResponse } from '@/api/UserModel'
 
 export default Vue.extend({
   name: 'register',

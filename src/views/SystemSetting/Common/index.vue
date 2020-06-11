@@ -21,7 +21,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import SettingBottom from '../../../components/Disk/SettingBottom.vue'
+import SettingBottom from '@/components/Disk/SettingBottom.vue'
 
 export default Vue.extend({
   name: 'common',

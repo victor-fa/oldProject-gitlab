@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import axios, { AxiosResponse, Canceler } from 'axios'
 import { SmsType, AccessToken, BasicResponse, User } from './UserModel'
-import deviceMgr from '../utils/deviceMgr'
+import deviceMgr from '@/utils/deviceMgr'
 import store from '@/store'
 import { nasCloud } from './CloudServer'
 import { type } from 'os'

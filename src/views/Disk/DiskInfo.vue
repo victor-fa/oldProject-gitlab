@@ -87,8 +87,8 @@
 </template>
 
 <script>
-import WindowsHeader from '../../components/Disk/WindowHeader.vue'
-import StringUtility from '../../utils/StringUtility'
+import WindowsHeader from '@/components/Disk/WindowHeader.vue'
+import StringUtility from '@/utils/StringUtility'
 import StorageHandler from '../Storage/StorageHandler';
 export default {
 	name: 'DiskInfo',

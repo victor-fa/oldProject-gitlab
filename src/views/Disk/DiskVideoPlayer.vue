@@ -54,10 +54,10 @@
 </template>
 
 <script>
-import Media from '../../utils/file/media';
-import WindowsHeader from '../../components/Disk/WindowHeader.vue'
+import Media from '@/utils/file/media';
+import WindowsHeader from '@/components/Disk/WindowHeader.vue'
 import NasFileAPI from '@/api/NasFileAPI'
-import StringUtility from '../../utils/StringUtility'
+import StringUtility from '@/utils/StringUtility'
 export default {
 	name: 'DiskVideoPlayer',
 	components: { WindowsHeader },

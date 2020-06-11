@@ -45,11 +45,11 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import infiniteScroll from 'vue-infinite-scroll'
-import { EventBus, EventType } from '../../utils/eventBus'
-import processCenter, { EventName } from '../../utils/processCenter'
-import { ArrangeWay, ResourceType, ResourceItem } from '../../api/NasFileModel'
+import { EventBus, EventType } from '@/utils/eventBus'
+import processCenter, { EventName } from '@/utils/processCenter'
+import { ArrangeWay, ResourceType, ResourceItem } from '@/api/NasFileModel'
 import ResourceHeader from './ResourceHeader.vue'
-import { SortWay } from '../../model/sortList'
+import { SortWay } from '@/model/sortList'
 
 export default Vue.extend({
   name: 'resource-list',

@@ -16,14 +16,14 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import MainView from '../MainView/index.vue'
-import { ResourceItem, OrderType, UploadTimeSort } from '../../api/NasFileModel'
-import NasFileAPI from '../../api/NasFileAPI'
-import { BasicResponse } from '../../api/UserModel'
-import { uploadSortList } from '../../model/sortList'
+import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
+import NasFileAPI from '@/api/NasFileAPI'
+import { BasicResponse } from '@/api/UserModel'
+import { uploadSortList } from '@/model/sortList'
 import ResourceHandler from '../MainView/ResourceHandler'
 import MainViewMixin from '../MainView/MainViewMixin'
-import { recentContextMenu } from '../../components/OperateListAlter/operateList'
-import RouterUtility from '../../utils/RouterUtility'
+import { recentContextMenu } from '@/components/OperateListAlter/operateList'
+import RouterUtility from '@/utils/RouterUtility'
 
 export default Vue.extend({
   name: 'recent',

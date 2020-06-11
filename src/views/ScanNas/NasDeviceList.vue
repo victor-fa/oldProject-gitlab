@@ -34,7 +34,7 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import { MenuItem } from 'electron'
-import { NasInfo } from '../../api/ClientModel'
+import { NasInfo } from '@/api/ClientModel'
 
 export default Vue.extend({
   name: 'nas-device-list',

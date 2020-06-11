@@ -1,7 +1,7 @@
 import { RemoteTask, RemoteTaskStatus } from '@/api/NasFileModel';
 import { TransportModel } from './MainPage/TransportModel';
 import { UploadStatus } from '@/model/categoryList';
-import { ResourceType } from '../../api/NasFileModel'
+import { ResourceType } from '@/api/NasFileModel'
 
 export default {
   convertRemoteTask (model: RemoteTask): TransportModel {

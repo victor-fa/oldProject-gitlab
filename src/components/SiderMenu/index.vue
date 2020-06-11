@@ -23,7 +23,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { FuncListItem } from '../../router/modules/HomeList'
+import { FuncListItem } from '@/router/modules/HomeList'
 
 export default Vue.extend({
   name: 'sider-menu',

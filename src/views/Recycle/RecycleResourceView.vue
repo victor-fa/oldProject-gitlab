@@ -2,8 +2,8 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import Recycle from './index.vue'
-import { ResourceItem, OrderType } from '../../api/NasFileModel'
-import NasFileAPI from '../../api/NasFileAPI'
+import { ResourceItem, OrderType } from '@/api/NasFileModel'
+import NasFileAPI from '@/api/NasFileAPI'
 import ResourceHandler from '../MainView/ResourceHandler'
 
 export default Vue.extend({

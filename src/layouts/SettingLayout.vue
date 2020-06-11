@@ -26,8 +26,8 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import WindowMenu from '../components/WindowMenu/index.vue'
-import { SettingRouters } from '../router/modules/SettingList'
+import WindowMenu from '@/components/WindowMenu/index.vue'
+import { SettingRouters } from '@/router/modules/SettingList'
 
 export default Vue.extend({
   name: 'setting-layout',

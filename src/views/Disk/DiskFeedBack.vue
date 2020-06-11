@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import WindowsHeader from '../../components/Disk/WindowHeader.vue'
+import WindowsHeader from '@/components/Disk/WindowHeader.vue'
 import UserAPI from '@/api/UserAPI'
 const packageInfo = require('../../../package');
 export default {

@@ -14,9 +14,9 @@ import { User } from '@/api/UserModel'
 
 export default class EncryptUploadTask extends UploadTask {
   convertFileStats (path: string, stats: fs.Stats): Promise<FileInfo> {
-    return new Promise(async resolve => {
+    return new Promise(resolve => {
       let fileInfo: FileInfo | null = null
-      await super.convertFileStats(path, stats).then(info => {
+      super.convertFileStats(path, stats).then(info => {
         fileInfo = info
         if (!fileInfo.isDirectory) {
           return this.calculatorFileMD5(path)

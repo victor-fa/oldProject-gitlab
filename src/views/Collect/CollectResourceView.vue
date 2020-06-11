@@ -1,11 +1,11 @@
 <script lang="ts">
 import Vue from 'vue'
 import MainResourceView from '../MainView/MainResourceView.vue'
-import { collectContextMenu } from '../../components/OperateListAlter/operateList'
-import { ResourceItem } from '../../api/NasFileModel'
-import RouterUtility from '../../utils/RouterUtility'
+import { collectContextMenu } from '@/components/OperateListAlter/operateList'
+import { ResourceItem } from '@/api/NasFileModel'
+import RouterUtility from '@/utils/RouterUtility'
 import ResourceHandler from '../MainView/ResourceHandler'
-import NasFileAPI from '../../api/NasFileAPI'
+import NasFileAPI from '@/api/NasFileAPI'
 
 export default Vue.extend({
   name: 'collect-resource-view',

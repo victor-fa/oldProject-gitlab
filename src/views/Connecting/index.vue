@@ -10,12 +10,12 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import processCenter, { EventName } from '../../utils/processCenter'
-import { AccessToken, User } from '../../api/UserModel'
-import { EventBus } from '../../utils/eventBus'
-import ClientAPI from '../../api/ClientAPI'
-import { NasInfo, NasAccessInfo } from '../../api/ClientModel'
-import NasFileAPI from '../../api/NasFileAPI'
+import processCenter, { EventName } from '@/utils/processCenter'
+import { AccessToken, User } from '@/api/UserModel'
+import { EventBus } from '@/utils/eventBus'
+import ClientAPI from '@/api/ClientAPI'
+import { NasInfo, NasAccessInfo } from '@/api/ClientModel'
+import NasFileAPI from '@/api/NasFileAPI'
 
 export default Vue.extend({
   name: 'connecting',

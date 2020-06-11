@@ -1,7 +1,7 @@
 import _ from 'lodash'
-import { AccessToken, User, Account, DeviceInfo } from '../../api/UserModel'
+import { AccessToken, User, Account, DeviceInfo } from '@/api/UserModel'
 import { ActionContext } from 'vuex'
-import { USER_MODEL, ACCESS_TOKEN, ACCOUNT, NAS_DEVICES } from '../../common/constants'
+import { USER_MODEL, ACCESS_TOKEN, ACCOUNT, NAS_DEVICES } from '@/common/constants'
 
 interface UserState {
   user?: User,

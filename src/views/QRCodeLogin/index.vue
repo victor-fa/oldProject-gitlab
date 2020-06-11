@@ -15,13 +15,13 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import { loginIcons } from '../Login/iconList'
-import router from '../../router'
-import UserAPI from '../../api/UserAPI'
+import router from '@/router'
+import UserAPI from '@/api/UserAPI'
 import QRCode from 'qrcode'
-import { AccessToken, User } from '../../api/UserModel'
-import ClientAPI from '../../api/ClientAPI'
-import { NasAccessInfo, NasInfo, NasUser } from '../../api/ClientModel'
-import processCenter, { EventName } from '../../utils/processCenter'
+import { AccessToken, User } from '@/api/UserModel'
+import ClientAPI from '@/api/ClientAPI'
+import { NasAccessInfo, NasInfo, NasUser } from '@/api/ClientModel'
+import processCenter, { EventName } from '@/utils/processCenter'
 
 enum QRCodeType {
   online,

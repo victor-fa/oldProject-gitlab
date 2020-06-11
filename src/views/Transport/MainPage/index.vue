@@ -29,10 +29,10 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import HeaderView from './HeaderView.vue'
-import BasicList from '../../../components/BasicList/index.vue'
-import { TransportTask } from '../../../api/NasFileModel'
+import BasicList from '@/components/BasicList/index.vue'
+import { TransportTask } from '@/api/NasFileModel'
 import MainBottomView from '../../MainView/MainBottomView.vue'
-import { TransportCategory } from '../../../model/categoryList'
+import { TransportCategory } from '@/model/categoryList'
 
 export default Vue.extend({
   name: 'transport-main-page',

@@ -16,12 +16,12 @@ import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
-import { ResourceItem, ShareItem } from '../../api/NasFileModel'
-import NasFileAPI from '../../api/NasFileAPI'
+import { ResourceItem, ShareItem } from '@/api/NasFileModel'
+import NasFileAPI from '@/api/NasFileAPI'
 import ResourceHandler from '../MainView/ResourceHandler'
-import { shareContextMenu } from '../../components/OperateListAlter/operateList'
-import RouterUtility from '../../utils/RouterUtility'
-import { User } from '../../api/UserModel'
+import { shareContextMenu } from '@/components/OperateListAlter/operateList'
+import RouterUtility from '@/utils/RouterUtility'
+import { User } from '@/api/UserModel'
 
 export default Vue.extend({
   name: 'share-file-page',
