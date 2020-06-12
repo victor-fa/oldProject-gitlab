@@ -1,7 +1,6 @@
 // 负责main process和render processes之间的通讯
-import { ipcRenderer, ipcMain, BrowserWindow, nativeImage } from 'electron'
+import { ipcRenderer, ipcMain, BrowserWindow } from 'electron'
 import windowManager, { homeWindow } from './windowManager'
-import path from 'path'
 
 enum ChannelName {
   async = 'asynchronous-message',

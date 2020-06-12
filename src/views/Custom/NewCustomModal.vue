@@ -19,8 +19,8 @@
         </a-button>
         <img v-else class="cover-image" :src="imageData" @click="handleCoverAction">
       </div>
-      <a-input placeholder="请输入模块名" v-model="name"/>
-      <a-textarea placeholder="请填写简要叙述" :rows="3" v-model="desc"/>
+      <a-input placeholder="请输入模块名（不超过10个字符）" v-model="name" :max-length="10"/>
+      <a-textarea placeholder="请填写简要叙述（不超过100个字符）" :rows="3" v-model="desc" :max-length="100"/>
     </div>
     <div slot="footer" class="modal-footer">
       <a-button class="cancel-btn" @click="handleCancelAction">取消</a-button>

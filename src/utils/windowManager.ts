@@ -79,6 +79,7 @@ export default {
     }
   },
   presentLoginWindow (path: string, msg?: string): BrowserWindow {
+    process.platform === 'win32' ? appTray.destroy() : null    // 关闭系统托盘
     if (loginWindow !== null) {
       this.activeWindow(loginWindow)
     } else {
