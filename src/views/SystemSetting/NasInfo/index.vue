@@ -132,9 +132,7 @@ export default Vue.extend({
 		},
 		handleSwitchMode () {
 			NasFileAPI.switchMode(this.mode).then(response => {
-				if (response.data.code !== 200) {
-					this.$message.error('您不是管理员，无法操作设备关机')
-				}
+				if (response.data.code !== 200) { this.$message.error('您不是管理员，无法操作设备关机') }
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
@@ -188,9 +186,7 @@ export default Vue.extend({
 		},
 		handleShutdown () {
 			NasFileAPI.shutdown().then(response => {
-				if (response.data.code !== 200) {
-					this.$message.error('您不是管理员，无法操作设备关机')
-				}
+				if (response.data.code !== 200) { this.$message.error('您不是管理员，无法操作设备关机') }
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
@@ -198,9 +194,7 @@ export default Vue.extend({
 		},
 		handleReboot () {
 			NasFileAPI.reboot().then(response => {
-				if (response.data.code !== 200) {
-					this.$message.error('您不是管理员，无法操作设备重启')
-				}
+				if (response.data.code !== 200) { this.$message.error('您不是管理员，无法操作设备重启') }
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
@@ -208,9 +202,7 @@ export default Vue.extend({
 		},
 		handleFactory () {
 			NasFileAPI.factory().then(response => {
-				if (response.data.code !== 200) {
-					this.$message.error('您不是管理员，无法操作设备恢复出厂设置')
-				}
+				if (response.data.code !== 200) { this.$message.error('您不是管理员，无法操作设备恢复出厂设置') }
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)

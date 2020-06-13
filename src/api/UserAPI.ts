@@ -47,6 +47,14 @@ export default {
       smsType
     })
   },
+  smsShortCode (phone: string, smsType: SmsType, sn: string, mac: string): CloudResponse {
+    return nasCloud.post(userModulePath + '/send/short/sms', {
+      phone,
+      smsType,
+      sn,
+      mac
+    })
+  },
   register (phoneNo: string, password: string, code: string): CloudResponse {
     return nasCloud.post(userModulePath + '/reg/phone', {
       phoneNo,

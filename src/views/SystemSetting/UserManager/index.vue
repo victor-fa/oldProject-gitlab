@@ -42,7 +42,7 @@ export default Vue.extend({
   name: 'user-manager',
 	data() {
 		return {
-			nasUsers: [],
+			nasUsers: [] as any,
 			UploadSrc: false,
 			loginIcons,
 			deliver: {
@@ -92,7 +92,10 @@ export default Vue.extend({
     fetchBindUserList () {
       NasFileAPI.fetchBindUserList().then(response => {
 				if (response.data.code !== 200) return
-        this.nasUsers = _.get(response.data.data, 'nas_users')
+				this.nasUsers = _.get(response.data.data, 'nas_users')
+				this.nasUsers.sort((a, b) => {
+					if (a.role > b.role) return -1
+				})
 				console.log(JSON.parse(JSON.stringify(this.nasUsers)));
       }).catch(error => {
         this.$message.error('网络连接错误，请检测网络')
@@ -104,6 +107,7 @@ export default Vue.extend({
 			const ugreen_no = item.ugreen_no
       NasFileAPI.enableUser(ugreen_no, status).then(response => {
 				if (response.data.code !== 200) return
+				this.fetchBindUserList()
 				console.log(response.data);
       }).catch(error => {
         this.$message.error('网络连接错误，请检测网络')
@@ -114,22 +118,34 @@ export default Vue.extend({
 			const ugreen_no = item.ugreen_no
       NasFileAPI.deleteCommonUser(ugreen_no).then(response => {
 				if (response.data.code !== 200) return
+				this.fetchBindUserList()
 				console.log(response.data);
       }).catch(error => {
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
 		},
-		showDeliver (item) {
-			this.deliver.ugreen_no = item.ugreen_no
-			UserAPI.smsCode(this.user.phoneNo, 6).then(response => {
-				if (response.data.code !== 200) return
-				this.deliver.visiable = true
-				this.$message.success('短信已发送到手机')
-			}).catch(error => {
-				console.log(error)
-				this.$message.error('网络连接错误,请检测网络')
-			})
+		showDeliverModal (item) {
+			const { dialog } = require('electron').remote
+			dialog.showMessageBox({
+				type: 'info',
+				message: '每台设备只有一个管理员，确定后您将失去这台设备的\n管理权限！是否确定提升该用户为管理员用户？',
+				buttons: ['确定', '取消'],
+				cancelId: 1
+			}).then(result => {
+				if (result.response === 0) {
+					this.deliver.ugreen_no = item.ugreen_no
+					const curNas = this.nasInfo as NasInfo
+					UserAPI.smsShortCode(this.user.phoneNo, 6, curNas.sn, curNas.mac).then(response => {
+						if (response.data.code !== 200) return
+						this.deliver.visiable = true
+						this.$message.success('短信已发送到手机')
+					}).catch(error => {
+						console.log(error)
+						this.$message.error('网络连接错误,请检测网络')
+					})
+				}
+			}).catch(error => console.log(error))
 		},
 		handleDeliver (item) {
 			const ugreen_no = this.deliver.ugreen_no
@@ -143,6 +159,8 @@ export default Vue.extend({
 					ugreen_no: ''
 				}
 				console.log(response.data);
+				this.$message.success('管理员转让成功！')
+				this.fetchBindUserList()
       }).catch(error => {
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)
@@ -150,19 +168,20 @@ export default Vue.extend({
 		},
 		rightClick: function(item) {
       const { remote } = require('electron')
-      const { Menu, MenuItem } = remote as any
+			const { Menu, MenuItem } = remote as any
+			const _this = this as any
 			const menu = new Menu()
 			if (this.isUserAdmin && item.role === 0) {
 				menu.append(new MenuItem({
-					label: '禁用',
-					click: function () { this.enableUser(item) }
+					label: item.status === 0 ? '启用' : '禁用',
+					click: function () { _this.enableUser(item) }
 				}));
 				menu.append(new MenuItem({
 					label: '删除',
-					click: function () { this.deleteCommonUser(item) }
+					click: function () { _this.deleteCommonUser(item) }
 				}));
 				menu.append(new MenuItem({label: '提升为管理员',
-					click: function () { this.showDeliver(item) }
+					click: function () { _this.showDeliverModal(item) }
 				}));
 			}
       menu.popup(remote.getCurrentWindow())
