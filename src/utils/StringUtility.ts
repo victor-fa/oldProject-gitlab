@@ -73,7 +73,12 @@ export default {
 			sizes = ['B', 'KB', 'MB', 'GB', 'TB'],
 			i = Math.floor(Math.log(bytes) / Math.log(k));
 		return (bytes / Math.pow(k, i)).toPrecision(3) + sizes[i];
-	},
+  },
+  // 获取磁盘状态
+  formatDiskStatus(status) {
+    const nameArr = ['正常', '未初始化', '已经初始化,正在同步', '该磁盘正在重建，正在从主盘上获取数据', '该磁盘正在格式化或者切换工作模式']
+    return nameArr[status]
+  },
   // 加密密码规则
   // recursion 递归次数
   encryptPassword (password: string, recursion: number = 2) {

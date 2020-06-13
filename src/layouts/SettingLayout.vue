@@ -1,7 +1,7 @@
 <template>
   <a-layout class="settting-layout">
     <a-layout-header class="setting-header">
-      <span>系统设置</span>
+      <span><img class="setting-icon" src="../assets/setting_icon.png">&nbsp;&nbsp;系统设置</span>
       <window-menu :configure="'unable'" class="window-menu"/>
     </a-layout-header>
     <a-layout>
@@ -64,16 +64,20 @@ export default Vue.extend({
   width: 100vw;
   height: 100vh;
   .setting-header {
-    height: 44px;
+    height: 35px;
     width: 100%;
     padding: 0px;
-    background-color: white;
+    background-color: #EDEFF4;
     display: flex;
     align-items: center;
     justify-content: space-between;
     -webkit-app-region: drag;
+    img {
+      width: 20px;
+    }
     span {
       margin-left: 20px;
+      font-weight: 500;
     }
     .window-menu {
       margin-right: 20px;
@@ -88,17 +92,19 @@ export default Vue.extend({
     justify-content: flex-start;
     align-items: stretch;
     flex-direction: column;
-    background-color: white;
+    background-color: #F8F9FC;
     .sider-item {
       height: 44px;
       line-height: 44px;
       font-size: 14px;
-      font-weight: bold;
+      font-weight: 500;
       color: #484848;
+      margin-top: 10px;
     }
     .sider-item-selected {
-      background-color: #DEF1EA;
+      background-color: #06b6501a;
       color: #007934;
+      font-weight: 500;
     }
   }
   .setting-content {

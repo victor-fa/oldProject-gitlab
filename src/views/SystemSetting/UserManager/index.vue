@@ -1,15 +1,18 @@
 <template>
 	<div class="cd-setting-main">
 		<div class="cd-setting-content">
-			<div class="content" v-for="(item, index) in nasUsers" :key="index" @contextmenu="rightClick(item)">
-				<img class="userImg" v-if="item.image" :src="item.image">
-				<img class="userImg" v-else :src="loginIcons.account">
-				<div class="userContent">
-					<span>{{item.nic_name}}（{{item.ugreen_no}}）</span>
-					<span>{{item.atime | filterTime}}</span>
+			<div class="content" v-for="(item, index) in nasUsers" :key="index">
+				<span class="role" v-show="item.role === 1">管理员</span>
+				<span class="role" v-show="item.role === 0 && index === 1">共享者</span>
+				<div class="detail" @contextmenu="rightClick(item)">
+					<img class="userImg" v-if="item.image" :src="item.image">
+					<img class="userImg" v-else :src="loginIcons.account">
+					<div class="userContent">
+						<span>{{item.nic_name}}（{{item.ugreen_no}}）</span>
+						<span>{{item.atime | filterTime}}</span>
+					</div>
+					<span style="margin: 20px 10px 0 0;">{{item.status === 0 ? '已禁用' : item.is_connecting === 0 ? '不在线' : '在线'}}</span>
 				</div>
-				<span style="margin: 20px 10px 0 0;">{{item.status === 0 ? '禁用' : item.is_connecting === 0 ? '未连接' : '在线'}}</span>
-				<img class="userEnter" :src="loginIcons.open">
 			</div>
 		</div>
 		<a-modal
@@ -149,7 +152,7 @@ export default Vue.extend({
       const { remote } = require('electron')
       const { Menu, MenuItem } = remote as any
 			const menu = new Menu()
-			if (this.isUserAdmin) {
+			if (this.isUserAdmin && item.role === 0) {
 				menu.append(new MenuItem({
 					label: '禁用',
 					click: function () { this.enableUser(item) }
@@ -179,10 +182,7 @@ export default Vue.extend({
 </script>
 
 <style lang="less" scoped>
-p {
-	color: #000;
-	text-align: left;
-}
+p { text-align: left; }
 
 .cd-setting-main {
 	width: 100%;
@@ -192,32 +192,38 @@ p {
 	.cd-setting-content {
 		width: calc(100%);
 		height: 100%;
-		border: 1px solid #eee;
 		padding: 20px;
 		float: left;
 		overflow-y: scroll;
 		.content {
 			display: flex;
-			&:hover, &:active, &:focus {
-				background: lightgray;
+			flex-flow: column;
+			.role {
+				text-align: left;
+				font-weight: 500;
+				font-size: 15px;
+			}
+			.detail {
+				display: flex;
+				flex-flow: row;
+				border-radius: 4px;
+				&:hover, &:active, &:focus {
+					background: #06b6501a;
+				}
 			}
 		}
 		.userImg {
-			width: 30px;
-			height: 30px;
+			width: 50px;
+			height: 50px;
 			margin: 15px 0 0 10px;
+			border-radius: 50%;
 		}
 		.userContent {
 			flex: 1;
 			display: flex;
 			flex-flow: column;
 			text-align: left;
-			padding: 10px;
-		}
-		.userEnter {
-			width: 10px;
-			height: 14px;
-			margin: 23px 10px 0px 0px;
+			padding: 20px;
 		}
 	}
 }

@@ -7,24 +7,26 @@
 			<p class="cd-setting-info">IP地址：{{nasInfo.ip}}</p>
 			<p class="cd-setting-info">MAC地址：{{nasInfo.mac}}</p>
 			<p class="cd-setting-title">磁盘信息</p>
-			<div style="display: flex;" v-for="(item, index) in storages" :key="index">
-				<div style="flex: 1; display: flex; flex-flow: column; text-align: left; padding: 10px;">
-					<span>盘位{{index}}   <font style="color: #06B650;">正常</font></span>
-					<img style="width: 60px; height: 60px; margin: 0px;" :src="loginIcons.disk">
-				</div>
-				<div style="flex: 1; display: flex; flex-flow: column; text-align: left; padding: 10px;">
-					<span>disk_a</span>
-					<span>{{item.showName}}</span>
-					<span>容量 {{item.showSizeSimple}}</span>
-					<span>已使用 {{item.showUsed}}</span>
-				</div>
-				<a-button v-show="isUserAdmin" style="margin: 30px 10px 0 0;">格式化</a-button>
+			<div class="content" v-for="(item, index) in disks" :key="index">
+				<template v-if="item.type !== 7">
+					<div class="side">
+						<span>盘位{{index + 1}}<font>{{item.status | filterStatus}}</font></span>
+						<img :src="loginIcons.disk">
+					</div>
+					<div class="side">
+						<span>{{item.type | filterStorageType(index)}}</span>
+						<span>{{item.modelName}}</span>
+						<span>容量 {{item.size | filterSize}}</span>
+						<span>已使用 {{item.used | filterSize}}</span>
+					</div>
+					<a-button v-show="isUserAdmin" style="">格式化</a-button>
+				</template>
 			</div>
 			<p class="cd-setting-title">存储模式</p>
 			<p class="cd-setting-title">
-				<a-radio-group v-model="loginSetting.closeChoice">
-					<a-radio value="tray">双盘备份模式</a-radio>
-					<a-radio value="exit">普通存储模式</a-radio>
+				<a-radio-group v-model="mode">
+					<a-radio :value="0">双盘备份模式</a-radio>
+					<a-radio :value="1">普通存储模式</a-radio>
 				</a-radio-group>
 			</p>
 			<p class="cd-setting-title">
@@ -61,6 +63,7 @@ import { NasInfo } from '@/api/ClientModel'
 import StorageHandler from '../../Storage/StorageHandler'
 import ClientAPI from '@/api/ClientAPI'
 import { DeviceInfo, DeviceRole, User } from '@/api/UserModel'
+import StringUtility from '@/utils/StringUtility'
 
 export default Vue.extend({
   name: 'nas-info',
@@ -71,9 +74,21 @@ export default Vue.extend({
 		...mapGetters('User', ['user', 'nasDevices']),
 		...mapGetters('NasServer', ['nasInfo']),
 	},
+  filters: {
+    filterSize (bytes) {
+      return StringUtility.formatShowSize(bytes)
+		},
+    filterStatus (status) {
+      return StringUtility.formatDiskStatus(status)
+		},
+		filterStorageType (data, index) {
+			return StorageHandler.matchStorageName(data, index)
+		}
+	},
 	data() {
 		return {
-			storages: [] as any,
+			disks: [] as any,
+			mode: 0,
 			loginSetting: {
 				autoLogin: false,
 				autoPowerOn: false,
@@ -88,7 +103,7 @@ export default Vue.extend({
 		};
   },
 	created() {
-		this.fetchStorages()
+		this.fetchDisks()
 		this.isUserAdmin = this.isRoleAdmin()
 	},
   methods: {
@@ -112,7 +127,18 @@ export default Vue.extend({
 			_this.$electron.remote.getCurrentWindow().close()
 		},
 		handleSave (data) {
+			this.mode !== -1 ? this.handleDangerousOperation('switchMode') : null
 			// if (data === 0) setTimeout(() => this.close(), 3000);
+		},
+		handleSwitchMode () {
+			NasFileAPI.switchMode(this.mode).then(response => {
+				if (response.data.code !== 200) {
+					this.$message.error('您不是管理员，无法操作设备关机')
+				}
+			}).catch(error => {
+				this.$message.error('网络连接错误，请检测网络')
+				console.log(error)
+			})
 		},
 		handleDangerousOperation (flag) {
 			let message = ''
@@ -125,6 +151,8 @@ export default Vue.extend({
 				message = `1、恢复出厂设置将会清除所有用户信息与缓存数据，并重新同步数据。\n2、操作并不会删除您硬盘里面的文件。\n3、恢复出厂过程可能会比较长，请耐心等待！`
 			} else if (flag === 'update') {
 				message = `确定升级？`
+			} else if (flag === 'switchMode') {
+				message = `切换工作模式，需要对硬盘格式化\n因此耗时比较长（一般需要半分钟到一分钟）`
 			} else if (flag === 'delete') {
 				if (this.isUserAdmin) {
 					this.detach.visiable = true
@@ -149,6 +177,8 @@ export default Vue.extend({
 							this.handleFactory()
 						} else if (flag === 'update') {
 							this.fetchUpdateInfo()
+						} else if (flag === 'switchMode') {
+							this.handleSwitchMode()
 						} else if (flag === 'delete') {
 							this.handleCommonDelete()
 						}
@@ -225,12 +255,13 @@ export default Vue.extend({
 				console.log(error)
 			})
 		},
-    fetchStorages () {
-      NasFileAPI.fetchStorages().then(response => {
+    fetchDisks () {
+      NasFileAPI.fetchDisks().then(response => {
         if (response.data.code !== 200) return
-        const storages = _.get(response.data.data, 'storages')
-				this.storages = StorageHandler.formatStorages(storages)
-				console.log(JSON.parse(JSON.stringify(this.storages)));
+				this.disks = _.get(response.data.data, 'disks')
+				this.mode = _.get(response.data.data, 'mode')
+				console.log(JSON.parse(JSON.stringify(this.disks)));
+				console.log(this.mode);
       }).catch(error => {
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)
@@ -251,11 +282,7 @@ export default Vue.extend({
 </script>
 
 <style lang="less" scoped>
-p {
-	color: #000;
-	text-align: left;
-}
-
+p { text-align: left; }
 .cd-setting-main {
 	width: 100%;
 	height: 86%;
@@ -264,7 +291,6 @@ p {
 	.cd-setting-content {
 		width: calc(100%);
 		height: 100%;
-		border: 1px solid #eee;
 		padding: 20px;
 		float: left;
 		overflow-y: scroll;
@@ -274,9 +300,7 @@ p {
 			line-height: 35px;
 			margin-bottom: 10px;
 			color: #06B650;
-			.cd-purple-button {
-				margin-right: 10px;
-			}
+			.cd-purple-button { margin-right: 10px; }
 		}
 		.cd-setting-info {
 			width: 100%;
@@ -302,6 +326,23 @@ p {
 				height: 70px;
 				margin: 15px 0 0 -3px;
 			}
+		}
+		.content {
+			display: flex;
+			.side {
+				flex: 1;
+				display: flex;
+				flex-flow: column;
+				text-align: left;
+				padding: 10px;
+				font { color: #06B650; }
+				img {
+					width: 60px;
+					height: 60px;
+					margin: 0px;
+				}
+			}
+			button { margin: 30px 10px 0 0; }
 		}
 	}
 }

@@ -23,6 +23,7 @@ const cryptoModule = '/v1/crypto'
 const recycleModule = '/v1/recycle'
 const settingModule = '/setting/v1/sys'
 const upgradeModule = '/v1/upgrade'
+const diskModule = '/v1/disk'
 
 type ServerResponse = Promise<AxiosResponse<BasicResponse>>
 const CancelToken = axios.CancelToken
@@ -65,6 +66,15 @@ export default {
   },
   fetchStorages (): ServerResponse {
     return nasServer.get(fileModule + '/storages')
+  },
+  fetchDisks (): ServerResponse {
+    return nasServer.get(fileModule + '/disks')
+  },
+  switchMode (mode: number): ServerResponse {
+    return nasServer.post(diskModule + '/disks', {
+      mode,
+      force: 0
+    })
   },
   fetchResourceList (path: string, uuid: string, page: number, order: OrderType = OrderType.byNameDesc, size: number = 40): ServerResponse {
     return nasServer.get(fileModule + '/list', {

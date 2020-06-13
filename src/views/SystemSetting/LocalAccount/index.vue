@@ -165,10 +165,7 @@ export default Vue.extend({
 </script>
 
 <style lang="less" scoped>
-p {
-	color: #000;
-	text-align: left;
-}
+p { text-align: left; }
 
 .cd-setting-main {
 	width: 100%;
@@ -178,7 +175,6 @@ p {
 	.cd-setting-content {
 		width: calc(100%);
 		height: 100%;
-		border: 1px solid #eee;
 		padding: 20px;
 		float: left;
 		overflow-y: scroll;
@@ -211,9 +207,7 @@ p {
 			margin: 8px 0;
 			width: 230px;
 			text-align: left;
-			.ivu-input-number, .ivu-input-wrapper {
-				margin: 5px 0;
-			}
+			.ivu-input-number, .ivu-input-wrapper { margin: 5px 0; }
 			button {
 				float: right;
 				margin-top: 10px;

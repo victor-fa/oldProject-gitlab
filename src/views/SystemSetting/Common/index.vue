@@ -1,15 +1,16 @@
 <template>
 	<div class="cd-setting-main">
 		<div class="cd-setting-content">
-			<p class="cd-setting-title">登录设置</p>
+			<p class="cd-setting-title title">登录设置</p>
 			<p class="cd-setting-title">
-				<a-checkbox v-model="loginSetting.autoLogin">自动登录</a-checkbox>
+				<a-checkbox class="checkbox" v-model="loginSetting.autoLogin">自动登录</a-checkbox>
 				<a-checkbox v-model="loginSetting.autoPowerOn">开机自启动</a-checkbox>
 			</p>
-			<p class="cd-setting-title">当关闭窗口时</p>
+			<p class="cd-setting-title close title">当关闭窗口时</p>
 			<p class="cd-setting-title">
 				<a-radio-group v-model="loginSetting.closeChoice">
 					<a-radio value="tray">最小化到托盘</a-radio>
+					<br><br>
 					<a-radio value="exit">退出程序</a-radio>
 				</a-radio-group>
 			</p>
@@ -93,11 +94,7 @@ export default Vue.extend({
 </script>
 
 <style lang="less" scoped>
-p {
-	color: #000;
-	text-align: left;
-}
-
+p { text-align: left; }
 .cd-setting-main {
 	width: 100%;
 	height: 86%;
@@ -106,11 +103,16 @@ p {
 	.cd-setting-content {
 		width: calc(100%);
 		height: 100%;
-		border: 1px solid #eee;
 		padding: 20px;
 		float: left;
 		overflow-y: scroll;
 		position: relative;
+		.title {
+			font-weight: 500;
+			font-size: 15px;
+		}
+		.checkbox { margin-right: 10px; }
+		.close { margin-top: 20px; }
 	}
 }
 </style>

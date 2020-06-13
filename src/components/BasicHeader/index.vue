@@ -184,8 +184,8 @@ export default Vue.extend({
     -webkit-app-region: no-drag;
     cursor: pointer;
     .setting-icon {
-      width: 14px;
-      height: 13px;
+      width: 20px;
+      height: 20px;
       margin-right: 4px;
     }
     .arrow-icon {

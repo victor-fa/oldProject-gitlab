@@ -10,8 +10,8 @@
 					<a-input type="file" name="userhead" @change="changePhoto()" ref="file" />
 				</div>
 			</form>
-			<p class="cd-setting-info" style="display: flex;">
-				昵称：<a-input type="text" v-model="user.nicName" placeholder="请输入昵称" clearable style="width: 200px;margin-left: 13px;" />
+			<p class="cd-setting-info nick">
+				昵称：<a-input type="text" v-model="user.nicName" placeholder="请输入昵称" clearable class="nick-name" />
 			</p>
 			<p class="cd-setting-info">
 				手机号：<a-input type="text" v-model="user.phoneNo" placeholder="请输入手机号" clearable style="width: 200px;" />
@@ -177,11 +177,7 @@ export default Vue.extend({
 </script>
 
 <style lang="less" scoped>
-p {
-	color: #000;
-	text-align: left;
-}
-
+p { text-align: left; }
 .cd-setting-main {
 	width: 100%;
 	height: 86%;
@@ -190,7 +186,6 @@ p {
 	.cd-setting-content {
 		width: calc(100%);
 		height: 100%;
-		border: 1px solid #eee;
 		padding: 20px;
 		float: left;
 		overflow-y: scroll;
@@ -216,15 +211,22 @@ p {
 			img {
 				width: 70px;
 				height: 70px;
-				margin: 15px 0 0 -3px;
+				border-radius: 50%;
+			}
+		}
+		.nick {
+			display: flex;
+			.nick-name {
+				width: 200px;
+				margin-left: 13px;
 			}
 		}
 		.cd-user-head {
 			width: 70px;
 			height: 70px;
 			position: absolute;
-			left: 154px;
-			top: 70px;
+			left: 155px;
+			top: 65px;
 			overflow: unset;
 			transition: all 0.35s;
 			input {
