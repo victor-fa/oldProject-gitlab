@@ -90,8 +90,7 @@ const storageContextMenu: Array<OperateGroup> = [
   },
   {
     items: [
-      { title: '卸载', command: 'unload' },
-      { title: '格式化', command: 'format' },
+      { title: '初始化', command: 'initialize' },
       { title: '属性', command: 'info' }
     ]
   }

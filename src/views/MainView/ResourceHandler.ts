@@ -5,8 +5,9 @@ import { ClipboardModel } from '@/store/modules/Resource'
 import StringUtility from '@/utils/StringUtility'
 import { TaskMode } from '@/api/NasFileAPI'
 import store from '@/store'
-import { User } from '@/api/UserModel'
+import { User, DeviceRole } from '@/api/UserModel'
 import path from 'path'
+import { NasAccessInfo } from '@/api/ClientModel'
 
 export default {
   // 对资源列表进行分类
@@ -222,6 +223,7 @@ export default {
   // 3. 多选情况下，如果既包含已分享(收藏)和未分享(收藏)，就展示成不可用的分享(收藏)
   // 4. 如果当前正在命名中，只允许删除
   // 5. 外置硬盘不允许分享、收藏和下载目录
+  // 5. 初始化仅管理员有权限，无法初始化外置硬盘
   filterItemOperateList (groups: OperateGroup[], showArray: Array<ResourceItem>, item: ResourceItem) {
     if (_.isEmpty(groups)) return null 
     if (item.renaming === true) return this.onlyShowDelete(groups)
@@ -236,6 +238,8 @@ export default {
           item.disable = states.disableCollect
         } else if (item.command === 'download') {
           item.disable = states.disableDownload
+        } else if (item.command === 'initialize') {
+          item.disable = states.disableInit
         } else if (multipleDisableItem.indexOf(item.command) !== -1) {
           item.disable = states.disable
         }
@@ -261,9 +265,11 @@ export default {
     let disableShare = false
     let disableCollect = false
     let disableDownload = false
+    let disableInit = false
     for (let index = 0; index < selectItems.length; index++) {
       const element = selectItems[index]
       const isInternal = _.startsWith(element.path, prefix)
+      const role = (_.get(store.getters, 'NasServer/accessInfo') as NasAccessInfo).role
       if (!disableShare) {
         if (element.shared === ShareStatus.has || !isInternal) disableShare = true
       }
@@ -271,12 +277,14 @@ export default {
         if (element.collected === CollectStatus.has || !isInternal) disableCollect = true
       }
       if (!disableDownload && !isInternal && element.type === ResourceType.folder) disableDownload = true
+      if ((!disableInit && !(element as any).isInternal) || role === DeviceRole.user) disableInit = true
     }
     return {
       disable, // 是否禁用打开、属性、重命名菜单项
       disableShare, // 是否禁用分享菜单项
       disableCollect, // 是否禁用收藏菜单项
-      disableDownload // 是否禁用下载菜单项
+      disableDownload, // 是否禁用下载菜单项
+      disableInit
     }
   },
   // list的右键菜单显示规则

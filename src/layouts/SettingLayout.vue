@@ -10,6 +10,7 @@
           v-for="(item, index) in siderMenu"
           :key="index"
           class="sider-item"
+          v-show="!item.disable"
           v-bind:class="{ 'sider-item-selected': item.meta.isSelected }"
           @click="handleSiderItemClick(index)"
         >
@@ -26,24 +27,32 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
+import { NasInfo } from '@/api/ClientModel'
 import WindowMenu from '@/components/WindowMenu/index.vue'
 import { SettingRouters } from '@/router/modules/SettingList'
+import { DeviceRole } from '@/api/UserModel'
 
 export default Vue.extend({
   name: 'setting-layout',
   components: {
     WindowMenu
   },
+	computed: {
+		...mapGetters('NasServer', ['accessInfo'])
+	},
   data () {
-    const items = SettingRouters.filter(item => {
-      return item.meta !== undefined
-    })
     return {
-      siderMenu: _.cloneDeep(items)
+      siderMenu: [] as any,
     }
   },
   mounted () {
     if (this.$route.name !== 'user-profile') this.$router.push('user-profile')
+    SettingRouters[4].disable = this.accessInfo.role === DeviceRole.user
+    const items = SettingRouters.filter(item => {
+      return item.meta !== undefined
+    })
+    this.siderMenu = _.cloneDeep(items)
   },
   methods: {
     handleSiderItemClick (index: number) {

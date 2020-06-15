@@ -11,7 +11,7 @@
       @dblclick.native.stop="diskDoubleClick(index)"
       @contextmenu.native.stop.prevent="diskContextMenu(index)"
     />
-    <span v-show="showCustom" class="separator-tip">精选</span>
+    <span v-show="showCustom" class="separator-tip">珍藏</span>
     <div class="book-item">
       <custom-list-item
         v-for="(item, index) in customs"

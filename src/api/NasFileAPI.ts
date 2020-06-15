@@ -70,10 +70,10 @@ export default {
   fetchDisks (): ServerResponse {
     return nasServer.get(fileModule + '/disks')
   },
-  switchMode (mode: number): ServerResponse {
+  switchMode (mode: number, force: number): ServerResponse {
     return nasServer.post(diskModule + '/disks', {
       mode,
-      force: 0
+      force
     })
   },
   fetchResourceList (path: string, uuid: string, page: number, order: OrderType = OrderType.byNameDesc, size: number = 40): ServerResponse {

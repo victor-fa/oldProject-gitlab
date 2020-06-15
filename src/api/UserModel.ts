@@ -57,8 +57,8 @@ interface Account {
 }
 
 enum DeviceRole {
-  user = '0',
-  admin = '1'
+  user = 0,
+  admin = 1
 }
 
 enum DeviceStatus {

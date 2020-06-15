@@ -54,8 +54,8 @@ export default Vue.extend({
 		};
 	},
   computed: {
-    ...mapGetters('User', ['user', 'nasDevices']),
-		...mapGetters('NasServer', ['nasInfo']),
+    ...mapGetters('User', ['user']),
+		...mapGetters('NasServer', ['nasInfo', 'accessInfo']),
 	},
 	filters: {
 		filterTime(data) {
@@ -64,7 +64,7 @@ export default Vue.extend({
 	},
 	beforeMount() {
 		this.fetchBindUserList()
-		this.isUserAdmin = this.isRoleAdmin()
+		this.isUserAdmin = this.accessInfo.role === DeviceRole.admin
 	},
   methods: {
 		handleBottom(data) {
@@ -185,16 +185,6 @@ export default Vue.extend({
 				}));
 			}
       menu.popup(remote.getCurrentWindow())
-    },
-    isRoleAdmin () {
-			const curNas = this.nasInfo as NasInfo
-			const boundDevices = this.nasDevices as DeviceInfo[]
-			const curUser = this.user as User
-      for (let index = 0; index < boundDevices.length; index++) {
-				const item = boundDevices[index]
-        if (curNas.sn === item.sn && item.uno === curUser.ugreenNo && item.role === DeviceRole.admin) return true
-      }
-      return false
     }
   }
 })
