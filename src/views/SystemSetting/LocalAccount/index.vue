@@ -4,7 +4,7 @@
 			<p class="cd-setting-title">用户离线设置</p>
 			<p class="cd-setting-title"><a-switch v-model="offlinePass.isUsed" defaultChecked @change="onOfflineChange"/></p>
 			<template v-if="offlinePass.isUsed">
-				<p class="cd-setting-sec-title">{{offlinePass.already_set ? '修改' : '添加'}}账号密码</p>
+				<p class="cd-setting-title">{{offlinePass.already_set ? '修改' : '添加'}}账号密码</p>
 				<div class="cd-setting-form">
 					<a-input v-if="!offlinePass.already_set" type="text" v-model="offlinePass.offline_username" placeholder="离线账号" clearable style="width: 100%;margin-bottom: 10px;" />
 					<p v-if="offlinePass.already_set" class="cd-setting-info">当前离线账号：<font style="float: right;">{{ offlinePass.offline_username }}</font></p>
@@ -178,6 +178,13 @@ p { text-align: left; }
 		padding: 20px;
 		float: left;
 		overflow-y: scroll;
+		.cd-setting-title {
+			width: 100%;
+			font-size: 16px;
+			line-height: 35px;
+			margin-bottom: 10px;
+			font-weight: bold;
+		}
 		.cd-setting-info {
 			width: 100%;
 			font-size: 14px;

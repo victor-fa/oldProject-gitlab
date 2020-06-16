@@ -20,14 +20,13 @@
         @dblclick.native.stop="doubleClick(index)"
         @contextmenu.native.stop="contextMenuClick($event, index)"
       />
-      <a-modal
-        :visible="mode.visiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
-        okText="确定" cancelText="取消" @ok="handleInitialize(null)" @cancel="mode.visiable = false;mode.choice = 0">
-        <p>请选择存储模式</p>
-        <a-radio-group v-model="mode.choice">
-          <a-radio :value="0">双盘备份模式</a-radio>
-          <a-radio :value="1">普通存储模式</a-radio>
-        </a-radio-group>
+      <a-modal :title="makesureModal.title"
+        :visible="makesureModal.visiable" :mask="false" :closable="false" :maskClosable="false" width="400px"
+        :okText="commonInfo.okText" :cancelText="commonInfo.cancelText" @ok="handleMakesure"
+        @cancel="handleCancle">
+        <p>{{makesureModal.message}}</p>
+        <font class="modal-font">{{commonInfo.tips}}</font>
+        <a-input :placeholder="commonInfo.placeholder" v-model="makesureModal.input" :max-length="4"/>
       </a-modal>
     </template>
   </main-view>
@@ -49,6 +48,7 @@ import StringUtility from '@/utils/StringUtility'
 import { SortList, SortKindItem } from '@/model/sortList'
 import { clearQueueCache } from '@/api/Transport/TransportQueue'
 import processCenter, { EventName } from '@/utils/processCenter'
+import { firstMode, secondMode, commonInfo } from '@/views/SystemSetting/settingModel'
 
 export default Vue.extend({
   name: 'storage',
@@ -66,8 +66,18 @@ export default Vue.extend({
 				choice: 0
       },
 			diskMode: 0,
+			finalMode: 0,
+			firstMode,
+			secondMode,
+			commonInfo,
       contentMenu: _.clone(storageContextMenu), // item右键菜单选项
-      showFuncList: _.clone(storageFuncList) // header中的操作功能集合
+      showFuncList: _.clone(storageFuncList), // header中的操作功能集合
+			makesureModal: {
+				title: '',
+				visiable: false,
+				input: '',
+				message: ''
+			}
     }
   },
   mounted () {
@@ -150,7 +160,9 @@ export default Vue.extend({
     },
     handleInitialize () {
 			if (this.mode.visiable) {	// 已有弹框，选择后切换
-				this.handleOperation('detail', this.mode.choice)
+				// this.handleOperation('detail', this.mode.choice)
+				this.finalMode = this.mode.choice
+				this.handleOperation('makesure')
 				return
 			}
       if (this.diskMode === -1) {	// 打开弹框
@@ -161,49 +173,50 @@ export default Vue.extend({
       if (index === null) return
       const item = this.dataArray[index] as any
       console.log(JSON.parse(JSON.stringify(item)));
-			this.handleOperation('detail', item.raidMode)	// 按原先的默认模式处理
+			// this.handleOperation('detail', item.raidMode)	// 按原先的默认模式处理
+			this.finalMode = item.raidMode
+			this.handleOperation('makesure')
     },
-		handleOperation (flag, data) {
-			const { dialog } = require('electron').remote
-			let message = ''
-			if (flag === 'detail') {
-				message = data === 0 ? `双盘备份模式是将两个硬盘互作备份，即双盘raid1模式，
-								单个硬盘损坏不影响数据的读取，把坏的硬盘换掉后可继
-								续恢复双盘备份功能。组合之后，总容量等于2块硬盘中
-								较小的容量。` : `普通硬盘存储模式，没有相互备份数据功能，如有硬盘损
-								坏，那坏掉的硬盘的数据将无法读取。`
-			} else if (flag === 'second') {
-				message = data === 0 ? `当前接入内置硬盘口的硬盘数据将会被格式化，并将两
-								个硬盘组合成双盘备份模式。
-								（操作开始后将不能中止）` : `当前接入内置硬盘口的硬盘数据将会被格式化，并将两个
-								硬盘设置成普通硬盘模式，两块硬盘单独使用，没有备份功能。
-								（操作开始后将不能中止）`
-			} else if (flag === 'switchMode') {
-				message = data === 0 ? `当前存储模式是：双盘备份模式
-								此操作将把（盘位2）进行磁盘格式化，然后自动同步盘位1
-								的数据，恢复当前双盘备份功能。
-								（操作开始后将不能中止）` : `当前存储模式是：普通存储模式
-								此操作将把（盘位2）进行磁盘格式化，请确认备份好硬盘的
-								数据再进行操作。
-								（操作开始后将不能中止）`
-			}
-			dialog.showMessageBox({
-				type: 'info', message, buttons: ['确定', '取消'], cancelId: 1
-			}).then(result => {
-				if (result.response === 0) {
-					if (flag === 'detail') {
-						this.handleOperation('second', data)
-					} else if (flag === 'second') {
-						this.handleOperation('switchMode', data)
-					} else if (flag === 'switchMode') {
-						this.switchMode(data)
-					}
+		handleOperation (flag) {
+			if (flag === 'makesure') {
+				this.makesureModal = {
+					title: this.finalMode === 0 ? this.firstMode.makesure.title : this.secondMode.makesure.title,
+					visiable: true,
+					input: '',
+					message: this.finalMode === 0 ? this.firstMode.makesure.message : this.secondMode.makesure.message
 				}
-			}).catch(error => console.log(error))
+			} else if (flag === 'switchMode') {
+				this.makesureModal = {
+					title: this.finalMode === 0 ? this.firstMode.switchMode.title : this.secondMode.switchMode.title,
+					visiable: true,
+					input: '',
+					message: this.finalMode === 0 ? this.firstMode.switchMode.message : this.secondMode.switchMode.message
+				}
+			}
 		},
-		switchMode(mode) {
-			NasFileAPI.switchMode(mode, 0).then(response => {
-				if (response.data.code !== 200) { this.$message.error('网络连接错误，请检测网络') }
+		handleMakesure () {
+			if (this.makesureModal.input.length === 0) {
+				this.$message.error('您未输入关键信息！')
+				return
+			}
+			if (this.makesureModal.input !== '我已了解') {
+				this.$message.error('输入关键信息错误！')
+				return
+			}
+			this.handleCancle()
+			this.makesureModal.title === '硬盘初始化' ? this.handleSwitchMode() : this.handleOperation('switchMode')
+		},
+		handleCancle () {
+			this.makesureModal = {
+				title: this.makesureModal.title,
+				visiable: false,
+				input: '',
+				message: ``
+			}
+		},
+		handleSwitchMode () {
+			NasFileAPI.switchMode(this.finalMode, 1).then(response => {
+				if (response.data.code !== 200) return
 				this.mode = {
 					visiable: false,
 					choice: 0
@@ -229,5 +242,9 @@ export default Vue.extend({
 </script>
 
 <style lang="less" scoped>
-
+.modal-font {
+	color: #f00;
+	display: block;
+	margin-bottom: 15px;
+}
 </style>

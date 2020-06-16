@@ -6,6 +6,7 @@
 				<a-checkbox class="checkbox" v-model="loginSetting.autoLogin">自动登录</a-checkbox>
 				<a-checkbox v-model="loginSetting.autoPowerOn">开机自启动</a-checkbox>
 			</p>
+			<p class="cd-setting-title"><br></p>
 			<p class="cd-setting-title close title">当关闭窗口时</p>
 			<p class="cd-setting-title">
 				<a-radio-group v-model="loginSetting.closeChoice">
@@ -108,7 +109,7 @@ p { text-align: left; }
 		overflow-y: scroll;
 		position: relative;
 		.title {
-			font-weight: 500;
+			font-weight: bold;
 			font-size: 15px;
 		}
 		.checkbox { margin-right: 10px; }

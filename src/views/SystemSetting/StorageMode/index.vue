@@ -4,37 +4,42 @@
 			<p class="cd-setting-title">存储模式</p>
 			<p class="cd-setting-title">
 				<a-radio-group v-model="mode">
-					<a-radio :value="0">双盘备份模式</a-radio>
-					<a-radio :value="1">普通存储模式</a-radio>
+					<a-radio :value="0">{{firstMode.title}}</a-radio>
+					<br><br><font>{{firstMode.content[0]}}<br>{{firstMode.content[1]}}<br>{{firstMode.content[2]}}</font><br><br>
+					<a-radio :value="1">{{secondMode.title}}</a-radio>
+					<br><br><font>{{firstMode.content[0]}}<br>{{firstMode.content[1]}}</font><br><br>
 				</a-radio-group>
 			</p>
 		</div>
 		<SettingBottom @callback="handleBottom" />
+		<a-modal :title="makesureModal.title"
+			:visible="makesureModal.visiable" :mask="false" :closable="false" :maskClosable="false" width="400px"
+			:okText="commonInfo.okText" :cancelText="commonInfo.cancelText" @ok="handleMakesure"
+			@cancel="handleCancle">
+			<p>{{makesureModal.message}}</p>
+			<font class="modal-font">{{commonInfo.tips}}</font>
+      <a-input :placeholder="commonInfo.placeholder" v-model="makesureModal.input" :max-length="4"/>
+		</a-modal>
 	</div>
 </template>
 
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import { mapGetters } from 'vuex'
 import SettingBottom from '@/components/Disk/SettingBottom.vue'
-import { USER_MODEL } from '@/common/constants'
 import { loginIcons } from '@/views/Login/iconList'
 import NasFileAPI from '@/api/NasFileAPI'
-import UserAPI from '@/api/UserAPI'
-import { NasInfo } from '@/api/ClientModel'
 import StorageHandler from '../../Storage/StorageHandler'
-import ClientAPI from '@/api/ClientAPI'
 import StringUtility from '@/utils/StringUtility'
-import { DeviceRole } from '@/api/UserModel'
+import { clearQueueCache } from '@/api/Transport/TransportQueue'
+import processCenter, { EventName } from '@/utils/processCenter'
+import { firstMode, secondMode, commonInfo } from '../settingModel'
+
 
 export default Vue.extend({
   name: 'nas-info',
 	components: {
 		SettingBottom
-	},
-	computed: {
-		...mapGetters('NasServer', ['accessInfo'])
 	},
   filters: {
     filterSize (bytes) {
@@ -56,16 +61,23 @@ export default Vue.extend({
 				closeChoice: 'tray'
 			},
 			loginIcons,
+			firstMode,
+			secondMode,
+			commonInfo,
 			detach: {
 				visiable: false,
 				choice: 0
 			},
-			isUserAdmin: false
+			makesureModal: {
+				title: '',
+				visiable: false,
+				input: '',
+				message: ''
+			}
 		};
   },
 	created() {
 		this.fetchDisks()
-		this.isUserAdmin = this.accessInfo.role === DeviceRole.admin
 	},
   methods: {
 		handleBottom(data) {
@@ -88,59 +100,59 @@ export default Vue.extend({
 			_this.$electron.remote.getCurrentWindow().close()
 		},
 		handleSave (data) {
-			this.mode !== -1 ? this.handleOperation('detail') : null
-			// if (data === 0) setTimeout(() => this.close(), 3000);
+			this.mode !== -1 ? this.handleOperation('makesure') : null
+		},
+		handleOperation (flag) {
+			if (flag === 'makesure') {
+				this.makesureModal = {
+					title: this.mode === 0 ? this.firstMode.makesure.title : this.secondMode.makesure.title,
+					visiable: true,
+					input: '',
+					message: this.mode === 0 ? this.firstMode.makesure.message : this.secondMode.makesure.message
+				}
+			} else if (flag === 'switchMode') {
+				this.makesureModal = {
+					title: this.mode === 0 ? this.firstMode.switchMode.title : this.secondMode.switchMode.title,
+					visiable: true,
+					input: '',
+					message: this.mode === 0 ? this.firstMode.switchMode.message : this.secondMode.switchMode.message
+				}
+			}
 		},
 		handleSwitchMode () {
 			NasFileAPI.switchMode(this.mode, 1).then(response => {
-				if (response.data.code !== 200) { this.$message.error('您不是管理员，无法操作设备关机') }
+				if (response.data.code !== 200) return
+				console.log(response);
+				this.switchDevice()
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
 			})
 		},
-		handleOperation (flag) {
-			const { dialog } = require('electron').remote
-			let message = ''
-			if (flag === 'detail') {
-				message = this.mode === 0 ? `双盘备份模式是将两个硬盘互作备份，即双盘raid1模式，
-								单个硬盘损坏不影响数据的读取，把坏的硬盘换掉后可继
-								续恢复双盘备份功能。组合之后，总容量等于2块硬盘中
-								较小的容量。` : `普通硬盘存储模式，没有相互备份数据功能，如有硬盘损
-								坏，那坏掉的硬盘的数据将无法读取。`
-			} else if (flag === 'second') {
-				message = this.mode === 0 ? `当前接入内置硬盘口的硬盘数据将会被格式化，并将两
-								个硬盘组合成双盘备份模式。
-								（操作开始后将不能中止）` : `当前接入内置硬盘口的硬盘数据将会被格式化，并将两个
-								硬盘设置成普通硬盘模式，两块硬盘单独使用，没有备份功能。
-								（操作开始后将不能中止）`
-			} else if (flag === 'switchMode') {
-				message = this.mode === 0 ? `当前存储模式是：双盘备份模式
-								此操作将把（盘位2）进行磁盘格式化，然后自动同步盘位1
-								的数据，恢复当前双盘备份功能。
-								（操作开始后将不能中止）` : `当前存储模式是：普通存储模式
-								此操作将把（盘位2）进行磁盘格式化，请确认备份好硬盘的
-								数据再进行操作。
-								（操作开始后将不能中止）`
+		switchDevice () {
+			this.$store.dispatch('NasServer/clearCacheNas')
+			clearQueueCache()
+			processCenter.renderSend(EventName.bindList)
+		},
+		handleMakesure () {
+			if (this.makesureModal.input.length === 0) {
+				this.$message.error('您未输入关键信息！')
+				return
 			}
-			setTimeout(() => {
-				dialog.showMessageBox({
-					type: 'info',
-					message,
-					buttons: ['确定', '取消'],
-					cancelId: 1
-				}).then(result => {
-					if (result.response === 0) {
-						if (flag === 'detail') {
-							this.handleOperation('second')
-						} else if (flag === 'second') {
-							this.handleOperation('switchMode')
-						} else if (flag === 'switchMode') {
-							this.handleSwitchMode()
-						}
-					}
-				}).catch(error => console.log(error))
-			}, 100);
+			if (this.makesureModal.input !== '我已了解') {
+				this.$message.error('输入关键信息错误！')
+				return
+			}
+			this.handleCancle()
+			this.makesureModal.title === '硬盘初始化' ? this.handleSwitchMode() : this.handleOperation('switchMode')
+		},
+		handleCancle () {
+			this.makesureModal = {
+				title: this.makesureModal.title,
+				visiable: false,
+				input: '',
+				message: ``
+			}
 		},
     fetchDisks () {
       NasFileAPI.fetchDisks().then(response => {
@@ -174,8 +186,12 @@ p { text-align: left; }
 			font-size: 16px;
 			line-height: 35px;
 			margin-bottom: 10px;
-			color: #06B650;
+			font-weight: bold;
 			.cd-purple-button { margin-right: 10px; }
+			font {
+				font-weight: 500;
+				line-height: 24px;
+			}
 		}
 		.cd-setting-info {
 			width: 100%;
@@ -221,5 +237,9 @@ p { text-align: left; }
 		}
 	}
 }
-
+.modal-font {
+	color: #f00;
+	display: block;
+	margin-bottom: 15px;
+}
 </style>
