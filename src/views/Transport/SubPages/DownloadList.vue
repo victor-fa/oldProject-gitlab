@@ -194,14 +194,29 @@ export default Vue.extend({
       const item: DownloadTask = this.dataArray[args[0]]
       console.log(JSON.parse(JSON.stringify(item)));
       const _this = this as any
+      const refKey = 'renderItem' + item.srcPath
+      const cell: any = this.$refs[refKey]
       switch (command) {
         case 'cancel':  // 取消
           downloadQueue.deleteTask(item)
           this.getListData()
           break;
         case 'pause': // 暂停 开始
-          const refKey = 'renderItem' + item.srcPath
-          const cell: any = this.$refs[refKey]
+          if (item.status === TaskStatus.suspend) {
+            item.resume()
+            cell.setOperateItemDisable('continue', true)
+            cell.updateContinueItem()
+          } else if (item.status === TaskStatus.progress) {
+            item.suspend()
+            cell.setOperateItemDisable('pause', true)
+            cell.updatePauseItem()
+          } else if (item.status === TaskStatus.error) {
+            item.resume()
+            cell.setOperateItemDisable('error', true)
+            cell.updateErrorItem()
+          }
+          break;
+        case 'continue': // 暂停 开始
           if (item.status === TaskStatus.suspend) {
             item.resume()
             cell.setOperateItemDisable('continue', true)

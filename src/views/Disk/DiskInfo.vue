@@ -13,7 +13,7 @@
 			</div>
 			<div class="cd-disk-info-item">
 				<span>文件位置:</span>
-				<div ref="address" :title="DiskData.path">{{ DiskData.path }}</div>
+				<div ref="address" :title="DiskData.name">{{getPathSource()}}/{{ DiskData.name }}</div>
 			</div>
 			<div class="cd-disk-info-item">
 				<span>文件大小:</span>
@@ -162,6 +162,14 @@ export default {
 	methods: {
 		close() {
 			this.window.close();
+		},
+		getPathSource () {
+			if (this.DiskData.path.indexOf('/.library') > -1) { return '珍藏' }
+			if (this.DiskData.path.indexOf('/.safe') > -1) { return '加密空间' }
+			if (this.DiskData.path.indexOf('/.backup') > -1) { return '备份' }
+			if (this.DiskData.collected === 1) { return '收藏' }
+			if (this.DiskData.shared === 1) { return '珍藏' }
+			return '存储'
 		}
 	}
 };

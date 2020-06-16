@@ -142,41 +142,23 @@ const backupResourceContextMenu: Array<OperateGroup> = [
     icon: require('../../assets/open_accessory.png'),
     items: [
       { title: '打开', command: 'open' },
-      { title: '删除', command: 'delete' },
-      { title: '重命名', command: 'rename' },
+    ]
+  },
+  {
+    icon: require('../../assets/down_accessory.png'),
+    items: [
       { title: '下载', command: 'download' },
       { title: '分享', command: 'share' },
       { title: '收藏', command: 'collect' }
     ]
   },
   {
+    icon: require('../../assets/delet_accessory.png'),
     items: [
+      { title: '删除', command: 'delete' },
       { title: '复制', command: 'copy' },
       { title: '剪切', command: 'cut' },
       { title: '移动到', command: 'moveto' }
-    ]
-  },
-  {
-    icon: require('../../assets/delet_accessory.png'),
-    items: [
-      { title: '属性', command: 'info' }
-    ]
-  }
-]
-
-const backupContextMenu: Array<OperateGroup> = [
-  {
-    icon: require('../../assets/open_accessory.png'),
-    items: [
-      { title: '新建文件夹', command: 'newFolder' }
-    ]
-  },
-  {
-    icon: require('../../assets/delet_accessory.png'),
-    items: [
-      { title: '清空剪切板', command: 'clearClipboard' },
-      { title: '粘贴', command: 'paste' },
-      { title: '刷新', command: 'refresh' }
     ]
   }
 ]
@@ -343,7 +325,6 @@ export {
   encryptMisTokenContextMenu,
   encryptContextMenu,
   backupResourceContextMenu,
-  backupContextMenu,
   collectContextMenu,
   shareContextMenu,
   shareResourceContextMenu,

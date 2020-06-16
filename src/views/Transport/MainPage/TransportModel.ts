@@ -41,6 +41,21 @@ const runningOperateItems: TransportOpItem[] = [
     iconWidth: '11px'
   }
 ]
+const pauseOperateItems: TransportOpItem[] = [
+  continueItem,
+  {
+    icon: require('../../../assets/cancle_icon.png'),
+    hoverIcon: require('../../../assets/cancle_icon_selected.png'),
+    command: 'cancel',
+    iconWidth: '9px'
+  },
+  {
+    icon: require('../../../assets/file_icon.png'),
+    hoverIcon: require('../../../assets/file_icon_selected.png'),
+    command: 'jump',
+    iconWidth: '11px'
+  }
+]
 const completedOperateItems: TransportOpItem[] = [
   {
     icon: require('../../../assets/text_icon.png'),
@@ -89,6 +104,7 @@ export {
   continueItem,
   errorItem,
   runningOperateItems,
+  pauseOperateItems,
   completedOperateItems,
   remoteCompletedOperateItems,
   TransportModel

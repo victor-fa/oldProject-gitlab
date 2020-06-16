@@ -58,7 +58,7 @@ import ResourceHandler from '@/views/MainView/ResourceHandler'
 import CustomButton from '@/components/CustomButton/index.vue'
 import StringUtility from '@/utils/StringUtility'
 import { UploadStatus } from '@/model/categoryList'
-import { runningOperateItems, completedOperateItems, remoteCompletedOperateItems, pauseItem, continueItem, errorItem, TransportModel } from './TransportModel'
+import { runningOperateItems, pauseOperateItems, completedOperateItems, remoteCompletedOperateItems, pauseItem, continueItem, errorItem, TransportModel } from './TransportModel'
 
 export default Vue.extend({
   name: 'transport-item',

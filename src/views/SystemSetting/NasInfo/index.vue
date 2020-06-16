@@ -19,7 +19,7 @@
 						<span>容量 {{item.size | filterSize}}</span>
 						<span>已使用 {{item.used | filterSize}}</span>
 					</div>
-					<a-button v-show="isUserAdmin" @click="handleInitialize(item)" style="">初始化</a-button>
+					<a-button v-show="isUserAdmin && diskFormatting === 0 && (item.status === 0 || item.status === 2)" @click="handleInitialize(item)" style="">初始化</a-button>
 					<!-- 管理员可以进行格式化 -->
 				</template>
 			</div>
@@ -33,18 +33,19 @@
 		</div>
 		<a-modal
 			:visible="detach.visiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
-			okText="确定" cancelText="取消" @ok="handleAdminDelete" @cancel="detach.visiable = false">
+			okText="确定" cancelText="取消" @ok="handleAdminDelete" @cancel="detach.visiable = false;detach.choice = 0">
 			<p>是否删除用户数据？</p>
 			<a-radio-group v-model="detach.choice">
 				<a-radio :value="0">不删除</a-radio>
 				<a-radio :value="1">删除</a-radio>
 			</a-radio-group>
 		</a-modal>
-		<a-modal
-			:visible="update.visiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
-			okText="确认升级" cancelText="取消升级" @ok="handleUpdate" @cancel="update.visiable = false">
-			<p>{{update.info}}</p>
-			
+		<a-modal title="检测到有新版本固件更新"
+			:visible="update.visiable" :mask="false" :closable="false" :maskClosable="false" width="350px"
+			okText="确认升级" cancelText="取消升级" @ok="handleUpdate" @cancel="update.visiable = false,update.info = {}">
+			<p>版本名称：{{update.info.versionName}}（{{update.info.size | filterSize}}）</p>
+			<p>发布时间：{{update.info.pubtime | filterTime}}</p>
+			<p>描述：{{update.info.desc}}</p>
 		</a-modal>
 		<a-modal
 			:visible="mode.visiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
@@ -83,6 +84,9 @@ export default Vue.extend({
     filterSize (bytes) {
       return StringUtility.formatShowSize(bytes)
 		},
+    filterTime (time) {
+      return StringUtility.formatShowMtime(time)
+		},
     filterStatus (status) {
       return StringUtility.formatDiskStatus(status)
 		},
@@ -105,14 +109,15 @@ export default Vue.extend({
 			},
 			update: {
 				visiable: false,
-				info: null as any
+				info: {} as any
 			},
 			mode: {
 				visiable: false,
 				choice: 0
 			},
 			isUserAdmin: false,
-			diskMode: 0
+			diskMode: 0,
+			diskFormatting: 0
 		};
   },
 	created() {
@@ -167,7 +172,7 @@ export default Vue.extend({
 		},
 		handleShutdown () {
 			NasFileAPI.shutdown().then(response => {
-				if (response.data.code !== 200) { this.$message.error('网络连接错误，请检测网络') }
+				if (response.data.code !== 200) return
 				this.switchDevice()
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
@@ -176,7 +181,7 @@ export default Vue.extend({
 		},
 		handleReboot () {
 			NasFileAPI.reboot().then(response => {
-				if (response.data.code !== 200) { this.$message.error('网络连接错误，请检测网络') }
+				if (response.data.code !== 200) return
 				this.switchDevice()
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
@@ -185,7 +190,7 @@ export default Vue.extend({
 		},
 		handleFactory () {
 			NasFileAPI.factory().then(response => {
-				if (response.data.code !== 200) { this.$message.error('网络连接错误，请检测网络') }
+				if (response.data.code !== 200) return
 				this.switchDevice()
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
@@ -202,9 +207,22 @@ export default Vue.extend({
 					this.$message.info('当前版本已最新')
 					return
 				}
+				this.update.info = response.data.data as any
+				// this.update.info = {
+        //   "id": 36,
+        //   "model": "2",
+        //   "modelName": "PRO_V001_SN01.0.1.002",
+        //   "name": "NasServer固件_内网升级_V01.02.33.200308",
+        //   "versionNo": "10233200308",
+        //   "versionName": "内测固件",
+        //   "size": 1.0,
+        //   "desc": "Nas Server升级固件",
+        //   "remark": "Nas Server升级固件",
+        //   "pubtime": null,
+        //   "ctime": 1582678312000,
+        //   "utime": 1583452793000
+        // } as any
 				this.update.visiable = true
-				this.update.info = response.data.data
-				console.log(this.update.info);
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
@@ -247,9 +265,9 @@ export default Vue.extend({
       NasFileAPI.fetchDisks().then(response => {
         if (response.data.code !== 200) return
 				this.disks = _.get(response.data.data, 'disks')
-				console.log(JSON.parse(JSON.stringify(this.disks)));
+				console.log(JSON.parse(JSON.stringify(response.data.data)));
 				this.diskMode = _.get(response.data.data, 'mode')
-				console.log(this.diskMode);
+				this.diskFormatting = _.get(response.data.data, 'formatting')
       }).catch(error => {
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)
@@ -268,7 +286,7 @@ export default Vue.extend({
 		},
 		switchMode(mode) {
 			NasFileAPI.switchMode(mode, 0).then(response => {
-				if (response.data.code !== 200) { this.$message.error('网络连接错误，请检测网络') }
+				if (response.data.code !== 200) return
 				this.mode = {
 					visiable: false,
 					choice: 0

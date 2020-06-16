@@ -29,11 +29,11 @@ export default Vue.extend({
     ...mapGetters('NasServer', ['nasInfo', 'accessInfo'])
   },
   created () {
-    this.checkUpdate()
+    this.checkSoftUpdate()
   },
   methods: {
     // 调接口判断是否需要更新
-    checkUpdate () {
+    checkSoftUpdate () {
       let appId = ''
       let appVersion = 0
       if (process.platform === 'win32') {	// win环境

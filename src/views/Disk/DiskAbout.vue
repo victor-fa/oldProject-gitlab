@@ -107,7 +107,6 @@ export default {
     filterTime (time) {
       return StringUtility.formatShowMtime(time)
 		}
-		
 	},
 	methods: {
 		bind() {

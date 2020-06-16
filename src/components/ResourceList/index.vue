@@ -47,6 +47,7 @@ import Vue from 'vue'
 import infiniteScroll from 'vue-infinite-scroll'
 import { EventBus, EventType } from '@/utils/eventBus'
 import processCenter, { EventName } from '@/utils/processCenter'
+import StringUtility from '@/utils/StringUtility'
 import { ArrangeWay, ResourceType, ResourceItem } from '@/api/NasFileModel'
 import ResourceHeader from './ResourceHeader.vue'
 import { SortWay } from '@/model/sortList'
@@ -189,7 +190,7 @@ export default Vue.extend({
       let paths: string[] = []
       for (let index = 0; index < files.length; index++) {
         const element = files[index]
-        paths.push(element.path)
+        paths.push(StringUtility.convertR2L(element.path))
       }
       this.$emit('callbackAction', 'drop', paths)
     }

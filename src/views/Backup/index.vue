@@ -2,7 +2,6 @@
   <main-view
     :loading="loading"
     :dataSource="dataArray"
-    :contextListMenu="backupContextMenu"
     :contextItemMenu="backupResourceContextMenu"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
@@ -20,7 +19,7 @@ import { BasicResponse } from '@/api/UserModel'
 import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
 import ResourceHandler from '../MainView/ResourceHandler'
 import NasFileAPI from '@/api/NasFileAPI'
-import { backupContextMenu, backupResourceContextMenu } from '@/components/OperateListAlter/operateList'
+import { backupResourceContextMenu } from '@/components/OperateListAlter/operateList'
 import UploadTask from '@/api/Transport/UploadTask'
 
 export default Vue.extend({
@@ -39,7 +38,6 @@ export default Vue.extend({
       page: 1,
       uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
       busy: false,
-      backupContextMenu, // list右键菜单选项
       backupResourceContextMenu // item右键菜单选项
     }
   },

@@ -141,23 +141,38 @@ export default Vue.extend({
     handleItemAction(command: string, ...args: any[]) {
       const item: BackupUploadTask = this.dataArray[args[0]]
       const _this = this as any
+      const refKey = 'renderItem' + item.srcPath
+      const cell: any = this.$refs[refKey]
       switch (command) {
         case 'cancel':  // 取消
           backupUploadQueue.deleteTask(item)
           this.getListData()
           break;
         case 'pause': // 暂停 开始
-          const refKey = 'renderItem' + item.srcPath
-          const cell: any = this.$refs[refKey]
-          if (item.status === TaskStatus.suspend) {
+          if (item.status === TaskStatus.suspend) { // 暂停 -> 开始
             item.resume()
             cell.setOperateItemDisable('continue', true)
             cell.updateContinueItem()
-          } else if (item.status === TaskStatus.progress) {
+          } else if (item.status === TaskStatus.progress) { // 开始 -> 暂停
             item.suspend()
             cell.setOperateItemDisable('pause', true)
             cell.updatePauseItem()
-          } else if (item.status === TaskStatus.error) {
+          } else if (item.status === TaskStatus.error) { // 报错 -> 开始
+            item.resume()
+            cell.setOperateItemDisable('error', true)
+            cell.updateErrorItem()
+          }
+          break;
+        case 'continue': // 暂停 开始
+          if (item.status === TaskStatus.suspend) { // 暂停 -> 开始
+            item.resume()
+            cell.setOperateItemDisable('continue', true)
+            cell.updateContinueItem()
+          } else if (item.status === TaskStatus.progress) { // 开始 -> 暂停
+            item.suspend()
+            cell.setOperateItemDisable('pause', true)
+            cell.updatePauseItem()
+          } else if (item.status === TaskStatus.error) { // 报错 -> 开始
             item.resume()
             cell.setOperateItemDisable('error', true)
             cell.updateErrorItem()
