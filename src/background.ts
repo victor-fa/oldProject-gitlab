@@ -21,7 +21,8 @@ let win: BrowserWindow | null,
 	MainWindow,
 	AboutWindow,
 	FeedBackWindow,
-	ForgetPassWindow
+	ForgetPassWindow,
+	RomUpdateWindow
 /*播放按钮*/
 let PlayerIcon = path.join(__filename, 'start_icon');
 let NextBtn = nativeImage.createFromPath(path.join(PlayerIcon, 'start_icon.png'));
@@ -184,7 +185,7 @@ let DiskSystem = {
 			icon: './src/assets/logo.png',
 			title: '关于uGgreen-Nas',
 			width: 600,
-			height: 330,
+			height: 400,
 			maximizable: false,
 			minimizable: false,
 			resizable: false,
@@ -258,6 +259,29 @@ let DiskSystem = {
 		});
     ForgetPassWindow.on('blur', () => {
 			ForgetPassWindow.focus()
+      // shell.beep()
+    })
+	},
+	RomUpdateWindow: msg => {
+		if (RomUpdateWindow) {
+			return windowControl.active(RomUpdateWindow, msg);
+		}
+		RomUpdateWindow = windowControl.create({
+			url: 'rom-update',
+			data: msg,
+			icon: './src/assets/logo.png',
+			width: 400,
+			height: 400,
+			maximizable: false,
+			resizable: false,
+			transparent: true,
+      show: false,
+			onclose: () => {
+				RomUpdateWindow = null;
+			}
+		});
+    RomUpdateWindow.on('blur', () => {
+			RomUpdateWindow.focus()
       // shell.beep()
     })
 	},
@@ -398,6 +422,9 @@ function bindIpc() {
 				break;
 			case 'forget-pass':
 				DiskSystem.ForgetPassWindow(data);
+				break;
+			case 'rom-update':
+				DiskSystem.RomUpdateWindow(data);
 				break;
 			case 'about':
 				DiskSystem.AboutWindow(data);

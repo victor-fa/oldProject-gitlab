@@ -154,7 +154,7 @@ export default {
               icon: './src/assets/logo.png',
               title: '关于uGgreen-Nas',
               width: 600,
-              height: 330,
+              height: 400,
               maximizable: false,
               minimizable: false,
               resizable: false,

@@ -17,22 +17,6 @@
         <router-view/>
       </a-layout-content>
     </a-layout>
-    <a-modal
-      title="检测到有新版本固件更新"
-			:visible="update.visiable" 
-      :mask="false"
-      :closable="false"
-      :maskClosable="false"
-      width="350px"
-			okText="确认升级"
-      cancelText="取消升级"
-      @ok="handleUpdate"
-      @cancel="handleCancleUpdate"
-    >
-			<p>版本名称：{{update.info.versionName}}（{{update.info.size | filterSize}}）</p>
-			<p>发布时间：{{update.info.pubtime | filterTime}}</p>
-			<p>描述：{{update.info.desc}}</p>
-		</a-modal>
   </a-layout>
 </template>
 
@@ -43,7 +27,6 @@ import { mapGetters } from 'vuex'
 import ILogo from '../components/Logo/index.vue'
 import SiderMenu from '../components/SiderMenu/index.vue'
 import BasicHeader from '../components/BasicHeader/index.vue'
-import processCenter, { EventName } from '../utils/processCenter'
 import { HomeRouters, FuncListItem } from '../router/modules/HomeList'
 import { CacheRoute, RouteClass } from '../store/modules/Router'
 import RouterUtility from '../utils/RouterUtility'
@@ -53,6 +36,7 @@ import { User, DeviceRole } from '../api/UserModel'
 import StringUtility from '../utils/StringUtility'
 import { initQueue } from '../api/Transport/TransportQueue'
 import NasFileAPI from '../api/NasFileAPI'
+import processCenter, { EventName } from '@/utils/processCenter'
 
 export default Vue.extend({
   name: 'base-layout',
@@ -63,8 +47,6 @@ export default Vue.extend({
   },
   data () {
     return {
-			update: { visiable: false, info: {} as any },
-			diskMode: 0,
       silderItems: [] as FuncListItem[]
     }
   },
@@ -73,14 +55,6 @@ export default Vue.extend({
     ...mapGetters('Resource', ['taskCount']),
     ...mapGetters('NasServer', ['accessInfo'])
   },
-  filters: {
-    filterSize (bytes) {
-      return StringUtility.formatShowSize(bytes)
-		},
-    filterTime (time) {
-      return StringUtility.formatShowMtime(time)
-		}
-	},
   created () {
     initQueue()
     this.accessInfo.role === DeviceRole.admin ? this.fetchUpdateInfo() : null
@@ -205,9 +179,9 @@ export default Vue.extend({
 				}
 				if (!response.data.data) {
 					return
-				}
-				this.update.info = response.data.data as any
-				// this.update.info = {
+        }
+        const info = response.data.data as any
+        // const info = {
         //   "id": 36,
         //   "model": "2",
         //   "modelName": "PRO_V001_SN01.0.1.002",
@@ -221,34 +195,12 @@ export default Vue.extend({
         //   "ctime": 1582678312000,
         //   "utime": 1583452793000
         // } as any
-				this.update.visiable = true
+        const _this = this as any
+        _this.$ipc.send('system', 'rom-update', info);
 			}).catch(error => {
         console.log(error)
       })
 		},
-		switchDevice () {
-			this.$store.dispatch('NasServer/clearCacheNas')
-			processCenter.renderSend(EventName.bindList)
-		},
-		handleUpdate () {
-			NasFileAPI.fetchRomUpgrade().then(response => {
-				if (response.data.code !== 200) return
-        console.log(response);
-				this.$message.success('请等待几分钟重新连接，请勿关闭电源')
-        setTimeout(() => {
-          this.switchDevice()
-        }, 3000);
-			}).catch(error => {
-				this.$message.error('网络连接错误，请检测网络')
-				console.log(error)
-			})
-    },
-    handleCancleUpdate() {
-      this.update = {
-				visiable: false,
-				info: {} as any
-      }
-    },
     getFirstRoute (category: RouteClass) {
       let item: FuncListItem | undefined
       for (let index = 0; index < this.silderItems.length; index++) {

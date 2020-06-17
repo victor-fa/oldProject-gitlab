@@ -86,6 +86,11 @@ const routes = [
     path: '/forget-pass',
     name: 'DiskForgetPass',
     component: () => import('../views/Disk/DiskForgetPass.vue')
+  },
+  {
+    path: '/rom-update',
+    name: 'DiskRomUpdate',
+    component: () => import('../views/Disk/DiskRomUpdate.vue')
   }
 ]
 

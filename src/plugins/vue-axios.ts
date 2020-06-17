@@ -1,9 +1,10 @@
 import Vue from 'vue'
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import VueAxios from 'vue-axios'
+import { nasCloudIP } from '@/api/CloudServer'
 
 const instance = axios.create({
-  baseURL: 'http://cloud2.ugreengroup.com',
+  baseURL: nasCloudIP,
   timeout: 10000,
   withCredentials: true
 })

@@ -7,8 +7,10 @@ import processCenter, { EventName } from '@/utils/processCenter'
 import store from '@/store'
 import UserAPI from './UserAPI'
 
+const nasCloudIP = 'http://cloud2.ugreengroup.com'
+
 const nasCloud = axios.create({
-  baseURL: 'http://cloud2.ugreengroup.com',
+  baseURL: nasCloudIP,
   timeout: 10000,
   withCredentials: false
 })
@@ -91,5 +93,6 @@ const getRefreshToken = () => {
 }
 
 export {
-  nasCloud
+  nasCloud,
+  nasCloudIP
 }

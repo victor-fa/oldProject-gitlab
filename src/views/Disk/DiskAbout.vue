@@ -2,16 +2,16 @@
 	<div class="cloudSeries-about-win">
 		<WindowsHeader :data="header" />
 		<div class="cloudSeries-about-main">
-			<div class="app-version">
-				<div class="logo">Nas-uGreen</div>
-				<span>Version{{ version }}</span>
-			</div>
-			<div class="app-icon"></div>
-			<div class="engine-info">
-				<h4>核心版本{{ electron }}</h4>
-				<ul>
-					<li v-for="(item, index) in InfoList" :key="index">{{ index }}<span />{{ item }}</li>
-				</ul>
+			<div class="title"><img src="../../assets/logo.png">绿联云</div>
+			<div class="content">
+				<div class="title">关于（产品介绍）</div>
+				<div class="detail">
+					<p>（1）您应具有中华人民共和国法律规定的与您行为相适应的民事行为能力；如果您未满18周岁，您需要在由您法定监护人同意、并代表您签署确认该协议，方可注册、使用绿联云软件平台帐户。</p><br>
+					<p>（2）您通过相关设备（如个人手机、电脑、电视等）下载对应专用的绿联云软件，使用您自有的手机号码在平台上注册帐号，并设置个人密码，绑定您自有的绿联网络私有云存储产品，即可享受本服务。绿联云软件平台帐号的所有权归绿联所有，您注册后享有其使用权，不得出租、出借、转让、赠与或与他人共同使用。</p><br>
+					<p>（3）您应自行负责您的帐号和密码的安全性。您需采取积极措施保证帐号和密码的安全性，建议措施包括但不限于：不将自己的帐号和密码透露给他人、设置复杂密码、定期修改密码等。无论是否经过您的授权，对通过您帐户进行的或在您帐户中发生的所有活动，均应由您自行负责。如发现他人未经授权使用您的帐号和密码的，您应立即通知绿联。</p><br>
+					<p>（4）您有权在平台上修改个人帐号中各项可修改的信息，若密码遗失，您可以根据提示通过注册的手机号码重置密码。</p><br>
+					<p>（5）您需确保用于注册帐号所使用的手机号码的真实、准确性和合法性，注册所使用的手机号码是认定您与平台帐号之关联性的唯一凭证。一旦手机号码出现更换、丢失或者无法收到验证码等，您需更新手机号码，方可继续使用本服务。</p><br>
+				</div>
 			</div>
 			<div class="update-info">
 				<p class="tips">{{ message }}</p>
@@ -21,13 +21,11 @@
 				</div>
 			</div>
 			<div class="bottom">
-				<p class="release">©2020 uGreen_{{ name }}</p>
-				<a-button @click="openUpdateInfo">
-					<span>{{ CheckText }}</span>
-				</a-button>
-				<a-button @click="openLink">
-					官网
-				</a-button>
+				<p class="release">版本号：{{ version }}</p>
+				<!-- ©2020 uGreen_{{ name }} -->
+				<a-button @click="openUpdateInfo"><span>{{ CheckText }}</span></a-button>
+				<a-button @click="$electron.shell.openExternal(nasCloudIP + '/sys/file/resource/pc/serviceAgreement.htm')">用户协议</a-button>
+				<a-button @click="$electron.shell.openExternal(nasCloudIP + '/sys/file/resource/pc/secretAgreement.htm')">隐私协议</a-button>
 			</div>
 		</div>
 		<a-modal
@@ -47,6 +45,8 @@
 import WindowsHeader from '@/components/Disk/WindowHeader.vue'
 import UserAPI from '@/api/UserAPI'
 import StringUtility from '@/utils/StringUtility'
+import { nasCloudIP } from '@/api/CloudServer'
+
 
 const packageInfo = require('../../../package');
 export default {
@@ -85,7 +85,8 @@ export default {
 				desc: '',
 				remark: '',
 				pubTime: 0
-			}
+			},
+			nasCloudIP
 		};
 	},
 	components: { WindowsHeader },
@@ -161,9 +162,6 @@ export default {
 		doUpdate() {
 			this.$ipc.send('system', 'check-for-update', this.updateInfo.pkgUrl);
 			this.updateInfo.visiable = false
-		},
-		openLink() {
-			this.$electron.shell.openExternal('https://www.lulian.cn/');
 		}
 	}
 };
@@ -182,10 +180,32 @@ export default {
 	background: #fff;
 	padding: 0 30px 20px;
 	position: relative;
+	.title {
+		display: flex;
+		line-height: 25px;
+		img {
+			width: 25px;
+			margin-right: 10px;
+		}
+	}
+	.content {
+		.title {
+			display: flex;
+			justify-content: center;
+		}
+		.detail {
+			text-align: left;
+			text-indent: 2em;
+			overflow-y: scroll;
+			height: 228px;
+		}
+	}
 	.bottom {
 		width: 90%;
 		position: absolute;
-		bottom: -110px;
+		bottom: -148px;
+		border-top: 1px solid;
+    padding-top: 16px;
 		button {
 			float: right;
 			background: none;
@@ -203,64 +223,6 @@ export default {
 		float: right;
 		margin-left: 20px;
 		overflow: hidden !important;
-	}
-}
-.app-version {
-	text-align: left;
-	.logo {
-		width: 190px;
-		height: 45px;
-		float: left;
-		display: inline-block;
-		vertical-align: bottom;
-		font-size: 30px;
-		line-height: 39px;
-		color: #4c4c4c;
-		font-family: 'Mistral';
-		font-weight: bold;
-	}
-	span {
-		display: inline-block;
-		vertical-align: bottom;
-		font-size: 14px;
-		margin: 0 10px;
-		color: #4c4c4c;
-		line-height: 45px;
-	}
-}
-.app-icon {
-	background: transparent url('../../assets/big_logo.png');
-	position: absolute;
-	top: 10px;
-	right: 40px;
-	background-size: 100%;
-	width: 80px;
-	height: 80px;
-	border-radius: 100%;
-	box-shadow: 0 0 10px 0 #6e6e6e;
-}
-.engine-info {
-	text-align: left;
-	margin: 20px 35% 0 8px;
-	h4 {
-		font-size: 14px;
-		font-weight: 400;
-		color: #4c4c4c;
-		padding: 15px 0;
-	}
-	ul {
-		font-size: 12px;
-		color: #bdbdbd;
-		list-style: none;
-		padding: 0;
-		line-height: 20px;
-		li {
-			float: left;
-			width: 50%;
-			span {
-				padding: 5px;
-			}
-		}
 	}
 }
 .update-info {
