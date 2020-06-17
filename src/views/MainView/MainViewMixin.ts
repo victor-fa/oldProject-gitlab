@@ -295,13 +295,15 @@ export default Vue.extend({
     },
     handleJumpAction () {
       const item = ResourceHandler.getFirstSelectItem(this.dataArray)
+      if (item === null) return
       EventBus.$emit(EventName.jump, item)
     },
     handleDownloadAction (directory: string[]) {
       const destPath = directory[0]
       const items = ResourceHandler.getSelectItems(this.dataArray)
       items.forEach(item => {
-        const task = new DownloadTask(item, destPath, item.uuid)
+        const task = new DownloadTask(item.path, destPath, item.uuid)
+        task.setResourceItem(item)
         downloadQueue.addTask(task)
         this.$store.dispatch('Resource/increaseTask')
       })

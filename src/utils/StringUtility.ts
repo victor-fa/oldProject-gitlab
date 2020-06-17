@@ -165,13 +165,13 @@ export default {
     const mByte = kByte * 1024
     const gByte = mByte * 1024
     if (speed < kByte) {
-      return `${(speed).toFixed(2)}B/s`
+      return `${(speed).toFixed(1)}B/s`
     } else if (speed < mByte) {
-      return `${(speed / kByte).toFixed(2)}K/s`
+      return `${(speed / kByte).toFixed(1)}K/s`
     } else if (speed < gByte) {
-      return `${(speed / mByte).toFixed(2)}M/s`
+      return `${(speed / mByte).toFixed(1)}M/s`
     } 
-    return `${(speed / gByte).toFixed(2)}G/s`
+    return `${(speed / gByte).toFixed(1)}G/s`
   },
   // 校验手机号
   vaildatorPhone (phone: string) {

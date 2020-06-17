@@ -7,21 +7,28 @@ import { UploadParams } from '../NasFileModel'
 import FileHandle, { FileHandleError } from '@/utils/FileHandle'
 import axios, { AxiosResponse, CancelTokenSource } from 'axios'
 import { BasicResponse } from '../UserModel'
-import StringUtility from '@/utils/StringUtility'
+import StringUtility from '../../utils/StringUtility'
 import path from 'path'
+import ResourceHandler from '@/views/MainView/ResourceHandler'
 
 const CancelToken = axios.CancelToken
 let tmpFileInfos: FileInfo[] = []
 
 export default class UploadTask extends BaseTask {
   private directory: string // 上传文件的目录
-  source? = CancelToken.source() // 下载取消请求标识
+  private source? = CancelToken.source() // 下载取消请求标识
   private fileHandle = -1 // 标记当前正在操作的文件句柄
+  private previousSize = 0
+  private speedTimer?: NodeJS.Timeout
 
   constructor(srcPath: string, destPath: string, uuid: string) {
     super(srcPath, destPath, uuid)
     this.directory = uuid === '' ? srcPath : path.dirname(srcPath)
     this.source = CancelToken.source()
+    if (!_.isEmpty(this.icon)) return
+    ResourceHandler.matchLocalPathIcon(srcPath).then(icon => {
+      this.icon = icon
+    })
   }
   // public methods
   async start () {
@@ -32,19 +39,31 @@ export default class UploadTask extends BaseTask {
     this.calculatorUploadFileSize()
     // 3. 开始递归上传文件
     this.uploadFile()
+    // 4. 开启速度定时器
+    this.beginSpeedTimer()
   }
-  cancel () {
+  async cancel () {
     super.cancel()
     this.fileInfos = []
-    if (this.fileHandle > 0) FileHandle.closeFileHandle(this.fileHandle)
-    this.source !== undefined && this.source.cancel()
+    if (this.fileHandle !== -1) {
+      FileHandle.closeFileHandle(this.fileHandle)
+      this.fileHandle = -1
+    }
+    if (this.source !== undefined) {
+      this.source.cancel()
+      this.source = undefined
+    }
   }
   suspend () {
     super.suspend()
-    if (this.fileHandle > 0) FileHandle.closeFileHandle(this.fileHandle)
-    this.fileHandle = -1
-    this.source !== undefined && this.source.cancel()
-    this.source = undefined
+    if (this.fileHandle !== -1) {
+      FileHandle.closeFileHandle(this.fileHandle)
+      this.fileHandle = -1
+    }
+    if (this.source !== undefined) {
+      this.source.cancel()
+      this.source = undefined
+    }
   }
   resume () {
     super.resume()
@@ -111,6 +130,21 @@ export default class UploadTask extends BaseTask {
       })
     })
   }
+  // 开启计算速度定时器
+  beginSpeedTimer () {
+    this.speedTimer = setInterval(() => {
+      if (this.previousSize >= this.completedBytes) return
+      const speed = this.completedBytes - this.previousSize // 单位B/s
+      this.speed = StringUtility.formatSpeed(speed)
+      this.previousSize = this.completedBytes
+    }, 2000)
+  }
+  // 清除定时器
+  clearSpeedTimer () {
+    if (this.speedTimer !== undefined) {
+      clearInterval(this.speedTimer)
+    }
+  }
   // 计算待上传文件的总大小
   private calculatorUploadFileSize () {
     this.countOfBytes = 0
@@ -121,10 +155,13 @@ export default class UploadTask extends BaseTask {
     })
   }
   // 处理上传错误回调
-  private handlerTaskError (code: TaskErrorCode) {
-    const error = new TaskError(code)
+  private handlerTaskError (code: TaskErrorCode, desc?: string) {
+    this.speed = ''
+    const error = new TaskError(code, desc)
     this.status = TaskStatus.error
-    this.emit('error', this.index, error)
+    this.error = error
+    this.emit('error', this.taskId, error)
+    this.clearSpeedTimer()
   }
   // 递归读取上传多个文件
   protected uploadFile () {
@@ -134,7 +171,9 @@ export default class UploadTask extends BaseTask {
     const fileInfo = this.getUploadFileInfo()
     if (fileInfo === null) {
       this.status = TaskStatus.finished
-      this.emit('taskFinished', this.index)
+      this.name = path.basename(this.srcPath)
+      this.emit('taskFinished', this.taskId)
+      this.clearSpeedTimer()
       return
     }
     if (this.uuid === '' && fileInfo.newCompleted !== true) {
@@ -145,7 +184,9 @@ export default class UploadTask extends BaseTask {
     if (fileInfo.isDirectory === true || fileInfo.totalSize <= 0) {
       this.createFolder(fileInfo)
     } else {
-      this.startUpload(fileInfo)
+      this.filterFilesInfo(fileInfo).then(isFilter => {
+        isFilter ? this.uploadFile() : this.startUpload(fileInfo)
+      })
     }    
   }
   // 创建文件夹
@@ -154,7 +195,8 @@ export default class UploadTask extends BaseTask {
       console.log(response)
       if (response.data.code !== 200) return
       fileInfo.newCompleted = true
-      this.emit('fileFinished', this.index, _.cloneDeep(fileInfo))
+      this.name = fileInfo.relativePath
+      this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.uploadFile()
     }).catch(_ => {
       fileInfo.newCompleted = true
@@ -163,36 +205,29 @@ export default class UploadTask extends BaseTask {
   }
   // 开始上传文件数据
   private startUpload (fileInfo: FileInfo) {
-    this.filterFilesInfo(fileInfo).then(norepeat => {
-      if (!norepeat) {  // 当且仅当重复时 
-        fileInfo.filter = true
-        this.uploadFile()
-        return
+    FileHandle.openReadFileHandle(fileInfo.srcPath).then(fd => { // open file handle success
+      this.fileHandle = fd
+      return this.uploadSingleFile(fd, fileInfo)
+    }).then(fd => { // upload file data success
+      return FileHandle.closeFileHandle(fd)
+    }).then(() => { // close file handle success
+      this.fileHandle = -1
+      this.name = fileInfo.relativePath
+      this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
+      this.uploadFile()
+    }).catch(error => { // handler error
+      if (error instanceof TaskError) {
+        this.handlerTaskError(error.code, error.desc)
+      } else if (error === FileHandleError.openError) {
+        this.handlerTaskError(TaskErrorCode.openHandleError)
+      } else {
+        this.handlerTaskError(TaskErrorCode.closeHandleError)
       }
-      FileHandle.openReadFileHandle(fileInfo.srcPath).then(fd => { // open file handle success
-        this.fileHandle = fd
-        return this.uploadSingleFile(fd, fileInfo)
-      }).then(fd => { // upload file data success
-        return FileHandle.closeFileHandle(fd)
-      }).then(() => { // close file handle success
-        this.fileHandle = -1
-        this.emit('fileFinished', this.index, _.cloneDeep(fileInfo))
-        this.uploadFile()
-      }).catch(error => { // handler error
-        console.log(error)
-        if (error instanceof TaskError) {
-          this.handlerTaskError(error.code)
-        } else if (error === FileHandleError.openError) {
-          this.handlerTaskError(TaskErrorCode.openHandleError)
-        } else {
-          this.handlerTaskError(TaskErrorCode.closeHandleError)
-        }
-      })
     })
   }
   // 获取待上传的文件对象
   private getUploadFileInfo () {
-    for (let index = 0; index < this.fileInfos!.length; index++) {
+    for (let index = 0; index < this.fileInfos.length; index++) {
       const item = this.fileInfos[index]
       // if (item.filter !== true) return item
       if (item.isDirectory === true) {
@@ -211,7 +246,7 @@ export default class UploadTask extends BaseTask {
           reject(error)
         } else {
           this.completedBytes += bytes
-          this.emit('progress', this.index)
+          this.emit('progress', this.taskId)
           const isCompleted = file.completedSize >= file.totalSize
           isCompleted && resolve(fd)
         }
@@ -225,10 +260,9 @@ export default class UploadTask extends BaseTask {
       chunkLength = buffer.length
       return this.uploadChunckData(file, buffer, this.source)
     }).then(response => {
-      console.log(response)
       if (this.status !== TaskStatus.progress) return
       if (response.data.code !== 200) {
-        const desc = response.data.code === 4050 ? `${file.name}已存在，请重命名后再上传` : response.data.msg
+        const desc = response.data.code === 4050 ? '文件名已存在，请重命名后再试' : response.data.msg
         const error = new TaskError(TaskErrorCode.serverError, desc)
         completionHandler(undefined, error)
       } else {
@@ -243,12 +277,6 @@ export default class UploadTask extends BaseTask {
       } else {
         completionHandler(undefined, new TaskError(TaskErrorCode.networkError))
       }
-    })
-  }
-  handleTaskError (code: TaskErrorCode) {
-    return new Promise((resolve, reject) => {
-      const error = new TaskError(code)
-      reject(error)
     })
   }
   // 生成上传参数
@@ -281,7 +309,7 @@ export default class UploadTask extends BaseTask {
   }
   // 过滤（备份加密用）
   protected filterFilesInfo (fileInfo: FileInfo): Promise<Boolean> {
-    return Promise.resolve(true)
+    return Promise.resolve(false)
   }
   /**上传文件数据 */
   protected uploadChunckData (file: FileInfo, buffer: Buffer, cancel?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {

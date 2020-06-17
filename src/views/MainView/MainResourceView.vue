@@ -23,12 +23,13 @@ import { ResourceItem, OrderType, ResourceType } from '@/api/NasFileModel'
 import NasFileAPI, { TaskMode } from '@/api/NasFileAPI'
 import { BasicResponse, User } from '@/api/UserModel'
 import ResourceHandler from './ResourceHandler'
-import { ClipboardModel } from '@/store/modules/Resource'
-import { uploadQueue } from '@/api/Transport/TransportQueue'
-import UploadTask from '@/api/Transport/UploadTask'
-import { resourceContextMenu, listContextMenu } from '@/components/OperateListAlter/operateList'
-import StringUtility from '@/utils/StringUtility'
-import processCenter, { EventName } from '@/utils/processCenter'
+import { ClipboardModel } from '../../store/modules/Resource'
+import { uploadQueue } from '../../api/Transport/TransportQueue'
+import UploadTask from '../../api/Transport/UploadTask'
+import { resourceContextMenu, listContextMenu } from '../../components/OperateListAlter/operateList'
+import StringUtility from '../../utils/StringUtility'
+import processCenter, { EventName } from '../../utils/processCenter'
+import { TaskError } from '../../api/Transport/BaseTask'
 
 export default Vue.extend({
   name: 'main-resource-view',
@@ -73,6 +74,10 @@ export default Vue.extend({
   },
   created () {
     this.updateView()
+  },
+  destroyed () {
+    uploadQueue.off('taskFinished', this.handleTaskFinished)
+    uploadQueue.off('error', this.handleTaskError)
   },
   methods: {
     updateView () {
@@ -156,13 +161,18 @@ export default Vue.extend({
         console.log(path);
         const task = new UploadTask(path, this.path, this.uuid)
         uploadQueue.addTask(task)
-        uploadQueue.once('taskFinished', () => {
-          setTimeout(() => {
-            this.handleRefreshAction()
-          }, 1000);
-        })
+        uploadQueue.once('taskFinished', this.handleTaskFinished)
+        uploadQueue.once('error', this.handleTaskError)
         this.$store.dispatch('Resource/increaseTask')
       })
+    },
+    handleTaskFinished () {
+      setTimeout(() => {
+        this.handleRefreshAction()
+      }, 1000)
+    },
+    handleTaskError (taskId: number, error: TaskError) {
+      this.$message.error(error.desc)
     },
     handleNewFolderAction () {
       const newName = ResourceHandler.calculateNewFolderName(this.dataArray)

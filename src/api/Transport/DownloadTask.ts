@@ -7,6 +7,7 @@ import { DownloadParams, ResourceItem, ResourceType } from '../NasFileModel'
 import BaseTask, { TaskStatus, TaskError, TaskErrorCode, FileInfo } from './BaseTask'
 import path from 'path'
 import StringUtility from '@/utils/StringUtility'
+import ResourceHandler from '@/views/MainView/ResourceHandler'
 
 export default class DownloadTask extends BaseTask {
   readonly maxDownloadSize = 1 * 1024 * 1024 // 单次最大下载字节数
@@ -14,46 +15,66 @@ export default class DownloadTask extends BaseTask {
   private fileHandle = -1 // 文件句柄
   private resourceItem?: ResourceItem
   private fileCount = 0
+  private previousSize = 0
+  private speedTimer?: NodeJS.Timeout
 
-  constructor(item: ResourceItem | string, destPath: string, uuid: string) {
-    super(item, destPath, uuid)
+  constructor(srcPath: string, destPath: string, uuid: string) {
+    super(srcPath, destPath, uuid)
     const CancelToken = axios.CancelToken
     this.source = CancelToken.source()
-    if (_.isObject(item)) {
-      this.resourceItem = item
-    }
   }
   // public methods
+  setResourceItem (item: ResourceItem) {
+    this.resourceItem = item
+    this.icon = ResourceHandler.searchResourceIcon(item.type, item.path)
+  }
   async start () {
     super.start()
     // 1. 转换需要下载的文件对象
     if (this.resourceItem !== undefined) {
       await this.fetchFileInfos(this.resourceItem)
     }
-    console.log(this.fileInfos)
     // 2. 计算总文件大小
     this.calculateDownloadSize()
     // 3. 开始递归下载
     this.downloadFile()
+    // 4. 开启速度定时器
+    this.beginSpeedTimer()
   }
-  cancel () {
+  async cancel () {
     super.cancel()
-    this.fileHandle !== -1 && FileHandle.closeFileHandle(this.fileHandle)
-    this.source !== undefined && this.source.cancel()
-    this.removeUnfinishedFile()
+    if (this.fileHandle !== -1) {
+      FileHandle.closeFileHandle(this.fileHandle)
+      this.fileHandle = -1
+    }
+    if (this.source !== undefined) {
+      this.source.cancel()
+      this.source = undefined
+    }
+    await FileHandle.removeFile(this.fullPath())
+    this.fileInfos = []
   }
   suspend () {
     super.suspend()
-    this.fileHandle !== -1 && FileHandle.closeFileHandle(this.fileHandle)
-    this.fileHandle = -1
-    this.source !== undefined && this.source.cancel()
-    this.source = undefined
+    if (this.fileHandle !== -1) {
+      FileHandle.closeFileHandle(this.fileHandle)
+      this.fileHandle = -1
+    }
+    if (this.source !== undefined) {
+      this.source.cancel()
+      this.source = undefined
+    }
   }
   resume () {
     super.resume()
     const CancelToken = axios.CancelToken
     this.source = CancelToken.source()
     this.downloadFile()
+  }
+  reload () {
+    super.reload()
+    const CancelToken = axios.CancelToken
+    this.source = CancelToken.source()
   }
   // private methods
   // 获取待下载的文件
@@ -66,19 +87,10 @@ export default class DownloadTask extends BaseTask {
       } else {
         this.recursionFetchTree(1, error => {
           if (error !== undefined) {
-            this.status = TaskStatus.error
-            this.emit('error', this.index, error)
+            this.handleDownloadError(error.code, error.desc)
           }
           resolve()
         })
-      }
-    })
-  } 
-  // 删除未完成文件
-  private removeUnfinishedFile () {
-    this.fileInfos.forEach(item => {
-      if (item.completedSize < item.totalSize && item.completedSize > 0) { // not completed
-        FileHandle.removeFile(item.destPath)
       }
     })
   }
@@ -110,7 +122,7 @@ export default class DownloadTask extends BaseTask {
   private convertFileInfo (item: ResourceItem) {
     const name = StringUtility.formatName(item.path)
     let destPath = `${this.destPath}/${name}`
-    let relativePath: string | undefined
+    let relativePath = name
     if (this.resourceItem!.type === ResourceType.folder) {
       const directory = path.dirname(this.resourceItem!.path)
       relativePath = item.path.substring(directory.length, item.path.length)
@@ -136,13 +148,30 @@ export default class DownloadTask extends BaseTask {
       this.completedBytes += item.completedSize
     })
   }
+  // 开启计算速度定时器
+  beginSpeedTimer () {
+    this.speedTimer = setInterval(() => {
+      if (this.previousSize >= this.completedBytes) return
+      const speed = this.completedBytes - this.previousSize // 单位B/s
+      this.speed = StringUtility.formatSpeed(speed)
+      this.previousSize = this.completedBytes
+    }, 2000)
+  }
+  // 清除定时器
+  clearSpeedTimer () {
+    if (this.speedTimer !== undefined) {
+      clearInterval(this.speedTimer)
+    }
+  }
   // 递归下载文件
   private downloadFile () {
     if (this.status !== TaskStatus.progress) return
     const fileInfo = this.getNextFileInfo()
     if (fileInfo === null) {
       this.status = TaskStatus.finished
-      this.emit('taskFinished', this.index)
+      this.name = path.basename(this.srcPath)
+      this.emit('taskFinished', this.taskId)
+      this.clearSpeedTimer()
       return
     }
     if (fileInfo.isDirectory === true) {
@@ -155,7 +184,8 @@ export default class DownloadTask extends BaseTask {
   private createDirectory (fileInfo: FileInfo) {
     FileHandle.newDirectory(fileInfo.destPath).then(() => {
       fileInfo.newCompleted = true
-      this.emit('fileFinished', this.index, _.cloneDeep(fileInfo))
+      this.name = fileInfo.relativePath
+      this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.downloadFile()
     }).catch(_ => {
       fileInfo.newCompleted = true
@@ -176,7 +206,8 @@ export default class DownloadTask extends BaseTask {
     }).then(path => { // rename file
       fileInfo.destPath = path
       this.downloadFile()
-      this.emit('fileFinished', this.index, _.cloneDeep(fileInfo))
+      this.name = fileInfo.relativePath
+      this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       console.log(fileInfo)
     }).catch(error => {
       if (error instanceof TaskError) {
@@ -203,19 +234,20 @@ export default class DownloadTask extends BaseTask {
   // 递归下载单个文件
   private downloadSingleFile (fd: number, fileInfo: FileInfo): Promise<number> {
     return new Promise((resolve, reject) => {
-      this.downloadFileChunk(fd, fileInfo, (error?: TaskError) => {
+      this.downloadFileChunk(fd, fileInfo, (bytes: number, error?: TaskError) => {
         if (!_.isEmpty(error)) {
           reject(error)
         } else {
-          this.emit('progress', this.index)
-          if (this.countOfBytes === 0) this.countOfBytes = fileInfo.totalSize
+          this.completedBytes += bytes
+          this.emit('progress', this.taskId)
           fileInfo.completedSize >= fileInfo.totalSize && resolve(fd)
         }
       })
     })
   }
   // 下载并写入文件数据
-  protected downloadFileChunk (fd: number, fileInfo: FileInfo, completionHandler: (error?: TaskError) => void) {
+  protected downloadFileChunk (fd: number, fileInfo: FileInfo, completionHandler: (bytes: number, error?: TaskError) => void) {
+    let chunkLength = 0
     this.downloadChunkData(fileInfo).then(response => { // download data
       if (response.status !== 200 && response.status !== 206) {
         const error = new TaskError(TaskErrorCode.serverError, response.statusText)
@@ -226,26 +258,26 @@ export default class DownloadTask extends BaseTask {
         const error = new TaskError(TaskErrorCode.serverError, 'response headers is null')
         return Promise.reject(error)
       }
-      fileInfo.totalSize = result.total
       fileInfo.completedSize += result.bytes
+      chunkLength = result.bytes
       return FileHandle.wirteFile(fd, result.buffer)
     }).then(() => { // write data
       if (this.status !== TaskStatus.progress) return
-      completionHandler()
+      completionHandler(chunkLength)
       if (fileInfo.completedSize < fileInfo.totalSize) this.downloadFileChunk(fd, fileInfo, completionHandler)
     }).catch(error => { // catch error
       if (this.status !== TaskStatus.progress || axios.isCancel(error)) return
       if (error === FileHandleError.writeError) {
         const error = new TaskError(TaskErrorCode.writeDataError)
-        completionHandler(error)
+        completionHandler(0, error)
       } else {
         const error = new TaskError(TaskErrorCode.networkError)
-        completionHandler(error)
+        completionHandler(0, error)
       }
     })
   }
   // 生成下载请求参数
-  generateDownloadParams (fileInfo: FileInfo): DownloadParams {
+  protected generateDownloadParams (fileInfo: FileInfo): DownloadParams {
     return {
       uuid: this.uuid,
       path: fileInfo.srcPath,
@@ -273,10 +305,13 @@ export default class DownloadTask extends BaseTask {
   private handleDownloadError (code: TaskErrorCode, desc?: string) {
     const error = new TaskError(code, desc)
     this.status = TaskStatus.error
-    this.emit('error', this.index, error)
+    this.speed = ''
+    this.error = error
+    this.emit('error', this.taskId, error)
+    this.clearSpeedTimer()
   }
   // protected methods
-  downloadChunkData (fileInfo: FileInfo, source?: CancelTokenSource) {
+  protected downloadChunkData (fileInfo: FileInfo, source?: CancelTokenSource) {
     const params = this.generateDownloadParams(fileInfo)
     return NasFileAPI.downloadData(params, this.source)
   }

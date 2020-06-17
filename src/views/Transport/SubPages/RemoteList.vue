@@ -1,40 +1,30 @@
 <template>
   <main-page
+    :categorys="categorys"
     :dataSource="showArray"
-    :category="categorys"
+    v-on:itemAction="handleItemAction"
     v-on:categoryChange="handleCategoryChange"
-    v-on:transportOperateAction="handleOperateAction"
-  >
-    <template v-slot:renderItem="{ item, index}">
-      <transport-item
-        :ref="'renderItem' + item.id"
-        :key="item.id"
-        :model="item"
-        :index="index"
-        v-on:operationAction="handleItemAction"
-      />
-    </template>
-  </main-page>
+    v-on:batchAction="handleOperateAction"
+  />
 </template>
 
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
-import { remoteCategorys, UploadStatus } from '@/model/categoryList'
-import { RemoteTask } from '@/api/NasFileModel'
-import TransportItem from '../MainPage/TransportItem.vue'
-import NasFileAPI from '@/api/NasFileAPI'
-import { TransportModel } from '../MainPage/TransportModel'
+import { RemoteTask } from '../../../api/NasFileModel'
+import NasFileAPI from '../../../api/NasFileAPI'
+import { TransportModel, remoteCategorys, TransportStatus } from '../MainPage/TransportModel'
 import TransportHandler from '../TransportHandler'
+import { EventBus } from '../../../utils/eventBus'
+import { EventName } from '../../../utils/processCenter'
 
 let timer: NodeJS.Timeout | null = null
 
 export default Vue.extend({
   name: 'remote-list',
   components: {
-    MainPage,
-    TransportItem
+    MainPage
   },
   data () {
     let items: TransportModel[] = []
@@ -42,140 +32,96 @@ export default Vue.extend({
       loading: false,
       dataArray: items,
       showArray: items,
-      categorys: remoteCategorys
-    }
-  },
-  watch: {
-    dataArray: function (value: TransportModel[]) {
-      const item = this.categorys.filter(item => {
-        return item.isSelected
-      })[0]
-      this.showArray = this.filterDataArray(item.status)
-      this.updateCategoryCount(item.status)
+      categorys: _.cloneDeep(remoteCategorys)
     }
   },
   created () {
-    this.resetSelected()
     this.fetchRemoteList()
-  },
-  mounted () {
-    timer = setInterval(this.fetchRemoteList, 1000)
   },
   destroyed () {
     if (timer !== null) clearInterval(timer)
   },
   methods: {
     // handle subviews action
-    handleCategoryChange (index: number) {
-      const item = this.categorys[index]
-      this.showArray = this.filterDataArray(item.status)
+    handleCategoryChange (aIndex: number) {
+      this.categorys = this.categorys.map((item, index) => {
+        item.isSelected = index === aIndex
+        return item
+      })
+      this.updateView()
     },
     handleOperateAction (command: string) {
       switch (command) {
         case 'pauseAll':
-          const pauseAllFlag = this.showArray.some(item => item.status !== UploadStatus.completed)
-          if (!pauseAllFlag) {
-            this.$message.error('无可暂停任务')
-          } else {
-            this.showArray.forEach(item => {
-              if (item.status !== UploadStatus.completed) {
-                this.pauseRemoteTask(item.id)
-              }
-            })
-          }
-          break;
+          break
+        case 'continue':
+          break
         case 'cancelAll':
-          const cancelAllFlag = this.showArray.some(item => item.status !== UploadStatus.completed)
-          if (!cancelAllFlag) {
-            this.$message.error('无可取消任务')
-          } else {
-            this.showArray.forEach(item => {
-              if (item.status !== UploadStatus.completed) {
-                this.cancelRemoteTask(item.id)
-              }
-            })
-          }
           break;
         case 'clearAll':
-          const clearAllFlag = this.showArray.some(item => item.status === UploadStatus.completed)
-          const _this = this as any
-          if (!clearAllFlag) {
-            this.$message.error('无可清空任务')
-          } else {
-            _this.$electron.shell.beep()
-            _this.$confirm({
-              title: '删除',
-              content: '是否将所有记录清空',
-              okText: '删除',
-              okType: 'danger',
-              cancelText: '取消',
-              onOk() {
-                _this.showArray.forEach(item => {
-                  if (item.status === UploadStatus.completed) {
-                    _this.cancelRemoteTask(item.id)
-                  }
-                })
-                setTimeout(() => { _this.fetchRemoteList() }, 1000);
-              }
-            });
-          }
-          break;
+          break
       }
     },
-    handleItemAction (command: string, ...args: any[]) {
-      const item = this.showArray[args[0]]
-      const _this = this as any
+    handleItemAction (command: string, index: number, ...args: any[]) {
+      const model = this.showArray[index]
       switch (command) {
         case 'pause':
-          this.pauseRemoteTask(item.id)
+          this.pauseRemoteTask(model.id)
           break;
         case 'continue':
-          this.continueRemoteTask(item.id)
+          this.continueRemoteTask(model.id)
           break;
         case 'cancel':
-          this.cancelRemoteTask(item.id)
+          this.cancelRemoteTask(model.id)
           break;
         case 'jump':
-          _this.$electron.shell.showItemInFolder(item.sourcePath)
+          EventBus.$emit(EventName.jump, { path: model.path, uuid: model.uuid })
           break;
         case 'delete':
-          this.cancelRemoteTask(item.id)
+          this.cancelRemoteTask(model.id)
           break;
       }
     },
     // private methods
-    resetSelected() { // 重置默认选项
-      remoteCategorys[0].isSelected = true
-      remoteCategorys[1].isSelected = false
-    },
     fetchRemoteList () {
       this.loading = true
       NasFileAPI.fetchRemoteTaskList().then(response => {
         this.loading = false
         if (response.data.code !== 200) return
         const tasks = _.get(response.data.data, 'list') as RemoteTask[] 
-        this.dataArray = tasks.map(item => {  // 1-1 / 2-2 / 4-4 / 8-8 / 10-16  对应16进制
+        this.dataArray = tasks.map(item => {
           return TransportHandler.convertRemoteTask(item)
         })
+        if (!_.isEmpty(this.dataArray)) {
+          timer = setInterval(this.fetchRemoteList, 1000)
+          this.updateView()
+        } else {
+          if (timer !== null) clearInterval(timer)
+        }
       }).catch(error => {
         console.log(error)
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    filterDataArray (status: UploadStatus) {
-      return this.dataArray.filter(item => {
-        return item.status === status
+    updateView () {
+      const category = this.categorys.filter(item => {
+        return item.isSelected
+      })[0].status
+      this.showArray = this.dataArray.filter(model => {
+        return model.category === category
       })
-    },
-    updateCategoryCount (status: UploadStatus) {
-      this.categorys = this.categorys.map(aItem => {
-        if (aItem.status === status) {
-          aItem.count = this.showArray.length
+      this.categorys = this.categorys.map(item => {
+        if (item.status === category) {
+          item.count = this.showArray.length
         } else {
-          aItem.count = this.dataArray.length - this.showArray.length
+          item.count = this.dataArray.length - this.showArray.length
         }
-        return aItem
+        item.batchItems = item.batchItems.map(item => {
+          item.disable = this.showArray.length === 0
+          return item
+        })
+        return item
       })
     },
     pauseRemoteTask (id: number) {

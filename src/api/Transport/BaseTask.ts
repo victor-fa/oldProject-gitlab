@@ -2,7 +2,6 @@
 import _ from 'lodash'
 import { EventEmitter } from 'events'
 import StringUtility from '@/utils/StringUtility'
-import { ResourceItem } from '../NasFileModel'
 
 /** 传输任务事件
  * progress (index) 上传进度事件
@@ -14,10 +13,10 @@ export default class BaseTask extends EventEmitter {
   readonly srcPath: string
   readonly destPath: string
   readonly uuid: string
-  readonly name: string // 文件名
   readonly maxChunkSize = 1 * 1024 * 1024 // 单次读取的最大字节数
+  name: string // 文件名
   /**任务索引 */
-  index: number = 0
+  taskId: number = 0
   /**待传输总字节数 */
   countOfBytes: number = 0
   /**已传输完成字节数 */
@@ -26,16 +25,17 @@ export default class BaseTask extends EventEmitter {
   fileInfos: FileInfo[] = []
   /**任务状态 */
   status = TaskStatus.pending
+  /**传输速度 */
+  speed = ''
+  /**任务图标 */
+  icon: any
+  /**错误信息 */
+  error?: TaskError
 
-  constructor(item: string | ResourceItem, destPath: string, uuid: string) {
+  constructor(srcPath: string, destPath: string, uuid: string) {
     super()
-    if (_.isString(item)) {
-      this.srcPath = item
-      this.name = StringUtility.formatName(item)
-    } else {
-      this.srcPath = (item as ResourceItem).path
-      this.name = (item as ResourceItem).name
-    }
+    this.srcPath = srcPath
+    this.name = StringUtility.formatName(srcPath)
     this.destPath = destPath
     this.uuid = uuid
   }
@@ -43,8 +43,9 @@ export default class BaseTask extends EventEmitter {
   async start () {
     this.status = TaskStatus.progress
   }
-  cancel () {
+  async cancel () {
     this.status = TaskStatus.error
+    this.removeAllListeners()
   }
   suspend () {
     this.status = TaskStatus.suspend
@@ -54,6 +55,11 @@ export default class BaseTask extends EventEmitter {
   }
   reload () {
     this.status = TaskStatus.pending
+    this.error = undefined
+    this.removeAllListeners()
+  }
+  fullPath () {
+    return `${this.destPath}/${this.name}`
   }
 }
 
@@ -61,11 +67,11 @@ interface FileInfo {
   name: string,
   srcPath: string,
   destPath: string,
+  relativePath: string,
   totalSize: number,
   completedSize: number,
   md5?: string,
   isDirectory?: boolean,
-  relativePath?: string,
   newCompleted?: boolean,
   filter?: boolean
 }

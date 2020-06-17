@@ -1,5 +1,5 @@
 // 传输队列，管理上传下载队列
-import _ from 'lodash'
+import _, { reject } from 'lodash'
 import { EventEmitter } from 'events'
 import BaseTask, { TaskStatus, FileInfo, TaskError } from './BaseTask'
 import UploadTask from './UploadTask'
@@ -7,12 +7,13 @@ import BackupUploadTask from './BackupUploadTask'
 import EncryptUploadTask from './EncryptUploadTask'
 import DownloadTask from './DownloadTask'
 import EncryptDownloadTask from './EncryptDownloadTask'
+import store from '@/store'
+import { User } from '../UserModel'
+import { NasInfo } from '../ClientModel'
 
 /**
- * progress (task) 上传进度回调
- * fileFinished (task, fileInfo) 单个文件上传完成回调
- * taskFinished (task) 上传任务完成回调
- * error (task, error) 任务出错回调
+ * taskStatusChange (taskId) 任务状态改变事件
+ * taskQueueChange () 任务队列数量改变
 */
 class TaskQueue<T extends BaseTask> extends EventEmitter {
   /**最大任务数 */
@@ -37,46 +38,107 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
   }
   /**添加新的任务 */
   addTask (task: T) {
-    task.index = this.generateTaskIndex()
+    task.taskId = this.generateTaskId()
     this.queue.push(task)
-    this.checkUploadQueue()
-    this.emit('addTask', _.cloneDeep(task))
     if (this.db !== undefined) {
       const obj = this.convertTask2Obj(task)
       this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).add(obj)
     }
+    this.emit('taskQueueChange')
+    this.checkUploadQueue()
   }
   /**删除任务 */
-  deleteTask (task: T) {
-    task.cancel()
-    this.queue = this.removeTask(task)
+  async deleteTask (task: T) {
+    await task.cancel()
+    this.queue = this.removeTask(task.taskId)
+    this.emit('taskQueueChange')
+    await this.deleteTaskInDB(task)
     this.checkUploadQueue()
-    this.emit('removeTask', _.cloneDeep(task))
-    if (this.db !== undefined) {
-      this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).delete(task.index)
-    }
   }
   /**刷新任务，当上传出错时，调用此接口刷新任务 */
-  reloadTask (task: T) {
-    const index = this.queue.indexOf(task)
+  async reloadTask (task: T) {
     task.reload()
-    this.queue.splice(index, 1, task)
-    this.checkUploadQueue()
+    this.queue = this.updateQueue(task)
+    this.emit('taskStatusChange', task.taskId)
     this.reloadTaskInDB(task)
+    this.checkUploadQueue()
   }
-  /**清除所有任务 */
+  /**暂停任务 */
+  async suspendTask (task: T) {
+    task.suspend()
+    this.queue = this.updateQueue(task)
+    this.emit('taskStatusChange', task.taskId)
+    this.reloadTaskInDB(task)
+    this.checkUploadQueue()
+  }
+  /**继续任务 */
+  async resumeTask (task: T) {
+    task.resume()
+    this.queue = this.updateQueue(task)
+    this.emit('taskStatusChange', task.taskId)
+    this.reloadTaskInDB(task)
+    this.checkUploadQueue()
+  }
+  /**删除进行中的任务 */
+  deleteDoingTasks () {
+    this.queue.forEach(task => {
+      if (task.status !== TaskStatus.finished) {
+        task.cancel()
+        this.deleteTask(task)
+      }
+    })
+    this.emit('taskQueueChange')
+  }
+  /**删除已完成的任务 */
+  deleteDoneTasks () {
+    this.queue.forEach(task => {
+      if (task.status === TaskStatus.finished) {
+        task.cancel()
+        this.deleteTask(task)
+      }
+    })
+    this.emit('taskQueueChange')
+  }
+  /**暂停全部任务 */
+  suspendAllTasks () {
+    this.queue.forEach(task => {
+      if (task.status === TaskStatus.pending || task.status === TaskStatus.progress) {
+        task.suspend()
+        this.reloadTaskInDB(task)
+      }
+    })
+    this.emit('taskQueueChange')
+  }
+  /**批量继续 */
+  resumeAllTasks () {
+    this.queue.forEach(task => {
+      if (task.status === TaskStatus.suspend) {
+        task.completedBytes > 0 ? task.resume() : task.reload()
+        this.reloadTaskInDB(task)
+      }
+    })
+    this.emit('taskQueueChange')
+  }
+  /**查找任务 */
+  searchTask (taskId: number) {
+    for (let index = 0; index < this.queue.length; index++) {
+      const task = this.queue[index]
+      if (task.taskId === taskId) return task
+    }
+  }
+  /**清空任务队列 */
   clearAllTask () {
     this.queue.forEach(task => {
-      if (task.status === TaskStatus.progress) task.cancel()
+      task.cancel()
     })
     this.queue = []
     this.clearTable(this.db)
   }
   // private methods
-  private generateTaskIndex () {
+  private generateTaskId () {
     const task = _.last(this.queue)
     if (task === undefined) return 0
-    return task.index + 1
+    return task.taskId + 1
   }
   private openTransportDB (): Promise<Event> {
     return new Promise((resolve, reject) => {
@@ -106,9 +168,15 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
     })
   }
   private createTable (db: IDBDatabase, name: string) {
-    if (!db.objectStoreNames.contains(name)) {
-      db.createObjectStore(name, { keyPath: 'index' })
+    const fullName = this.genterateFullTableName(name)
+    if (!db.objectStoreNames.contains(fullName)) {
+      db.createObjectStore(fullName, { keyPath: 'index' })
     }
+  }
+  private genterateFullTableName (name: string) {
+    const ugreenNo = (_.get(store.getters, 'User/user') as User).ugreenNo
+    const sn = (_.get(store.getters, 'NasServer/nasInfo') as NasInfo).sn
+    return `${ugreenNo}-${sn}-${name}`
   }
   private clearTable (db?: IDBDatabase) {
     if (db === undefined) return
@@ -138,21 +206,23 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
       srcPath: task.srcPath,
       destPath: task.destPath,
       uuid: task.uuid,
-      index: task.index,
+      index: task.taskId,
       countOfBytes: task.countOfBytes,
       completedBytes: task.completedBytes,
       fileInfos: task.fileInfos,
-      status: task.status
+      status: task.status,
+      type: task.icon
     }
   }
   // 将DB中存储的对象转换成task
   private convertObj2Task (obj: any) {
     const task = this.createTask(obj.srcPath, obj.destPath, obj.uuid)
-    task.index = obj.index
+    task.taskId = obj.index
     task.countOfBytes = obj.countOfBytes
     task.completedBytes = obj.completedBytes
     task.fileInfos = obj.fileInfos
     task.status = obj.status
+    task.icon = obj.icon
     return task as T
   }
   private createTask (srcPath: string, destPath: string, uuid: string) {
@@ -183,11 +253,34 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
       }
     }
   }
-  private reloadTaskInDB (task: T) {
-    if (this.db !== undefined) {
-      const obj = this.convertTask2Obj(task)
-      this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).put(obj)
-    }
+  private reloadTaskInDB (task: T): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.db !== undefined) {
+        const obj = this.convertTask2Obj(task)
+        const request = this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).put(obj)
+        request.onerror = event => {
+          reject(event)
+        }
+        request.onsuccess = _ => {
+          resolve()
+        }
+      }
+      resolve()
+    })
+  }
+  private deleteTaskInDB (task: T): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.db !== undefined) {
+        const request = this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).delete(task.taskId)
+        request.onerror = event => {
+          reject(event)
+        }
+        request.onsuccess = _ => {
+          resolve()
+        }
+      }
+      resolve()
+    })
   }
   // 获取正在上传中的任务队列
   private getUploadingQueue () {
@@ -195,66 +288,63 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
       return item.status === TaskStatus.progress
     })
   }
+  // 移除task,并更新其它任务的标识符
+  private removeTask (taskId: number) {
+    return this.queue.filter(task => {
+      return taskId !== task.taskId
+    })
+  }
+  // 更新任务
+  private updateQueue (task: T) {
+    return this.queue.map(item => {
+      if (item.taskId === task.taskId) return task
+      return item
+    })
+  }
   // 监听上传任务的回调
   private observerTask (task: T) {
-    task.on('progress', (index: number) => {
+    task.addListener('progress', (index: number) => {
       this.handleTaskProcess(index)
     })
-    task.on('fileFinished', (index: number, fileInfo: FileInfo) => {
+    task.addListener('fileFinished', (index: number, fileInfo: FileInfo) => {
       this.handleFileFinished(index, fileInfo)
     })
-    task.once('taskFinished', (index: number) => {
+    task.addListener('taskFinished', (index: number) => {
       this.handleTaskFinished(index)
     })
-    task.once('error', (index: number, error: TaskError) => {
+    task.addListener('error', (index: number, error: TaskError) => {
       this.handleTaskError(index, error)
     })
-  }
-  // 移除task,并更新其它任务的标识符
-  private removeTask (task: T) {
-    const index = task.index
-    return this.queue.filter((task, aIndex) => {
-      if (aIndex === index) return false
-      if (aIndex > index) task.index = aIndex - 1
-      return true
-    })
-  }
-  searchTask (aIndex: number) {
-    for (let index = 0; index < this.queue.length; index++) {
-      const task = this.queue[index]
-      if (task.index === aIndex) return task
-    }
   }
   // protected methods
   // handle upload task callback
   protected handleTaskProcess (index: number) {
-    const task = this.searchTask(index)
-    if (task === undefined) return
-    this.emit('progress', _.cloneDeep(task))
+    this.emit('taskStatusChange', index)
   }
   protected handleFileFinished (index: number, fileInfo: FileInfo) {
+    console.log(fileInfo)
     const task = this.searchTask(index)
     if (task === undefined) return
     const newTask = _.cloneDeep(task)
     this.reloadTaskInDB(newTask)
-    this.emit('fileFinished', newTask, fileInfo)
+    this.emit('taskStatusChange', task.taskId)
   }
   protected handleTaskFinished (index: number) {
     const task = this.searchTask(index)
     if (task === undefined) return
+    this.reloadTaskInDB(task)
     this.checkUploadQueue()
+    this.emit('taskStatusChange', task.taskId)
+    this.emit('taskFinished')
     task.removeAllListeners()
-    const newTask = _.cloneDeep(task)
-    this.reloadTaskInDB(newTask)
-    this.emit('taskFinished', newTask)
   }
   protected handleTaskError (index: number, error: TaskError) {
+    console.log(error)
     const task = this.searchTask(index)
     if (task === undefined) return
+    this.reloadTaskInDB(task)
+    this.emit('taskStatusChange', task.taskId)
     task.removeAllListeners()
-    const newTask = _.cloneDeep(task)
-    this.reloadTaskInDB(newTask)
-    this.emit('error', newTask, error)
   }
 }
 
@@ -288,9 +378,9 @@ const clearQueueCache = () => {
 }
 
 const releaseQueue = <T extends BaseTask>(queue?: TaskQueue<T>) => {
-  removeQueueListeners(queue)
   if (queue !== undefined) {
     queue.clearAllTask()
+    queue.removeAllListeners()
     queue = undefined
   }
 }

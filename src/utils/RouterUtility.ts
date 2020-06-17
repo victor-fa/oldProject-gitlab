@@ -1,7 +1,7 @@
 import _, { Dictionary } from 'lodash';
 import router from '@/router';
-import store from '@/store';
-import { CacheRoute, RouteCalss } from '@/store/modules/Router'
+import store from '@/store'
+import { CacheRoute, RouteClass } from '../store/modules/Router'
 
 export default {
   push (name: string, path: string, query?: Dictionary<string>, params?: Dictionary<string>) {
@@ -24,7 +24,7 @@ export default {
       this.jumpLastRoute()
     })
   },
-  switchRoute (type: RouteCalss) {
+  switchRoute (type: RouteClass) {
     store.dispatch('Router/switchshowRoutes', type).then(() => {
       this.jumpLastRoute()
     })

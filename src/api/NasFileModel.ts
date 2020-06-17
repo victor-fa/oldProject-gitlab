@@ -4,6 +4,7 @@ enum ArrangeWay {
 }
 
 enum ResourceType {
+  unknow = -1,
   all = 0,
   video = 1,
   audio = 2,
@@ -180,13 +181,22 @@ enum RemoteTaskStatus { // 对应的是16进制
   prerunning = 1,
   running = 2,
   error = 3,
-  pause = 8,
-  completed = 16
+  pause = 4,
+  completed = 5
+}
+
+enum RemoteType {
+  copy = 1,
+  move = 2,
+  delete = 3,
+  encryptDelete = 4,
+  encryptIn = 5,
+  encryptOut = 6
 }
 
 interface RemoteTask {
   id: number,
-  type: ResourceType,
+  type: RemoteType,
   uid: number,
   status: RemoteTaskStatus,
   errmsg: string,
@@ -196,7 +206,10 @@ interface RemoteTask {
   curr_size: number,
   speed: number,
   curr_src_path: string,
-  curr_dst_path: string
+  curr_src_uuid: string,
+  curr_dst_path: string,
+  curr_dst_uuid: string,
+  file_type: ResourceType
 }
 
 interface UploadParams {
@@ -261,5 +274,6 @@ export {
   UploadParams,
   CustomModule,
   CustomInfo,
-  DownloadParams
+  DownloadParams,
+  RemoteType
 }

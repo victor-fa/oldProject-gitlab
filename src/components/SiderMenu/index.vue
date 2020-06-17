@@ -36,16 +36,20 @@ export default Vue.extend({
   data () {
     return {
       showItems: this.silderItems as FuncListItem[],
-      selectedIndex: 0,
+    }
+  },
+  watch: {
+    silderItems: function (newValue: FuncListItem[]) {
+      this.showItems = newValue
     }
   },
   methods: {
     onSelectAction (aIndex: number) {
-      if (this.selectedIndex === aIndex) {
+      const item = this.showItems[aIndex]
+      if (item.meta!.isSelected) {
         this.$emit('popTop', aIndex)
         return
       }
-      this.selectedIndex = aIndex
       this.$emit('change', aIndex)
       this.updateView(aIndex)
     },

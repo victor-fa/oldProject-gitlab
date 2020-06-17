@@ -24,7 +24,7 @@ import _ from 'lodash'
 import fs from 'fs'
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
-import { backupCategorys } from '@/model/categoryList'
+import { downloadCategorys } from '../MainPage/TransportModel'
 import TransportItem from '../MainPage/TransportItem.vue'
 import StringUtility from '@/utils/StringUtility'
 import { backupUploadQueue } from '@/api/Transport/TransportQueue'
@@ -41,7 +41,7 @@ export default Vue.extend({
   data () {
     return {
       dataArray: [] as BackupUploadTask[],
-      category: backupCategorys,
+      category: _.cloneDeep(downloadCategorys),
       state: TaskStatus.pending
     }
   },
@@ -224,7 +224,7 @@ export default Vue.extend({
       filterList = list.filter(item => item.fileInfos.length > 0)
       console.log(JSON.parse(JSON.stringify(filterList)));
       const filterAarr = [TaskStatus.pending, TaskStatus.progress, TaskStatus.suspend, TaskStatus.error]
-      backupCategorys[0].count = filterList.filter((item:any) => (filterAarr.indexOf(item.status) > -1)).length
+      downloadCategorys[0].count = filterList.filter((item:any) => (filterAarr.indexOf(item.status) > -1)).length
       this.dataArray = StringUtility.filterRepeatPath(filterList)
     }
   }

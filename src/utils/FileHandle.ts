@@ -103,22 +103,17 @@ export default {
       })
     }) 
   },
-  /**移除临时文件 */
-  removeFile (path: string) {
+  /**移除文件 */
+  removeFile (path: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const stats = fs.statSync(path)
-      if (stats.isFile()) {
-        const newPath = path + downloadingSuffix
-        if (fs.existsSync(newPath)) {
-          fs.unlink(newPath, error => {
-            if (error === null) {
-              reject(error)
-            } else {
-              resolve()
-            }
-          })
-        }
+      if (stats.isDirectory()) {
+        fs.rmdirSync(path)
+      } else {
+        const newPath = fs.existsSync(path) ? path : path + downloadingSuffix
+        fs.unlinkSync(newPath)
       }
+      resolve()
     })
   },
   /**重命名下载完成文件 */

@@ -8,6 +8,7 @@ import store from '@/store'
 import { User, DeviceRole } from '@/api/UserModel'
 import path from 'path'
 import { NasAccessInfo } from '@/api/ClientModel'
+import fs from 'fs'
 
 export default {
   // 对资源列表进行分类
@@ -390,17 +391,43 @@ export default {
     const mine = type.toLowerCase()
     if (mine === 'pdf') return require('../../assets/resource/pdf_icon.png')
     if (mine === 'html') return require('../../assets/resource/html_icon.png')
-    const textTypes = ['txt', 'md', 'xml', 'json']
+    const imageTypes = ['bmp', 'gif', 'jpg', 'png', 'jpeg', 'webp', 'pcx', 'exif', 'fpx', 'svg']
+    if (imageTypes.indexOf(mine) !== -1) return require('../../assets/resource/image_icon.png')
+    const audioTypes = ['wav', 'aif', 'au', 'mp3', 'ram', 'wma', 'mmf', 'amr', 'aac', 'flac', 'midi']
+    if (audioTypes.indexOf(mine) !== -1) return require('../../assets/resource/audio_icon.png')
+    const videoTypes = ['avi', 'mov', 'qt', 'asf', 'rm', 'mp4', 'flv', 'mpeg']
+    if (videoTypes.indexOf(mine) !== -1) return require('../../assets/resource/video_icon.png')
+    const textTypes = ['txt', 'md', 'xml', 'json', 'rtf']
     if (textTypes.indexOf(mine) !== -1) return require('../../assets/resource/txt_icon.png')
     const excelTypes = ['xls', 'xlsx', 'numbers']
     if (excelTypes.indexOf(mine) !== -1) return require('../../assets/resource/excel_icon.png')
-    const wordTypes = ['doc', 'docx']
+    const wordTypes = ['doc', 'docx', 'wps']
     if (wordTypes.indexOf(mine) !== -1) return require('../../assets/resource/word_icon.png')
     const pptTypes = ['ppt', 'pptx', 'key']
     if (pptTypes.indexOf(mine) !== -1) return require('../../assets/resource/ppt_icon.png')
     const compressTypes = ['rar', 'zip', 'arj', 'gz', 'iso', 'z']
     if (compressTypes.indexOf(mine) !== -1) return require('../../assets/resource/compress_icon.png')
     return require('../../assets/resource/unkonw_icon.png')
+  },
+  matchLocalPathIcon (path: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (!fs.existsSync(path)) {
+        reject(new Error('path is not exist'))
+        return
+      }
+      fs.stat(path, (error, stats) => {
+        if (error !== null) {
+          reject(error)
+        } else {
+          if (stats.isDirectory()) {
+            resolve(require('../../assets/resource/folder_icon.png'))
+          } else {
+            const icon = this.matchMineTypeIcon(path)
+            resolve(icon)
+          }
+        }
+      })
+    })
   },
   /**检测文件名合法性 */
   checkFileName (newName: string) {

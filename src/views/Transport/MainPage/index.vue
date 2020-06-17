@@ -1,23 +1,24 @@
 <template>
   <div>
-    <header-view
-      :categorys="category"
-      :currentTab="currentTab"
-      v-on:categroyChange="handleCategoryChange"
-      v-on:batchAction="handleBatchAction"
-    />
     <a-spin :spinning="loading">
+      <header-view
+        :categorys="categorys"
+        v-on:categroyChange="handleCategoryChange"
+        v-on:batchAction="handleBatchAction"
+      />
       <basic-list
         :adjust="122"
         :dataSource="dataSource"
       >
         <template v-slot:renderItem="{ item, index }">
-          <slot name="renderItem"
-            :item="item"
-            :index="index"
-            :status="status"
-            v-on:CallbackControl="handleControl"
-          />
+          <slot name="renderItem" :item="item" :index="index">
+            <transport-item
+              :key="item.id"
+              :model="item"
+              :index="index"
+              v-on:operationAction="handleItemAction"
+            />
+          </slot>
         </template>
       </basic-list>
     </a-spin>
@@ -32,36 +33,30 @@ import HeaderView from './HeaderView.vue'
 import BasicList from '@/components/BasicList/index.vue'
 import { TransportTask } from '@/api/NasFileModel'
 import MainBottomView from '../../MainView/MainBottomView.vue'
-import { TransportCategory } from '@/model/categoryList'
+import TransportItem from './TransportItem.vue'
 
 export default Vue.extend({
   name: 'transport-main-page',
   components: {
     HeaderView,
     BasicList,
-    MainBottomView
+    MainBottomView,
+    TransportItem
   },
   props: {
-    dataSource: Array,
-    category: Array,
-    currentTab: String
-  },
-  data () {
-    return {
-      status: this.category[0],
-      loading: false
-    }
+    loading: Boolean,
+    dataSource: Array, // 列表数据
+    categorys: Array // 表头数据
   },
   methods: {
     handleCategoryChange (index: number) {
-      this.status = this.category[index]
       this.$emit('categoryChange', index)
     },
     handleBatchAction (command: string) {
-      this.$emit('transportOperateAction', command)
+      this.$emit('batchAction', command)
     },
-    handleControl (model, ...args: any[]) {
-      this.$emit('CallbackControl', model, args[0])
+    handleItemAction (command: string, taskId: number) {
+      this.$emit('itemAction', command, taskId)
     }
   }
 })

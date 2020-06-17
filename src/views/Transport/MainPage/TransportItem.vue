@@ -1,20 +1,15 @@
 <template>
-  <a-layout
+  <div
     class="transport-item"
     v-bind:class="{ 'transport-item-odd': isOdd }"
   >
-    <a-layout-sider class="icon-wrapper" :width="58">
-      <img :src="searchResourceIcon(model)" class="item-icon">
-    </a-layout-sider>
-    <a-layout-content class="content">
-      <div class="content-top">
-        <span v-show="model.speed"
-          :title="model.speed ? discernTypeForTitle(model) : null">
-          {{ '任务' + model.id }}
-          <!-- {{ model.sourcePath }} -->
-          <span style="color: red">{{ model.status === 4 ? '&nbsp;(上传错误)' : null }}</span>
-        </span>
-        <span v-show="!model.speed">{{ model.name }}<span style="color: red">{{ model.status === 4 ? '&nbsp;(上传错误)' : null }}</span></span>
+    <div class="item-slider">
+      <img :src="model.icon">
+    </div>
+    <div class="item-content">
+      <div class="item-top">
+        <span class="item-name">{{ model.name }}</span>
+        <span v-if="showError" class="item-error">传输失败</span>
         <div>
           <custom-button
             v-for="(item, index) in showItems"
@@ -29,36 +24,33 @@
           />
         </div>
       </div>
-      <div v-if="!isCompleted" class="content-bottom">
+      <div v-if="!isCompleted" class="item-bottom">
         <a-progress
           class="progress"
-          :percent="model.speed ? model.progressPercent : (model.completedBytes / model.countOfBytes) * 100"
+          :percent="model.progressPercent"
           :showInfo="false"
           :strokeColor="'#06B650'"
           :strokeWidth="6"
-          :title="model.speed ? model.progressPercent + '%' : (model.completedBytes / model.countOfBytes) * 100 + '%'"
+          :title="model.progressPercent + '%'"
         />
-        <span class="speed" v-show="model.speed">{{ model.speed }}</span>
-        <span class="speed" v-show="!model.speed">{{ model.completedBytes | formatSpeed }}</span>
-        <span class="progress-value" v-show="model.progress">{{ model.progress }}</span>
-        <span class="progress-value" v-show="!model.progress">{{ model.completedBytes | formatShowSize }} / {{ model.countOfBytes | formatShowSize }}</span>
+        <span class="speed">{{ model.speed }}</span>
+        <span class="progress-value">{{ model.progress }}</span>
       </div>
-      <div v-else class="completed-content-bottom">
-        <span v-show="model.speed">{{ model.total }}</span>
-        <span v-show="!model.speed">{{ model.countOfBytes | formatShowSize }}</span>
+      <div v-else class="item-completed-bottom">
+        <span>{{ model.total }}</span>
       </div>
-    </a-layout-content>
-  </a-layout>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import ResourceHandler from '@/views/MainView/ResourceHandler'
-import CustomButton from '@/components/CustomButton/index.vue'
-import StringUtility from '@/utils/StringUtility'
-import { UploadStatus } from '@/model/categoryList'
-import { runningOperateItems, pauseOperateItems, completedOperateItems, remoteCompletedOperateItems, pauseItem, continueItem, errorItem, TransportModel } from './TransportModel'
+import { runningOperateItems, TransportModel, TransportStatus } from './TransportModel'
+import ResourceHandler from '../../../views/MainView/ResourceHandler'
+import CustomButton from '../../../components/CustomButton/index.vue'
+import StringUtility from '../../../utils/StringUtility'
+import { TaskStatus } from '../../../api/Transport/BaseTask'
 
 export default Vue.extend({
   name: 'transport-item',
@@ -70,84 +62,39 @@ export default Vue.extend({
     index: Number
   },
   data () {
-    const filterAarr = [UploadStatus.pending, UploadStatus.uploading, UploadStatus.suspend, UploadStatus.error]
-    let items = filterAarr.indexOf(this.model.status) > -1 ? runningOperateItems : (this.model.speed ? remoteCompletedOperateItems : completedOperateItems)
     return {
-      showItems: _.cloneDeep(items)
+      showItems: (this.model as TransportModel).controlItems
+    }
+  },
+  watch: {
+    model: function (newValue: TransportModel) {
+      this.showItems = newValue.controlItems
     }
   },
   computed: {
     isOdd: function () {
-      const _this = this as any
-      return _this.index % 2
+      const result: boolean = this.index % 2 === 1
+      return result
     },
     isCompleted: function () {
-      return (this.model as TransportModel).status === UploadStatus.completed
-    }
-  },
-  filters: {
-    formatShowSize: function (num) {
-      return StringUtility.formatShowSize(num)
+      const model = this.model as TransportModel
+      const result: boolean = model.category === TransportStatus.done
+      return result
     },
-    formatSpeed: function (num) {
-      return StringUtility.formatSpeed(num)
+    showError: function () {
+      const model = this.model as TransportModel
+      const result: boolean = model.status === TaskStatus.error
+      return result
     }
   },
   methods: {
-    searchResourceIcon (item) {
-      let type:any = 0
-      if (item.srcPath) {
-        const suffix = StringUtility.formatSuffix(item.srcPath)
-        if (item.fileInfos.length === 1 && item.srcPath.indexOf('.') > -1) {
-          type = StringUtility.suffixToType(suffix, 'number')
-        } else {
-          type = 6
-        }
-      } else {  // 远程操作
-        type = item.type
-      }
-      return ResourceHandler.searchResourceIcon(type, item.srcPath)
-    },
     handleOperationAction (index: number) {
       const item = this.showItems[index]
-      this.$emit('operationAction', item.command, this.index)
-    },
-    updatePauseItem () {
-      this.showItems = this.showItems.map(item => {
-        item.disable = false
-        return item.command === 'pause' ? continueItem : item
-      })
-    },
-    updateContinueItem () {
-      this.showItems = this.showItems.map(item => {
-        item.disable = false
-        return item.command === 'continue' ? pauseItem : item
-      })
-    },
-    updateErrorItem () {
-      this.showItems = this.showItems.map(item => {
-        item.disable = false
-        return item.command === 'error' ? errorItem : item
-      })
-    },
-    setOperateItemDisable (command: string, disable: boolean) {
-      this.showItems = this.showItems.map(item => {
-        if (item.command === command) item.disable = disable
+      this.$emit('operationAction', item.command, index)
+      this.showItems = this.showItems.map((item, aIndex) => {
+        item.disable = index === aIndex
         return item
       })
-      console.log(this.showItems);
-    },
-    // 转换title内容
-    discernTypeForTitle (item) {
-      let result = ''
-      if (item.type === 1) {
-        result = '从\n' + item.sourcePath + '\n复制到\n' + item.destinationPath
-      } else if (item.type === 2) {
-        result = '从\n' + item.sourcePath + '\n剪切到\n' + item.destinationPath
-      } else if (item.type === 4) {
-        result = '删除' + item.sourcePath
-      }
-      return result
     }
   }
 })
@@ -155,26 +102,32 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .transport-item {
-  height: 58px;
+  height: 64px;
   width: 100%;
-  background-color: #FCFBFE;
-  .icon-wrapper {
-    margin-left: 6px;
-    background-color: transparent;
+  background-color: #f6f8fb;
+  .item-slider {
+    height: 100%;
+    width: 45px;
+    position: absolute;
+    left: 0px;
     img {
       width: 23px;
-      margin: auto;
+      height: 19px;
+      margin-top: 21px;
+      margin-left: 22px;
     }
   }
-  .content {
-    padding-right: 30px;
-    .content-top {
+  .item-content {
+    height: 100%;
+    margin-left: 45px;
+    padding: 0px 12px;
+    .item-top {
       height: 50%;
       display: flex;
-      padding-top: 10px;
       justify-content: space-between;
-      align-items: center;
-      span {
+      align-items: flex-end;
+      .item-name {
+        width: 100%;
         font-size: 14px;
         color: #484848;
         text-align: left;
@@ -183,13 +136,19 @@ export default Vue.extend({
         white-space: nowrap;
         flex: 1;
       }
+      .item-error {
+        margin-left: 12px;
+        font-size: 14px;
+        color: #ff183e;
+        justify-content: flex-start;
+      }
       .operate-item {
         width: 19px;
         height: 19px;
         margin-left: 20px;
       }
     }
-    .content-bottom {
+    .item-bottom {
       height: 50%;
       display: flex;
       justify-content: space-between;
@@ -210,7 +169,7 @@ export default Vue.extend({
         width: 100px;
       }
     }
-    .completed-content-bottom {
+    .item-completed-bottom {
       height: 50%;
       display: flex;
       justify-content: flex-start;

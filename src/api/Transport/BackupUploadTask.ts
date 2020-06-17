@@ -12,7 +12,8 @@ import { FileInfo } from './BaseTask';
 let fileInfos: FileInfo[] = []
 
 export default class BackupUploadTask extends UploadTask {
-  /**转换stats */
+  icon = require('../../assets/resource/folder_icon.png')
+
   convertFileStats (path: string, stats: fs.Stats): Promise<FileInfo> {
     return new Promise(resolve => {
       let fileInfo: FileInfo | null = null
@@ -34,14 +35,14 @@ export default class BackupUploadTask extends UploadTask {
     return new Promise(async (resolve, reject) => {
       const stream = fs.createReadStream(path)
       const fsHash = crypto.createHash('md5')
-      await stream.on('data', data => {
+      stream.on('data', data => {
         fsHash.update(data)
       })
-      await stream.once('end', () => {
+      stream.once('end', () => {
         const md5 = fsHash.digest('hex')
         resolve(md5)
       })
-      await stream.once('error', error => {
+      stream.once('error', error => {
         reject(error)
       })
     })

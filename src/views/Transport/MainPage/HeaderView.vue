@@ -2,7 +2,7 @@
   <div class="transport-header-view">
     <div class="left-view">
       <div
-        v-for="(item, index) in showItems"
+        v-for="(item, index) in showCategorys"
         :key="index"
         class="left-view-item"
       >
@@ -10,38 +10,48 @@
           :class="{ 'ant-btn-selected': item.isSelected }"
           @click="handleCategoryChange(index)"
         >
-          {{ item.name + ` (${item.count})` }}
+          {{ item.name + `(${item.count})` }}
         </a-button>
         <span v-show="showSplitLine(index)" class="split-line">/</span>
       </div>
     </div>
-    <div v-if="status === 'doing'" class="right-view">
-      <a-button v-show="currentTab === 'backup'" @click="handleBtnClick('backupFolder')">添加备份目录</a-button>
-      <a-button v-show="isAllPause" @click="handleBtnClick('pauseAll')" v-preventReClick>全部暂停</a-button>
-      <a-button v-show="!isAllPause" @click="handleBtnClick('resumeAll')" v-preventReClick>全部开始</a-button>
-      <a-button @click="handleBtnClick('cancelAll')" v-preventReClick>全部取消</a-button>
-    </div>
-    <div v-else class="right-view">
-      <a-button @click="handleBtnClick('clearAll')">清空所有记录</a-button>
+    <div class="right-view">
+      <a-button
+        v-for="(item, index) in showBatchItems"
+        :key="item.command"
+        :disabled="item.disable === true"
+        @click="handleBatchAction(index)"
+      >
+        {{ item.title }}
+      </a-button>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
-import { TransportCategory } from '@/model/categoryList'
+import { TransportCategory, BatchItem } from './TransportModel'
+
 export default Vue.extend({
   name: 'transport-header-view',
   props: {
-    categorys: Array,
-    currentTab: String
+    categorys: Array
   },
-  data () {
-    let items = this.categorys as TransportCategory[]
-    return {
-      showItems: items,
-      status: 'doing',
-      isAllPause: true
+  computed: {
+    showCategorys: function () {
+      const categorys = this.categorys as TransportCategory[]
+      return categorys
+    },
+    showBatchItems: function () {
+      const categorys = this.categorys as TransportCategory[]
+      for (let index = 0; index < categorys.length; index++) {
+        const element = categorys[index]
+        if (element.isSelected) {
+          return element.batchItems
+        }
+      }
+      return [] as BatchItem[]
     }
   },
   methods: {
@@ -49,24 +59,16 @@ export default Vue.extend({
       return index !== this.categorys.length - 1
     },
     handleCategoryChange (index: number) {
-      this.showItems = this.showItems.map((item, aIndex) => {
-        item.isSelected = index === aIndex
-        return item
-      })
-      this.status = index === 0 ? 'doing' : 'done'
+      const item = this.showCategorys[index]
+      if (item.isSelected) return
       this.$emit('categroyChange', index)
     },
-    handleBtnClick (command: string) {
-      if (command === 'pauseAll' || command === 'resumeAll') {
-        this.isAllPause = !this.isAllPause
-      }
-      this.$emit('batchAction', command)
+    handleBatchAction (index: number) {
+      const item = this.showBatchItems[index]
+      item.disable = true
+      this.showBatchItems.splice(index, 1, item)
+      this.$emit('batchAction', item.command)
     },
-  },
-  filters: {
-    formateName: function (value: string, count: number) {
-      return count === 0 ? value : `${value}（${count}）`
-    }
   }
 })
 </script>

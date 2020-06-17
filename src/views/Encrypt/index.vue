@@ -337,7 +337,8 @@ export default Vue.extend({
       const destPath = directory[0]
       const items = ResourceHandler.getSelectItems(this.dataArray)
       items.forEach(item => {
-        const task = new EncryptDownloadTask(item, destPath, item.uuid)
+        const task = new EncryptDownloadTask(item.path, destPath, item.uuid)
+        task.setResourceItem(item)
         encryptDownloadQueue.addTask(task)
         this.$store.dispatch('Resource/increaseTask')
       })

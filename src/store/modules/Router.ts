@@ -1,7 +1,7 @@
 import _, { Dictionary } from 'lodash'
 import { ActionContext } from 'vuex'
 
-enum RouteCalss {
+enum RouteClass {
   recent = 'recent',
   storage = 'storage',
   custom = 'custom',
@@ -16,11 +16,11 @@ interface CacheRoute {
   path: string,
   query?: Dictionary<string>,
   params?: Dictionary<string>,
-  type?: RouteCalss // 内部只读参数，用于区分一级菜单分类，栈顶缓存才拥有此参数
+  type?: RouteClass // 内部只读参数，用于区分一级菜单分类，栈顶缓存才拥有此参数
 }
 
 export {
-  RouteCalss,
+  RouteClass,
   CacheRoute
 }
 
@@ -57,14 +57,16 @@ export default {
   mutations: {
     INIT_PATHS (state: RouterState, pathsMap: Dictionary<CacheRoute[]>) {
       state.pathMap = pathsMap as any
-      state.showRoutes = pathsMap[RouteCalss.recent]
+      state.showRoutes = pathsMap[RouteClass.recent]
     },
-    SWITCH_SHOW_PATHS (state: RouterState, type: RouteCalss) {
+    SWITCH_SHOW_PATHS (state: RouterState, type: RouteClass) {
       const paths = state.pathMap[type] as CacheRoute[]
       state.showRoutes = paths
     },
     UPDATE_SHOW_PATHS (state: RouterState, paths: CacheRoute[]) {
-      const type = getCacheType(state)
+      const route = _.head(paths)
+      if (route === undefined) return
+      const type = route.type
       if (type === undefined) return
       state.pathMap[type] = paths
       state.showRoutes = paths
@@ -110,7 +112,7 @@ export default {
     initPaths (context: ActionContext<RouterState, RouterState>, pathsMap: Dictionary<CacheRoute[]>) {
       context.commit('INIT_PATHS', pathsMap)
     },
-    switchshowRoutes (context: ActionContext<RouterState, RouterState>, type: RouteCalss) {
+    switchshowRoutes (context: ActionContext<RouterState, RouterState>, type: RouteClass) {
       context.commit('SWITCH_SHOW_PATHS', type)
     },
     updateshowRoutes (context: ActionContext<RouterState, RouterState>, paths: CacheRoute[]) {
