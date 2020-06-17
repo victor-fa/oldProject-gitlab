@@ -46,9 +46,9 @@ import { storageContextMenu, OperateGroup } from '@/components/OperateListAlter/
 import RouterUtility from '@/utils/RouterUtility'
 import StringUtility from '@/utils/StringUtility'
 import { SortList, SortKindItem } from '@/model/sortList'
-import { clearQueueCache } from '@/api/Transport/TransportQueue'
 import processCenter, { EventName } from '@/utils/processCenter'
 import { firstMode, secondMode, commonInfo } from '@/views/SystemSetting/settingModel'
+import TransportHelper from '../../api/Transport/TransportHelper'
 
 export default Vue.extend({
   name: 'storage',
@@ -98,6 +98,14 @@ export default Vue.extend({
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)
+      })
+    },
+    singleClick (index: number) {
+      const item = this.dataArray[index] as StorageInfo
+      if (item.isSelected === true) return
+      this.dataArray = this.dataArray.map((item, aIndex) => {
+        item.isSelected = aIndex === index
+        return item
       })
     },
     doubleClick (index: number) {
@@ -229,7 +237,7 @@ export default Vue.extend({
 		},
 		switchDevice () {
 			this.$store.dispatch('NasServer/clearCacheNas')
-			clearQueueCache()
+			TransportHelper.clearQueueCache()
 			processCenter.renderSend(EventName.bindList)
 		},
     // 重写父类中的方法

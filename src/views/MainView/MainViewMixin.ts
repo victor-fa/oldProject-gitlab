@@ -9,16 +9,8 @@ import { EventName } from '@/utils/processCenter'
 import { EventBus } from '@/utils/eventBus'
 import StringUtility from '@/utils/StringUtility'
 import DownloadTask from '@/api/Transport/DownloadTask'
-import { downloadQueue } from '@/api/Transport/TransportQueue'
+import { downloadQueue } from '@/api/Transport/TransportHelper'
 import RouterUtility from '@/utils/RouterUtility'
-
-// declare module 'vue/types/vue' {
-//   interface Vue {
-//     handleHeaderActions (action: string, ...args: any[]): void
-//     handleListActions (action: string, ...args: any[]): void
-//     handleContextMenuActions (command: string, ...args: any[]): void
-//   }
-// }
 
 let tmpArray: ResourceItem[] | null = null
 

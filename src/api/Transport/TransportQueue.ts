@@ -1,5 +1,5 @@
 // 传输队列，管理上传下载队列
-import _, { reject } from 'lodash'
+import _ from 'lodash'
 import { EventEmitter } from 'events'
 import BaseTask, { TaskStatus, FileInfo, TaskError } from './BaseTask'
 import UploadTask from './UploadTask'
@@ -7,29 +7,22 @@ import BackupUploadTask from './BackupUploadTask'
 import EncryptUploadTask from './EncryptUploadTask'
 import DownloadTask from './DownloadTask'
 import EncryptDownloadTask from './EncryptDownloadTask'
-import store from '@/store'
-import { User } from '../UserModel'
-import { NasInfo } from '../ClientModel'
 
 /**
  * taskStatusChange (taskId) 任务状态改变事件
  * taskQueueChange () 任务队列数量改变
 */
-class TaskQueue<T extends BaseTask> extends EventEmitter {
+export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   /**最大任务数 */
   maxCount = 5
+  /**数据库对象 */
+  db?: IDBDatabase
   private queue: T[]
   private tableName: string
-  private db?: IDBDatabase
   constructor (tableName: string) {
     super()
     this.tableName = tableName
     this.queue = []
-    this.openTransportDB().then(event => {
-      this.readDBTasks(event)
-    }).catch(error => {
-      console.log(error)
-    })
   }
   // public methods
   /**获取全部任务 */
@@ -132,64 +125,19 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
       task.cancel()
     })
     this.queue = []
-    this.clearTable(this.db)
+    // this.clearTable(this.db)
   }
-  // private methods
-  private generateTaskId () {
-    const task = _.last(this.queue)
-    if (task === undefined) return 0
-    return task.taskId + 1
-  }
-  private openTransportDB (): Promise<Event> {
-    return new Promise((resolve, reject) => {
-      const packageJson = require('../../../package.json')
-      const version = packageJson.version as string
-      let versionNum = 0
-      version.split('.').reverse().forEach((value, index) => {
-        const pow = Math.pow(10, index * 2)
-        versionNum += Number(value) * pow
-      })
-      const request = window.indexedDB.open('nas_transport', versionNum)
-      request.onupgradeneeded = event => {
-        const target = event.target as IDBOpenDBRequest
-        const db = target.result
-        this.createTable(db, 'UploadQueue')
-        this.createTable(db, 'BackupQueue')
-        this.createTable(db, 'EncryptQueue')
-        this.createTable(db, 'DownloadQueue')
-        this.createTable(db, 'EncryptDownloadQueue')
-      }
-      request.onsuccess = event => {
-        resolve(event)
-      }
-      request.onerror = event => {
-        reject(event)
-      }
-    })
-  }
-  private createTable (db: IDBDatabase, name: string) {
-    const fullName = this.genterateFullTableName(name)
-    if (!db.objectStoreNames.contains(fullName)) {
-      db.createObjectStore(fullName, { keyPath: 'index' })
+  /**创建任务表 */
+  createTable (db: IDBDatabase) {
+    if (!db.objectStoreNames.contains(this.tableName)) {
+      db.createObjectStore(this.tableName, { keyPath: 'index' })
     }
   }
-  private genterateFullTableName (name: string) {
-    const ugreenNo = (_.get(store.getters, 'User/user') as User).ugreenNo
-    const sn = (_.get(store.getters, 'NasServer/nasInfo') as NasInfo).sn
-    return `${ugreenNo}-${sn}-${name}`
-  }
-  private clearTable (db?: IDBDatabase) {
-    if (db === undefined) return
-    if (db.objectStoreNames.contains(this.tableName)) {
-      const objectStore = db.transaction(this.tableName, 'readwrite').objectStore(this.tableName)
-      objectStore.clear()
-    }
-  }
-  private readDBTasks (event: Event) {
-    const db = (event.target as IDBOpenDBRequest).result
+  /**读取表中数据 */
+  readDBTasks (db: IDBDatabase) {
     this.db = db
     if (db.objectStoreNames.length > 0) {
-      const objectStore = this.db.transaction(this.tableName, 'readonly').objectStore(this.tableName)
+      const objectStore = db.transaction(this.tableName, 'readonly').objectStore(this.tableName)
       objectStore.openCursor().onsuccess = event => {
         const cursor = (event.target as IDBRequest).result as IDBCursorWithValue
         if (cursor !== null) {
@@ -198,6 +146,19 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
           cursor.continue()
         }
       }
+    }
+  }
+  // private methods
+  private generateTaskId () {
+    const task = _.last(this.queue)
+    if (task === undefined) return 0
+    return task.taskId + 1
+  }
+  private clearTable (db?: IDBDatabase) {
+    if (db === undefined) return
+    if (db.objectStoreNames.contains(this.tableName)) {
+      const objectStore = db.transaction(this.tableName, 'readwrite').objectStore(this.tableName)
+      objectStore.clear()
     }
   }
   // 将task转换成DB可以存储的对象
@@ -346,62 +307,4 @@ class TaskQueue<T extends BaseTask> extends EventEmitter {
     this.emit('taskStatusChange', task.taskId)
     task.removeAllListeners()
   }
-}
-
-let uploadQueue: TaskQueue<UploadTask>
-let backupUploadQueue: TaskQueue<BackupUploadTask>
-let encryptUploadQueue: TaskQueue<EncryptUploadTask>
-let downloadQueue: TaskQueue<DownloadTask>
-let encryptDownloadQueue: TaskQueue<EncryptDownloadTask>
-
-/**初始化传输队列 */
-const initQueue = () => {
-  removeQueueListeners(uploadQueue)
-  uploadQueue = new TaskQueue<UploadTask>('UploadQueue')
-  removeQueueListeners(backupUploadQueue)
-  backupUploadQueue = new TaskQueue<BackupUploadTask>('BackupQueue')
-  removeQueueListeners(encryptUploadQueue)
-  encryptUploadQueue = new TaskQueue<EncryptUploadTask>('EncryptQueue')
-  removeQueueListeners(downloadQueue)
-  downloadQueue = new TaskQueue<DownloadTask>('DownloadQueue')
-  removeQueueListeners(encryptDownloadQueue)
-  encryptDownloadQueue = new TaskQueue<EncryptDownloadTask>('EncryptDownloadQueue')
-}
-
-/**清理传输队列缓存 */
-const clearQueueCache = () => {
-  releaseQueue(uploadQueue)
-  releaseQueue(backupUploadQueue)
-  releaseQueue(encryptUploadQueue)
-  releaseQueue(downloadQueue)
-  releaseQueue(encryptDownloadQueue)
-}
-
-const releaseQueue = <T extends BaseTask>(queue?: TaskQueue<T>) => {
-  if (queue !== undefined) {
-    queue.clearAllTask()
-    queue.removeAllListeners()
-    queue = undefined
-  }
-}
-
-const removeQueueListeners = <T extends BaseTask>(queue?: TaskQueue<T>) => {
-  if (queue !== undefined) {
-    const tasks = queue.getAllTasks()
-    tasks.forEach(task => {
-      task.removeAllListeners()
-    })
-    queue.removeAllListeners()
-  }
-}
-
-export {
-  TaskQueue,
-  uploadQueue,
-  backupUploadQueue,
-  encryptUploadQueue,
-  downloadQueue,
-  encryptDownloadQueue,
-  initQueue,
-  clearQueueCache
 }

@@ -12,7 +12,7 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
-import { uploadQueue } from '../../../api/Transport/TransportQueue'
+import { uploadQueue } from '../../../api/Transport/TransportHelper'
 import { TaskStatus, TaskError, FileInfo } from '../../../api/Transport/BaseTask'
 import UploadTask from '../../../api/Transport/UploadTask'
 import StringUtility from '../../../utils/StringUtility'

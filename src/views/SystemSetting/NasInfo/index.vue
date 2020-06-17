@@ -83,9 +83,9 @@ import StorageHandler from '../../Storage/StorageHandler'
 import ClientAPI from '@/api/ClientAPI'
 import StringUtility from '@/utils/StringUtility'
 import processCenter, { EventName } from '@/utils/processCenter'
-import { clearQueueCache } from '@/api/Transport/TransportQueue'
 import { DeviceRole } from '@/api/UserModel'
 import { firstMode, secondMode, commonInfo } from '../settingModel'
+import TransportHelper from '../../../api/Transport/TransportHelper'
 
 export default Vue.extend({
   name: 'nas-info',
@@ -280,7 +280,7 @@ export default Vue.extend({
 		},
 		switchDevice () {
 			this.$store.dispatch('NasServer/clearCacheNas')
-			clearQueueCache()
+			TransportHelper.clearQueueCache()
 			processCenter.renderSend(EventName.bindList)
 		},
     fetchDisks () {

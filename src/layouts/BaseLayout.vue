@@ -34,9 +34,9 @@ import { EventBus } from '../utils/eventBus'
 import { ResourceItem } from '../api/NasFileModel'
 import { User, DeviceRole } from '../api/UserModel'
 import StringUtility from '../utils/StringUtility'
-import { initQueue } from '../api/Transport/TransportQueue'
 import NasFileAPI from '../api/NasFileAPI'
 import processCenter, { EventName } from '@/utils/processCenter'
+import TransportHelper from '../api/Transport/TransportHelper'
 
 export default Vue.extend({
   name: 'base-layout',
@@ -56,7 +56,7 @@ export default Vue.extend({
     ...mapGetters('NasServer', ['accessInfo'])
   },
   created () {
-    initQueue()
+    TransportHelper.initTransportQueue()
     this.accessInfo.role === DeviceRole.admin ? this.fetchUpdateInfo() : null
   },
   mounted () {

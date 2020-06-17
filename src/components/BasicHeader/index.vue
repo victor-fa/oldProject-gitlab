@@ -54,7 +54,7 @@ import { User } from '@/api/UserModel'
 import WindowMenu from '../WindowMenu/index.vue'
 import UserAPI from '@/api/UserAPI'
 import ClientAPI from '@/api/ClientAPI'
-import { clearQueueCache } from '@/api/Transport/TransportQueue'
+import TransportHelper from '@/api/Transport/TransportHelper'
 
 export default Vue.extend({
   name: 'basic-header',
@@ -143,6 +143,7 @@ export default Vue.extend({
         // 清除缓存的用户相关信息
         this.$store.dispatch('User/clearCacheUserInfo')
         this.$store.dispatch('NasServer/clearCacheNas')
+        TransportHelper.clearQueueCache()
         processCenter.renderSend(EventName.login)
       }).catch(error => {
         console.log(error)
@@ -151,6 +152,7 @@ export default Vue.extend({
     },
     switchDevice () {
       this.$store.dispatch('NasServer/clearCacheNas')
+      TransportHelper.clearQueueCache()
       processCenter.renderSend(EventName.bindList)
     }
   }

@@ -24,12 +24,12 @@ import NasFileAPI, { TaskMode } from '@/api/NasFileAPI'
 import { BasicResponse, User } from '@/api/UserModel'
 import ResourceHandler from './ResourceHandler'
 import { ClipboardModel } from '../../store/modules/Resource'
-import { uploadQueue } from '../../api/Transport/TransportQueue'
 import UploadTask from '../../api/Transport/UploadTask'
 import { resourceContextMenu, listContextMenu } from '../../components/OperateListAlter/operateList'
 import StringUtility from '../../utils/StringUtility'
 import processCenter, { EventName } from '../../utils/processCenter'
 import { TaskError } from '../../api/Transport/BaseTask'
+import { uploadQueue } from '../../api/Transport/TransportHelper'
 
 export default Vue.extend({
   name: 'main-resource-view',

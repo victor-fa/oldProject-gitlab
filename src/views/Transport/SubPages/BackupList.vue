@@ -27,10 +27,10 @@ import MainPage from '../MainPage/index.vue'
 import { downloadCategorys } from '../MainPage/TransportModel'
 import TransportItem from '../MainPage/TransportItem.vue'
 import StringUtility from '@/utils/StringUtility'
-import { backupUploadQueue } from '@/api/Transport/TransportQueue'
 import BackupUploadTask from '@/api/Transport/BackupUploadTask'
 import { TaskStatus } from '@/api/Transport/BaseTask'
 import ClientAPI from '@/api/ClientAPI'
+import { backupUploadQueue } from '../../../api/Transport/TransportHelper'
 
 export default Vue.extend({
   name: 'backup-list',

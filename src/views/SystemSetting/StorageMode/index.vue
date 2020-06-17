@@ -31,9 +31,9 @@ import { loginIcons } from '@/views/Login/iconList'
 import NasFileAPI from '@/api/NasFileAPI'
 import StorageHandler from '../../Storage/StorageHandler'
 import StringUtility from '@/utils/StringUtility'
-import { clearQueueCache } from '@/api/Transport/TransportQueue'
 import processCenter, { EventName } from '@/utils/processCenter'
 import { firstMode, secondMode, commonInfo } from '../settingModel'
+import TransportHelper from '../../../api/Transport/TransportHelper'
 
 
 export default Vue.extend({
@@ -131,7 +131,7 @@ export default Vue.extend({
 		},
 		switchDevice () {
 			this.$store.dispatch('NasServer/clearCacheNas')
-			clearQueueCache()
+			TransportHelper.clearQueueCache()
 			processCenter.renderSend(EventName.bindList)
 		},
 		handleMakesure () {
