@@ -26,7 +26,8 @@ export default Vue.extend({
   name: 'launch',
   computed: {
     ...mapGetters('User', ['user', 'accessToken']),
-    ...mapGetters('NasServer', ['nasInfo', 'accessInfo'])
+    ...mapGetters('NasServer', ['nasInfo', 'accessInfo']),
+		...mapGetters('Setting', ['autoLogin'])
   },
   created () {
     this.checkSoftUpdate()
@@ -63,14 +64,12 @@ export default Vue.extend({
       })
     },
     validatorToken (): ValidatorResult {
+      if (!_.isEmpty(this.autoLogin) && !this.autoLogin.flag) {
+        return ValidatorResult.notLogin 
+      }
       if (_.isEmpty(this.user) || _.isEmpty(this.accessToken)) {
         return ValidatorResult.notLogin
       }
-      // const timestamp = new Date().valueOf()
-      // const localExpiresTime = (this.accessToken as AccessToken).localExpiresTime
-      // if (timestamp > localExpiresTime) {
-      //   return ValidatorResult.couldTokenExpires
-      // }
       if (_.isEmpty(this.nasInfo) || _.isEmpty(this.accessInfo)) {
         return ValidatorResult.notBind
       }
