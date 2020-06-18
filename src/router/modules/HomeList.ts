@@ -1,4 +1,5 @@
 import { TransportRouters } from './TransportList'
+import { BackupRouters } from './BackupList'
 
 const HomeRouters = [
   {
@@ -65,7 +66,10 @@ const HomeRouters = [
       icon: require('../../assets/backup_icon.png'),
       selectedIcon: require('../../assets/backup_icon_selected.png'),
       isSelected: false
-    }
+    },
+    children: [
+      ...BackupRouters
+    ]
   },
   {
     path: '/share',

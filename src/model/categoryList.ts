@@ -1,7 +1,7 @@
 import { ResourceType } from '@/api/NasFileModel'
 
 interface Category {
-  type: ResourceType | TaskCategoryType,
+  type: ResourceType | TaskCategoryType | BackupCategoryType,
   title: string,
   isSelected: boolean
 }
@@ -12,6 +12,11 @@ enum TaskCategoryType {
   offline = 'offline',
   backup = 'backup-list',
   remote = 'remote'
+}
+
+enum BackupCategoryType {
+  list = 'list',
+  setting = 'setting',
 }
 
 // 最近使用
@@ -67,9 +72,25 @@ let taskCategorys: Category[] = [
   }
 ]
 
+// 任务管理
+let backupCategorys: Category[] = [
+  {
+    type: BackupCategoryType.list,
+    title: '备份文件',
+    isSelected: true
+  },
+  {
+    type: BackupCategoryType.setting,
+    title: '备份设置',
+    isSelected: false
+  }
+]
+
 export {
   categorys,
   taskCategorys,
+  backupCategorys,
   Category,
-  TaskCategoryType
+  TaskCategoryType,
+  BackupCategoryType
 }

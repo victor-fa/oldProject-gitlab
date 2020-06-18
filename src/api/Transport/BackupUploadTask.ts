@@ -31,7 +31,7 @@ export default class BackupUploadTask extends UploadTask {
     })
   }
   // 计算文件的md5（不计算文件夹）
-   calculatorFileMD5 (path: string): Promise<string> {
+  calculatorFileMD5 (path: string): Promise<string> {
     return new Promise(async (resolve, reject) => {
       const stream = fs.createReadStream(path)
       const fsHash = crypto.createHash('md5')
@@ -71,9 +71,9 @@ export default class BackupUploadTask extends UploadTask {
     return new Promise((resolve, reject) => {
       const pathP = fileInfo.destPath
       NasFileAPI.backupCheck(pathP, fileInfo.md5 as string).then(response => {
-        if (response.data.code !== 200) return resolve(false)
-        if (response.data.data.identical === 1) return resolve(false)
-        return resolve(true)
+        if (response.data.code !== 200) return resolve(true)
+        if (response.data.data.identical === 1) return resolve(true)
+        return resolve(false)
       }).catch(error => {
         reject(error)
       })

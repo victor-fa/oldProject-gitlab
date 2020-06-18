@@ -128,6 +128,17 @@ const uploadCategorys: TransportCategory[] = [
   { name: '上传完成', status: TransportStatus.done, count: 0, isSelected: false, batchItems: doneItems }
 ]
 
+const backupItems: BatchItem[] = [
+  { title: '新增备份', command: 'addTask' },
+  { title: '全部暂停', command: 'pauseAll' },
+  { title: '继续上传', command: 'resumeAll' },
+  { title: '全部取消', command: 'cancelAll' }
+]
+const backupCategorys: TransportCategory[] = [
+  { name: '正在上传', status: TransportStatus.doing, count: 0, isSelected: true, batchItems: backupItems },
+  { name: '上传完成', status: TransportStatus.done, count: 0, isSelected: false, batchItems: doneItems }
+]
+
 const offlineCategorys: TransportCategory[] = [
   { name: '正在下载', status: TransportStatus.doing, count: 0, isSelected: true, batchItems: downloadItems },
   { name: '下载完成', status: TransportStatus.done, count: 0, isSelected: false, batchItems: doneItems }
@@ -174,6 +185,7 @@ export {
   TransportCategory,
   downloadCategorys,
   uploadCategorys,
+  backupCategorys,
   offlineCategorys,
   remoteCategorys
 }
