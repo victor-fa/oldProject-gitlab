@@ -38,12 +38,6 @@ export default Vue.extend({
   created () {
     this.fetchUploadTasks()
     this.observerUploadQueue()
-    // this.getListData()
-    // backupUploadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
-    //   // this.$store.dispatch('Resource/decreaseTask')
-    //   setTimeout(() => { this.getListData() }, 1000);
-    // })
-    console.log(JSON.parse(JSON.stringify(this.dataArray)));
   },
   destroyed () {
     this.removeObserver()
@@ -119,6 +113,7 @@ export default Vue.extend({
           break;
         case 'clearAll':
           backupUploadQueue.deleteDoneTasks()
+          setTimeout(() => this.fetchUploadTasks(), 1000);
           break;
         case 'addTask':
           this.showOpenDialog()
@@ -153,7 +148,7 @@ export default Vue.extend({
           shell.openItem(task.srcPath)
           break
         case 'openInFinder':
-          shell.showItemInFolder(task.srcPath)
+          shell.showItemInFolder(process.platform === 'win32' ? StringUtility.convertL2R(task.srcPath) : task.srcPath)
           break
         default:
           break

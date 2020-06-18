@@ -142,7 +142,7 @@ export default Vue.extend({
           shell.openItem(task.srcPath)
           break
         case 'openInFinder':
-          shell.showItemInFolder(task.srcPath)
+          shell.showItemInFolder(process.platform === 'win32' ? StringUtility.convertL2R(task.srcPath) : task.srcPath)
           break
         default:
           break

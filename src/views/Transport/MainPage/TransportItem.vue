@@ -90,7 +90,7 @@ export default Vue.extend({
   methods: {
     handleOperationAction (index: number) {
       const item = this.showItems[index]
-      this.$emit('operationAction', item.command, index)
+      this.$emit('operationAction', item.command, this.index)
       this.showItems = this.showItems.map((item, aIndex) => {
         item.disable = index === aIndex
         return item
