@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="encrypt">
     <main-view
       :loading="loading"
       :dataSource="dataArray"
@@ -448,6 +448,9 @@ export default Vue.extend({
 </script>
 
 <style scoped>
+.encrypt {
+  height: 100%;
+}
 .modal-title {
   text-align: center;
   display: block;

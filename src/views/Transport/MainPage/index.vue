@@ -68,6 +68,7 @@ export default Vue.extend({
 <style lang="less" scoped>
 .transport-main {
   background-color: white;
+  height: 100%;
   .main-header-view {
     height: 36px;
     padding: 0px;

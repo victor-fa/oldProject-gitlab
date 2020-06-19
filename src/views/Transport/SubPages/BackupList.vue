@@ -162,6 +162,7 @@ export default Vue.extend({
         buttonLabel: '选择',
         properties: (list as any)
       }).then(result => {
+        this.updateView()
         if (_.isEmpty(result.filePaths)) return
         result.filePaths.forEach(path => {
           path = StringUtility.convertR2L(path)

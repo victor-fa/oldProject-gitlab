@@ -53,7 +53,7 @@ export default {
 };
 </script>
 
-<style lang="less" scoped>
+<style scoped>
 /*pdf窗口*/
 html,body,#app{
 	height: 100%;
@@ -62,14 +62,14 @@ html,body,#app{
 	width: 100%;
 	height: 100%;
 	background: #4f4f4f;
-	.cd-pdf-show-container {
-		width: 100%;
-		height: calc(100% - 32px);
-		iframe {
-			width: 100%;
-			height: 100%;
-			border: none;
-		}
-	}
+}
+.cd-pdf-show-container {
+	width: 100%;
+	height: calc(100% - 46px);
+}
+iframe {
+	width: 100%;
+	height: 100%;
+	border: none;
 }
 </style>

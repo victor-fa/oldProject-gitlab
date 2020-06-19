@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="custom">
     <main-view
       ref="mainView"
       :loading="loading"
@@ -155,5 +155,7 @@ interface PageConfig {
 </script>
 
 <style lang="less" scoped>
-
+.custom {
+  height: 100%;
+}
 </style>
