@@ -316,7 +316,6 @@ export default Vue.extend({
       text-align: left;
       font-size: 14px;
       color: black;
-      font-weight: bold;
       line-height: 22px;
       overflow: hidden;
       white-space: nowrap;

@@ -119,7 +119,6 @@ export default Vue.extend({
     .silder-item-title {
       display: inline-block;
       font-size: 15px;
-      font-weight: bold;
       color: black;
       width: 70px;
       text-align: left;
@@ -129,12 +128,11 @@ export default Vue.extend({
     line-height: 30px;
     height: 30px;
     font-size: 14px;
-    font-weight: bold;
     color: black;
   }
   .silder-item-selected {
     background-color: #06B6501A;
-    span {
+    .silder-item-title {
       color: #007934;
     }
   }
@@ -147,7 +145,6 @@ export default Vue.extend({
     span:first-child {
       color: black;
       font-size: 12px;
-      font-weight: bold;
       text-overflow: ellipsis;
       overflow: hidden;
       white-space: nowrap;
@@ -159,7 +156,6 @@ export default Vue.extend({
     .storage-info {
       span {
         color: black;
-        font-weight: bold;
         font-size: 9px;
       }
       span:last-child {
