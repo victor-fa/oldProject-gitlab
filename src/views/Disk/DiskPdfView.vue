@@ -62,14 +62,14 @@ html,body,#app{
 	width: 100%;
 	height: 100%;
 	background: #4f4f4f;
-}
-.cd-pdf-show-container {
-	width: 100%;
-	height: calc(100% - 32px);
-	iframe {
+	.cd-pdf-show-container {
 		width: 100%;
-		height: 100%;
-		border: none;
+		height: calc(100% - 32px);
+		iframe {
+			width: 100%;
+			height: 100%;
+			border: none;
+		}
 	}
 }
 </style>

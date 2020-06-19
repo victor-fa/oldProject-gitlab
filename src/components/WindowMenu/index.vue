@@ -30,6 +30,7 @@
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import CustomButton from '../CustomButton/index.vue'
@@ -140,9 +141,9 @@ export default Vue.extend({
         this.closeAction()
         return
       }
-      const closeChoice = localStorage.getItem(CLOSE_CHOICE)
-      if (closeChoice === null) {
-        this.showChoiceModal = true
+      const closeChoice = localStorage.getItem(CLOSE_CHOICE) as any
+      if (_.isEmpty(closeChoice)) {
+        this.configure === 'unable' ? this.closeAction() : this.showChoiceModal = true
         return
       }
       const closeChoiceJson = JSON.parse(closeChoice)

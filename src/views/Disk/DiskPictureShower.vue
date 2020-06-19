@@ -1,10 +1,6 @@
 <template>
 	<div class="cd-image-container" @mousewheel="MouseZoom" tabindex="-1" @keydown.left="Prev" @keydown.right="Next">
 		<WindowsHeader :data="header" />
-		<!-- <p class="ImageShowTips">
-			<span class="cd-image-zoom" :style="{ opacity: ZoomWin }">{{ ZoomPercent }}</span
-			>{{ NowShow.count + 1 }}/{{ PhotoList.length }}
-		</p> -->
 		<img :class="'cd-image-show ' + (!Control ? 'cd-image-animated' : '')" :src="NowShow.URL" ref="imageShow" @load="onload" @mousedown="Drag" alt="" />
 		<Spin v-show="loaded">
 			<a-icon type="ios-loading" size="26" class="loading" />
@@ -12,9 +8,7 @@
 		<ul class="cd-image-control">
 			<li class="sf-icon-search-plus" @click="Zoom(1)" />
 			<li class="sf-icon-search-minus" @click="Zoom(-1)" />
-			<!-- <li class="sf-icon-angle-left" @click="Prev" /> -->
 			<li @click="orginz">1:1</li>
-			<!-- <li class="sf-icon-angle-right" @click="Next" /> -->
 			<li class="sf-icon-undo" @click="roate(-90)" />
 			<li class="sf-icon-redo" @click="roate(90)" />
 		</ul>
@@ -74,7 +68,6 @@ export default {
 			//接收打开图片文件的数据
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
-					// item.now = false;
 					item.count = index;
 					item.now = 'PlayThis';
 					this.ShowPicture(item, index);
@@ -154,8 +147,6 @@ export default {
 			}
 			let newWidth = img_show.offsetWidth;
 			let newHeight = img_show.offsetHeight;
-			//img_show.style.left = oldLeft - scaleX * (newWidth - oldWidth) + "px";
-			//img_show.style.top = oldTop - scaleY * (newHeight - oldHeight) + "px";
 			this.ZoomWin = 1;
 			let time_p = setTimeout(() => {
 				this.ZoomWin = 0;
@@ -237,7 +228,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .loading {
 	animation: loading 1s linear infinite;
 }
@@ -252,11 +243,6 @@ export default {
 		transform: rotate(360deg);
 	}
 }
-.demo-spin-col {
-	height: 100px;
-	position: relative;
-	border: 1px solid #eee;
-}
 /*图片查看*/
 .cd-image-container {
 	float: left;
@@ -268,86 +254,57 @@ export default {
 	-ms-user-select: none;
 	-khtml-user-select: none;
 	user-select: none;
-	.ivu-spin-main {
-		float: right;
-		padding: 30px 10px;
+	.cd-image-show {
+		position: absolute;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		right: 0;
+		z-index: 1;
+		margin: auto;
+		min-width: 0 !important;
+		max-width: none !important;
+		min-height: 0 !important;
+		max-height: none !important;
+		cursor: -webkit-grab;
+		-webkit-transition: none !important;
+		-moz-transition: none !important;
+		-o-transition: none !important;
+		transition: none !important;
 	}
-}
-.cd-image-zoom {
-	height: 30px;
-	color: #fff;
-	text-align: center;
-	font-size: 14px;
-	line-height: 30px;
-	opacity: 1;
-	-webkit-transition: all 0.35s;
-	-moz-transition: all 0.35s;
-	-o-transition: all 0.35s;
-	margin-right: 10px;
-}
-.cd-image-show {
-	position: absolute;
-	top: 0;
-	left: 0;
-	bottom: 0;
-	right: 0;
-	z-index: 1;
-	margin: auto;
-	min-width: 0 !important;
-	max-width: none !important;
-	min-height: 0 !important;
-	max-height: none !important;
-	cursor: -webkit-grab;
-	-webkit-transition: none !important;
-	-moz-transition: none !important;
-	-o-transition: none !important;
-}
-.cd-image-animated {
-	-webkit-transition: all 0.3s ease-out !important;
-	-moz-transition: all 0.3s ease-out !important;
-	-o-transition: all 0.3s ease-out !important;
-	transition: all 0.3s ease-out !important;
-}
-.ImageShowTips {
-	width: 100%;
-	text-align: right;
-	padding-right: 10px;
-	line-height: 30px;
-	font-size: 14px;
-	color: #fff;
-	position: absolute;
-	z-index: 2;
-	text-shadow: 0 0 5px rgb(0, 0, 0);
-}
-.cd-image-control {
-	z-index: 3;
-	position: absolute;
-	margin: 0 auto;
-	bottom: 30px;
-	height: 42px;
-	left: calc(50% - 106px);
-	border-radius: 3px;
-	-webkit-border-radius: 3px;
-	-moz-border-radius: 3px;
-	background: rgba(103, 103, 103, 0.5);
-	text-align: center;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.2);
-	li {
-		float: left;
-		width: 42px;
+	.cd-image-animated {
+		-webkit-transition: all 0.3s ease-out !important;
+		-moz-transition: all 0.3s ease-out !important;
+		-o-transition: all 0.3s ease-out !important;
+		transition: all 0.3s ease-out !important;
+	}
+	.cd-image-control {
+		z-index: 3;
+		position: absolute;
+		margin: 0 auto;
+		bottom: 30px;
 		height: 42px;
-		font-size: 14px;
+		left: calc(50% - 106px);
+		border-radius: 3px;
+		-webkit-border-radius: 3px;
+		-moz-border-radius: 3px;
+		background: rgba(103, 103, 103, 0.5);
 		text-align: center;
-		line-height: 42px;
-		cursor: pointer;
-		color: #fff;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.2);
+		li {
+			float: left;
+			width: 42px;
+			height: 42px;
+			font-size: 14px;
+			text-align: center;
+			line-height: 42px;
+			cursor: pointer;
+			color: #fff;
+			&:hover {
+				background: rgba(125, 125, 125, 0.5);
+				color: #fff;
+			}
+		}
 	}
-	.sf-icon-angle-left, .sf-icon-angle-right {
-		font-size: 22px;
-	}
-}
-.cd-image-control li:hover {
-	background: rgba(125, 125, 125, 0.5);
-	color: #fff;
 }
 </style>

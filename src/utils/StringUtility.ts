@@ -17,10 +17,6 @@ export default {
     }
     return tmpStr.length === 0 ? str : tmpStr
   },
-  // 将aRadix进制的num字串转换成bRadix进制的数字
-  conversionUtility (num: string, aRadix: number, bRadix: number) {
-    return parseInt(num, aRadix).toString(bRadix)
-  },
   // 过滤后台返回的公钥
   filterPublicKey (secretKey: string) {
     // filter prefix
@@ -109,16 +105,6 @@ export default {
     }
     return res
   },
-  // 路由转中文名
-  pathToName (path) {
-    const toolJson = [
-      { path: 'disk', name: '最近' }, { path: 'storage', name: '存储' }, 
-      { path: 'custom', name: '我的' },  { path: 'collect', name: '收藏' }, 
-      { path: 'encrypt', name: '加密' },  { path: 'backup', name: '备份' }, 
-      { path: 'share', name: '分享' },  { path: 'transport', name: '任务' }
-    ]
-    return toolJson.filter(o => o.path === path)[0].name
-  },
   /**获取路径目录 */
   pathDirectory (path: string) {
     const index = path.lastIndexOf('/')
@@ -153,11 +139,6 @@ export default {
         break;
     }
     return res
-  },
-  // 去重相同path
-  filterRepeatPath(arr) {
-    const res = new Map()
-    return arr.filter(item => !res.has(item.srcPath) && res.set(item.srcPath, 1))
   },
   // 格式化速度
   formatSpeed (speed: number) {

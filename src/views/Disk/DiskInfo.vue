@@ -185,85 +185,66 @@ export default {
 	box-shadow: 0 3px 3px 0 rgba(0, 0, 0, 0.14), 0 1px 7px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -1px rgba(0, 0, 0, 0.2);
 	border: 1px solid #efefef;
 	// -webkit-app-region: drag;
-}
-.cd-disk-info-head {
-	height: 56px;
-	border-bottom: 1px solid #ccc;
-	padding: 10px;
-	img {
-		width: 35px;
+	.cd-disk-info-head {
+		height: 56px;
+		border-bottom: 1px solid #ccc;
+		padding: 10px;
+		* {
+			display: inline-block;
+			line-height: 35px;
+			text-indent: 10px;
+			text-overflow: ellipsis;
+		}
+		span {
+			width: calc(100%);
+			font-size: 16px;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			text-align: left;
+		}
 	}
-	* {
-		display: inline-block;
-		line-height: 35px;
-		text-indent: 10px;
-		text-overflow: ellipsis;
-	}
-	span {
-		width: calc(100%);
-		font-size: 16px;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		text-align: left;
-	}
-}
-.cd-disk-info-item {
-	width: 100%;
-	padding: 0 50px;
-	font-size: 14px;
-	line-height: 32px;
-	display: flex;
-	span {
-		height: 30px;
-		display: block;
+	.cd-disk-info-item {
+		width: 100%;
+		padding: 0 50px;
 		font-size: 14px;
-		font-weight: 600;
+		line-height: 32px;
+		display: flex;
+		span {
+			height: 30px;
+			display: block;
+			font-size: 14px;
+			font-weight: 600;
+		}
+		div {
+			flex: 1;
+			width: calc(100% - 60px);
+			height: 30px;
+			line-height: 20px;
+			padding-top: 6px;
+			padding-left: 10px;
+			color: #2d2d2d;
+			text-overflow: ellipsis;
+			white-space: normal;
+			display: -webkit-box;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 1;
+			display: inline-block;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			cursor: pointer;
+			text-align: left;
+		}
+		button {
+			float: right;
+			background: none;
+			height: 30px;
+			line-height: 30px;
+			padding: 0 10px;
+			position: absolute;
+			right: 35px;
+			// -webkit-app-region: no-drag;
+		}
 	}
-	div {
-		flex: 1;
-		width: calc(100% - 60px);
-		height: 30px;
-		line-height: 20px;
-		padding-top: 6px;
-		padding-left: 10px;
-		color: #2d2d2d;
-		text-overflow: ellipsis;
-		white-space: normal;
-		display: -webkit-box;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 1;
-		display: inline-block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-		cursor: pointer;
-    text-align: left;
-	}
-	input {
-		width: calc(100% - 160px);
-		height: 29px;
-		border-radius: 0;
-		margin-left: 10px;
-		// -webkit-app-region: no-drag;
-	}
-	button {
-		float: right;
-		background: none;
-		height: 30px;
-		line-height: 30px;
-		padding: 0 10px;
-		position: absolute;
-    right: 35px;
-		// -webkit-app-region: no-drag;
-	}
-}
-.cd-disk-info-item input::selection {
-	background-color: #eaecf0;
-}
-.cd-disk-info-line {
-	width: calc(100% - 88px);
-	height: 1px;
-	background: #eaecf0;
-	margin: 5px auto;
 }
 </style>

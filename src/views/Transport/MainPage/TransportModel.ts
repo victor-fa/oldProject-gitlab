@@ -135,8 +135,8 @@ const backupItems: BatchItem[] = [
   { title: '全部取消', command: 'cancelAll' }
 ]
 const backupCategorys: TransportCategory[] = [
-  { name: '正在上传', status: TransportStatus.doing, count: 0, isSelected: true, batchItems: backupItems },
-  { name: '上传完成', status: TransportStatus.done, count: 0, isSelected: false, batchItems: doneItems }
+  { name: '正在备份', status: TransportStatus.doing, count: 0, isSelected: true, batchItems: backupItems },
+  { name: '备份完成', status: TransportStatus.done, count: 0, isSelected: false, batchItems: doneItems }
 ]
 
 const offlineCategorys: TransportCategory[] = [
