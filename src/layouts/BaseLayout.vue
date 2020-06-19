@@ -1,18 +1,17 @@
 <template>
-  <a-layout>
-    <a-layout-sider class="base-sider">
-      <i-logo/>
-      <sider-menu
-        :taskCount="taskCount"
-        :silderItems="silderItems"
-        v-on:change="handleSilderChange"
-        v-on:popTop="handlePopTopAction"
-      />
-    </a-layout-sider>
-    <a-layout>
-      <a-layout-header class="base-header">
-        <basic-header/>
-      </a-layout-header>
+  <a-layout class="base-layout">
+    <a-layout-header class="base-status-bar">
+      <basic-header/>
+    </a-layout-header>
+    <a-layout class="base-content">
+      <a-layout-sider class="base-sider">
+        <sider-menu
+          :taskCount="taskCount"
+          :silderItems="silderItems"
+          v-on:change="handleSilderChange"
+          v-on:popTop="handlePopTopAction"
+        />
+      </a-layout-sider>
       <a-layout-content>
         <router-view/>
       </a-layout-content>
@@ -21,10 +20,9 @@
 </template>
 
 <script lang="ts">
-import _, { Dictionary } from 'lodash'
+import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import ILogo from '../components/Logo/index.vue'
 import SiderMenu from '../components/SiderMenu/index.vue'
 import BasicHeader from '../components/BasicHeader/index.vue'
 import { HomeRouters, FuncListItem } from '../router/modules/HomeList'
@@ -37,11 +35,11 @@ import StringUtility from '../utils/StringUtility'
 import NasFileAPI from '../api/NasFileAPI'
 import processCenter, { EventName } from '@/utils/processCenter'
 import TransportHelper from '../api/Transport/TransportHelper'
+import StorageHandler from '../views/Storage/StorageHandler'
 
 export default Vue.extend({
   name: 'base-layout',
   components: {
-    ILogo,
     SiderMenu,
     BasicHeader
   },
@@ -58,8 +56,10 @@ export default Vue.extend({
   created () {
     TransportHelper.initTransportQueue()
     this.accessInfo.role === DeviceRole.admin ? this.fetchUpdateInfo() : null
+    this.fetchStorages()
   },
   mounted () {
+    this.filterSilderItems()
     this.initCacheRoutes()
     EventBus.$on(EventName.jump, this.jumpSpecifiedPath)
     if (this.$route.path !== '/recent') this.$router.push('recent')
@@ -68,12 +68,14 @@ export default Vue.extend({
     EventBus.$off(EventName.jump, this.jumpSpecifiedPath)
   },
   methods: {
-    initCacheRoutes () {
+    filterSilderItems () {
       const items = HomeRouters.filter(item => {
           return item.meta !== undefined
       })
       this.silderItems = _.cloneDeep(items) as FuncListItem[]
-      let pathsMap: Dictionary<CacheRoute[]> = {}
+    },
+    initCacheRoutes () {
+      let pathsMap: Map<string, CacheRoute[]> = new Map()
       this.silderItems.forEach(item => {
         const route: CacheRoute = {
           name: item.meta!.title,
@@ -87,6 +89,10 @@ export default Vue.extend({
     handleSilderChange (index: number) {
       const item = this.silderItems[index]
       RouterUtility.switchRoute(item.name as RouteClass)
+      this.silderItems = this.silderItems.map((item, aIndex) => {
+        item.meta!.isSelected = aIndex === index
+        return item
+      })
     },
     handlePopTopAction (index: number) {
       RouterUtility.popTop()
@@ -171,6 +177,18 @@ export default Vue.extend({
         type: RouteClass.storage
       }]
     },
+    fetchStorages () {
+      NasFileAPI.fetchStorages().then(response => {
+        console.log(response)
+        if (response.data.code !== 200) return
+        const storages = _.get(response.data.data, 'storages')
+        const list = StorageHandler.formatStorages(storages)
+        this.$store.dispatch('Resource/updateStorages', list)
+      }).catch(error => {
+        this.$message.error('网络连接错误，请检测网络')
+        console.log(error)
+      })
+    },
 		fetchUpdateInfo () {
 			NasFileAPI.fetchRomInfo().then(response => {
 				if (response.data.code !== 200) {
@@ -181,20 +199,6 @@ export default Vue.extend({
 					return
         }
         const info = response.data.data as any
-        // const info = {
-        //   "id": 36,
-        //   "model": "2",
-        //   "modelName": "PRO_V001_SN01.0.1.002",
-        //   "name": "NasServer固件_内网升级_V01.02.33.200308",
-        //   "versionNo": "10233200308",
-        //   "versionName": "内测固件",
-        //   "size": 1.0,
-        //   "desc": "Nas Server升级固件",
-        //   "remark": "Nas Server升级固件",
-        //   "pubtime": 1582678312000,
-        //   "ctime": 1582678312000,
-        //   "utime": 1583452793000
-        // } as any
         const _this = this as any
         _this.$ipc.send('system', 'rom-update', info);
 			}).catch(error => {
@@ -221,18 +225,21 @@ export default Vue.extend({
 </script>
 
 <style lang="scss" scoped>
-.base-sider {
+.base-layout {
   height: 100vh;
-  width: 200px;
-  background-color: #edf1f0;
-}
-.base-header {
-  height: 32px;
-  padding: 0px;
-  background-color: white;
-}
-.base-content {
-  padding: 0px;
-  background-color: #f6f8fb;
+  .base-status-bar {
+    height: 62px;
+    padding: 0px;
+    background-color: #EDEFF4;
+  }
+  .base-content {
+    background-color: #f6f8fb;
+    .base-sider {
+      width: 170px !important;
+      min-width: 170px !important;
+      max-width: 170px !important;
+      background-color: #edf1f0;
+    }
+  }
 }
 </style>

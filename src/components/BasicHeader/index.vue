@@ -1,45 +1,51 @@
 <template>
   <div class="basic-header" style="-webkit-app-region: drag">
-    <window-menu class="window-menu"/>
-    <a-divider class="split-line" type="vertical"/>
-    <a-popover
-      trigger="click"
-      v-model="visible"
-      overlayClassName="settingPopover"
-    >
-      <template slot="content">
-        <ul>
-          <li
-            v-for="(item, index) in settingList"
-            :key="index"
-            class="setting-item"
-            @click.stop="didSettingItemClick(item)"
-            @mouseenter="handleMouseEnter(item)"
-          >
-            {{ item.title }}
-            <img src="../../assets/operate_icon.png">
-            <ul v-show="item.childrens && showChildren" class="operate-children">
-              <li
-                v-for="(cell, index) in item.childrens"
-                :key="index"
-                @click="didSettingItemClick(cell)"
-                class="operate-item"
-              >
-                {{ cell.title }}
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </template>
-      <div class="setting">
-        <img class="setting-icon" src="../../assets/setting_icon.png">
-        <img class="arrow-icon" src="../../assets/arrow_down.png">
+    <div class="basic-left">
+      <span>绿联云</span>
+      <span>{{ version }}</span>
+    </div>
+    <div class="basic-right">
+      <window-menu class="window-menu"/>
+      <a-divider class="split-line" type="vertical"/>
+      <a-popover
+        trigger="click"
+        v-model="visible"
+        overlayClassName="settingPopover"
+      >
+        <template slot="content">
+          <ul>
+            <li
+              v-for="(item, index) in settingList"
+              :key="index"
+              class="setting-item"
+              @click.stop="didSettingItemClick(item)"
+              @mouseenter="handleMouseEnter(item)"
+            >
+              {{ item.title }}
+              <img src="../../assets/operate_icon.png">
+              <ul v-show="item.childrens && showChildren" class="operate-children">
+                <li
+                  v-for="(cell, index) in item.childrens"
+                  :key="index"
+                  @click="didSettingItemClick(cell)"
+                  class="operate-item"
+                >
+                  {{ cell.title }}
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </template>
+        <div class="setting">
+          <img class="setting-icon" src="../../assets/setting_icon.png">
+          <img class="arrow-icon" src="../../assets/arrow_down.png">
+        </div>
+      </a-popover>
+      <div class="profile">
+        <img class="avatar" :src="imageUrl" alt="" v-if="imageUrl">
+        <a-avatar v-else class="avatar" icon="user" size="small"/>
+        <label class="nick-name" :title="nickName">{{ nickName }}</label>
       </div>
-    </a-popover>
-    <div class="profile">
-      <img class="avatar" :src="imageUrl" alt="" v-if="imageUrl">
-      <a-avatar v-else class="avatar" icon="user" size="small"/>
-      <label class="nick-name">{{ this.nickName ? this.nickName : this.userName }}</label>
     </div>
   </div>
 </template>
@@ -88,16 +94,18 @@ export default Vue.extend({
   computed: {
     ...mapGetters('User', ['user']),
     nickName: function () {
-      const nickName = _.get(this.user, 'nicName', '') as string
-      return nickName
-    },
-    userName: function () {
-      const name = _.get(this.user, 'userName', '') as string
+      const user = this.user as User
+      const name: string = _.isEmpty(user.nicName) ? user.userName : user.nicName
       return name
     },
     imageUrl: function () {
       const url = this.user.image as string
       return url
+    },
+    version: function () {
+      const packageJson = require('../../../package.json')
+      const version = packageJson.version as string
+      return `V ${version}`
     }
   },
   methods: {
@@ -108,8 +116,8 @@ export default Vue.extend({
       // this.isChildPosLeft = (this.$el as HTMLElement).offsetLeft + this.listWidth + rightPadding + secondListWidth <= document.body.clientWidth
     },
     didSettingItemClick (sender: Setting) {
+      this.visible = false
       const _this = this as any
-      _this.visible = false
       switch (sender.type) {
         case SettingType.system:
           processCenter.renderSend(EventName.setting)
@@ -121,13 +129,13 @@ export default Vue.extend({
           _this.$ipc.send('system', 'feedback', '');
           break
         case SettingType.logout:
-          _this.switchUser()
+          this.switchUser()
           break
         case SettingType.switching_device:
-          _this.switchDevice()
+          this.switchDevice()
           break
         case SettingType.quit:
-          _this.$electron.remote.getCurrentWindow().close();
+          window.close()
           break
         case SettingType.help:
           console.log('help');
@@ -161,49 +169,82 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .basic-header {
-  height: 32px;
-  padding: 4px 0px;
+  height: 100%;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  flex-direction: row-reverse;
-  .window-menu {
-    margin-right: 15px;
-  }
-  .split-line {
-    width: 1px;
-    height: 20px;
-    background-color: #01B74F;
-  }
-  .setting {
-    margin: 0px 10px;
+  border-bottom: 1px solid #BCC0CE40;
+  .basic-left {
+    height: 100%;
+    margin-left: 30px;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    -webkit-app-region: no-drag;
-    cursor: pointer;
-    .setting-icon {
-      width: 20px;
-      height: 20px;
-      margin-right: 4px;
+    justify-content: center;
+    span:first-child {
+      line-height: 20px;
+      font-size:20px;
+      font-family: PingFang SC;
+      font-weight: 800;
+      color: black;
     }
-    .arrow-icon {
-      width: 6px;
-      height: 4px;
-    }
-  }
-  .profile {
-    display: flex;
-    align-items: center;
-    -webkit-app-region: no-drag;
-    .avatar {
-      width: 20px;
-      height: 20px;
-      margin-right: 4px;
-      border-radius: 50%;
-    }
-    .nick-name {
-      line-height: 17px;
-      font-size: 12px;
+    span:last-child {
       color: #484848;
+      font-size: 10px;
+      font-weight: bold;
+      line-height: 10px;
+      margin-top: 5px;
+    }
+  }
+  .basic-right {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: row-reverse;
+    .window-menu {
+      margin-right: 15px;
+    }
+    .split-line {
+      width: 1px;
+      height: 20px;
+      background-color: #01B74F;
+    }
+    .setting {
+      margin:0px 8px;
+      display: flex;
+      align-items: center;
+      -webkit-app-region: no-drag;
+      cursor: pointer;
+      .setting-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 4px;
+      }
+      .arrow-icon {
+        width: 6px;
+        height: 4px;
+      }
+    }
+    .profile {
+      display: flex;
+      align-items: center;
+      -webkit-app-region: no-drag;
+      .avatar {
+        width: 27px;
+        height: 27px;
+        margin-right: 8px;
+        border-radius: 50%;
+        overflow: hidden;
+      }
+      .nick-name {
+        line-height: 17px;
+        font-size: 13px;
+        color: black;
+        max-width: 150px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+      }
     }
   }
 }

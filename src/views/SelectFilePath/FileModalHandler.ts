@@ -22,10 +22,10 @@ export {
 
 export default {
   // 当breadcrumb item超出长度时，实现中间缩略
-  calculateShowPaths (component: Vue): Promise<number | undefined> {
+  calculateShowPaths (breadcrumb: Vue): Promise<number | undefined> {
     return new Promise((resolve) => {
-      component.$nextTick(() => {
-        const breadcrumb = component.$refs.breadcrumb as Vue
+      breadcrumb.$nextTick(() => {
+        // const breadcrumb = component.$refs.breadcrumb as Vue
         const width = breadcrumb.$el.clientWidth
         if (width >= breadcrumb.$el.scrollWidth) return
         const childrens = breadcrumb.$children

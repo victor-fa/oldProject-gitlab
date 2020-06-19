@@ -4,7 +4,7 @@
       <custom-button
         v-if="closable"
         :image="menuIcons.close"
-        iconWidth="9px"
+        iconWidth="20px"
         class="close-item"
         @click.native="handleCallbackModal('askClose')"
       />
@@ -13,14 +13,14 @@
         :image="menuIcons.maximize"
         :selectedImage="menuIcons.minimun"
         :isSelected="zoomChange"
-        iconWidth="11px"
+        iconWidth="20px"
         class="resize-item"
         @click.native="resizeAction"
       />
       <custom-button
         v-if="minimizable"
         :image="menuIcons.hide"
-        iconWidth="10px"
+        iconWidth="20px"
         class="hide-item"
         @click.native="hideAction"
       />

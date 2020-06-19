@@ -1,29 +1,45 @@
 <template>
-  <ul>
-    <li
-      v-for="(item, index) in silderItems"
-      :key="index"
-      class="item"
-      v-bind:class="{ itemSelected: item.meta.isSelected }"
-      @click="onSelectAction(index)"
-    >
-      <img :src="item.meta.isSelected ? item.meta.selectedIcon : item.meta.icon"/>
-      <label>{{ item.meta.title }}
-        <a-badge
-          v-show="item.name === 'transport'"
-          :count="taskCount"
-          :numberStyle="{backgroundColor: '#01B74F', color: '#fff'}"
-          style="float: right"
-        >
-        </a-badge>
-      </label>
-    </li>
-  </ul>
+  <div class="silder-menu">
+    <ul>
+      <li
+        v-for="(item, index) in silderItems"
+        :key="index"
+        v-bind:class="{ 'silder-item-selected': item.meta.isSelected }"
+        @click="onSelectAction(index)"
+      >
+        <div v-if="item.meta.icon !== undefined" class="silder-item">
+          <img :src="item.meta.isSelected ? item.meta.selectedIcon : item.meta.icon"/>
+          <span class="silder-item-title">{{ item.meta.title }}</span>
+          <a-badge v-show="item.name === 'transport'" :count="taskCount"/>
+        </div>
+        <span v-else class="silder-type-item">{{ item.meta.title }}</span>
+      </li>
+    </ul>
+    <div class="silder-storage" v-show="showStorage">
+      <span>{{ storageInfo.name }}</span>
+      <a-progress
+        class="progress"
+        :percent="storageInfo.precent"
+        :showInfo="false"
+        :strokeColor="'#7C7C7C'"
+        :strokeWidth="6"
+        :title="storageInfo.precent + '%'"
+      />
+      <div class="storage-info">
+        <span>存储空间</span>
+        <span>{{ storageInfo.info }}</span>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
 import { FuncListItem } from '@/router/modules/HomeList'
+import { User } from '../../api/UserModel'
+import { StorageInfo } from '../../api/NasFileModel'
 
 export default Vue.extend({
   name: 'sider-menu',
@@ -35,62 +51,127 @@ export default Vue.extend({
   },
   data () {
     return {
-      showItems: this.silderItems as FuncListItem[],
+      showStorage: false,
+      storageInfo: {}
     }
   },
+  computed: {
+    ...mapGetters('User', ['user']),
+    ...mapGetters('Resource', ['storages'])
+  },
   watch: {
-    silderItems: function (newValue: FuncListItem[]) {
-      this.showItems = newValue
+    storages: function () {
+      this.getStorageInfo()
     }
   },
   methods: {
-    onSelectAction (aIndex: number) {
-      const item = this.showItems[aIndex]
+    getStorageInfo () {
+      const user = this.user as User
+      if (_.isEmpty(user)) return
+      const storage = (this.storages as StorageInfo[])[0]
+      if (_.isEmpty(storage)) return
+      let name = '未知设备'
+      if (!_.isEmpty(user.nicName)) {
+        name = user.nicName
+      } else if (!_.isEmpty(user.userName)) {
+        name = user.userName
+      }
+      name += '的设备'
+      const precent = storage.showProgress
+      const info = storage.showSize
+      this.storageInfo = { name, precent, info }
+      this.showStorage = true
+    },
+    onSelectAction (index: number) {
+      const item = this.silderItems[index] as FuncListItem
       if (item.meta!.isSelected) {
-        this.$emit('popTop', aIndex)
+        this.$emit('popTop', index)
         return
       }
-      this.$emit('change', aIndex)
-      this.updateView(aIndex)
+      this.$emit('change', index)
     },
-    updateView (selectedIndex: number) {
-      this.showItems = this.showItems.map((item, index) => {
-        item.meta!.isSelected = index === selectedIndex
-        return item
-      })
+    showTypeItem (item: FuncListItem) {
+      return item.meta!.icon !== undefined
     }
   }
 })
 </script>
 
 <style lang="less" scoped>
-.item {
-  height: 44px;
+.silder-menu {
+  height: 100%;
+  width: 100%;
+  padding-top: 14px;
+  background-color: #F8F9FC;
+  border-right: 1px solid #BCC0CE40;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0px 11px 0px 7px;
-  cursor: pointer;
-  border-radius: 4px;
-  img {
-    width: 16px;
-    margin-right: 18px;
-    cursor: pointer;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  .silder-item {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    img {
+      width: 20px;
+      margin:0px 18px 0px 32px;
+    }
+    .silder-item-title {
+      display: inline-block;
+      font-size: 15px;
+      font-weight: bold;
+      color: black;
+      width: 80px;
+      text-align: left;
+    }
   }
-  label {
-    display: inline-block;
+  .silder-type-item {
+    line-height: 30px;
+    height: 30px;
     font-size: 14px;
     font-weight: bold;
-    color: #484848;
-    width: 100px;
-    text-align: left;
-    cursor: pointer;
+    color: black;
+  }
+  .silder-item-selected {
+    background-color: #06B6501A;
+    span {
+      color: #007934;
+    }
+  }
+  .silder-storage {
+    margin: 0px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    span:first-child {
+      color: black;
+      font-size: 12px;
+      font-weight: bold;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .progress {
+      height: 20px;
+      line-height: 20px;
+    }
+    .storage-info {
+      span {
+        color: black;
+        font-weight: bold;
+        font-size: 9px;
+      }
+      span:last-child {
+        margin-left: 12px;
+      }
+    }
   }
 }
-.itemSelected {
-  background-color: #DEF1EA;
-  label {
-    color: #007934;
-  }
+</style>
+
+<style>
+.silder-menu .silder-storage .ant-progress-inner {
+  border: 1px solid #9B9FA9;
 }
 </style>

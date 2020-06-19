@@ -158,7 +158,7 @@ export default Vue.extend({
         flex: 1;
       }
       .speed {
-        color: #06B650;
+        color: #007934;
         font-size: 11px;
         padding: 0px 10px;
       }

@@ -1,6 +1,6 @@
 <template>
   <div class="main-bottom-view">
-    <label>{{ itemCount }}个项目</label>
+    <label>共{{ itemCount }}个项目</label>
   </div>
 </template>
 
@@ -20,15 +20,13 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .main-bottom-view {
+  height: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  background-color: #edf1f0;
+  justify-content: center;
   label {
     font-size: 12px;
     color: #484848;
-    line-height: 17px;
-    margin-right: 18px;
   }
 }
 </style>

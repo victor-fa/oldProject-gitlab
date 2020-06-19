@@ -370,14 +370,7 @@ export default Vue.extend({
       const items = ResourceHandler.getSelectItems(this.dataArray)
       if (_.isEmpty(items) || items.length > 1) return
       const item = items[0]
-      _this.$ipc.send('file-control', 0, item);
-      // processCenter.renderSend(EventName.mediaInfo, {
-      //   path: 'media-info',
-      //   params: {
-      //     uuid: item.uuid,
-      //     path: item.path
-      //   }
-      // })
+      _this.$ipc.send('file-control', 0, item)
     },
     clearClipboardAction () {
       this.$store.dispatch('Resource/updateClipboard', { isClip: false, items: [] })

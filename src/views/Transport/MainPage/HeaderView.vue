@@ -10,7 +10,7 @@
           :class="{ 'ant-btn-selected': item.isSelected }"
           @click="handleCategoryChange(index)"
         >
-          {{ item.name + `(${item.count})` }}
+          {{ item.name + ` (${item.count})` }}
         </a-button>
         <span v-show="showSplitLine(index)" class="split-line">/</span>
       </div>
@@ -75,28 +75,32 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .transport-header-view {
-  height: 45px;
+  height: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 10px;
-  margin: 0px 15px;
-  border-bottom: 1px solid #dcdcdc;
+  background-color: #F8F9FC;
+  border-bottom: 1px solid #BCC0CE40;
   .left-view {
+    margin-left: 8px;
+    height: 100%;
+    display: flex;
+    align-items: center;
     .left-view-item {
       display: inline-block;
       .ant-btn {
         max-width: 100px;
         border: none;
-        height: 30px;
         color: #484848;
         font-size: 14px;
+        font-weight: bold;
         line-height: 14px;
         padding: 0px;
         margin: 0px 10px;
+        background-color: #F8F9FC;
       }
       .ant-btn-selected {
-        color: #06B650;
+        color: #007934;
       }
       .split-line {
         color: #484848;
@@ -105,13 +109,17 @@ export default Vue.extend({
     }
   }
   .right-view {
+    height: 100%;
     padding-right: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
     .ant-btn {
       height: 22px;
       padding: 0px 10px;
       margin-left: 6px;
       font-size: 13px;
-      color: #484848;
+      color: black;
       border: 1px solid #e5e5e5;
     }
   }

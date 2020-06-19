@@ -171,9 +171,10 @@ export default Vue.extend({
         return item.name
       })
       if (this.showPaths.length <= 1) return
-      FileModalHandler.calculateShowPaths(this).then(index => {
+      const breadcrumb = this.$refs.breadcrumb as Vue
+      FileModalHandler.calculateShowPaths(breadcrumb).then(index => {
         if (index === undefined) return
-        this.showPaths = FileModalHandler.replaceElement(this.cacheArray, 1, index, '...')
+        this.showPaths = FileModalHandler.replaceElement(value, 1, index, '...')
       })
     }
   },
@@ -310,18 +311,16 @@ export default Vue.extend({
     },
     handleBreadcrumbClick (index: number) {
       if (index === this.showPaths.length - 1) return
-      const item = this.showPaths[index]
-      if (item === '...') return
+      if (this.showPaths[index] === '...') return
       this.cacheArray = this.cacheArray.slice(0, index + 1)
       this.updateViewForCacheArray()
     },
     handleNewFolderAction () {
-      const item = _.head(this.showArray) as ResourceItem | undefined
-      if (item === undefined || item.renaming === true) return
       const newName = ResourceHandler.calculateNewFolderName(this.showArray)
       const newItem = {
         type: ResourceType.folder,
         name: newName,
+        isSelected: true,
         renaming: true
       } as ResourceItem
       this.showArray.unshift(newItem)
@@ -423,7 +422,7 @@ export default Vue.extend({
           this.handleContextmenu(args[0])
           break;
         case 'newFolderRequest':
-          this.handleNewFolderRequest(args[0])
+          this.handleNewFolderRequest(args[0], args[1])
           break
         default:
           break;
@@ -459,37 +458,45 @@ export default Vue.extend({
       this.cacheArray = FileModalHandler.pushCache(this.cacheArray, this.selectedItem!)
       this.updateViewForCacheArray()
     },
-    handleNewFolderRequest (newName: string) {
-      const item = this.handlreNewFolderItem()
-      if (item === undefined) return
-      const cacheItem = _.last(this.cacheArray)
-      if (cacheItem === undefined) return
-      const path = `${cacheItem.path!}/${newName}`
-      const uuid = cacheItem.uuid!
-      NasFileAPI.newFolder(path, uuid).then(response => {
+    handleNewFolderRequest (index: number, newName: string) {
+      const item = this.updateItemState(index, true, false)
+      const param = this.getLastParam()
+      if (param === undefined) return
+      NasFileAPI.newFolder(`${param.path}/${newName}`, param.uuid).then(response => {
         console.log(response)
         item.disable = false
         if (response.data.code !== 200) {
-          item.renaming = true
+          this.updateItemState(index, false, true)
           return
         }
-        item.uuid = uuid
-        item.name = newName
-        item.path = path
-        this.showArray.splice(0, 1, item)
+        this.refreshResourceList(param.path, param.uuid)
       }).catch(error => {
         console.log(error)
         this.$message.error('创建失败')
         this.showArray.shift()
       })
     },
-    handlreNewFolderItem () {
-      const item = this.showArray[0] as ResourceItem
-      if (item.renaming !== true) return undefined
-      item.disable = true
-      item.renaming = false
-      this.showArray.splice(0, 1, item)
+    getLastParam () {
+      const cacheItem = _.last(this.cacheArray)
+      if (cacheItem === undefined) return
+      const path = cacheItem.path
+      const uuid = cacheItem.uuid
+      if (path !== undefined && uuid !== undefined) {
+        return { path, uuid }
+      }
+    },
+    // 更新index对应item的禁用和编辑状态
+    updateItemState (index: number, disable: boolean, renaming: boolean) {
+      const item = this.showArray[index]
+      item.disable = disable
+      item.renaming = renaming
+      this.showArray.splice(index, 1, item)
       return item
+    },
+    refreshResourceList (path: string, uuid: string) {
+      this.page = 1
+      this.busy = false
+      this.fetchResourceList(path, uuid)
     }
   }
 })

@@ -223,7 +223,7 @@ export default Vue.extend({
       return {
         birthday: nasUser.birthday,
         email: nasUser.email,
-        nickName: nasUser.nic_name,
+        nicName: nasUser.nic_name,
         phoneNo: nasUser.phone_no,
         sex: nasUser.sex,
         ugreenNo: nasUser.ugreen_no,

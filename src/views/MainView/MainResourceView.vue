@@ -43,7 +43,6 @@ export default Vue.extend({
       dataArray: [] as ResourceItem[],
       page: 1,
       busy: false,
-      categoryType: ResourceType.all,
       order: OrderType.byNameDesc, // 当前选择的排序规则
       itemMenu: resourceContextMenu, // item的右键菜单
       listMenu: listContextMenu // list的右键菜单
@@ -92,33 +91,8 @@ export default Vue.extend({
       return true
     },
     fetchResourceList () {
-      if (this.categoryType === ResourceType.all) {
-        this.fetchAllList()
-      } else {
-        this.fetchTypeList(this.categoryType)
-      }
-    },
-    fetchAllList () {
       this.loading = true
       NasFileAPI.fetchResourceList(this.path, this.uuid, this.page, this.order).then(response => {
-        console.log(response)
-        this.loading = false
-        if (response.data.code !== 200) return
-        this.parseResponse(response.data)
-      }).catch(error => {
-        this.loading = false
-        this.$message.error('网络连接错误，请检测网络')
-        console.log(error)
-      })
-    },
-    fetchTypeList (type: ResourceType) {
-      this.loading = true
-      let utime = 0
-      const lastItem = _.last(this.dataArray)
-      if (this.page > 1 && lastItem !== undefined) {
-        utime = lastItem.utime
-      }
-      NasFileAPI.fetchTlist(this.page, utime, type, this.order).then(response => {
         console.log(response)
         this.loading = false
         if (response.data.code !== 200) return
@@ -144,7 +118,6 @@ export default Vue.extend({
     },
     // 覆盖混入中的方法
     handleLoadmoreAction () {
-      if (this.busy) return
       this.page++
       this.fetchResourceList()
     },
@@ -216,16 +189,13 @@ export default Vue.extend({
       return item
     },
     handleDireactoryInfoAction () {
-      processCenter.renderSend(EventName.mediaInfo, {
-        path: 'media-info',
-        params: {
-          uuid: this.uuid,
-          path: this.path
-        }
-      })
+      const _this = this as any
+      const items = ResourceHandler.getSelectItems(this.dataArray)
+      if (_.isEmpty(items) || items.length > 1) return
+      const item = items[0]
+      _this.$ipc.send('file-control', 0, item)
     },
     handleTabChange (type: ResourceType) {
-      this.categoryType = type
       this.handleRefreshAction()
     },
     handleSortWayChangeAction (order: OrderType) {

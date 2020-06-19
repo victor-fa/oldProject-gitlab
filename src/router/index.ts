@@ -4,7 +4,6 @@ import VueRouter from 'vue-router'
 import LoginLayout from '../layouts/LoginLayout.vue'
 import { HomeRouters } from './modules/HomeList'
 import { LoginRouters } from './modules/LoginList'
-import { MediaRouters } from './modules/MediaList'
 import { SettingRouters } from './modules/SettingList'
 
 Vue.use(VueRouter)
@@ -38,14 +37,6 @@ const routes = [
     path: '/info',
     name: 'DiskInfo',
     component: () => import('../views/Disk/DiskInfo.vue')
-  },
-  {
-    path: '/media-layout',
-    name: 'media-layout',
-    component: () => import('../layouts/MediaLayout.vue'),
-    children: [
-      ...MediaRouters
-    ]
   },
   {
     path: '/picture-shower',

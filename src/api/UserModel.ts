@@ -22,7 +22,7 @@ interface User {
   uid: string,
   nasNo: string,
   userName: string,
-  nickName: string,
+  nicName: string,
   birthday: number,
   sex: UserSex,
   areaNo: string,

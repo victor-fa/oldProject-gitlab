@@ -1,29 +1,32 @@
 <template>
-  <div>
-    <a-spin :spinning="loading">
+  <a-layout class="transport-main">
+    <a-layout-header class="main-header-view">
       <header-view
         :categorys="categorys"
         v-on:categroyChange="handleCategoryChange"
         v-on:batchAction="handleBatchAction"
       />
-      <basic-list
-        :adjust="122"
-        :dataSource="dataSource"
-      >
-        <template v-slot:renderItem="{ item, index }">
-          <slot name="renderItem" :item="item" :index="index">
-            <transport-item
-              :key="item.id"
-              :model="item"
-              :index="index"
-              v-on:operationAction="handleItemAction"
-            />
-          </slot>
-        </template>
-      </basic-list>
-    </a-spin>
-    <main-bottom-view/>
-  </div>
+    </a-layout-header>
+    <a-layout-content class="main-content-view">
+      <a-spin :spinning="loading">
+        <basic-list :dataSource="dataSource">
+          <template v-slot:renderItem="{ item, index }">
+            <slot name="renderItem" :item="item" :index="index">
+              <transport-item
+                :key="item.id"
+                :model="item"
+                :index="index"
+                v-on:operationAction="handleItemAction"
+              />
+            </slot>
+          </template>
+        </basic-list>
+      </a-spin>
+    </a-layout-content>
+    <a-layout-footer class="main-footer-view">
+      <main-bottom-view/>
+    </a-layout-footer>
+  </a-layout>
 </template>
 
 <script lang="ts">
@@ -61,3 +64,21 @@ export default Vue.extend({
   }
 })
 </script>
+
+<style lang="less" scoped>
+.transport-main {
+  background-color: white;
+  .main-header-view {
+    height: 36px;
+    padding: 0px;
+  }
+  .main-content-view {
+    padding: 0px;
+    border: 1px;
+  }
+  .main-footer-view {
+    padding: 0px;
+    height: 24px;
+  }
+}
+</style>

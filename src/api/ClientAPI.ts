@@ -232,7 +232,7 @@ const convertNasUser = (user: User) => {
   let nasUser = {
     ugreen_no: user.ugreenNo,
     phone_no: user.phoneNo,
-    nic_name: user.nickName,
+    nic_name: user.nicName,
     version: user.versionNo
   }
   // filter property with null value

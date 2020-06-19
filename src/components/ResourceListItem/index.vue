@@ -179,7 +179,6 @@ export default Vue.extend({
       event.preventDefault()
       if (this.isRenaming === false) {
         this.$emit('callbackAction', 'enterRenaming', this.index)
-        // return
       } else {
         const input = (this.$refs.inputName as Vue).$el as HTMLInputElement
         input.blur()

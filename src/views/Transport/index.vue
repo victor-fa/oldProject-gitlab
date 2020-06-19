@@ -1,7 +1,9 @@
 <template>
   <div class="transport">
     <basic-tabs :tabs="categorys" v-on:tabChange="handleTabsChange"/>
-    <router-view></router-view>
+    <div class="transport-sub-view">
+      <router-view></router-view>
+    </div>
   </div>
 </template>
 
@@ -49,6 +51,13 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .transport {
+  height: 100%;
   background-color: white;
+  display: flex;
+  flex-direction: column;
+  .transport-sub-view {
+    display: flex;
+    flex: 1;
+  }
 }
 </style>

@@ -20,10 +20,12 @@
         <a-input
           v-if="item.renaming === true"
           v-focus
-          type="text"
+          ref="inputName"
           v-model="newName"
           placeholder="请输入文件名"
           @focus="handleFocus($event)"
+          @blur="handleBlur($event, index)"
+          @keydown.enter="handlePressEnter($event)"
         />
         <span v-else>{{ item.name }}</span>
       </div>
@@ -72,27 +74,7 @@ export default Vue.extend({
       }
     }
   },
-  mounted () {
-    document.onkeyup = event => {
-      event.stopPropagation()
-    }
-    document.onkeydown = event => {
-      event.stopPropagation()
-    }
-  },
-  destroyed () {
-    document.onkeyup = null
-    document.onkeydown = null
-    this.removeRenamingItem()
-  },
   methods: {
-    removeRenamingItem () {
-      const item = _.head(this.dataSource) as ResourceItem | undefined
-      if (item === undefined) return
-      if (item.renaming === true) {
-        this.dataSource.shift()
-      }
-    },
     handleLoadMoreAction () {
       if (_.isEmpty(this.dataSource) || this.busy) return
       this.$emit('callbackAction', 'loadmore')
@@ -116,8 +98,7 @@ export default Vue.extend({
       const target = event.currentTarget as HTMLInputElement
       target.select()
     },
-    handlePressEnter (event?: MouseEvent) {
-      console.log('handlePressEnter')
+    handleBlur (event: MouseEvent, index: number) {
       if (_.isEmpty(this.newName)) {
         this.dataSource.shift()
         return
@@ -126,7 +107,13 @@ export default Vue.extend({
         this.$message.error('名称包含非法字符')
         return
       }
-      this.$emit('callbackAction', 'newFolderRequest', this.newName)
+      this.$emit('callbackAction', 'newFolderRequest', index, this.newName)
+    },
+    handlePressEnter (event: MouseEvent) {
+      event.stopPropagation()
+      event.preventDefault()
+      const input = (this.$refs.inputName as Vue).$el as HTMLInputElement
+      input.blur()
     }
   }
 })

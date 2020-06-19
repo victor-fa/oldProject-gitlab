@@ -1,76 +1,72 @@
 <template>
   <div class="main-header-view" :key="key">
-    <basic-tabs v-if="false" :tabs="categorys" v-on:tabChange="handleTabChange"/>
-    <div class="bottom-bar">
-      <div class="left-bar">
-        <custom-button
-          :image="backIcon"
-          :disableImage="disableBackIcon"
-          :disable="disableBack"
-          class="back-icon-style"
-          iconWidth="6px"
-          @click.native="backAction"
-        />
-        <a-breadcrumb separator=">" class="modal-breadcrumb" ref="breadcrumb">
-          <a-breadcrumb-item
-            v-for=" (item, index) in showRoutes"
-            :key="index"
-            :class="{ 'modal-breadcrumb-item': showHover(index) }"
-            @click.native.stop="handleBreadcrumbClick(index)"
-          >
-            {{ item.name }}
-          </a-breadcrumb-item>
-        </a-breadcrumb>
-      </div>
-      <div class="right-bar">
-        <a-input
-          v-if="showSearch"
-          v-focus
-          ref="searchInput"
-          placeholder="搜索"
-          v-model="keyword"
-          :allowClear="true"
-          style="width: 150px"
-          @focus="handleSearchFocus"
-          @blur="handleSearchBlur"
-          @pressEnter="handleSearchAction"
-        />
-        <div
-          v-for="(item, index) in funcList"
+    <div class="header-left-view">
+      <custom-button
+        v-if="false"
+        :image="backIcon"
+        :disableImage="disableBackIcon"
+        :disable="disableBack"
+        class="back-icon-style"
+        iconWidth="6px"
+        @click.native="backAction"
+      />
+      <a-breadcrumb separator=">" class="modal-breadcrumb" ref="breadcrumb">
+        <a-breadcrumb-item
+          v-for=" (item, index) in showPaths"
           :key="index"
+          :class="{ 'modal-breadcrumb-item': showHover(index) }"
+          @click.native.stop="handleBreadcrumbClick(index)"
         >
-          <a-popover
-            v-if="showPopover(item)"
-            trigger="click"
-            v-model="visible"
-            placement="bottom"
-          >
-            <sort-popover-list
-              slot="content"
-              :sortList="popoverList"
-              v-on:sortWayChange="sortWayChange"
-            />
-            <span>
-              <custom-button
-                class="right-item"
-                :image="item.icon"
-                :ref="item.command"
-                :iconWidth="item.iconWidth"
-                v-show="item.isHidden !== true"
-                @click.native="handleItemClick(index)"
-              />
-            </span>
-          </a-popover>
+          {{ item }}
+        </a-breadcrumb-item>
+      </a-breadcrumb>
+    </div>
+    <div class="header-right-view">
+      <a-input
+        v-if="showSearch"
+        v-focus
+        ref="searchInput"
+        placeholder="搜索"
+        v-model="keyword"
+        :allowClear="true"
+        style="width: 150px"
+        @focus="handleSearchFocus"
+        @blur="handleSearchBlur"
+        @pressEnter="handleSearchAction"
+      />
+      <div
+        v-for="(item, index) in funcList"
+        :key="index"
+        class="right-item"
+      >
+        <a-popover
+          v-if="showPopover(item)"
+          v-model="visible"
+          placement="bottom"
+        >
+          <sort-popover-list
+            slot="content"
+            :sortList="popoverList"
+            v-on:sortWayChange="sortWayChange"
+          />
           <custom-button
-            v-show="showItem(item)"
-            class="right-item"
+            class="right-button"
             :image="item.icon"
-            :selectedImage="item.selectedIcon"
-            :isSelected="item.isSelected"
+            :ref="item.command"
             :iconWidth="item.iconWidth"
+            v-show="item.isHidden !== true"
             @click.native="handleItemClick(index)"
           />
-        </div>
+        </a-popover>
+        <custom-button
+          v-show="showItem(item)"
+          class="right-button"
+          :image="item.icon"
+          :selectedImage="item.selectedIcon"
+          :isSelected="item.isSelected"
+          :iconWidth="item.iconWidth"
+          @click.native="handleItemClick(index)"
+        />
       </div>
     </div>
   </div>
@@ -80,7 +76,6 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import BasicTabs from '@/components/BasicTabs/index.vue'
 import { categorys, taskCategorys, Category } from '@/model/categoryList'
 import { EventBus, EventType } from '@/utils/eventBus'
 import CustomButton from '@/components/CustomButton/index.vue'
@@ -90,6 +85,7 @@ import { ArrangeWay, OrderType, ResourceType } from '@/api/NasFileModel'
 import { commonFuncList, ResourceFuncItem } from './ResourceFuncList'
 import { CacheRoute } from '@/store/modules/Router'
 import RouterUtility from '@/utils/RouterUtility'
+import FileModalHandler, { CacheParams } from '../SelectFilePath/FileModalHandler'
 
 export default Vue.extend({
   name: 'main-header-view',
@@ -106,7 +102,6 @@ export default Vue.extend({
     event: 'handleTabChange'
   },
   components: {
-    BasicTabs,
     CustomButton,
     SortPopoverList
   },
@@ -122,6 +117,7 @@ export default Vue.extend({
       categorys: _.cloneDeep(categorys),
       backIcon: require('../../assets/back_icon.png'),
       disableBackIcon: require('../../assets/dis_back_icon.png'),
+      showPaths: [] as string[],
       visible: false, // 控制排序气泡弹窗是否显示 
       showSearch: false, // 控制搜索框是否显示
       keyword: '' // 搜索关键字
@@ -139,10 +135,21 @@ export default Vue.extend({
   },
   watch: {
     showRoutes: function (newValue: CacheRoute[]) {
-      this.$nextTick(() => {
-        this.calculatePathsTruncate()
+      this.showPaths = newValue.map(item => {
+        return item.name
+      })
+      if (this.showPaths.length <= 1) return
+      const breadcrumb = this.$refs.breadcrumb as Vue
+      FileModalHandler.calculateShowPaths(breadcrumb).then(index => {
+        if (index === undefined) return
+        this.showPaths = FileModalHandler.replaceElement(newValue as CacheParams[], 1, index, '...')
       })
     }
+  },
+  mounted () {
+    this.showPaths = (this.showRoutes as CacheRoute[]).map(item => {
+      return item.name
+    })
   },
   methods: {
     // public methods
@@ -151,30 +158,10 @@ export default Vue.extend({
       this.hideSearchInput()
     },
     // private methods
+    // 缩率item不能点击
     showHover (index: number) {
-      if (index === this.showRoutes.length - 1) return false
-      const path = this.showRoutes[index]
-      return path.name !== '...'
-    },
-    // 计算路径的截断，中间缩率实现
-    calculatePathsTruncate () {
-      this.$nextTick(() => {
-        const breadcrumb = this.$refs.breadcrumb as Vue
-        if (breadcrumb === undefined) return
-        const width = breadcrumb.$el.clientWidth
-        if (width >= breadcrumb.$el.scrollWidth) return
-        const childrens = breadcrumb.$children
-        let fixedWidth = (childrens[0].$el as HTMLElement).offsetWidth + 15
-        const count = childrens.length
-        for (let index = count - 1; index >= 0; index--) {
-          const element = childrens[index].$el as HTMLElement
-          fixedWidth += element.offsetWidth
-          if (fixedWidth >= width) {
-            this.$store.dispatch('Router/replacePaths', index)
-            break
-          }
-        }
-      })
+      if (index === this.showPaths.length - 1) return false
+      return this.showPaths[index] !== '...'
     },
     showPopover (item: ResourceFuncItem) {
       const list = this.popoverList as SortList
@@ -220,10 +207,8 @@ export default Vue.extend({
       this.$emit('CallbackAction', 'back')
     },
     handleBreadcrumbClick (index: number) {
-      const showRoutes = this.showRoutes as CacheRoute[]
-      if (index === showRoutes.length - 1) return
-      const item = this.showRoutes[index] as CacheRoute
-      if (item.name === '...') return
+      if (index === this.showPaths.length - 1) return
+      if (this.showPaths[index] === '...') return
       RouterUtility.pop(index)
     },
     handleItemClick (index: number) {
@@ -236,6 +221,7 @@ export default Vue.extend({
           this.refreshAction()
           break;
         case 'sort':
+          this.visible = !this.visible
           break;
         case 'arrange':
           this.arrangeAction(index)
@@ -307,72 +293,68 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .main-header-view {
-  background-color: white;
-  .bottom-bar {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .header-left-view {
+    flex: 1;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 16px 0px 6px;
-    margin: 0px 15px;
-    border-bottom: 1px solid #dcdcdc;
-    .left-bar {
-      line-height: 32px;
-      display: flex;
-      align-items: center;
-      flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0px 10px 0px 19px;
+    .back-icon-style {
+      height: 22px;
+      width: 30px;
+      vertical-align: middle;
+      margin-right: 3px;
+    }
+    .modal-breadcrumb {
+      width: 100%;
+      text-align: left;
+      font-size: 14px;
+      color: black;
+      font-weight: bold;
+      line-height: 22px;
       overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
-      padding-right: 10px;
-      .modal-breadcrumb {
-        font-size: 12px;
-        line-height: 22px;
-        overflow: hidden;
-        white-space: nowrap;
-        .modal-breadcrumb-item:hover {
-          color: #06b650;
-        }
-      }
-      .back-icon-style {
-        height: 22px;
-        width: 30px;
-        vertical-align: middle;
-        margin-right: 3px;
-      }
-      .normal {
-        font-size: 14px;
-        line-height: 22px;
-        color: #484848;
-        cursor: pointer;
-      }
-      .special {
-        color: #06B650;
+      .modal-breadcrumb-item:hover {
+        color: #06b650;
       }
     }
-    .right-bar {
+  }
+  .header-right-view {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-right: 20px;
+    .right-item {
+      height: 20px;
+      width: 20px;
+      margin-left: 7px;
       display: flex;
+      justify-content: center;
       align-items: center;
-      height: 22px;
-      margin-right: 4px;
-      .right-item {
-        height: 22px;
-        width: 22px;
-        margin-left: 2px;
-      }
+    }
+    .right-button {
+      height: 20px;
+      width: 20px;
     }
   }
 }
 </style>
 
 <style>
-.main-header-view .right-bar .ant-input {
+.main-header-view .header-right-view .ant-input {
   font-size: 12px;
   color: #484848;
   height: 20px;
   margin-right: 4px;
   padding-right: 0px;
 }
-.main-header-view .right-bar .ant-input-suffix {
+.main-header-view .header-right-view .ant-input-suffix {
   right: 4px;
 }
 .main-header-view .modal-breadcrumb .ant-breadcrumb-separator {

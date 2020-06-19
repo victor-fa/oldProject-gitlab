@@ -262,7 +262,7 @@ export default class UploadTask extends BaseTask {
     }).then(response => {
       if (this.status !== TaskStatus.progress) return
       if (response.data.code !== 200) {
-        const desc = response.data.code === 4050 ? '文件名已存在，请重命名后再试' : response.data.msg
+        const desc = response.data.code === 4050 ? `${file.name}已存在` : response.data.msg
         const error = new TaskError(TaskErrorCode.serverError, desc)
         completionHandler(undefined, error)
       } else {

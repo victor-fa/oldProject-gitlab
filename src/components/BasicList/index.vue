@@ -29,9 +29,6 @@ export default Vue.extend({
   directives: { infiniteScroll },
   props: {
     dataSource: Array,
-    adjust: {
-      default: 0
-    },
     busy: {
       default: false
     }
@@ -43,27 +40,24 @@ export default Vue.extend({
   },
   data () {
     return {
-      scrollHeight: document.body.clientHeight - this.adjust
+      scrollHeight: 0
     }
   },
   mounted () {
-    if (this.adjust > 0) {
-      window.addEventListener('resize', this.observerWindowResize)
-    }
+    window.addEventListener('resize', this.observerWindowResize)
+    this.$nextTick(() => {
+      this.scrollHeight = this.$parent.$parent.$el.clientHeight
+    })
   },
   destroyed () {
-    if (this.adjust > 0) {
-      window.removeEventListener('resize', this.observerWindowResize)
-    }
+    window.removeEventListener('resize', this.observerWindowResize)
   },
   methods: {
     observerWindowResize () {
-      const newHeight = document.body.clientHeight - this.adjust
-      if (newHeight !== this.scrollHeight) {
-        this.scrollHeight = newHeight
-      }
+      this.scrollHeight = this.$parent.$parent.$el.clientHeight
     },
     handleInfiniteOnLoad () {
+      if (this.busy) return
       if (_.isEmpty(this.dataSource)) return
       this.$emit('loadMoreData')
     }
@@ -73,6 +67,7 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .basic-list {
+  height: 100%;
   background-color: white;
   overflow-x: hidden;
   overflow-y: scroll;

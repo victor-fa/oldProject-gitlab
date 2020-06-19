@@ -79,7 +79,6 @@ export default Vue.extend({
       this.fetchUlist()
     },
     handleLoadmoreAction () {
-      if (this.busy) return
       this.page++
       this.fetchUlist()
     },

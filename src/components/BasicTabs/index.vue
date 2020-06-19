@@ -54,28 +54,29 @@ export {
 
 <style lang="less" scoped>
 .basic-tabs {
-  height: 28px;
-  margin-left: 20px;
+  height: 36px;
+  padding-left: 18px;
   list-style: none;
   display: flex;
   justify-content: flex-start;
+  background-color: #F8F9FC;
+  border-bottom: 1px solid #BCC0CE40;
   li {
     display: inline-block;
-    color: #484848;
+    color: #010101;
     font-weight: bold;
     font-size: 14px;
-    width: 84px;
-    padding: 0 14px;
-    height: 25px;
-    line-height: 25px;
-    margin-bottom: 10px;
+    width: 56px;
+    margin-right: 40px;
+    height: 33px;
+    line-height: 33px;
     cursor: pointer;
   }
   .split-line {
-    height: 4px;
-    width: 55px;
-    background-color: #01B74F;
-    border-radius: 2px;
+    height: 3px;
+    width: 50px;
+    background-color: #007934;
+    border-radius: 1.5px;
     margin: 0px;
   }
 }

@@ -11,83 +11,62 @@ const pauseItem: TransportOpItem = {
   icon: require('../../../assets/pause_icon.png'),
   hoverIcon: require('../../../assets/pause_icon_selected.png'),
   command: 'pause',
-  iconWidth: '7px'
+  iconWidth: '15px'
 }
 const continueItem: TransportOpItem = {
   icon: require('../../../assets/start_icon.png'),
   hoverIcon: require('../../../assets/start_icon_selected.png'),
   command: 'continue',
-  iconWidth: '7px'
+  iconWidth: '15px'
 }
 const refreshItem: TransportOpItem = {
   icon: require('../../../assets/refresh_icon.png'),
   hoverIcon: require('../../../assets/refresh_icon_selected.png'),
   command: 'refresh',
-  iconWidth: '11px'
+  iconWidth: '15px'
 }
-const runningOperateItems: TransportOpItem[] = [
-  pauseItem,
-  {
-    icon: require('../../../assets/cancle_icon.png'),
-    hoverIcon: require('../../../assets/cancle_icon_selected.png'),
-    command: 'cancel',
-    iconWidth: '9px'
-  },
-  {
-    icon: require('../../../assets/file_icon.png'),
-    hoverIcon: require('../../../assets/file_icon_selected.png'),
-    command: 'jump',
-    iconWidth: '11px'
-  }
-]
-const pauseOperateItems: TransportOpItem[] = [
-  continueItem,
-  {
-    icon: require('../../../assets/cancle_icon.png'),
-    hoverIcon: require('../../../assets/cancle_icon_selected.png'),
-    command: 'cancel',
-    iconWidth: '9px'
-  },
-  {
-    icon: require('../../../assets/file_icon.png'),
-    hoverIcon: require('../../../assets/file_icon_selected.png'),
-    command: 'jump',
-    iconWidth: '11px'
-  }
-]
+const cancelItem: TransportOpItem = {
+  icon: require('../../../assets/cancle_icon.png'),
+  hoverIcon: require('../../../assets/cancle_icon_selected.png'),
+  command: 'cancel',
+  iconWidth: '15px'
+}
+const jumpItem: TransportOpItem = {
+  icon: require('../../../assets/file_icon.png'),
+  hoverIcon: require('../../../assets/file_icon_selected.png'),
+  command: 'jump',
+  iconWidth: '15px'
+}
+const runningOperateItems: TransportOpItem[] = [ pauseItem, cancelItem, jumpItem ]
+const pauseOperateItems: TransportOpItem[] = [ continueItem, cancelItem, jumpItem ]
+const deleteItem: TransportOpItem = {
+  icon: require('../../../assets/delete_icon.png'),
+  hoverIcon: require('../../../assets/delete_icon_selected.png'),
+  command: 'delete',
+  iconWidth: '15px'
+}
 const completedOperateItems: TransportOpItem[] = [
   {
     icon: require('../../../assets/text_icon.png'),
     hoverIcon: require('../../../assets/text_icon_selected.png'),
     command: 'open',
-    iconWidth: '9px'
+    iconWidth: '15px'
   },
   {
     icon: require('../../../assets/file_icon.png'),
     hoverIcon: require('../../../assets/file_icon_selected.png'),
     command: 'openInFinder',
-    iconWidth: '11px'
+    iconWidth: '15px'
   },
-  {
-    icon: require('../../../assets/delete_icon.png'),
-    hoverIcon: require('../../../assets/delete_icon_selected.png'),
-    command: 'delete',
-    iconWidth: '11px'
-  }
+  deleteItem
 ]
-const remoteCompletedOperateItems: TransportOpItem[] = [
-  {
-    icon: require('../../../assets/delete_icon.png'),
-    hoverIcon: require('../../../assets/delete_icon_selected.png'),
-    command: 'delete',
-    iconWidth: '11px'
-  }
-]
+const remoteCompletedOperateItems: TransportOpItem[] = [ deleteItem ]
 
 interface BatchItem {
   title: string,
   command: string,
-  disable?: boolean
+  disable?: boolean,
+  isHidden?: boolean
 }
 
 const doneItems: BatchItem[] = [
@@ -110,7 +89,7 @@ interface TransportCategory {
 // 传输条目分类
 const downloadItems: BatchItem[] = [
   { title: '全部暂停', command: 'pauseAll' },
-  { title: '继续下载', command: 'resumeAll' },
+  { title: '继续下载', command: 'resumeAll', isHidden: true },
   { title: '全部取消', command: 'cancelAll' }
 ]
 const downloadCategorys: TransportCategory[] = [
@@ -120,7 +99,7 @@ const downloadCategorys: TransportCategory[] = [
 
 const uploadItems: BatchItem[] = [
   { title: '全部暂停', command: 'pauseAll' },
-  { title: '继续上传', command: 'resumeAll' },
+  { title: '继续上传', command: 'resumeAll', isHidden: true },
   { title: '全部取消', command: 'cancelAll' }
 ]
 const uploadCategorys: TransportCategory[] = [
@@ -146,7 +125,7 @@ const offlineCategorys: TransportCategory[] = [
 
 const remoteItems: BatchItem[] = [
   { title: '全部暂停', command: 'pauseAll' },
-  { title: '继续传输', command: 'resumeAll' },
+  { title: '全部继续', command: 'resumeAll', isHidden: true },
   { title: '全部取消', command: 'cancelAll' }
 ]
 const remoteCategorys: TransportCategory[] = [

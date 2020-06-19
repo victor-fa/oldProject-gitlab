@@ -1,45 +1,50 @@
 <template>
-  <div class="main-view">
-    <slot 
-      name="header"
-      :popoverList="popoverList"
-    >
-      <main-header-view
-        ref="mainHeaderView"
+  <a-layout class="main-view">
+    <a-layout-header class="main-header-view">
+      <slot 
+        name="header"
         :popoverList="popoverList"
-        :funcList="showFuncList"
-        v-model="categoryType"
-        v-on:CallbackAction="handleHeaderViewAction"
-      />
-    </slot>
-    <a-spin :spinning="loading">
-      <resource-list
-        ref="resourceList"
-        :customGrid="listGrid"
-        :dataSource="showArray"
-        :busy="busy"
-        :arrangeWay="arrangeWay"
-        v-on:callbackAction="handleResourceListAction"
       >
-        <template v-slot:resourceItem="{ item, index, arrangeWay }">
-          <slot name="resourceItem" :item="item" :index="index" :arrangeWay="arrangeWay">
-            <resource-list-item
-              :model="item"
-              :index="item.index"
-              :isSelected="item.isSelected"
-              :isDisable="item.disable"
-              :isRenaming="item.renaming"
-              :showName="item.name"
-              :arrangeWay="arrangeWay"
-              v-on:callbackAction="handleResourceItemAction"
-            />
-          </slot>
-        </template>
-      </resource-list>
-    </a-spin>
-    <slot name="footer" :itemCount="itemCount">
-      <main-bottom-view :itemCount="itemCount"/>
-    </slot>
+        <main-header-view
+          ref="mainHeaderView"
+          :popoverList="popoverList"
+          :funcList="showFuncList"
+          v-model="categoryType"
+          v-on:CallbackAction="handleHeaderViewAction"
+        />
+      </slot>
+    </a-layout-header>
+    <a-layout-content class="main-content-view">
+      <a-spin :spinning="loading">
+        <resource-list
+          :customGrid="listGrid"
+          :dataSource="showArray"
+          :busy="busy"
+          :arrangeWay="arrangeWay"
+          v-on:callbackAction="handleResourceListAction"
+        >
+          <template v-slot:resourceItem="{ item, index, arrangeWay }">
+            <slot name="resourceItem" :item="item" :index="index" :arrangeWay="arrangeWay">
+              <resource-list-item
+                :model="item"
+                :index="item.index"
+                :isSelected="item.isSelected"
+                :isDisable="item.disable"
+                :isRenaming="item.renaming"
+                :showName="item.name"
+                :arrangeWay="arrangeWay"
+                v-on:callbackAction="handleResourceItemAction"
+              />
+            </slot>
+          </template>
+        </resource-list>
+      </a-spin>
+    </a-layout-content>
+    <a-layout-footer class="main-footer-view">
+      <slot name="footer" :itemCount="itemCount">
+        <main-bottom-view :itemCount="itemCount"/>
+      </slot>
+    </a-layout-footer>
     <operate-list-alter
       v-show="showAlter"
       ref="operateListAlter"
@@ -49,7 +54,7 @@
     />
     <select-file-path v-if="showSelectModal" v-on:dismiss="handleSelectModalDismiss"/>
     <encrypt-pass-model :visiable="showEncryptModal" v-on:passCallback="handleEncryptPassModal"/>
-  </div>
+  </a-layout>
 </template>
 
 <script lang="ts">
@@ -372,3 +377,24 @@ export default Vue.extend({
   }
 })
 </script>
+
+<style lang="less" scoped>
+.main-view {
+  height: 100%;
+  .main-header-view {
+    height: 36px;
+    padding: 0px;
+    background-color: #F7F9FB;
+    border-bottom: 1px solid #BCC0CE40;
+  }
+  .main-content-view {
+    padding: 0px;
+  }
+  .main-footer-view {
+    height: 24px;
+    padding: 0px;
+    background-color: #F7F9FB;
+    border-top: 1px solid #BCC0CE40;
+  }
+}
+</style>

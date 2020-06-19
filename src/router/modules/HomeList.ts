@@ -7,7 +7,7 @@ const HomeRouters = [
     component: () => import('../../views/Recent/index.vue'),
     name: 'recent',
     meta: {
-      title: '最近',
+      title: '最近使用',
       icon: require('../../assets/recent_icon.png'),
       selectedIcon: require('../../assets/recent_icon_selected.png'),
       isSelected: true
@@ -18,18 +18,54 @@ const HomeRouters = [
     component: () => import('../../views/Storage/index.vue'),
     name: 'storage',
     meta: {
-      title: '存储',
+      title: '全部文件',
       icon: require('../../assets/storage_icon.png'),
       selectedIcon: require('../../assets/storage_icon_selected.png'),
       isSelected: false
     }
   },
   {
+    path: '/media/image',
+    name: 'media-image',
+    component: () => import('../../views/Media/index.vue'),
+    meta: { 
+      title: '图片',
+      isSelected: false
+     }
+  },
+  {
+    path: '/media/video',
+    name: 'media-video',
+    component: () => import('../../views/Media/index.vue'),
+    meta: { 
+      title: '视频',
+      isSelected: false
+     }
+  },
+  {
+    path: '/media/music',
+    name: 'media-music',
+    component: () => import('../../views/Media/index.vue'),
+    meta: { 
+      title: '音乐',
+      isSelected: false
+     }
+  },
+  {
+    path: '/media/document',
+    name: 'document',
+    component: () => import('../../views/Media/index.vue'),
+    meta: { 
+      title: '文档',
+      isSelected: false
+     }
+  },
+  {
     path: '/custom',
     component: () => import('../../views/Custom/index.vue'),
     name: 'custom',
     meta: {
-      title: '珍藏',
+      title: '我的珍藏',
       icon: require('../../assets/custom_icon.png'),
       selectedIcon: require('../../assets/custom_icon_selected.png'),
       isSelected: false
@@ -40,20 +76,9 @@ const HomeRouters = [
     component: () => import('../../views/Collect/index.vue'),
     name: 'collect',
     meta: {
-      title: '收藏',
+      title: '我的收藏',
       icon: require('../../assets/collect_icon.png'),
       selectedIcon: require('../../assets/collect_icon_selected.png'),
-      isSelected: false
-    }
-  },
-  {
-    path: '/encrypt',
-    component: () => import('../../views/Encrypt/index.vue'),
-    name: 'encrypt',
-    meta: {
-      title: '加密',
-      icon: require('../../assets/encrypt_icon.png'),
-      selectedIcon: require('../../assets/encrypt_icon_selected.png'),
       isSelected: false
     }
   },
@@ -62,7 +87,7 @@ const HomeRouters = [
     component: () => import('../../views/Backup/index.vue'),
     name: 'backup',
     meta: {
-      title: '备份',
+      title: '我的备份',
       icon: require('../../assets/backup_icon.png'),
       selectedIcon: require('../../assets/backup_icon_selected.png'),
       isSelected: false
@@ -76,9 +101,20 @@ const HomeRouters = [
     component: () => import('../../views/Share/index.vue'),
     name: 'share',
     meta: {
-      title: '分享',
+      title: '共享空间',
       icon: require('../../assets/share_icon.png'),
       selectedIcon: require('../../assets/share_icon_selected.png'),
+      isSelected: false
+    }
+  },
+  {
+    path: '/encrypt',
+    component: () => import('../../views/Encrypt/index.vue'),
+    name: 'encrypt',
+    meta: {
+      title: '加密空间',
+      icon: require('../../assets/encrypt_icon.png'),
+      selectedIcon: require('../../assets/encrypt_icon_selected.png'),
       isSelected: false
     }
   },
@@ -87,7 +123,7 @@ const HomeRouters = [
     component: () => import('../../views/Transport/index.vue'),
     name: 'transport',
     meta: {
-      title: '任务',
+      title: '任务列表',
       icon: require('../../assets/transport_icon.png'),
       selectedIcon: require('../../assets/transport_icon_selected.png'),
       isSelected: false
@@ -103,7 +139,7 @@ const HomeRouters = [
     meta: {
       title: '回收站',
       icon: require('../../assets/recycle_icon.png'),
-      selectedIcon: require('../../assets/recycle_selected_icon.png'),
+      selectedIcon: require('../../assets/recycle_icon_selected.png'),
       isSelected: false
     }
   },
@@ -141,7 +177,7 @@ const HomeRouters = [
    path: '/recycle-resource-view',
    name: 'recycle-resource-view',
    component: () => import('../../views/Recycle/RecycleResourceView.vue')
- } 
+ }
 ]
 
 interface FuncListItem {
@@ -151,7 +187,7 @@ interface FuncListItem {
     title: string,
     icon: any,
     selectedIcon: any,
-    isSelected: boolean
+    isSelected: boolean,
   }
 }
 

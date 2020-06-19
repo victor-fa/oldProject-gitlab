@@ -66,21 +66,18 @@ export default Vue.extend({
     },
     arrangeWay: {
       default: ArrangeWay.horizontal
-    },
-    paddingHeight: {
-      default: 94
     }
   },
   data () {
     return {
       dragState: false,
-      scrollHeight: document.body.clientHeight - this.paddingHeight
+      scrollHeight: 0
     }
   },
   watch: {
-    arrangeWay: function (newValue) {
-      const asjust = newValue === ArrangeWay.horizontal ? 28 : -28
-      this.scrollHeight += asjust
+    arrangeWay: function (newValue: ArrangeWay) {
+      const adjust = newValue === ArrangeWay.horizontal ? 28 : -28
+      this.scrollHeight += adjust
     }
   },
   computed: {
@@ -93,32 +90,32 @@ export default Vue.extend({
       return { gutter: 16, xs: 1, sm: 1, md: 1, lg: 1, xl: 1, xxl: 1 }
     },
     isShowHeader: function () {
-      if (this.arrangeWay === ArrangeWay.vertical) {
-        return true
-      }
+      if (this.arrangeWay === ArrangeWay.vertical) return true
       return false
     },
     isSupportDrag: function () {
       const name = this.$route.name as string
       return name === 'main-resource-view' || name === 'custom'
-    },
+    }
   },
   mounted () {
     window.addEventListener('resize', this.observerWindowResize)
     document.addEventListener('keydown', this.handleKeydownAction)
+    this.$nextTick(() => {
+      this.scrollHeight = this.$parent.$parent.$el.clientHeight
+    })
   },
   destroyed () {
-    window.addEventListener('resize', this.observerWindowResize)
+    window.removeEventListener('resize', this.observerWindowResize)
     document.removeEventListener('keydown', this.handleKeydownAction)
   },
   methods: {
     observerWindowResize () {
-      const height = this.paddingHeight + 28
-      const adjust = this.arrangeWay === ArrangeWay.horizontal ? this.paddingHeight : height
-      const newHeight = document.body.clientHeight - adjust
-      if (newHeight !== this.scrollHeight) {
-        this.scrollHeight = newHeight
+      let height = this.$parent.$parent.$el.clientHeight
+      if (this.arrangeWay === ArrangeWay.vertical) {
+        height -= 28
       }
+      this.scrollHeight = height
     },
     handleKeydownAction (event: KeyboardEvent) {
       const code = event.code
@@ -157,6 +154,7 @@ export default Vue.extend({
       this.$emit('callbackAction', 'delelteItems')
     },
     handleInfiniteOnLoad () {
+      if (this.busy) return
       if (_.isEmpty(this.dataSource)) return
       this.$emit('callbackAction', 'loadmore')
     },
@@ -200,6 +198,8 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .resource-list {
+  width: 100%;
+  height: 100%;
   background-color: white;
   overflow: auto;
 }

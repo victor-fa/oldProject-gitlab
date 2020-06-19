@@ -4,6 +4,10 @@ import { ActionContext } from 'vuex'
 enum RouteClass {
   recent = 'recent',
   storage = 'storage',
+  image = 'media-image',
+  video = 'media-video',
+  music = 'media-music',
+  document = 'media-document',
   custom = 'custom',
   collect = 'collect',
   encrypt = 'encrypt',
@@ -26,28 +30,14 @@ export {
 
 interface RouterState {
   showRoutes: CacheRoute[],
-  pathMap: {
-    recent: CacheRoute[],
-    storage: CacheRoute[],
-    collect: CacheRoute[],
-    encrypt: CacheRoute[],
-    backup: CacheRoute[],
-    share: CacheRoute[]
-  }
+  pathMap: Map<string, CacheRoute[]>
 }
 
 export default {
   namespaced: true,
   state: {
     showRoutes: [],
-    pathMap: {
-      recent: [],
-      storage: [],
-      collect: [],
-      encrypt: [],
-      backup: [],
-      share: []
-    }
+    pathMap: {}
   },
   getters: {
     showRoutes: (state: RouterState) => {
@@ -55,8 +45,8 @@ export default {
     }
   },
   mutations: {
-    INIT_PATHS (state: RouterState, pathsMap: Dictionary<CacheRoute[]>) {
-      state.pathMap = pathsMap as any
+    INIT_PATHS (state: RouterState, pathsMap: Map<string, CacheRoute[]>) {
+      state.pathMap = pathsMap
       state.showRoutes = pathsMap[RouteClass.recent]
     },
     SWITCH_SHOW_PATHS (state: RouterState, type: RouteClass) {
@@ -109,7 +99,7 @@ export default {
     }
   },
   actions: {
-    initPaths (context: ActionContext<RouterState, RouterState>, pathsMap: Dictionary<CacheRoute[]>) {
+    initPaths (context: ActionContext<RouterState, RouterState>, pathsMap: Map<string, CacheRoute[]>) {
       context.commit('INIT_PATHS', pathsMap)
     },
     switchshowRoutes (context: ActionContext<RouterState, RouterState>, type: RouteClass) {

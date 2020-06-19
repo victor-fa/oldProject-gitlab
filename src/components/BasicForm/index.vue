@@ -28,7 +28,7 @@
           <label>{{ item.account }}</label>
           <custom-button
             :image="CloseIcon"
-            iconWidth="8px"
+            iconWidth="20px"
             class="delete-button"
             @click.stop.native="handleDelete(item)"
           />
