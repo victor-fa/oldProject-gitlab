@@ -9,25 +9,25 @@ interface TransportOpItem {
 }
 const pauseItem: TransportOpItem = {
   icon: require('../../../assets/pause_icon.png'),
-  hoverIcon: require('../../../assets/pause_icon_selected.png'),
+  hoverIcon: require('../../../assets/pause_selected_icon.png'),
   command: 'pause',
   iconWidth: '15px'
 }
 const continueItem: TransportOpItem = {
   icon: require('../../../assets/start_icon.png'),
-  hoverIcon: require('../../../assets/start_icon_selected.png'),
+  hoverIcon: require('../../../assets/start_selected_icon.png'),
   command: 'continue',
   iconWidth: '15px'
 }
 const refreshItem: TransportOpItem = {
-  icon: require('../../../assets/refresh_icon.png'),
-  hoverIcon: require('../../../assets/refresh_icon_selected.png'),
+  icon: require('../../../assets/refresh_sicon.png'),
+  hoverIcon: require('../../../assets/refresh_sicon_selected.png'),
   command: 'refresh',
   iconWidth: '15px'
 }
 const cancelItem: TransportOpItem = {
-  icon: require('../../../assets/cancle_icon.png'),
-  hoverIcon: require('../../../assets/cancle_icon_selected.png'),
+  icon: require('../../../assets/cancel_sicon.png'),
+  hoverIcon: require('../../../assets/cancel_sicon_selected.png'),
   command: 'cancel',
   iconWidth: '15px'
 }
@@ -47,8 +47,8 @@ const deleteItem: TransportOpItem = {
 }
 const completedOperateItems: TransportOpItem[] = [
   {
-    icon: require('../../../assets/text_icon.png'),
-    hoverIcon: require('../../../assets/text_icon_selected.png'),
+    icon: require('../../../assets/open_icon.png'),
+    hoverIcon: require('../../../assets/open_icon_selected.png'),
     command: 'open',
     iconWidth: '15px'
   },

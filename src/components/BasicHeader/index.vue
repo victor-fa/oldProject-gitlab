@@ -38,7 +38,11 @@
         </template>
         <div class="setting">
           <img class="setting-icon" src="../../assets/setting_icon.png">
-          <img class="arrow-icon" src="../../assets/arrow_down.png">
+          <img
+            src="../../assets/arrow_down.png"
+            class="arrow-icon"
+            v-bind:class="{ 'rotate-anime': visible, 'restore-anime': restore }"
+          >
         </div>
       </a-popover>
       <div class="profile">
@@ -70,7 +74,8 @@ export default Vue.extend({
   data () {
     let items: Array<any> = []
     return {
-      visible: false,
+      visible: false, // 设置弹窗是否展示
+      restore: false, // 恢复设置弹窗指示器位置
       showItems: items,
       showChildren: false,
       settingList
@@ -89,6 +94,9 @@ export default Vue.extend({
         group.items = items
         return true
       })
+    },
+    visible: function (newValue: boolean) {
+      this.restore = !newValue
     }
   },
   computed: {
@@ -173,7 +181,6 @@ export default Vue.extend({
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #BCC0CE40;
   .basic-left {
     height: 100%;
     margin-left: 30px;
@@ -221,8 +228,8 @@ export default Vue.extend({
         margin-right: 4px;
       }
       .arrow-icon {
-        width: 6px;
-        height: 4px;
+        width: 10px;
+        height: 10px;
       }
     }
     .profile {
@@ -247,6 +254,20 @@ export default Vue.extend({
       }
     }
   }
+}
+.rotate-anime {
+  animation: rotateAnimate .25s linear forwards;
+}
+.restore-anime {
+  animation: restoreAnimate .25s linear forwards;
+}
+@keyframes rotateAnimate {
+  0% { transform: rotate(0deg); };
+  100% { transform: rotate(180deg); };
+}
+@keyframes restoreAnimate {
+  0% { transform: rotate(180deg); };
+  100% { transform: rotate(360deg); };
 }
 </style>
 

@@ -231,9 +231,11 @@ export default Vue.extend({
     height: 62px;
     padding: 0px;
     background-color: #EDEFF4;
+    border-bottom: 1px solid #BCC0CE40;
   }
   .base-content {
     background-color: #f6f8fb;
+    border-top: 1px solid white;
     .base-sider {
       width: 170px !important;
       min-width: 170px !important;

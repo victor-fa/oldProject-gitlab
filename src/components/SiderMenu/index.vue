@@ -121,7 +121,7 @@ export default Vue.extend({
       font-size: 15px;
       font-weight: bold;
       color: black;
-      width: 80px;
+      width: 70px;
       text-align: left;
     }
   }
