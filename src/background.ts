@@ -270,7 +270,7 @@ let DiskSystem = {
 			url: 'rom-update',
 			data: msg,
 			icon: './src/assets/logo.png',
-			width: 400,
+			width: 450,
 			height: 400,
 			maximizable: false,
 			resizable: false,

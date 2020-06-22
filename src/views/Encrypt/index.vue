@@ -309,7 +309,7 @@ export default Vue.extend({
       const name = item.name
       const path = item.path
       const uuid = item.uuid
-      RouterUtility.push(name, 'encrypt-reasource-view', { path, uuid })
+      RouterUtility.push(name, 'encrypt-resource-view', { path, uuid })
     },
     handleLoadmoreAction () {
       this.page++

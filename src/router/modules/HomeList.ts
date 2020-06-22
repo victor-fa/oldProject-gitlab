@@ -159,6 +159,11 @@ const HomeRouters = [
     component: () => import('../../views/Collect/CollectResourceView.vue')
   },
   {
+    path: '/encrypt-resource-view',
+    name: 'encrypt-resource-view',
+    component: () => import('../../views/Encrypt/EncryptResourceView.vue')
+  },
+  {
     path: '/share-resource-view',
     name: 'share-resource-view',
     component: () => import('../../views/Share/ShareResourceView.vue')

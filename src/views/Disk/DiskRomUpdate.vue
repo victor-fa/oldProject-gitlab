@@ -4,7 +4,7 @@
     <a-modal
       title="检测到有新版本固件更新"
 			:visible="true" :mask="false" :maskClosable="false" style="top: -7px;"
-      width="350px" okText="确认升级" cancelText="取消升级" @ok="handleUpdate" @cancel="handleCancleUpdate">
+      width="450px" okText="确认升级" cancelText="取消升级" @ok="handleUpdate" @cancel="handleCancleUpdate">
 			<p>版本名称：{{updateInfo.versionName}}（{{updateInfo.size | filterSize}}）</p>
 			<p>发布时间：{{updateInfo.pubtime | filterTime}}</p>
 			<p>描述：{{updateInfo.desc}}</p>

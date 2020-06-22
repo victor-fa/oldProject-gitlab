@@ -194,11 +194,9 @@ export default Vue.extend({
 				if (response.data.code !== 200) {
 					this.$message.error('网络连接错误，请检测网络')
 					return
-				}
-				if (!response.data.data) {
-					return
         }
-        const info = response.data.data as any
+        const info = _.get(response.data, 'data')
+				if (!info) return
         const _this = this as any
         _this.$ipc.send('system', 'rom-update', info);
 			}).catch(error => {

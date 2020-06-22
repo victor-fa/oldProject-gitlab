@@ -46,7 +46,7 @@
 			</a-radio-group>
 		</a-modal>
 		<a-modal title="检测到有新版本固件更新"
-			:visible="update.visiable" :mask="false" :closable="false" :maskClosable="false" width="350px"
+			:visible="update.visiable" :mask="false" :closable="false" :maskClosable="false" width="450px"
 			okText="确认升级" cancelText="取消升级" @ok="handleUpdate" @cancel="update.visiable = false,update.info = {}">
 			<p>版本名称：{{update.info.versionName}}（{{update.info.size | filterSize}}）</p>
 			<p>发布时间：{{update.info.pubtime | filterTime}}</p>
@@ -225,25 +225,12 @@ export default Vue.extend({
 					this.$message.error('网络连接错误，请检测网络')
 					return
 				}
-				if (!response.data.data) {
+        const info = _.get(response.data, 'data')
+				if (!info) {
 					this.$message.info('当前版本已最新')
 					return
 				}
-				this.update.info = response.data.data as any
-				// this.update.info = {
-        //   "id": 36,
-        //   "model": "2",
-        //   "modelName": "PRO_V001_SN01.0.1.002",
-        //   "name": "NasServer固件_内网升级_V01.02.33.200308",
-        //   "versionNo": "10233200308",
-        //   "versionName": "内测固件",
-        //   "size": 1.0,
-        //   "desc": "Nas Server升级固件",
-        //   "remark": "Nas Server升级固件",
-        //   "pubtime": null,
-        //   "ctime": 1582678312000,
-        //   "utime": 1583452793000
-        // } as any
+				this.update.info = info as any
 				this.update.visiable = true
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
