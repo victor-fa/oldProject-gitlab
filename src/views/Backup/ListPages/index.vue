@@ -20,7 +20,6 @@ import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
 import ResourceHandler from '../../MainView/ResourceHandler'
 import NasFileAPI from '@/api/NasFileAPI'
 import { backupResourceContextMenu } from '@/components/OperateListAlter/operateList'
-import UploadTask from '@/api/Transport/UploadTask'
 
 export default Vue.extend({
   name: 'backup',

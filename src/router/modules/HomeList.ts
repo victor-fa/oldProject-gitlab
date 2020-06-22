@@ -53,7 +53,7 @@ const HomeRouters = [
   },
   {
     path: '/media/document',
-    name: 'document',
+    name: 'media-document',
     component: () => import('../../views/Media/index.vue'),
     meta: { 
       title: '文档',
