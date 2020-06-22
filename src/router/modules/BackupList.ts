@@ -2,7 +2,7 @@ const BackupRouters = [
   {
     path: '/list',
     name: 'list',
-    component: () => import('../../views/Backup/ListPages/index.vue')
+    component: () => import('../../views/Backup/ListPageView.vue')
   },
   {
     path: '/setting',

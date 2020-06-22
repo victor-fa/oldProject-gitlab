@@ -144,6 +144,10 @@ export default Vue.extend({
   },
   mounted () {
     this.updateArrangeWay()
+    const { BrowserWindow } = require('electron').remote
+    const win = BrowserWindow.getFocusedWindow()
+    if (win === null) return
+		win.on('blur', event => { this.showAlter =  false });
   },
   methods: {
     // public methods

@@ -13,11 +13,11 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import MainView from '../../MainView/index.vue'
-import MainViewMixin from '../../MainView/MainViewMixin'
+import MainView from '../MainView/index.vue'
+import MainViewMixin from '../MainView/MainViewMixin'
 import { BasicResponse } from '@/api/UserModel'
 import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
-import ResourceHandler from '../../MainView/ResourceHandler'
+import ResourceHandler from '../MainView/ResourceHandler'
 import NasFileAPI from '@/api/NasFileAPI'
 import { backupResourceContextMenu } from '@/components/OperateListAlter/operateList'
 
