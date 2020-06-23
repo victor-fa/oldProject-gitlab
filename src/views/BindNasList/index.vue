@@ -97,6 +97,7 @@ export default Vue.extend({
     },
     searchNas (nas: DeviceInfo) {
       this.loading = true
+      ClientAPI.setNasName(nas.name)
       ClientAPI.searchNas(nas.sn, nas.mac).then(data => {
         const secretKey = StringUtility.filterPublicKey(nas.publicKey)
         this.loginToNas(data, secretKey)

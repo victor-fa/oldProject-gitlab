@@ -14,10 +14,14 @@ const userModulePath = '/v1/user'
 let client: dgram.Socket | null = null
 const CancelToken = axios.CancelToken
 let cancel: Canceler | null = null
+let curNasName = ''
 
 export default {
   setBaseUrl (url: string) {
     nasServer.defaults.baseURL = url
+  },
+  setNasName (nas) {  // 获取P2P下的设备名称，用于对应到IndexDB的数据库名称
+    curNasName = nas
   },
   // refresh_token过期时调用
   login (user: User, secretKey: string, tunnelIP?: string): Promise<AxiosResponse<BasicResponse>> {
@@ -164,11 +168,11 @@ export default {
   initP2PTunnel (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
     const tunnelNas:NasInfo = {
       active: 1,
-      name: '',
+      name: curNasName,
       model: '',
-      mac: '',
+      mac: mac,
       ip: '127.0.0.1',
-      sn: '',
+      sn: sn,
       port: 9001,
       ssl_port: '000',
       softversion: 'V1.0.1'
