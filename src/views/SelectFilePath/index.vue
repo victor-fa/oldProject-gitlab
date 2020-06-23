@@ -45,21 +45,25 @@
         </a-breadcrumb-item>
       </a-breadcrumb>
       <div class="modal-content">
-        <a-spin :spinning="loading">
-          <first-directory
-            v-if="isFirstList"
-            :storages="showArray"
-            :customs="showCustoms"
-            v-on:callbackAction="handleFirstAction"
-          />
-          <second-directory
-            v-else
-            ref="secondDirectory"
-            :busy="busy"
-            :dataSource="showArray"
-            v-on:callbackAction="handleSecondAction"
-          />
-        </a-spin>
+        <disk-list-view
+          v-if="showListType === 0"
+          :cacheParams="cacheParams"
+          :selectedItem="selectedItem"
+          v-on:open="handleDiskOpenAction"
+          v-on:didSelectItem="handleDiskSelectAction"
+        />
+        <file-list-view
+          v-if="showListType === 1"
+          ref="fileList"
+          :cacheParams="cacheParams"
+          :selectedItem="selectedItem"
+          v-on:open="handleFileOpenAction"
+          v-on:didSelectItem="handleFileSelectAction"
+        />
+        <b-t-list-view
+          v-if="showListType === 2"
+          v-on:didSelectItem="handleFileSelectAction"
+        />
       </div>
       <div class="modal-footer">
         <a-button @click="handleNewFolderAction" :disabled="newFolderDisbale">新建文件夹</a-button>
@@ -70,7 +74,7 @@
             :disabled="moveDisable"
             @click="handleMoveAction"
           >
-            移动
+            {{ title }}
           </a-button>
         </div>
       </div>
@@ -83,15 +87,16 @@ import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import CustomButton from '@/components/CustomButton/index.vue'
-import FirstDirectory from './FirstDirectory.vue'
-import SecondDirectory from './SecondDirectory.vue'
+import DiskListView from './DiskListView.vue'
+import FileListView from './FileListView.vue'
+import BTListView from './BTListView.vue'
 import { ResourceItem, CustomModule, StorageInfo, ResourceType, PartitionInfo, CustomInfo } from '@/api/NasFileModel'
 import NasFileAPI from '@/api/NasFileAPI'
 import StorageHandler from '../Storage/StorageHandler'
 import { NasAccessInfo } from '@/api/ClientModel'
 import { nasServer } from '@/api/NasServer'
 import CustomHandler from '../Custom/CustomHandler'
-import FileModalHandler, { CacheParams, CacheType } from './FileModalHandler'
+import FileModalHandler, { CacheParams, CacheType, SelectListType } from './FileModalHandler'
 import { BasicResponse, User } from '@/api/UserModel'
 import ResourceHandler from '../MainView/ResourceHandler'
 import StringUtility from '@/utils/StringUtility'
@@ -103,41 +108,29 @@ export default Vue.extend({
   name: 'resource-move-modal',
   components: {
     CustomButton,
-    FirstDirectory,
-    SecondDirectory
+    DiskListView,
+    FileListView,
+    BTListView
+  },
+  props: {
+    listType: {
+      default: SelectListType.disk
+    },
+    title: {
+      default: '移动'
+    }
   },
   data () {
     return {
-      page: 1,
-      busy: false,
       hideModal: false,
-      loading: false,
+      showListType: this.listType as SelectListType,
       selectedItem: undefined as StorageInfo | PartitionInfo | CustomModule | ResourceItem | undefined,
       cacheArray: [{ name: '全部文件', type: CacheType.disk }] as CacheParams[],
       showPaths: ['全部文件'],
-      showArray: [] as any[],
-      storages: [] as StorageInfo[],
-      showCustoms: [] as CustomModule[],
-      customs: [] as CustomModule[],
       moveModalIcons
     }
   },
   computed: {
-    ...mapGetters('NasServer', ['accessInfo']),
-    ...mapGetters('Resource', ['homeId']),
-    menu: function () {
-      const { Menu, MenuItem } = require('electron').remote
-      const menu = new Menu()
-      menu.append(new MenuItem({ label: '打开', click: this.handleMenuItemClick }))
-      return menu
-    },
-    isFirstList: function () {
-      const item = _.last(this.cacheArray)
-      if (item !== undefined && item.type === CacheType.resource) {
-        return false
-      }
-      return true
-    },
     forwardDisable: function () { // 禁用前进按钮
       const result = (this.selectedItem === undefined) as boolean
       return result
@@ -146,14 +139,14 @@ export default Vue.extend({
       const result = (this.cacheArray.length === 1) as boolean
       return result
     },
-    newFolderDisbale: function () {
+    newFolderDisbale: function () { // 禁用新进按钮
       const item = _.last(this.cacheArray)
       if (item !== undefined && item.type === CacheType.resource) {
         return false
       }
       return true
     },
-    moveDisable: function () {
+    moveDisable: function () { // 禁用移动按钮
       if (this.cacheArray.length === 1 && this.selectedItem === undefined) {
         return true
       } else {
@@ -163,148 +156,41 @@ export default Vue.extend({
         }
       }
       return false
+    },
+    cacheParams: function () {
+      const cache = _.last(this.cacheArray) as CacheParams
+      return cache
     }
   },
   watch: {
-    cacheArray: function (value: CacheParams[]) {
-      this.showPaths = value.map(item => {
-        return item.name
-      })
-      if (this.showPaths.length <= 1) return
-      const breadcrumb = this.$refs.breadcrumb as Vue
-      FileModalHandler.calculateShowPaths(breadcrumb).then(index => {
-        if (index === undefined) return
-        this.showPaths = FileModalHandler.replaceElement(value, 1, index, '...')
-      })
+    cacheArray: function (newValue: CacheParams[]) {
+      const lastItem = _.last(newValue)!
+      this.showListType = lastItem.type === CacheType.resource ? SelectListType.file : SelectListType.disk
+      this.updateShowPaths(newValue)
     }
   },
   created () {
-    this.fetchStorages()
-    this.fetchCustomList()
     document.addEventListener('keyup', this.handleKeyupAction)
   },
   destroyed () {
     document.removeEventListener('keyup', this.handleKeyupAction)
   },
   methods: {
-    showHover (index: number) {
-      if (index === this.showPaths.length - 1) return false
-      const path = this.showPaths[index]
-      return path !== '...'
-    },
-    handleKeyupAction (event: KeyboardEvent) {
-      const code = (event as any).code
-      if (code === 'Enter') {
-        event.stopPropagation()
-        if (this.moveDisable === true) return
-        if (this.hasRenamingItem()) {
-          const list = this.$refs.secondDirectory as any
-          list.handlePressEnter()
-        } else {
-          this.handleMoveAction()
-        }
-      }
-    },
-    hasRenamingItem () {
-      for (let index = 0; index < this.showArray.length; index++) {
-        const element = this.showArray[index]
-        if (element.hasOwnProperty('renaming') && element.renaming === true) return true
-      }
-      return false
-    },
-    hideModalAnimate (path?: string, uuid?: string) {
-      this.hideModal = true
-      setTimeout(() => {
-        this.$emit('dismiss', path, uuid)
-      }, 350);
-    },
-    fetchStorages () {
-      this.loading = true
-      NasFileAPI.fetchStorages().then(response => {
-        this.loading = false
-        console.log(response)
-        if (response.data.code !== 200) return
-        const storages = _.get(response.data.data, 'storages')
-        this.storages = StorageHandler.formatStorages(storages)
-        this.showArray = this.storages
-      }).catch(error => {
-        this.loading = false
-        this.$message.error('网络连接错误，请检测网络')
-        console.log(error)
-      })
-    },
-    fetchCustomList () {
-      this.loading = true
-      NasFileAPI.fetchCustomList().then(response => {
-        console.log(response)
-        this.loading = false
-        if (response.data.code !== 200) return
-        const list = _.get(response.data.data, 'myself_folder_list') as CustomModule[]
-        const api_token = (this.accessInfo as NasAccessInfo).api_token
-        this.customs = list.map(item => {
-          const newItem = CustomHandler.formatItem(item, api_token)
-          return newItem
-        })
-        this.showCustoms = this.customs
-      }).catch(error => {
-        console.log(error)
-        this.loading = false
-        this.$message.error('网络连接错误，请检测网络')
-      })
-    },
-    fetchResourceList (path: string, uuid: string) {
-      this.loading = true
-      NasFileAPI.fetchResourceList(path, uuid, this.page).then(response => {
-        console.log(response)
-        this.loading = false
-        if (response.data.code !== 200) return
-        this.parseResponse(response.data)
-      }).catch(error => {
-        console.log(error)
-        this.loading = false
-        this.$message.error('网络连接错误，请检测网络')
-      })
-    },
-    parseResponse (data: BasicResponse) {
-      let list = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(list) || list.length < 20) this.busy = true
-      list = list.filter(item => {
-        if (item.type !== ResourceType.folder) {
-          this.busy = true
-          return false
-        }
-        return true
-      })
-      list = ResourceHandler.formatResourceList(list)
-      this.showArray = this.page === 1 ? list : this.showArray.concat(list)
-    },
-    // 根据cacheArray更新当前界面
-    updateViewForCacheArray () {
-      const item = _.last(this.cacheArray)
-      if (item === undefined) return
-      this.selectedItem = item.selectedItem
-      if (item.type === CacheType.disk) {
-        this.showArray = this.storages
-        this.showCustoms = this.customs
-      } else if (item.type === CacheType.partition) {
-        const storage = this.cacheArray[0].selectedItem as StorageInfo
-        this.showCustoms = []
-        this.showArray = storage.partitions
-      } else {
-        this.page = 1
-        this.busy = false
-        this.showArray = []
-        this.fetchResourceList(item.path!, item.uuid!)
-      }
-    },
     handleBackwardAction () {
       const index = this.cacheArray.length - 1
       this.cacheArray.pop()
-      this.updateViewForCacheArray()
+      const item = _.last(this.cacheArray)
+      if (item === undefined) return
+      this.selectedItem = item.selectedItem
     },
     handleForwardAction () {
-      this.cacheArray = FileModalHandler.pushCache(this.cacheArray, this.selectedItem!)
-      this.updateViewForCacheArray()
+      if (this.selectedItem === undefined) return
+      const cache = FileModalHandler.generateCacheParams(this.selectedItem)
+      if (cache === undefined) return
+      const newCacheArray = this.updateLastCache(this.selectedItem)
+      newCacheArray.push(cache)
+      this.cacheArray = newCacheArray
+      this.selectedItem = undefined
     },
     handleCloseAction () {
       this.hideModalAnimate()
@@ -313,190 +199,89 @@ export default Vue.extend({
       if (index === this.showPaths.length - 1) return
       if (this.showPaths[index] === '...') return
       this.cacheArray = this.cacheArray.slice(0, index + 1)
-      this.updateViewForCacheArray()
     },
     handleNewFolderAction () {
-      const newName = ResourceHandler.calculateNewFolderName(this.showArray)
-      const newItem = {
-        type: ResourceType.folder,
-        name: newName,
-        isSelected: true,
-        renaming: true
-      } as ResourceItem
-      this.showArray.unshift(newItem)
+      const fileList = this.$refs.fileList as any
+      fileList.newFolder()
     },
     handleCancelAction () {
       this.hideModalAnimate()
     },
     handleMoveAction () {
-      const item = _.last(this.cacheArray)
+      const item = this.selectedItem
       if (item === undefined) return
-      if (item.type === CacheType.disk) {
-        const result = FileModalHandler.parseDiskItem(this.selectedItem as any)
-        this.hideModalAnimate(result.path, result.uuid)
-      } else if (item.type === CacheType.partition) { 
-        const item = this.selectedItem as PartitionInfo
-        this.hideModalAnimate(item.path, item.uuid)
-      } else {
-        if (this.selectedItem === undefined) {
-          this.hideModalAnimate(item.path, item.uuid)
+      const result = FileModalHandler.generatePathAndUuid(item)
+      if (result === undefined) return
+      this.hideModalAnimate(result.path, result.uuid)
+    },
+    handleDiskOpenAction (params: CacheParams, item: StorageInfo | PartitionInfo | CustomModule) {
+      const newCacheArray = this.updateLastCache(item)
+      newCacheArray.push(params)
+      this.cacheArray = newCacheArray
+      this.selectedItem = undefined
+    },
+    handleDiskSelectAction (item?: StorageInfo | PartitionInfo | CustomModule) {
+      this.selectedItem = item
+    },
+    handleFileOpenAction (params: CacheParams, item: ResourceItem) {
+      const newCacheArray = this.updateLastCache(item)
+      newCacheArray.push(params)
+      this.cacheArray = newCacheArray
+      this.selectedItem = undefined
+    },
+    handleFileSelectAction (item: ResourceItem) {
+      this.selectedItem = item
+    },
+    handleKeyupAction (event: KeyboardEvent) {
+      const code = (event as any).code
+      if (code === 'Enter') {
+        event.stopPropagation()
+        if (this.hasRenamingItem()) {
+          const list = this.$refs.fileList as any
+          list.handlePressEnter()
         } else {
-          const selectedItem = this.selectedItem as ResourceItem
-          this.hideModalAnimate(selectedItem.path, selectedItem.uuid)
+          if (this.moveDisable === true) return
+          this.handleMoveAction()
         }
       }
     },
-    handleFirstAction (command: string, index: number, ...args: any[]) {
-      switch (command) {
-        case 'diskClick':
-          this.handleDiskClick(index)
-          break;
-        case 'diskDoubleClick':
-          this.handleOpenDisk(index)
-          break;
-        case 'diskContextMenu':
-          this.handleDiskContextMenu(index)
-          break
-        case 'customClick':
-          this.handleCustomClick(index)
-          break;
-        case 'customDoubleClick':
-          this.handleOpenCustom(index)
-          break;
-        case 'customContextMenu':
-          this.handleCustomContextMenu(index)
-          break
-        default:
-          break;
-      }
-    },
-    handleDiskClick (index: number) {
-      if (this.cacheArray.length === 1) { // disk
-        this.selectedItem = this.storages[index]
-        this.showArray = FileModalHandler.setItemSelected(this.storages, index)
-        this.showCustoms = FileModalHandler.resetItemSelected(this.customs)
-      } else { // partition
-        this.selectedItem = this.showArray[index]
-        this.showArray = FileModalHandler.setItemSelected(this.showArray, index)
-      }
-    },
-    handleOpenDisk (index: number) {
-      if (this.cacheArray.length === 1) {
-        this.selectedItem = this.storages[index]
-      } else {
-        this.selectedItem = this.showArray[index]
-      }
-      this.cacheArray = FileModalHandler.pushCache(this.cacheArray, this.selectedItem!)
-      this.updateViewForCacheArray()
-    },
-    handleDiskContextMenu (index: number) {
-      this.handleDiskClick(index)
-      this.showOpenPopoup()
-    },
-    handleCustomClick (index: number) {
-      this.selectedItem = this.showCustoms[index]
-      this.showCustoms = FileModalHandler.setItemSelected(this.customs, index)
-      this.showArray = FileModalHandler.resetItemSelected(this.storages)
-    },
-    handleOpenCustom (index: number) {
-      this.selectedItem = this.showCustoms[index]
-      this.cacheArray = FileModalHandler.pushCache(this.cacheArray, this.selectedItem!)
-      this.updateViewForCacheArray()
-    },
-    handleCustomContextMenu (index: number) {
-      this.handleCustomClick(index)
-      this.showOpenPopoup()
-    },
-    handleSecondAction (command: string, ...args: any[]) {
-      switch (command) {
-        case 'loadmore':
-          this.handleLoadMore()
-          break;
-        case 'singleClick':
-          this.handleResourceItemClick(args[0])
-          break;
-        case 'doubleClick':
-          this.handleResourceItemDbclick(args[0])
-          break;
-        case 'contextmenu':
-          this.handleContextmenu(args[0])
-          break;
-        case 'newFolderRequest':
-          this.handleNewFolderRequest(args[0], args[1])
-          break
-        default:
-          break;
-      }
-    },
-    handleLoadMore () {
-      const item = _.last(this.cacheArray)
-      if (item === undefined) return
-      this.page++
-      this.fetchResourceList(item.path!, item.uuid!)
-    },
-    handleResourceItemClick (index: number) {
-      this.selectedItem = this.showArray[index]
-      this.showArray = FileModalHandler.setItemSelected(this.showArray, index)
-    },
-    handleResourceItemDbclick (index: number) {
-      this.selectedItem = this.showArray[index]
-      this.cacheArray = FileModalHandler.pushCache(this.cacheArray, this.selectedItem!)
-      this.updateViewForCacheArray()
-    },
-    handleContextmenu (index: number) {
-      this.handleResourceItemClick(index)
-      this.showOpenPopoup()
-    },
-    showOpenPopoup () {
-      const { BrowserWindow } = require('electron').remote
-      const currentWindow = BrowserWindow.getFocusedWindow()
-      if (currentWindow !== null) {
-        this.menu.popup({ window: currentWindow })
-      }
-    },
-    handleMenuItemClick (item: MenuItem) {
-      this.cacheArray = FileModalHandler.pushCache(this.cacheArray, this.selectedItem!)
-      this.updateViewForCacheArray()
-    },
-    handleNewFolderRequest (index: number, newName: string) {
-      const item = this.updateItemState(index, true, false)
-      const param = this.getLastParam()
-      if (param === undefined) return
-      NasFileAPI.newFolder(`${param.path}/${newName}`, param.uuid).then(response => {
-        console.log(response)
-        item.disable = false
-        if (response.data.code !== 200) {
-          this.updateItemState(index, false, true)
-          return
-        }
-        this.refreshResourceList(param.path, param.uuid)
-      }).catch(error => {
-        console.log(error)
-        this.$message.error('创建失败')
-        this.showArray.shift()
+    // 根据cacheArray更新展示的路径
+    updateShowPaths (cacheArray: CacheParams[]) {
+      this.showPaths = cacheArray.map(item => {
+        return item.name
+      })
+      if (this.showPaths.length <= 1) return
+      const breadcrumb = this.$refs.breadcrumb as Vue
+      FileModalHandler.calculateShowPaths(breadcrumb).then(index => {
+        if (index === undefined) return
+        this.showPaths = FileModalHandler.replaceElement(cacheArray, 1, index, '...')
       })
     },
-    getLastParam () {
-      const cacheItem = _.last(this.cacheArray)
-      if (cacheItem === undefined) return
-      const path = cacheItem.path
-      const uuid = cacheItem.uuid
-      if (path !== undefined && uuid !== undefined) {
-        return { path, uuid }
-      }
+    // 判断当前path是否可以点击
+    showHover (index: number) {
+      if (index === this.showPaths.length - 1) return false
+      const path = this.showPaths[index]
+      return path !== '...'
     },
-    // 更新index对应item的禁用和编辑状态
-    updateItemState (index: number, disable: boolean, renaming: boolean) {
-      const item = this.showArray[index]
-      item.disable = disable
-      item.renaming = renaming
-      this.showArray.splice(index, 1, item)
-      return item
+    updateLastCache (item: StorageInfo | PartitionInfo | CustomModule | ResourceItem) {
+      const cacheArray = _.clone(this.cacheArray)
+      const index = cacheArray.length - 1
+      const lastItem = cacheArray[index]
+      lastItem.selectedItem = item
+      cacheArray.splice(index, 1, lastItem)
+      return cacheArray
     },
-    refreshResourceList (path: string, uuid: string) {
-      this.page = 1
-      this.busy = false
-      this.fetchResourceList(path, uuid)
+    hasRenamingItem () {
+      const item = this.selectedItem
+      if (item === undefined) return false
+      if (item.hasOwnProperty('renaming')) return (item as ResourceItem).renaming
+      return false
+    },
+    hideModalAnimate (path?: string, uuid?: string) {
+      this.hideModal = true
+      setTimeout(() => {
+        this.$emit('dismiss', path, uuid)
+      }, 350);
     }
   }
 })

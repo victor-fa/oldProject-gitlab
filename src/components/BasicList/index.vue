@@ -31,30 +31,25 @@ export default Vue.extend({
     dataSource: Array,
     busy: {
       default: false
-    }
-  },
-  watch: {
-    adjust: function (newValue: number) {
-      this.scrollHeight = document.body.clientHeight - newValue
+    },
+    adjust: {
+      default: 159
     }
   },
   data () {
     return {
-      scrollHeight: 0
+      scrollHeight: document.body.clientHeight - this.adjust
     }
   },
   mounted () {
     window.addEventListener('resize', this.observerWindowResize)
-    this.$nextTick(() => {
-      this.scrollHeight = this.$parent.$parent.$el.clientHeight
-    })
   },
   destroyed () {
     window.removeEventListener('resize', this.observerWindowResize)
   },
   methods: {
     observerWindowResize () {
-      this.scrollHeight = this.$parent.$parent.$el.clientHeight
+      this.scrollHeight = document.body.clientHeight - this.adjust
     },
     handleInfiniteOnLoad () {
       if (this.busy) return
@@ -67,10 +62,10 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .basic-list {
+  width: 100%;
   height: 100%;
   background-color: white;
-  overflow-x: hidden;
-  overflow-y: scroll;
+  overflow: auto;
 }
 </style>
 
@@ -81,5 +76,8 @@ export default Vue.extend({
 .basic-list .ant-list-item {
   margin: 0px;
   padding: 0px;
+}
+.basic-list .ant-list-empty-text {
+  margin-top: 10%;
 }
 </style>

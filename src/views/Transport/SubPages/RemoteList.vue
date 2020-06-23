@@ -1,5 +1,6 @@
 <template>
   <main-page
+    :loading="loading"
     :categorys="categorys"
     :dataSource="showArray"
     v-on:itemAction="handleItemAction"
@@ -18,6 +19,7 @@ import { TransportModel, remoteCategorys, TransportStatus } from '../MainPage/Tr
 import TransportHandler from '../TransportHandler'
 import { EventBus } from '../../../utils/eventBus'
 import { EventName } from '../../../utils/processCenter'
+import { TaskStatus } from '../../../api/Transport/BaseTask'
 
 let timer: NodeJS.Timeout | null = null
 
@@ -27,11 +29,10 @@ export default Vue.extend({
     MainPage
   },
   data () {
-    let items: TransportModel[] = []
     return {
       loading: false,
-      dataArray: items,
-      showArray: items,
+      dataArray: [] as TransportModel[],
+      showArray: [] as TransportModel[],
       categorys: _.cloneDeep(remoteCategorys)
     }
   },
@@ -108,7 +109,9 @@ export default Vue.extend({
       const category = this.categorys.filter(item => {
         return item.isSelected
       })[0].status
+      let canResumeAll = false
       this.showArray = this.dataArray.filter(model => {
+        if (model.status !== TaskStatus.suspend && model.status !== TaskStatus.error) canResumeAll = false
         return model.category === category
       })
       this.categorys = this.categorys.map(item => {
@@ -119,6 +122,8 @@ export default Vue.extend({
         }
         item.batchItems = item.batchItems.map(item => {
           item.disable = this.showArray.length === 0
+          if (item.command === 'pauseAll') item.isHidden = canResumeAll
+          if (item.command === 'resumeAll') item.isHidden = !canResumeAll
           return item
         })
         return item

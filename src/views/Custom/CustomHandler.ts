@@ -15,5 +15,13 @@ export default {
     image_path += `uuid=${item.uuid}&path=${item.myself_folder.background_path}&api_token=${apiToken}`
     item.myself_folder.image_path = image_path
     return item
+  },
+  formatShowItems (items: CustomModule[], selectedItem?: CustomModule) {
+    if (selectedItem === undefined || selectedItem.custom !== 'custom') return items
+    const name = (selectedItem as CustomModule).name
+    return items.map(item => {
+      item.isSelected = item.name === name
+      return item
+    })
   }
 }

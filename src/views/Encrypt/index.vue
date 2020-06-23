@@ -1,9 +1,10 @@
 <template>
   <div class="encrypt">
     <main-view
-      :loading="loading"
-      :dataSource="dataArray"
       :busy="busy"
+      :loading="loading"
+      :count="totalSize"
+      :dataSource="dataArray"
       :contextListMenu="alreadyLogin ? encryptContextMenu : encryptMisTokenContextMenu"
       :contextItemMenu="encryptResourceContextMenu"
       v-on:headerCallbackActions="handleHeaderActions"
@@ -64,7 +65,7 @@ import EncryptDownloadTask from '@/api/Transport/EncryptDownloadTask'
 import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
 import StringUtility from '@/utils/StringUtility'
 import { encryptContextMenu, encryptMisTokenContextMenu, encryptResourceContextMenu } from '@/components/OperateListAlter/operateList'
-import { User } from '@/api/UserModel'
+import { User, BasicResponse } from '@/api/UserModel'
 import RouterUtility from '@/utils/RouterUtility'
 import SelectFilePath from '../SelectFilePath/index.vue'
 
@@ -96,6 +97,7 @@ export default Vue.extend({
     return {
       loading: false,
       dataArray: [] as any,
+      totalSize: 0,
       page: 1,
       busy: false,
       uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
@@ -277,15 +279,23 @@ export default Vue.extend({
           this.encryptLogin.isVisiable = true // 弹出登录窗口
           return
         }
-        let list = _.get(response.data.data, 'list')
-        if (_.isEmpty(list) || list.length < 20) this.busy = true
-        list = ResourceHandler.formatResourceList(list)
-        this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
+        this.parseResponse(response.data)
         this.alreadyLogin = true
       }).catch(error => {
         this.loading = false
         console.log(error)
         this.encryptLogin.isVisiable = true
+      })
+    },
+    parseResponse (data: BasicResponse) {
+      this.totalSize = _.get(data.data, 'total')
+      let list = _.get(data.data, 'list') as Array<ResourceItem>
+      if (_.isEmpty(list) || list.length < 20) this.busy = true
+      list = ResourceHandler.formatResourceList(list)
+      list = this.page === 1 ? list : this.dataArray.concat(list)
+      this.dataArray = list.map((item, index) => {
+        item.index = index
+        return item
       })
     },
     logout () {

@@ -2,7 +2,7 @@
   <div class="transport-header-view">
     <div class="left-view">
       <div
-        v-for="(item, index) in showCategorys"
+        v-for="(item, index) in categorys"
         :key="index"
         class="left-view-item"
       >
@@ -39,16 +39,14 @@ export default Vue.extend({
     categorys: Array
   },
   computed: {
-    showCategorys: function () {
-      const categorys = this.categorys as TransportCategory[]
-      return categorys
-    },
     showBatchItems: function () {
       const categorys = this.categorys as TransportCategory[]
       for (let index = 0; index < categorys.length; index++) {
         const element = categorys[index]
         if (element.isSelected) {
-          return element.batchItems
+          return element.batchItems.filter(item => {
+            return item.isHidden !== true
+          })
         }
       }
       return [] as BatchItem[]
@@ -59,7 +57,7 @@ export default Vue.extend({
       return index !== this.categorys.length - 1
     },
     handleCategoryChange (index: number) {
-      const item = this.showCategorys[index]
+      const item = this.categorys[index] as TransportCategory
       if (item.isSelected) return
       this.$emit('categroyChange', index)
     },

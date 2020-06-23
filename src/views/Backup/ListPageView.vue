@@ -1,5 +1,7 @@
 <template>
   <main-view
+    :adjust="159"
+    :count="totalSize"
     :loading="loading"
     :dataSource="dataArray"
     :contextItemMenu="backupResourceContextMenu"
@@ -33,6 +35,7 @@ export default Vue.extend({
   data () {
     return {
       loading: false,
+      totalSize: 0,
       dataArray: [] as ResourceItem[],
       page: 1,
       uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
@@ -64,10 +67,15 @@ export default Vue.extend({
       })
     },
     parseResponse (data: BasicResponse) {
+      this.totalSize = _.get(data.data, 'total')
       let list = _.get(data.data, 'list') as Array<ResourceItem>
       if (_.isEmpty(list) || list.length < 20) this.busy = true
       list = ResourceHandler.formatResourceList(list)
-      this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
+      list = this.page === 1 ? list : this.dataArray.concat(list)
+      this.dataArray = list.map((item, index) => {
+        item.index = index
+        return item
+      })
     },
     // 重写父类中的方法
     handleRefreshAction () {

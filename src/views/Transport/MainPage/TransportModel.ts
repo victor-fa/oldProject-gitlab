@@ -113,13 +113,19 @@ const backupItems: BatchItem[] = [
   { title: '继续上传', command: 'resumeAll' },
   { title: '全部取消', command: 'cancelAll' }
 ]
+const offlineItems: BatchItem[] = [
+  { title: '新建任务', command: 'newOffline' },
+  { title: '全部暂停', command: 'pauseAll' },
+  { title: '继续下载', command: 'resumeAll', isHidden: true },
+  { title: '全部取消', command: 'cancelAll' }
+]
 const backupCategorys: TransportCategory[] = [
   { name: '正在备份', status: TransportStatus.doing, count: 0, isSelected: true, batchItems: backupItems },
   { name: '备份完成', status: TransportStatus.done, count: 0, isSelected: false, batchItems: doneItems }
 ]
 
 const offlineCategorys: TransportCategory[] = [
-  { name: '正在下载', status: TransportStatus.doing, count: 0, isSelected: true, batchItems: downloadItems },
+  { name: '正在下载', status: TransportStatus.doing, count: 0, isSelected: true, batchItems: offlineItems },
   { name: '下载完成', status: TransportStatus.done, count: 0, isSelected: false, batchItems: doneItems }
 ]
 

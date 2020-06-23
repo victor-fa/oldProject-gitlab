@@ -52,7 +52,9 @@ export default Vue.extend({
       const category = this.categorys.filter(item => {
         return item.isSelected
       })[0].status
+      let canResumeAll = true
       this.showArray = this.dataArray.filter(model => {
+        if (model.status !== TaskStatus.suspend && model.status !== TaskStatus.error) canResumeAll = false
         return model.category === category
       })
       this.categorys = this.categorys.map(item => {
@@ -63,6 +65,8 @@ export default Vue.extend({
         }
         item.batchItems = item.batchItems.map(item => {
           item.disable = this.showArray.length === 0
+          if (item.command === 'pauseAll') item.isHidden = canResumeAll
+          if (item.command === 'resumeAll') item.isHidden = !canResumeAll
           return item
         })
         return item

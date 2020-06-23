@@ -142,7 +142,7 @@ export default Vue.extend({
       const breadcrumb = this.$refs.breadcrumb as Vue
       FileModalHandler.calculateShowPaths(breadcrumb).then(index => {
         if (index === undefined) return
-        this.showPaths = FileModalHandler.replaceElement(newValue as CacheParams[], 1, index, '...')
+        this.showPaths = FileModalHandler.replaceElement(newValue, 1, index, '...')
       })
     }
   },

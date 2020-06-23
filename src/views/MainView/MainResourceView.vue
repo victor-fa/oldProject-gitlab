@@ -1,9 +1,10 @@
 <template>
   <main-view
     ref="mainView"
+    :busy="busy"
+    :count="totalSize"
     :loading="loading"
     :dataSource="dataArray"
-    :busy="busy"
     :contextItemMenu="itemMenu"
     :contextListMenu="listMenu"
     v-on:headerCallbackActions="handleHeaderActions"
@@ -39,10 +40,11 @@ export default Vue.extend({
   mixins: [MainViewMixin],
   data () {
     return {
-      loading: false,
-      dataArray: [] as ResourceItem[],
       page: 1,
       busy: false,
+      loading: false,
+      totalSize: 0,
+      dataArray: [] as ResourceItem[],
       order: OrderType.byNameDesc, // 当前选择的排序规则
       itemMenu: resourceContextMenu, // item的右键菜单
       listMenu: listContextMenu // list的右键菜单
@@ -104,10 +106,15 @@ export default Vue.extend({
       })
     },
     parseResponse (data: BasicResponse) {
+      this.totalSize = _.get(data.data, 'total')
       let list = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(list) || list.length < 39) this.busy = true
+      if (_.isEmpty(list) || list.length < 40) this.busy = true
       list = ResourceHandler.formatResourceList(list, this.selectedPath)
-      this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
+      list = this.page === 1 ? list : this.dataArray.concat(list)
+      this.dataArray = list.map((item, index) => {
+        item.index = index
+        return item
+      })
     },
     handlePasteSuccess () {
       this.$message.info('粘贴任务添加成功')

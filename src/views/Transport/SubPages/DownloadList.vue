@@ -54,7 +54,9 @@ export default Vue.extend({
         return item.isSelected
       })[0].status
       // list view
+      let canResumeAll = true
       this.showArray = this.dataArray.filter(model => {
+        if (model.status !== TaskStatus.suspend && model.status !== TaskStatus.error) canResumeAll = false
         return model.category === category
       })
       // header view
@@ -66,6 +68,8 @@ export default Vue.extend({
         }
         item.batchItems = item.batchItems.map(item => {
           item.disable = this.showArray.length === 0
+          if (item.command === 'pauseAll') item.isHidden = canResumeAll
+          if (item.command === 'resumeAll') item.isHidden = !canResumeAll
           return item
         })
         return item

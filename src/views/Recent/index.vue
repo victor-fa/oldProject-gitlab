@@ -1,8 +1,9 @@
 <template>
   <main-view
+    :busy="busy"
+    :count="totalSize"
     :loading="loading"
     :dataSource="dataArray"
-    :busy="busy"
     :popoverList="uploadSortList"
     :contextItemMenu="recentContextMenu"
     v-on:headerCallbackActions="handleHeaderActions"
@@ -33,11 +34,12 @@ export default Vue.extend({
   mixins: [MainViewMixin],
   data () {
     return {
-      loading: false,
-      dataArray: [] as ResourceItem[],
       page: 1,
       busy: false,
+      totalSize: 0,
+      loading: false,
       uploadSortList,
+      dataArray: [] as ResourceItem[],
       uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
       recentContextMenu // item右键菜单
     }
@@ -67,10 +69,15 @@ export default Vue.extend({
       return pos
     },
     parseResponse (data: BasicResponse) {
+      this.totalSize = _.get(data.data, 'total')
       let ulist = _.get(data.data, 'list') as Array<ResourceItem>
       if (_.isEmpty(ulist) || ulist.length < 20) this.busy = true
       ulist = ResourceHandler.formatResourceList(ulist)
-      this.dataArray = this.page === 1 ? ulist : this.dataArray.concat(ulist)
+      ulist = this.page === 1 ? ulist : this.dataArray.concat(ulist)
+      this.dataArray = ulist.map((item, index) => {
+        item.index = index
+        return item
+      })
     },
     // 重写父类中的方法
     handleRefreshAction () {

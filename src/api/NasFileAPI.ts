@@ -1,15 +1,13 @@
 import _ from 'lodash'
 import { ResourceItem, UploadParams, CustomInfo, DownloadParams, ResourceType } from '@/api/NasFileModel';
 import { BasicResponse } from '@/api/UserModel';
-import Vue from 'vue'
-import { jsonToParams, jsonToParamsForPdf, source } from '@/utils/request'
+import { jsonToParams, jsonToParamsForPdf } from '@/utils/request'
 import { CRYPTO_INFO } from '@/common/constants'
 import { NasInfo, CryptoInfo } from './ClientModel';
 import axios, { AxiosResponse, Canceler, CancelTokenSource } from 'axios/index'
 import { OrderType, UploadTimeSort } from './NasFileModel'
 import { nasServer } from './NasServer';
 import store from '@/store';
-import { type } from 'os';
 
 axios.defaults.withCredentials = true;
 
@@ -24,6 +22,7 @@ const recycleModule = '/v1/recycle'
 const settingModule = '/setting/v1/sys'
 const upgradeModule = '/v1/upgrade'
 const diskModule = '/v1/disk'
+const offlineModule = '/v1/dl'
 
 type ServerResponse = Promise<AxiosResponse<BasicResponse>>
 const CancelToken = axios.CancelToken
@@ -145,7 +144,7 @@ export default {
     return nasServer.post(collectModule + '/get')
   },
   collectFile (items: Array<ResourceItem>): ServerResponse {
-    const files = items.map((item, index) => {
+    const files = items.map(item => {
       return {
         uuid: item.uuid,
         path: item.path
@@ -154,7 +153,7 @@ export default {
     return nasServer.post(collectModule + '/set', { files })
   },
   cancelCollect (items: Array<ResourceItem>): ServerResponse {
-    const files = items.map((item) => {
+    const files = items.map(item => {
       return {
         uuid: item.uuid,
         path: item.path,
@@ -461,14 +460,17 @@ export default {
   fetchCustomInfo (path: string, uuid: string): ServerResponse {
     return nasServer.post(myselfModule + '/get_myself_folder', { path, uuid })
   },
-  fetchRecycleList (): ServerResponse {
-    return nasServer.post(recycleModule + '/list')
+  fetchRecycleList (page: number, size: number = 40): ServerResponse {
+    return nasServer.post(recycleModule + '/list', { page, size })
   },
   recoveryFile (items: ResourceItem[]): ServerResponse {
     const params = items.map(item => {
       return { path: item.path, uuid: item.uuid }
     })
     return nasServer.post(recycleModule + '/recovery', params)
+  },
+  clearRecycle (): ServerResponse {
+    return nasServer.post(recycleModule + '/clear')
   },
   deleteFile (items: ResourceItem[]): ServerResponse {
     const params = items.map(item => {
@@ -515,6 +517,37 @@ export default {
   },
   fetchRomUpgrade (): ServerResponse {
     return nasServer.post<BasicResponse>(upgradeModule + '/rom/upgrade')
+  },
+  fetchOfflineList (page: number, size: number = 40): ServerResponse {
+    return nasServer.get(offlineModule + '/get', {
+      params: { page: page, size: size, order: 1 }
+    })
+  },
+  fetchOfflineDoneList (): ServerResponse {
+    return nasServer.get(offlineModule + '/list')
+  },
+  addOfflineTask (params: any): ServerResponse {
+    return nasServer.post(offlineModule + '/add', params, {
+      headers: { 'Content-type': 'multipart/form-data' }
+    })
+  },
+  deleteOfflineTask (id?: number, status?: number): ServerResponse {
+    if (id !== undefined) {
+      return nasServer.get(offlineModule + '/del', { params: { id: id } })
+    }
+    return nasServer.get(offlineModule + '/del', { params: { status: status } })
+  },
+  pauseOfflineTask (id?: number, status?: number): ServerResponse {
+    if (id !== undefined) {
+      return nasServer.get(offlineModule + '/pause', { params: { id: id } })
+    }
+    return nasServer.get(offlineModule + '/pause', { params: { status: status } })
+  },
+  resumeOfflineTask (id?: number, status?: number): ServerResponse {
+    if (id !== undefined) {
+      return nasServer.get(offlineModule + '/start', { params: { id: id } })
+    }
+    return nasServer.get(offlineModule + '/start', { params: { status: status } })
   }
 }
 

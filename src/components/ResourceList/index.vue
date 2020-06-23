@@ -66,12 +66,15 @@ export default Vue.extend({
     },
     arrangeWay: {
       default: ArrangeWay.horizontal
+    },
+    adjust: {
+      default: 123
     }
   },
   data () {
     return {
       dragState: false,
-      scrollHeight: 0
+      scrollHeight: document.body.clientHeight - this.adjust
     }
   },
   watch: {
@@ -101,9 +104,6 @@ export default Vue.extend({
   mounted () {
     window.addEventListener('resize', this.observerWindowResize)
     document.addEventListener('keydown', this.handleKeydownAction)
-    setTimeout(() => {
-      this.scrollHeight = this.$parent.$parent.$el.clientHeight
-    }, 0);
   },
   destroyed () {
     window.removeEventListener('resize', this.observerWindowResize)
@@ -111,7 +111,7 @@ export default Vue.extend({
   },
   methods: {
     observerWindowResize () {
-      let height = this.$parent.$parent.$el.clientHeight
+      let height = document.body.clientHeight - this.adjust
       if (this.arrangeWay === ArrangeWay.vertical) {
         height -= 28
       }

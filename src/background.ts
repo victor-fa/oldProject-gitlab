@@ -1,10 +1,11 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain, nativeImage, shell } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, nativeImage } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import processCenter from './utils/processCenter'
 import windowControl from './utils/windowControl'
-const path = require('path');
+import path from 'path'
+import { spawn, exec } from 'child_process'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -474,18 +475,24 @@ function bindIpc() {
 }
 // 启动P2P隧道程序
 function awakeTunnel () {
-	const { spawn } = require('child_process')
   if (process.env.WEBPACK_DEV_SERVER_URL) {	// 开发环境
 		if (process.platform === 'win32') {
 			spawn(path.join(__filename, '../../public/tunnel/win/ugreenTunnel.exe'));
 		} else {
-			// TODO：mac平台启动程序
+			const cwdPath = path.join(__filename, '../../public/tunnel/mac')
+			const filePath = path.join(cwdPath, 'pgTunnelStatic')
+			const child = spawn(filePath, { shell: true, cwd: cwdPath })
+			child.stdout.pipe(process.stdout)
 		}
   } else {	// 生产环境
 		if (process.platform === 'win32') {
 			spawn(path.join(__filename, '../tunnel/win/ugreenTunnel.exe').replace(new RegExp("\\\\", "g"), '/'));
 		} else {
-			// TODO：mac平台启动程序
+			const cwdPath = path.join(__filename, '../tunnel/mac')
+			const filePath = path.join(cwdPath, 'pgTunnelStatic')
+			exec(`chmod 777 ${filePath}`, (error, stdout, stderr) => {
+				if (error === null) spawn(filePath, { shell: true, cwd: cwdPath })
+			})
 		}
   }
 }

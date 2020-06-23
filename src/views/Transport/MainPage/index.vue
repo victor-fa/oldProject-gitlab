@@ -9,7 +9,11 @@
     </a-layout-header>
     <a-layout-content class="main-content-view">
       <a-spin :spinning="loading">
-        <basic-list :dataSource="dataSource">
+        <basic-list
+          :busy="busy"
+          :dataSource="dataSource"
+          v-on:loadMoreData="hanldeLoadMoreAction"
+        >
           <template v-slot:renderItem="{ item, index }">
             <slot name="renderItem" :item="item" :index="index">
               <transport-item
@@ -24,7 +28,7 @@
       </a-spin>
     </a-layout-content>
     <a-layout-footer class="main-footer-view">
-      <main-bottom-view/>
+      <main-bottom-view :itemCount="itemCount"/>
     </a-layout-footer>
   </a-layout>
 </template>
@@ -48,8 +52,19 @@ export default Vue.extend({
   },
   props: {
     loading: Boolean,
+    busy: {
+      default: false
+    },
+    totalSize: Number,
     dataSource: Array, // 列表数据
     categorys: Array // 表头数据
+  },
+  computed: {
+    itemCount: function () {
+      if (_.isNumber(this.totalSize)) return this.totalSize
+      const count: number = this.dataSource.length
+      return count
+    }
   },
   methods: {
     handleCategoryChange (index: number) {
@@ -60,6 +75,9 @@ export default Vue.extend({
     },
     handleItemAction (command: string, taskId: number) {
       this.$emit('itemAction', command, taskId)
+    },
+    hanldeLoadMoreAction () {
+      this.$emit('loadMore')
     }
   }
 })
@@ -67,6 +85,7 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .transport-main {
+  height: 100%;
   background-color: white;
   height: 100%;
   .main-header-view {
@@ -75,7 +94,6 @@ export default Vue.extend({
   }
   .main-content-view {
     padding: 0px;
-    border: 1px;
   }
   .main-footer-view {
     padding: 0px;

@@ -17,9 +17,10 @@
     <a-layout-content class="main-content-view">
       <a-spin :spinning="loading">
         <resource-list
+          :busy="busy"
+          :adjust="adjust"
           :customGrid="listGrid"
           :dataSource="showArray"
-          :busy="busy"
           :arrangeWay="arrangeWay"
           v-on:callbackAction="handleResourceListAction"
         >
@@ -91,13 +92,15 @@ export default Vue.extend({
     EncryptPassModel
   },
   props: {
+    count: Number, // 条目总数
+    dataSource: Array, // 展示的条目数据
+    adjust: Number, // 列表高度与窗口的高度差
     loading: {
       default: false
     },
     busy: { // 是否处理加载更多事件
       default: true
     },
-    dataSource: Array,
     popoverList: { // header中排序弹窗列表数据
       default: () => {
         return _.cloneDeep(sortList)
@@ -133,6 +136,7 @@ export default Vue.extend({
       }
     },
     itemCount: function () {
+      if (_.isNumber(this.count)) return this.count as number
       const count = this.showArray.length as number
       return count
     }
@@ -195,16 +199,6 @@ export default Vue.extend({
           break;
       }
     },
-    handleArrangeChange (arrangeWay: ArrangeWay) {
-      this.arrangeWay = arrangeWay
-      localStorage.setItem('arrangeWay', arrangeWay.toString())
-    },
-    handleBackAction () {
-      RouterUtility.pop()
-    },
-    handleInnerRefreshAction() {
-      this.showAlter = false
-    },
     // handle resource list view callback actions
     handleResourceListAction (action: string, ...args: any[]) {
       // 这里移动弹窗没有使用window，故弹出时需要屏蔽所有快捷键
@@ -223,33 +217,6 @@ export default Vue.extend({
         default:
           break;
       }
-    },
-    handleListContextMenuAction (event: MouseEvent) {
-      this.showArray = ResourceHandler.resetSelectState(this.showArray)
-      const list = ResourceHandler.filterOperateList(this.contextListMenu as OperateGroup[], this.clipboard, this.categoryType)
-      this.showContextMenu(list, event)
-    },
-    showContextMenu (list: Array<OperateGroup> | null, event: MouseEvent) {
-      if (list === null) return
-      this.showOperateList = list
-      this.showAlter = true
-      this.$nextTick(() => {
-        const alter = this.$refs.operateListAlter as Vue
-        this.alterPosition = ResourceHandler.calculateSafePositionOnWindow(event.clientX, event.clientY, alter)
-      })
-    },
-    handleListClickAction () {
-      if (this.showAlter) {
-        this.showAlter = false
-      } else {
-        this.showArray = ResourceHandler.resetSelectState(this.showArray)
-      }
-    },
-    handleSelectAllItemsAction () {
-      this.showArray = this.showArray.map(item => {
-        item.isSelected = true
-        return item
-      })
     },
     // handle resource list view item callback actions
     handleResourceItemAction (action: string, index: number, ...args: any[]) {
@@ -277,6 +244,58 @@ export default Vue.extend({
         default:
           break;
       }
+    },
+    // handle main view context menu actions
+    handleAlterAction (command: string, ...args: any[]) {
+      this.$emit('contextMenuCallbackActions', command, ...args)
+      this.showAlter = false
+      switch (command) {
+        case 'moveto':
+          this.handleMoveToAction()
+          break;
+        case 'encrypt':
+          this.handleEncryptAction()
+          break;
+        default:
+          break;
+      }
+    },
+    handleArrangeChange (arrangeWay: ArrangeWay) {
+      this.arrangeWay = arrangeWay
+      localStorage.setItem('arrangeWay', arrangeWay.toString())
+    },
+    handleBackAction () {
+      RouterUtility.pop()
+    },
+    handleInnerRefreshAction() {
+      this.showAlter = false
+    },
+    handleListContextMenuAction (event: MouseEvent) {
+      this.showArray = ResourceHandler.resetSelectState(this.showArray)
+      const list = ResourceHandler.filterOperateList(this.contextListMenu as OperateGroup[], this.clipboard, this.categoryType)
+      this.showContextMenu(list, event)
+    },
+    showContextMenu (list: Array<OperateGroup> | null, event: MouseEvent) {
+      if (list === null) return
+      this.showOperateList = list
+      this.showAlter = true
+      this.$nextTick(() => {
+        const alter = this.$refs.operateListAlter as Vue
+        this.alterPosition = ResourceHandler.calculateSafePositionOnWindow(event.clientX, event.clientY, alter)
+      })
+    },
+    handleListClickAction () {
+      if (this.showAlter) {
+        this.showAlter = false
+      } else {
+        this.showArray = ResourceHandler.resetSelectState(this.showArray)
+      }
+    },
+    handleSelectAllItemsAction () {
+      this.showArray = this.showArray.map(item => {
+        item.isSelected = true
+        return item
+      })
     },
     handleSingleSelection (index: number) {
       const item = this.dataSource[index] as ResourceItem
@@ -307,21 +326,6 @@ export default Vue.extend({
       }
       const list = ResourceHandler.filterItemOperateList(this.contextItemMenu as OperateGroup[], this.showArray, item)
       this.showContextMenu(list, event)
-    },
-    // handle main view context menu actions
-    handleAlterAction (command: string, ...args: any[]) {
-      this.$emit('contextMenuCallbackActions', command, ...args)
-      this.showAlter = false
-      switch (command) {
-        case 'moveto':
-          this.handleMoveToAction()
-          break;
-        case 'encrypt':
-          this.handleEncryptAction()
-          break;
-        default:
-          break;
-      }
     },
     handleMoveToAction () {
       this.showSelectModal = true

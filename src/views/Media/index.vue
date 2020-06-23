@@ -1,6 +1,7 @@
 <template>
   <main-view
     :busy="busy"
+    :count="totalSize"
     :loading="loading"
     :dataSource="dataArray"
     v-on:headerCallbackActions="handleHeaderActions"
@@ -28,9 +29,10 @@ export default Vue.extend({
   },
   data () {
     return {
-      loading: false,
-      busy: false,
       page: 1,
+      busy: false,
+      totalSize: 0,
+      loading: false,
       dataArray: [] as ResourceItem[],
       order: OrderType.byNameDesc // 当前选择的排序规则
     }
@@ -84,10 +86,15 @@ export default Vue.extend({
       })
     },
     parseResponse (data: BasicResponse) {
+      this.totalSize = _.get(data.data, 'total')
       let list = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(list) || list.length < 39) this.busy = true
+      if (_.isEmpty(list) || list.length < 40) this.busy = true
       list = ResourceHandler.formatResourceList(list)
-      this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
+      list = this.page === 1 ? list : this.dataArray.concat(list)
+      this.dataArray = list.map((item, index) => {
+        item.index = index
+        return item
+      })
     },
     // 覆盖混入中的方法
     handleLoadmoreAction () {

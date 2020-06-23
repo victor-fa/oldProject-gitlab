@@ -1,6 +1,12 @@
 import _ from 'lodash'
 import { PartitionInfo, ResourceItem, StorageInfo, CustomModule } from '@/api/NasFileModel'
 
+enum SelectListType {
+  disk,
+  file,
+  bt
+}
+
 enum CacheType {
   disk,
   partition,
@@ -9,7 +15,7 @@ enum CacheType {
 
 interface CacheParams {
   name: string,
-  type?: CacheType, // 当前缓存的数据类型(磁盘列表，分区列表，目录列表), 默认为目录列表
+  type: CacheType, // 当前缓存的数据类型(磁盘列表，分区列表，目录列表), 默认为目录列表
   path?: string,
   uuid?: string,
   selectedItem?: undefined | StorageInfo | PartitionInfo | CustomModule | ResourceItem
@@ -17,7 +23,8 @@ interface CacheParams {
 
 export {
   CacheParams,
-  CacheType
+  CacheType,
+  SelectListType
 }
 
 export default {
@@ -44,7 +51,7 @@ export default {
     })
   },
   // 替换数组中的元素
-  replaceElement (items: CacheParams[], start: number, length: number, ele: string) {
+  replaceElement (items: Array<any>, start: number, length: number, ele: string) {
     let paths = items.map(item => {
       return item.name
     })
@@ -72,18 +79,30 @@ export default {
       return item as T
     })
   },
-  /**栈顶推入一个元素 */
-  pushCache (cacheItems: CacheParams[], aItem: StorageInfo | PartitionInfo | CustomModule | ResourceItem) {
-    if (_.isEmpty(cacheItems)) return cacheItems
-    const cache = this.generateCacheParams(aItem)
-    if (cache === undefined) return cacheItems
-    const items = cacheItems.concat([cache])
-    return items.map((item, index) => {
-      if (index === items.length - 2) {
-        item.selectedItem = aItem
-      }
-      return item
-    })
+  /**根据选中的数据生成对应的参数 */
+  generatePathAndUuid (item: StorageInfo | PartitionInfo | CustomModule | ResourceItem) {
+    switch (item.custom) {
+      case 'storage':
+        return {
+          path: (item as StorageInfo).partitions[0].path,
+          uuid: (item as StorageInfo).partitions[0].uuid
+        }
+      case 'partition':
+        return {
+          path: (item as PartitionInfo).path,
+          uuid: (item as PartitionInfo).uuid
+        }
+      case 'custom':
+        return {
+          path: (item as CustomModule).path,
+          uuid: (item as CustomModule).uuid
+        }
+      case 'resource':
+        return {
+          path: (item as ResourceItem).path,
+          uuid: (item as ResourceItem).uuid
+        }
+    }
   },
   /**根据选中的数据类型生成对应的缓存模型 */
   generateCacheParams (item: StorageInfo | PartitionInfo | CustomModule | ResourceItem): CacheParams | undefined {
@@ -133,22 +152,16 @@ export default {
 
  const handleStorageInfo = (item: StorageInfo): CacheParams => {
    if (item.partitions.length === 1) {
-     const partition = item.partitions[0]
      return {
-      name: item.showName,
-      type: CacheType.resource,
-      path: partition.path,
-      uuid: partition.uuid
+       name: item.showName,
+       type: CacheType.resource,
+       path: item.partitions[0].path,
+       uuid: item.partitions[0].uuid
      }
    } else {
-     // 分区的选中状态也有缓存
-     const selectedItem = item.partitions.filter(item => {
-       return item.isSelected === true
-     })[0]
-    return {
-      selectedItem,
-      name: item.showName,
-      type: CacheType.partition
-    }
+     return {
+       name: item.showName,
+       type: CacheType.partition
+     }
    }
  }

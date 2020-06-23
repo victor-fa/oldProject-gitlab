@@ -65,22 +65,6 @@ export default Vue.extend({
           break;
       }
     },
-    handleTabChange (type: ResourceType) {
-      const items = ResourceHandler.classifyArray(this.dataArray, type)
-      this.updateShowArray(items)
-    },
-    handleSearchAction (keyword: string) {
-      this.dataArray = ResourceHandler.searchShowArray(this.dataArray, keyword)
-    },
-    handleEndSerchAction () {
-      tmpArray !== null && (this.dataArray = tmpArray)
-    },
-    handleRefreshAction () {
-    },
-    handleSortWayChangeAction (order: OrderType) {
-      this.order = order
-      this.dataArray = ResourceHandler.orderShowArray(this.dataArray, order)
-    },
     // handle resource list view callback actions
     handleListActions (action: string, ...args: any[]) {
       switch (action) {
@@ -96,13 +80,6 @@ export default Vue.extend({
         default:
           break;
       }
-    },
-    handleLoadmoreAction () {
-    },
-    handleDropAction (paths: string[]) {
-    },
-    handleDeleteItems () {
-      this.handleDeletAction()
     },
     handleItemActions (action: string, index: number, ...args: any[]) {
       switch (action) {
@@ -124,46 +101,6 @@ export default Vue.extend({
         default:
           break;
       }
-    },
-    handleEnterRenaming (index: number) {
-      const item = this.dataArray[index]
-      if (item.disable === true || item.renaming === true) return
-      item.renaming = true
-      this.dataArray.splice(index, 1, item)
-    },
-    handleLeaveRenaming (index: number) {
-      const item = this.dataArray[index]
-      item.renaming = false
-      this.dataArray.splice(index, 1, item)
-    },
-    handleRenameRequestAction (index: number, newName: string) {
-      if (!ResourceHandler.checkFileName(newName.substring(0, newName.indexOf('.')))) {
-        this.$message.error('名称包含非法字符')
-        return
-      }
-      const item = ResourceHandler.disableFirstSelectItem(this.dataArray)
-      if (item === undefined) return
-      const newPath = StringUtility.renamePath(item.path, newName)
-      NasFileAPI.renameResource(item.path, newPath, item.uuid).then(response => {
-        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
-        if (response.data.code !== 200) return
-        this.$message.info('重命名成功')
-        item.path = newPath
-        item.name = newName
-        this.dataArray.splice(index, 1, item)
-      }).catch(error => {
-        console.log(error)
-        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
-        this.$message.error('重命名失败')
-      })
-    },
-    handleLeaveNewFolder (aIndex: number) {
-      this.dataArray = this.dataArray.filter((item, index) => {
-        if (index > aIndex) item.index = index - 1
-        return index !== aIndex
-      })
-    },
-    handleNewFolderRequestAction (index: number, newName: string) {
     },
     // handle main view context menu actions
     handleContextMenuActions (command: string, ...args: any[]) {
@@ -250,6 +187,69 @@ export default Vue.extend({
         default:
           break;
       }
+    },
+    handleTabChange (type: ResourceType) {
+      const items = ResourceHandler.classifyArray(this.dataArray, type)
+      this.updateShowArray(items)
+    },
+    handleSearchAction (keyword: string) {
+      this.dataArray = ResourceHandler.searchShowArray(this.dataArray, keyword)
+    },
+    handleEndSerchAction () {
+      tmpArray !== null && (this.dataArray = tmpArray)
+    },
+    handleRefreshAction () {
+    },
+    handleSortWayChangeAction (order: OrderType) {
+      this.order = order
+      this.dataArray = ResourceHandler.orderShowArray(this.dataArray, order)
+    },
+    handleLoadmoreAction () {
+    },
+    handleDropAction (paths: string[]) {
+    },
+    handleDeleteItems () {
+      this.handleDeletAction()
+    },
+    handleEnterRenaming (index: number) {
+      const item = this.dataArray[index]
+      if (item.disable === true || item.renaming === true) return
+      item.renaming = true
+      this.dataArray.splice(index, 1, item)
+    },
+    handleLeaveRenaming (index: number) {
+      const item = this.dataArray[index]
+      item.renaming = false
+      this.dataArray.splice(index, 1, item)
+    },
+    handleRenameRequestAction (index: number, newName: string) {
+      if (!ResourceHandler.checkFileName(newName.substring(0, newName.indexOf('.')))) {
+        this.$message.error('名称包含非法字符')
+        return
+      }
+      const item = ResourceHandler.disableFirstSelectItem(this.dataArray)
+      if (item === undefined) return
+      const newPath = StringUtility.renamePath(item.path, newName)
+      NasFileAPI.renameResource(item.path, newPath, item.uuid).then(response => {
+        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+        if (response.data.code !== 200) return
+        this.$message.info('重命名成功')
+        item.path = newPath
+        item.name = newName
+        this.dataArray.splice(index, 1, item)
+      }).catch(error => {
+        console.log(error)
+        this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
+        this.$message.error('重命名失败')
+      })
+    },
+    handleLeaveNewFolder (aIndex: number) {
+      this.dataArray = this.dataArray.filter((item, index) => {
+        if (index > aIndex) item.index = index - 1
+        return index !== aIndex
+      })
+    },
+    handleNewFolderRequestAction (index: number, newName: string) {
     },
     handleOpenAction () {
       const items = ResourceHandler.disableSelectItems(this.dataArray)

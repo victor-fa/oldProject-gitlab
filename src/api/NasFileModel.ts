@@ -11,7 +11,8 @@ enum ResourceType {
   image = 3,
   document = 4,
   archive = 5,
-  folder = 6
+  folder = 6,
+  bt = 128
 }
 
 enum ResourceStatus {
@@ -252,6 +253,30 @@ interface CustomInfo {
   tags: string[]
 }
 
+enum OfflineTaskStatus {
+  prepare,
+  ready,
+  running,
+  pausing,
+  error,
+  completed
+}
+
+interface OfflineTask {
+  id: number,
+  type: ResourceType,
+  status: OfflineTaskStatus,
+  itime: number,
+  reousrce: string,
+  path: string,
+  filename: string,
+  temp_path: string,
+  errmsg: string,
+  total_size: number,
+  curr_size: number,
+  speed: number
+}
+
 export {
   ResourceItem,
   ResourceStatus,
@@ -275,5 +300,7 @@ export {
   CustomModule,
   CustomInfo,
   DownloadParams,
-  RemoteType
+  RemoteType,
+  OfflineTask,
+  OfflineTaskStatus
 }

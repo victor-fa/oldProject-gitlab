@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { StorageType, StorageInfo } from '@/api/NasFileModel'
+import { StorageType, StorageInfo, PartitionInfo } from '@/api/NasFileModel'
 import StringUtility from '@/utils/StringUtility'
 import store from '@/store'
 import { User } from '@/api/UserModel'
@@ -75,6 +75,15 @@ export default {
         partition.path = path
         partition.custom = 'partition'
       })
+      return item
+    })
+  },
+  formatShowStorages (storages: StorageInfo[], selectedItem?: StorageInfo) {
+    if (selectedItem === undefined) return storages
+    if (selectedItem.custom !== 'storage') return storages
+    const name = (selectedItem as StorageInfo).showName
+    return storages.map(item => {
+      item.isSelected = item.showName === name
       return item
     })
   }

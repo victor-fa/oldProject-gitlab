@@ -5,6 +5,7 @@ import Recycle from './index.vue'
 import { ResourceItem, OrderType } from '@/api/NasFileModel'
 import NasFileAPI from '@/api/NasFileAPI'
 import ResourceHandler from '../MainView/ResourceHandler'
+import { BasicResponse } from '../../api/UserModel'
 
 export default Vue.extend({
   name: 'recycle-resource-view',
@@ -14,6 +15,7 @@ export default Vue.extend({
       page: 0,
       busy: false,
       loading: false,
+      totalSize: 0,
       order: OrderType.byNameDesc,
       dataArray: [] as ResourceItem[]
     }
@@ -36,16 +38,27 @@ export default Vue.extend({
       }
       return true
     },
+    parseResponse (data: BasicResponse) {
+      this.totalSize = _.get(data.data, 'total')
+      let list = _.get(data.data, 'list') as Array<ResourceItem>
+      if (_.isEmpty(list) || list.length < 20) this.busy = true
+      list = ResourceHandler.formatResourceList(list).map(item => {
+        item.name = item.alias
+        return item
+      })
+      list = this.page === 1 ? list : this.dataArray.concat(list)
+      this.dataArray = list.map((item, index) => {
+        item.index = index
+        return item
+      })
+    },
     // 重写父类中的方法
     fetchRecycleList () {
       this.loading = true
       NasFileAPI.fetchResourceList(this.path, this.uuid, this.page, this.order).then(response => {
         this.loading = false
         if (response.data.code !== 200) return
-        let list = _.get(response.data.data, 'list') as ResourceItem[]
-        if (_.isEmpty(list) || list.length < 20) this.busy = true
-        list = ResourceHandler.formatResourceList(list)
-        this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
+        this.parseResponse(response.data)
       }).catch(error => {
         console.log(error)
         this.loading = false

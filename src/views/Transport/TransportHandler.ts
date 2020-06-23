@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { RemoteTask, RemoteTaskStatus, ResourceType } from '@/api/NasFileModel';
+import { RemoteTask, RemoteTaskStatus, ResourceType, OfflineTask, OfflineTaskStatus } from '@/api/NasFileModel';
 import { TransportModel, TransportStatus, runningOperateItems, continueItem, completedOperateItems, refreshItem } from './MainPage/TransportModel';
 import BaseTask, { TaskStatus } from '@/api/Transport/BaseTask';
 import StringUtility from '@/utils/StringUtility';
@@ -45,6 +45,40 @@ export default {
   },
   convertBackupTask (model): TransportModel {
     return {} as TransportModel
+  },
+  convertOfflineTask (task: OfflineTask): TransportModel {
+    const status = this.converOfflineStatus(task.status)
+    const items = this.generateItemsForStatus(status)
+    const category = this.convertTaskStatus(status)
+    return {
+      id: task.id,
+      status,
+      category,
+      speed: this.formatSpeed(task.speed),
+      total: this.formatMemory(task.total_size),
+      progress: this.formatProgress(task.curr_size, task.total_size),
+      progressPercent: this.caculatePercent(task.curr_size, task.total_size),
+      name: task.filename,
+      icon: ResourceHandler.searchResourceIcon(ResourceType.document, task.path),
+      controlItems: items,
+      path: task.path,
+      uuid: ''
+    }
+  },
+  converOfflineStatus (status: OfflineTaskStatus): TaskStatus {
+    switch (status) {
+      case OfflineTaskStatus.prepare:
+      case OfflineTaskStatus.ready:
+        return TaskStatus.pending
+      case OfflineTaskStatus.running:
+        return TaskStatus.progress
+      case OfflineTaskStatus.pausing:
+        return TaskStatus.suspend
+      case OfflineTaskStatus.completed:
+        return TaskStatus.finished
+      case OfflineTaskStatus.error:
+        return TaskStatus.error
+    }
   },
   formatSpeed (speed: number) {
     const kByte = 1024
