@@ -1,6 +1,5 @@
 <template>
-  <div :style="{ height: scrollHeight + 'px' }"
-    >
+  <div :style="{ height: scrollHeight + 'px' }">
     <basic-tabs :tabs="categorys" v-on:tabChange="handleTabsChange"/>
     <router-view></router-view>
   </div>

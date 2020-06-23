@@ -23,8 +23,8 @@
 							<span>已使用 {{item.used | filterSize}}</span>
 						</div>
 					</div>
-					<a-button v-show="isUserAdmin && diskFormatting === 0 && (item.status === 0 || item.status === 2)" @click="handleInitialize(item)">初始化</a-button>
-					<!-- 管理员可以进行格式化 -->
+					<!-- <a-button v-show="isUserAdmin && diskFormatting === 0 && (item.status === 0 || item.status === 2)" @click="handleInitialize(item)">初始化</a-button> -->
+					<!-- 管理员可以进行格式化（2020.3.22伟明说针对某个内置的初始化不要了） -->
 				</template>
 			</div>
 			<p class="cd-setting-title"><br></p>
@@ -221,15 +221,9 @@ export default Vue.extend({
 		},
 		fetchUpdateInfo () {
 			NasFileAPI.fetchRomInfo().then(response => {
-				if (response.data.code !== 200) {
-					this.$message.error('网络连接错误，请检测网络')
-					return
-				}
+				if (response.data.code !== 200) { this.$message.error('网络连接错误，请检测网络'); return; }
         const info = _.get(response.data, 'data')
-				if (!info) {
-					this.$message.info('当前版本已最新')
-					return
-				}
+				if (!info) { this.$message.info('当前版本已最新'); return; }
 				this.update.info = info as any
 				this.update.visiable = true
 			}).catch(error => {
@@ -288,10 +282,7 @@ export default Vue.extend({
 				this.handleOperation('makesure')
 				return
 			}
-			if (this.diskMode === -1) {	// 打开弹框
-				this.mode.visiable = true
-				return
-			}
+			if (this.diskMode === -1) { this.mode.visiable = true; return; }	// 打开弹框
 			this.finalMode = item.raidMode
 			this.handleOperation('makesure')
 		},
@@ -313,14 +304,8 @@ export default Vue.extend({
 			}
 		},
 		handleMakesure () {
-			if (this.makesureModal.input.length === 0) {
-				this.$message.error('您未输入关键信息！')
-				return
-			}
-			if (this.makesureModal.input !== '我已了解') {
-				this.$message.error('输入关键信息错误！')
-				return
-			}
+			if (this.makesureModal.input.length === 0) { this.$message.error('您未输入关键信息！'); return; }
+			if (this.makesureModal.input !== '我已了解') { this.$message.error('输入关键信息错误！'); return; }
 			this.handleCancle()
 			this.makesureModal.title === '硬盘初始化' ? this.handleSwitchMode() : this.handleOperation('switchMode')
 		},
@@ -329,16 +314,13 @@ export default Vue.extend({
 				title: this.makesureModal.title,
 				visiable: false,
 				input: '',
-				message: ``
+				message: ''
 			}
 		},
 		handleSwitchMode () {
 			NasFileAPI.switchMode(this.finalMode, 1).then(response => {
 				if (response.data.code !== 200) return
-				this.mode = {
-					visiable: false,
-					choice: 0
-				}
+				this.mode = { visiable: false, choice: 0 }
 				// this.switchDevice()
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
@@ -417,12 +399,14 @@ p { text-align: left; }
 				font { color: #06B650; }
 				.average {
 					display: flex;
-					span {
-						flex: 1;
-					}
+					span { flex: 1; }
 				}
 			}
 			button { margin: 30px 10px 0 0; }
+			&:active, &:focus, &:hover {
+				background: #06b6501a;
+				border-radius: 4px;
+			}
 		}
 	}
 }

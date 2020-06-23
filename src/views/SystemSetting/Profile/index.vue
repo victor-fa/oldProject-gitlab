@@ -11,10 +11,10 @@
 				</div>
 			</form>
 			<p class="cd-setting-info nick">
-				昵称：<a-input type="text" v-model="user.nicName" placeholder="请输入昵称" clearable class="nick-name" />
+				昵称：<a-input type="text" v-model="user.nicName" placeholder="请输入昵称" clearable class="nick-name" :max-length="15" />
 			</p>
 			<p class="cd-setting-info">
-				手机号：<a-input type="text" v-model="user.phoneNo" placeholder="请输入手机号" clearable style="width: 200px;" />
+				手机号：<a-input type="text" v-model="user.phoneNo" placeholder="请输入手机号" clearable style="width: 200px;" :max-length="11" />
 			</p>
 			<p class="cd-setting-info">
 				<a-button @click="changePassword">修改密码</a-button>
@@ -24,7 +24,7 @@
 		<a-modal
 			:visible="codePhoneVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
 			okText="确定" cancelText="取消" @ok="changePhone" @cancel="codePhoneVisiable = false">
-			<p>验证码：</p><a-input placeholder="请输入验证码" v-model="changePhoneData.code" />
+			<p>验证码：</p><a-input placeholder="请输入验证码" v-model="changePhoneData.code" :max-length="6"/>
 		</a-modal>
 	</div>
 </template>
@@ -69,9 +69,7 @@ export default Vue.extend({
 			let user_pic = elm.value;
 			if (user_pic.length > 1 && user_pic) {
 				let type = StringUtility.formatSuffix(user_pic).toLowerCase();
-				if (['png', 'jpg', 'jpeg', 'bmp', 'gif'].indexOf(type) === -1) {
-					return this.$message.error('所选格式为' + type + ' 请重新选择上传的文件');
-				}
+				if (['png', 'jpg', 'jpeg', 'bmp', 'gif'].indexOf(type) === -1)  return this.$message.error('所选格式为' + type + ' 请重新选择上传的文件')
 				elm.files && elm.files[0] ? (this.UploadSrc = window.URL.createObjectURL(elm.files[0])) : '';
 				UserAPI.uploadPhoto(elm.files[0]).then(response => {
 					if (response.data.code !== 200) return
@@ -92,14 +90,11 @@ export default Vue.extend({
 		handleBottom(data) {
 			switch (data) {
 				case 0:
-					this.handleSave(data)
-					break;
+					this.handleSave(data); break;
 				case 1:
-					this.close()
-					break;
+					this.close(); break;
 				case 2:
-					this.handleSave(data)
-					break;
+					this.handleSave(data); break;
 				default:
 					break;
 			}
@@ -134,14 +129,8 @@ export default Vue.extend({
       })
 		},
 		getPhoneCode () {
-			if (!this.changePhoneData.phone.length) {
-				this.$message.warning('请输入新的手机号');
-				return;
-			}
-			if (this.changePhoneData.phone && !(/^1[3456789]\d{9}$/.test(this.changePhoneData.phone))) {
-				this.$message.error('请输入正确的手机号');
-				return;
-			}
+			if (!this.changePhoneData.phone.length) { this.$message.warning('请输入新的手机号'); return; }
+			if (this.changePhoneData.phone && !(/^1[3456789]\d{9}$/.test(this.changePhoneData.phone))) { this.$message.error('请输入正确的手机号'); return; }
 			UserAPI.smsCode(this.changePhoneData.phone, 5).then(response => {
 				if (response.data.code !== 200) return
 				this.codePhoneVisiable = true
@@ -152,10 +141,7 @@ export default Vue.extend({
       })
 		},
 		changePhone() {
-			if (!this.changePhoneData.code.length) {
-				this.$message.warning('请输入短信验证码');
-				return;
-			}
+			if (!this.changePhoneData.code.length) { this.$message.warning('请输入短信验证码'); return; }
 			const input = { phoneNo: this.changePhoneData.phone, code: this.changePhoneData.code }
 			UserAPI.updateInfo(input).then(response => {
 				if (response.data.code !== 200) return

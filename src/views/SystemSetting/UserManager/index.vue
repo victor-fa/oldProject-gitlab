@@ -21,7 +21,7 @@
 			okText="确定" cancelText="取消" @ok="handleDeliver" @cancel="deliver.visiable = false">
 			<div style="display: flex;justify-content: space-between;margin-bottom: 15px;">
 				<p>验证码：</p>
-				<a-input placeholder="请输入短信验证码" v-model="deliver.code" style="flex: 1;" />
+				<a-input placeholder="请输入短信验证码" v-model="deliver.code" style="flex: 1;" :max-length="6"/>
 			</div>
 		</a-modal>
 	</div>

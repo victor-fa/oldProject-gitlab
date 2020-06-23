@@ -6,7 +6,7 @@
 			<template v-if="offlinePass.isUsed">
 				<p class="cd-setting-title">{{offlinePass.already_set ? '修改' : '添加'}}账号密码</p>
 				<div class="cd-setting-form">
-					<a-input v-if="!offlinePass.already_set" type="text" v-model="offlinePass.offline_username" placeholder="离线账号" clearable style="width: 100%;margin-bottom: 10px;" />
+					<a-input v-if="!offlinePass.already_set" type="text" v-model="offlinePass.offline_username" placeholder="离线账号" clearable style="width: 100%;margin-bottom: 10px;" :max-length="15" />
 					<p v-if="offlinePass.already_set" class="cd-setting-info">当前离线账号：<font style="float: right;">{{ offlinePass.offline_username }}</font></p>
 					<a-input v-if="!offlinePass.already_set" type="password" v-model="offlinePass.offline_password" placeholder="离线密码" clearable style="width: 100%;margin-bottom: 10px;" />
 					<a-button v-if="offlinePass.already_set" @click="showModifyOffline">修改密码</a-button>
@@ -99,14 +99,8 @@ export default Vue.extend({
 			}
 		},
 		setOfflineAccount () {
-			if (!this.offlinePass.offline_username.length) {
-				this.$message.warning('请输入离线账号');
-				return
-			}
-			if (!this.offlinePass.offline_password.length) {
-				this.$message.warning('请输入离线密码');
-				return
-			}
+			if (!this.offlinePass.offline_username.length) { this.$message.warning('请输入离线账号'); return; }
+			if (!this.offlinePass.offline_password.length) { this.$message.warning('请输入离线密码'); return; }
 			const input = {
 				offline_username: this.offlinePass.offline_username,
 				offline_password: StringUtility.encryptPassword(this.offlinePass.offline_password)

@@ -11,7 +11,7 @@
         />
       </div>
       <div class="body">
-        <a-input placeholder="请输入本地账号" v-model="account"/>
+        <a-input placeholder="请输入本地账号" v-model="account" :max-length="15"/>
         <a-input
           type="password"
           placeholder="请输入本地密码"

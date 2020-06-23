@@ -101,9 +101,9 @@ export default Vue.extend({
   mounted () {
     window.addEventListener('resize', this.observerWindowResize)
     document.addEventListener('keydown', this.handleKeydownAction)
-    this.$nextTick(() => {
+    setTimeout(() => {
       this.scrollHeight = this.$parent.$parent.$el.clientHeight
-    })
+    }, 0);
   },
   destroyed () {
     window.removeEventListener('resize', this.observerWindowResize)
