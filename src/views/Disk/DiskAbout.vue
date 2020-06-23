@@ -1,11 +1,13 @@
 <template>
 	<div class="cloudSeries-about-win">
-		<WindowsHeader :data="header" />
+    <a-layout-header class="setting-header">
+      <span>关于绿联云</span>
+      <window-menu :configure="'unable'" class="window-menu"/>
+    </a-layout-header>
 		<div class="cloudSeries-about-main">
-			<div class="title"><img src="../../assets/logo.png">绿联云</div>
 			<div class="content">
-				<div class="title">关于（产品介绍）</div>
 				<div class="detail">
+					<p>关于（产品介绍）</p><br>
 					<p>（1）您应具有中华人民共和国法律规定的与您行为相适应的民事行为能力；如果您未满18周岁，您需要在由您法定监护人同意、并代表您签署确认该协议，方可注册、使用绿联云软件平台帐户。</p><br>
 					<p>（2）您通过相关设备（如个人手机、电脑、电视等）下载对应专用的绿联云软件，使用您自有的手机号码在平台上注册帐号，并设置个人密码，绑定您自有的绿联网络私有云存储产品，即可享受本服务。绿联云软件平台帐号的所有权归绿联所有，您注册后享有其使用权，不得出租、出借、转让、赠与或与他人共同使用。</p><br>
 					<p>（3）您应自行负责您的帐号和密码的安全性。您需采取积极措施保证帐号和密码的安全性，建议措施包括但不限于：不将自己的帐号和密码透露给他人、设置复杂密码、定期修改密码等。无论是否经过您的授权，对通过您帐户进行的或在您帐户中发生的所有活动，均应由您自行负责。如发现他人未经授权使用您的帐号和密码的，您应立即通知绿联。</p><br>
@@ -13,7 +15,7 @@
 					<p>（5）您需确保用于注册帐号所使用的手机号码的真实、准确性和合法性，注册所使用的手机号码是认定您与平台帐号之关联性的唯一凭证。一旦手机号码出现更换、丢失或者无法收到验证码等，您需更新手机号码，方可继续使用本服务。</p><br>
 				</div>
 			</div>
-			<div class="update-info">
+			<div class="update-info" v-if="percent > 0">
 				<p class="tips">{{ message }}</p>
 				<div class="process">
 					<Progress :percent="percent" v-show="percent > 0" />
@@ -22,10 +24,11 @@
 			</div>
 			<div class="bottom">
 				<p class="release">版本号：{{ version }}</p>
-				<!-- ©2020 uGreen_{{ name }} -->
-				<a-button @click="openUpdateInfo"><span>{{ CheckText }}</span></a-button>
-				<a-button @click="$electron.shell.openExternal(nasCloudIP + '/sys/file/resource/pc/serviceAgreement.htm')">用户协议</a-button>
-				<a-button @click="$electron.shell.openExternal(nasCloudIP + '/sys/file/resource/pc/secretAgreement.htm')">隐私协议</a-button>
+				<div class="button">
+					<a-button class="update" @click="openUpdateInfo"><span>{{ CheckText }}</span></a-button>
+					<a-button class="privacy" @click="$electron.shell.openExternal(nasCloudIP + '/sys/file/resource/pc/secretAgreement.htm')">隐私协议</a-button>
+					<a-button class="user" @click="$electron.shell.openExternal(nasCloudIP + '/sys/file/resource/pc/serviceAgreement.htm')">用户协议</a-button>
+				</div>
 			</div>
 		</div>
 		<a-modal
@@ -42,7 +45,7 @@
 </template>
 
 <script>
-import WindowsHeader from '@/components/Disk/WindowHeader.vue'
+import WindowMenu from '@/components/WindowMenu/index.vue'
 import UserAPI from '@/api/UserAPI'
 import StringUtility from '@/utils/StringUtility'
 import { nasCloudIP } from '@/api/CloudServer'
@@ -89,7 +92,7 @@ export default {
 			nasCloudIP
 		};
 	},
-	components: { WindowsHeader },
+	components: { WindowMenu },
 	beforeMount() {
 		this.bind();
 	},
@@ -173,78 +176,83 @@ export default {
 	width: 100%;
 	height: 100%;
 	/* -webkit-app-region: drag; */
-}
-.cloudSeries-about-main {
-	width: 100%;
-	height: calc(100% - 50px);
-	background: #fff;
-	padding: 0 30px 20px;
-	position: relative;
-	.title {
-		display: flex;
-		line-height: 25px;
-		img {
-			width: 25px;
-			margin-right: 10px;
+  .setting-header {
+    height: 35px;
+    width: 100%;
+    padding: 0px;
+    background-color: #EDEFF4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    -webkit-app-region: drag;
+    span {
+      margin-left: 20px;
+      font-weight: bold;
+    }
+    .window-menu { margin-right: 20px; }
+  }
+	.cloudSeries-about-main {
+		width: 100%;
+		height: calc(100% - 50px);
+		background: #fff;
+		padding: 20px;
+		position: relative;
+		.content {
+			border: 1px solid #BFBFBF;
+			padding: 10px 0px 10px 10px;
+			.detail {
+				text-align: left;
+				text-indent: 2em;
+				overflow-y: scroll;
+				height: 228px;
+			}
 		}
-	}
-	.content {
-		.title {
+		.bottom {
+			width: 90%;
+			position: absolute;
+			bottom: -148px;
 			display: flex;
-			justify-content: center;
+			flex-direction: column;
+			.release {
+				text-align: left;
+				font-size: 14px;
+				color: #4c4c4c;
+				margin-top: 10px;
+			}
+			.button {
+				background: none;
+				font-size: 12px;
+				color: #333;
+				.update { float: left; }
+				.user { float: right; }
+				.privacy {
+					float: right;
+					margin: 0 -20px 0 10px;
+				}
+			}
 		}
-		.detail {
-			text-align: left;
-			text-indent: 2em;
-			overflow-y: scroll;
-			height: 228px;
+		.update-info {
+			width: 100%;
+			padding: 10px 8px;
+			display: inline-block;
+			.tips {
+				font-size: 14px;
+				font-weight: 400;
+				color: #d82b2b;
+				text-align: left;
+				margin-bottom: 0;
+			}
+			.process {
+				padding: 10px 0;
+				height: 35px;
+				text-align: left;
+			}
+			.process-p {
+				color: #000;
+				display: inline-block;
+				margin-left: 10px;
+			}
 		}
-	}
-	.bottom {
-		width: 90%;
-		position: absolute;
-		bottom: -148px;
-		border-top: 1px solid;
-    padding-top: 16px;
-		button {
-			float: right;
-			background: none;
-			font-size: 12px;
-			color: #333;
-		}
-	}
-	.release {
-		float: left;
-		font-size: 12px;
-		color: #4c4c4c;
-		margin-top: 10px;
-	}
-	button {
-		float: right;
-		margin-left: 20px;
-		overflow: hidden !important;
-	}
-}
-.update-info {
-	width: 100%;
-	padding: 10px 8px;
-	display: inline-block;
-	.tips {
-		font-size: 14px;
-		font-weight: 400;
-		color: #d82b2b;
-		text-align: left;
-		margin-bottom: 0;
-	}
-	.process {
-		padding: 10px 0;
-		height: 35px;
-		text-align: left;
-	}
-	.process-p {
-		color: #000;
-		display: inline-block;
-		margin-left: 10px;
 	}
 }
 </style>

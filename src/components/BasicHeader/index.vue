@@ -101,6 +101,7 @@ export default Vue.extend({
   },
   computed: {
     ...mapGetters('User', ['user']),
+    ...mapGetters('NasServer', ['nasInfo']),
     nickName: function () {
       const user = this.user as User
       const name: string = _.isEmpty(user.nicName) ? user.userName : user.nicName
@@ -167,6 +168,7 @@ export default Vue.extend({
       })
     },
     switchDevice () {
+      this.nasInfo.ip === '127.0.0.1' ? ClientAPI.closeP2PTunnel() : null
       this.$store.dispatch('NasServer/clearCacheNas')
       TransportHelper.clearQueueCache()
       processCenter.renderSend(EventName.bindList)
