@@ -1,5 +1,5 @@
 <template>
-  <div :style="{ height: scrollHeight + 'px' }">
+  <div class="backup-view">
     <basic-tabs :tabs="categorys" v-on:tabChange="handleTabsChange"/>
     <router-view></router-view>
   </div>
@@ -18,8 +18,7 @@ export default Vue.extend({
   },
   data () {
     return {
-      categorys: _.cloneDeep(backupCategorys),
-      scrollHeight: 0
+      categorys: _.cloneDeep(backupCategorys)
     }
   },
   watch: {
@@ -36,13 +35,6 @@ export default Vue.extend({
   },
   created () {
     if (this.$route.name !== 'list') this.$router.push('list')
-    this.scrollHeight = document.body.clientHeight - 98
-    const _this = this as any
-    window.onresize = () => {
-      return (() => {
-        _this.scrollHeight = document.body.clientHeight - 98
-      })()
-    }
   },
   methods: {
     handleTabsChange (index: number) {
@@ -54,5 +46,11 @@ export default Vue.extend({
 </script>
 
 <style lang="less" scoped>
-
+.backup-view {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
 </style>

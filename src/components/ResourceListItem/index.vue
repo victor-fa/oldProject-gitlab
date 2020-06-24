@@ -286,7 +286,7 @@ export default Vue.extend({
     border-radius: 8px;
     img {
       max-width: 40px;
-      max-height: 80px;
+      max-height: 65px;
       margin: auto;
     }
   }
@@ -328,6 +328,7 @@ export default Vue.extend({
   }
 }
 .vertical-item {
+  width: 100%;
   color: #484848;
   font-size: 12px;
   text-align: left;

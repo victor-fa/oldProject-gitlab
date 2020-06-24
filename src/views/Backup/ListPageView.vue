@@ -1,5 +1,6 @@
 <template>
   <main-view
+    class="list-page"
     :adjust="159"
     :count="totalSize"
     :loading="loading"
@@ -103,5 +104,7 @@ export default Vue.extend({
 </script>
 
 <style scoped>
-
+.list-page {
+  flex: 1;
+}
 </style>

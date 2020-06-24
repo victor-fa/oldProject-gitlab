@@ -224,6 +224,9 @@ export default Vue.extend({
 .resource-list .ant-list-item {
   margin: 0px;
 }
+.resource-list .ant-list-empty-text {
+  padding-top: 15%;
+}
 .ant-list-grid .ant-col > .ant-list-item {
   margin-bottom: 0;
 }

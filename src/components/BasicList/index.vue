@@ -8,7 +8,7 @@
     :infinite-scroll-immediate-check="false"
   >
     <a-list
-      itemLayout="horizontal"
+      :grid="{ gutter: 16, xs: 1, sm: 1, md: 1, lg: 1, xl: 1, xxl: 1 }"
       :dataSource="dataSource"
       :split="false"
     >
@@ -33,7 +33,7 @@ export default Vue.extend({
       default: false
     },
     adjust: {
-      default: 159
+      default: 157
     }
   },
   data () {
@@ -65,7 +65,8 @@ export default Vue.extend({
   width: 100%;
   height: 100%;
   background-color: white;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 </style>
 
@@ -78,6 +79,6 @@ export default Vue.extend({
   padding: 0px;
 }
 .basic-list .ant-list-empty-text {
-  margin-top: 10%;
+  padding-top: 15%;
 }
 </style>

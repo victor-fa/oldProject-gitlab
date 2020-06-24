@@ -47,8 +47,8 @@ export default Vue.extend({
   components: {
     HeaderView,
     BasicList,
-    MainBottomView,
-    TransportItem
+    TransportItem,
+    MainBottomView
   },
   props: {
     loading: Boolean,
@@ -85,9 +85,9 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .transport-main {
+  width: 100%;
   height: 100%;
   background-color: white;
-  height: 100%;
   .main-header-view {
     height: 36px;
     padding: 0px;
@@ -98,6 +98,8 @@ export default Vue.extend({
   .main-footer-view {
     padding: 0px;
     height: 24px;
+    background-color: #F7F9FB;
+    border-top: 1px solid #BCC0CE40;
   }
 }
 </style>

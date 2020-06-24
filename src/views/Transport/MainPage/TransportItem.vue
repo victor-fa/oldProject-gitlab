@@ -3,9 +3,7 @@
     class="transport-item"
     v-bind:class="{ 'transport-item-odd': isOdd }"
   >
-    <div class="item-slider">
-      <img :src="model.icon">
-    </div>
+    <img class="task-icon" :src="model.icon">
     <div class="item-content">
       <div class="item-top">
         <span class="item-name">{{ model.name }}</span>
@@ -105,21 +103,17 @@ export default Vue.extend({
   height: 64px;
   width: 100%;
   background-color: #f6f8fb;
-  .item-slider {
-    height: 100%;
-    width: 45px;
-    position: absolute;
-    left: 0px;
-    img {
-      width: 23px;
-      height: 19px;
-      margin-top: 21px;
-      margin-left: 22px;
-    }
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  .task-icon {
+    width: 23px;
+    height: 19px;
+    margin: 0px 15px 0px 20px;
   }
   .item-content {
+    flex: 1;
     height: 100%;
-    margin-left: 45px;
     padding: 0px 12px;
     .item-top {
       height: 50%;
