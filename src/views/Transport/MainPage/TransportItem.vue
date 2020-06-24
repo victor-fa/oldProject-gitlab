@@ -121,14 +121,13 @@ export default Vue.extend({
       justify-content: space-between;
       align-items: flex-end;
       .item-name {
-        width: 100%;
         font-size: 14px;
         color: #484848;
         text-align: left;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        flex: 1;
+        max-width: 300px;
       }
       .item-error {
         margin-left: 12px;

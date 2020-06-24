@@ -28,7 +28,7 @@
             <slot name="resourceItem" :item="item" :index="index" :arrangeWay="arrangeWay">
               <resource-list-item
                 :model="item"
-                :index="item.index"
+                :index="index"
                 :isSelected="item.isSelected"
                 :isDisable="item.disable"
                 :isRenaming="item.renaming"

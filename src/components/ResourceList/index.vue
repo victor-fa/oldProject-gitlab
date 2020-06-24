@@ -201,7 +201,8 @@ export default Vue.extend({
   width: 100%;
   height: 100%;
   background-color: white;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .horizontalResourceList {
   padding: 20px;

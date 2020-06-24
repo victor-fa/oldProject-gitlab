@@ -254,12 +254,12 @@ interface CustomInfo {
 }
 
 enum OfflineTaskStatus {
-  prepare,
-  ready,
-  running,
-  pausing,
-  error,
-  completed
+  prepare = 0x0,
+  ready = 0x1,
+  running = 0x2,
+  pausing = 0x3,
+  error = 0x4,
+  completed = 0x5
 }
 
 interface OfflineTask {

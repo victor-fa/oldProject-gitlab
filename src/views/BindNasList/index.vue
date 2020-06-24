@@ -23,7 +23,7 @@ import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import NasDeviceList from '../ScanNas/NasDeviceList.vue'
 import UserAPI from '@/api/UserAPI'
-import { DeviceInfo } from '@/api/UserModel'
+import { DeviceInfo, BasicResponse } from '@/api/UserModel'
 import StringUtility from '@/utils/StringUtility'
 import ClientAPI from '@/api/ClientAPI'
 import { nasServer } from '@/api/NasServer';
@@ -72,15 +72,21 @@ export default Vue.extend({
         console.log(response)
         this.loading = false
         if (response.data.code !== 200) return
-        this.deviceList = _.get(response.data.data, 'userDevices') as DeviceInfo[]
-        // cache device list
-        this.$store.dispatch('User/updateNasDevices', this.deviceList)
-        if (this.autoLogin) this.handleAutoLogin()
+        this.parseResponse(response.data)
       }).catch((error: any) => {
         console.log(error)
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
       })
+    },
+    parseResponse (data: BasicResponse) {
+      const list = _.get(data.data, 'userDevices') as DeviceInfo[]
+      this.deviceList = list.sort((a, b) => {
+        return a.status > b.status ? -1 : 1
+      })
+      // cache device list
+      this.$store.dispatch('User/updateNasDevices', this.deviceList)
+      if (this.autoLogin) this.handleAutoLogin()
     },
     didSelectItem (index: number) {
       this.currentDevice = index

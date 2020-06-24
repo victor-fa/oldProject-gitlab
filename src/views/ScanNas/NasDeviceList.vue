@@ -17,9 +17,16 @@
           @contextmenu.stop="showContextMenu($event, index)"
         >
           <div class="content">
-            <span>{{ item.name }}</span>
+            <span class="content-title">{{ item.name }}</span>
+            <span
+              v-if="showStatus(item)"
+              class="content-status"
+              v-bind:class="{ 'status-online': item.status === 1 }"
+            >
+              {{ item.status | formatStatus }}
+            </span>
             <span>model: {{ item.model }}</span>
-            <span v-show="showIpLabel(item)">ip: {{ item.ip }}</span>
+            <span v-if="showIpLabel(item)">ip: {{ item.ip }}</span>
             <span>sn: {{ item.sn }}</span>
             <span>mac: {{ item.mac }}</span>
           </div>
@@ -35,6 +42,7 @@ import _ from 'lodash'
 import Vue from 'vue'
 import { MenuItem } from 'electron'
 import { NasInfo } from '@/api/ClientModel'
+import { DeviceInfo, DeviceStatus } from '../../api/UserModel'
 
 export default Vue.extend({
   name: 'nas-device-list',
@@ -67,6 +75,9 @@ export default Vue.extend({
     showIpLabel (item: NasInfo) {
       return !_.isEmpty(item.ip)
     },
+    showStatus (item: DeviceInfo) {
+      return item.status !== undefined
+    },
     didSelectItem (index: number) {
       this.selectedIndex = index
     },
@@ -84,6 +95,11 @@ export default Vue.extend({
     },
     handleMenuItemClick (item: MenuItem) {
       this.$emit('didSelectItem', this.selectedIndex)
+    }
+  },
+  filters: {
+    formatStatus (status: DeviceStatus) {
+      return status === DeviceStatus.offline ? '离线' : '在线'
     }
   }
 })
@@ -108,13 +124,21 @@ export default Vue.extend({
       flex-direction: column;
       margin-left: 32px;
       max-width: 150px;
-      span:first-child {
+      .content-title {
         text-align: left;
         font-size: 16px;
         font-weight: 800;
         color: #373737;
         margin-bottom: 15px;
         white-space: nowrap;
+      }
+      .content-status {
+        color: #FF0101;
+        font-weight: bold;
+      }
+      .status-online {
+        color: #007934;
+        font-weight: bold;
       }
       span {
         text-align: left;
