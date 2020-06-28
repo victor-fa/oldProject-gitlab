@@ -20,7 +20,7 @@
         <img v-else class="cover-image" :src="imageData" @click="handleCoverAction">
       </div>
       <a-input placeholder="请输入模块名（不超过10个字符）" v-model="name" :max-length="10"/>
-      <a-textarea placeholder="请填写简要叙述（不超过100个字符）" :rows="3" v-model="desc" :max-length="100"/>
+      <a-textarea placeholder="请填写简要叙述（不超过50个字符）" :rows="3" v-model="desc" :max-length="50"/>
     </div>
     <div slot="footer" class="modal-footer">
       <a-button class="cancel-btn" @click="handleCancelAction">取消</a-button>
@@ -65,6 +65,7 @@ export default Vue.extend({
   methods: {
     show (item?: CustomModule) {
       this.visible = true
+      this.$emit('creatCompleted')  // 刷新的方式取消所有选中状态，防止按Backspace时把模块删除了
       if (item === undefined) return
       this.item = item
       this.name = item.myself_folder.name
@@ -118,12 +119,6 @@ export default Vue.extend({
       if (_.isEmpty(this.name)) {
         return '模块名不能为空'
       }
-      if (_.isEmpty(this.desc)) {
-        return '模块描述不能为空'
-      }
-      if (_.isEmpty(this.imageData)) {
-        return '封面不能为空'
-      }
       return null
     },
     creatCustomModule () {
@@ -138,10 +133,13 @@ export default Vue.extend({
         const path = _.get(response.data.data, 'path')
         const uuid = _.get(response.data.data, 'uuid')
         const data = _.get(this.imageObj, 'base64')
-        return NasFileAPI.uploadCustomCover(path, uuid, data)
+        if (data) { // 创建成功
+          return NasFileAPI.uploadCustomCover(path, uuid, data)
+        } else {  // 未上传封面图
+          return Promise.resolve({ data: { code: 200 } }) as any
+        }
       }).then(response => {
         this.loading = false
-        console.log(response)
         if (response.data.code !== 200) return
         this.visible = false
         this.$emit('creatCompleted')

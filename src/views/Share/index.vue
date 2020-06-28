@@ -65,7 +65,7 @@ export default Vue.extend({
           type: ResourceType.folder,
           name: `${name}的分享`,
           path: item.ugreen_no.toString()
-        } as ResourceItem
+        } as any
       })
     },
     // 覆盖混入中的方法

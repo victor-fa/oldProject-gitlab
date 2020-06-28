@@ -61,6 +61,9 @@ export default {
     var s = date.getSeconds();
     return Y + M + D + h + m + s;
   },
+  formatMacAddress (value) {
+    return value.replace(/:/g, '')
+  },
   // 格式化文件大小
 	formatShowSize(bytes) {
 		bytes = parseFloat(bytes);

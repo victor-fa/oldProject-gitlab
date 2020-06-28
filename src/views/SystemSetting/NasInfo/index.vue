@@ -5,7 +5,7 @@
 			<p class="cd-setting-info">序列号：{{nasInfo.sn}}</p>
 			<p class="cd-setting-info">固件版本：{{nasInfo.softversion}}</p>
 			<p class="cd-setting-info">IP地址：{{nasInfo.ip}}</p>
-			<p class="cd-setting-info">MAC地址：{{nasInfo.mac}}</p>
+			<p class="cd-setting-info">MAC地址：{{nasInfo.mac | filterMac}}</p>
 			<p class="cd-setting-title">磁盘信息</p>
 			<div class="content" v-for="(item, index) in disks" :key="index">
 				<template v-if="item.type !== 7">
@@ -104,6 +104,9 @@ export default Vue.extend({
 		},
 		filterStorageType (data, index) {
 			return StorageHandler.matchStorageName(data, index)
+		},
+		filterMac (data) {
+			return StringUtility.formatMacAddress(data)
 		}
 	},
 	data() {
