@@ -81,9 +81,7 @@ export default Vue.extend({
         if (response.data.code !== 200) return
         const list = _.get(response.data.data, 'files') as Array<ShareItem>
         this.dataArray = list.map((item, index) => {
-          const rItem = ResourceHandler.convertResourceItem(item) as ResourceItem
-          rItem.index = index
-          return rItem
+          return ResourceHandler.convertResourceItem(item) as ResourceItem
         })
       }).catch(error => {
         console.log(error)

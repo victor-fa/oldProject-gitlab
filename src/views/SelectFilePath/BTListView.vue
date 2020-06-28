@@ -68,11 +68,7 @@ export default Vue.extend({
         item.name = item.alias
         return item
       })
-      list = this.page === 1 ? list : this.dataArray.concat(list)
-      this.dataArray = list.map((item, index) => {
-        item.index = index
-        return item
-      })
+      this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
     },
     fetchBtList () {
       this.loading = true

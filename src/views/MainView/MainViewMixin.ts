@@ -243,11 +243,8 @@ export default Vue.extend({
         this.$message.error('重命名失败')
       })
     },
-    handleLeaveNewFolder (aIndex: number) {
-      this.dataArray = this.dataArray.filter((item, index) => {
-        if (index > aIndex) item.index = index - 1
-        return index !== aIndex
-      })
+    handleLeaveNewFolder (index: number) {
+      this.dataArray = this.dataArray.splice(index, 1)
     },
     handleNewFolderRequestAction (index: number, newName: string) {
     },

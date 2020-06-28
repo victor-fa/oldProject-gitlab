@@ -110,11 +110,7 @@ export default Vue.extend({
       let list = _.get(data.data, 'list') as Array<ResourceItem>
       if (_.isEmpty(list) || list.length < 40) this.busy = true
       list = ResourceHandler.formatResourceList(list, this.selectedPath)
-      list = this.page === 1 ? list : this.dataArray.concat(list)
-      this.dataArray = list.map((item, index) => {
-        item.index = index
-        return item
-      })
+      this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
     },
     handlePasteSuccess () {
       this.$message.info('粘贴任务添加成功')
@@ -162,10 +158,7 @@ export default Vue.extend({
         name: newName,
         renaming: true
       } as ResourceItem 
-      this.dataArray = [newItem].concat(this.dataArray).map((item, index) => {
-        item.index = index
-        return item
-      })
+      this.dataArray = [newItem].concat(this.dataArray)
     },
     handleNewFolderRequestAction (index: number, newName: string) {
       if (!ResourceHandler.checkFileName(newName)) {

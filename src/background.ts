@@ -482,7 +482,7 @@ function awakeTunnel () {
 			const cwdPath = path.join(__filename, '../../public/tunnel/mac')
 			const filePath = path.join(cwdPath, 'pgTunnelStatic')
 			const child = spawn(filePath, { shell: true, cwd: cwdPath })
-			child.stdout.pipe(process.stdout)
+			// child.stdout.pipe(process.stdout)
 		}
   } else {	// 生产环境
 		if (process.platform === 'win32') {

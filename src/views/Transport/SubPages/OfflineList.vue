@@ -25,6 +25,8 @@ import { OfflineTask, OfflineTaskStatus } from '../../../api/NasFileModel'
 import TransportHandler from '../TransportHandler'
 import { BasicResponse } from '../../../api/UserModel'
 import { AxiosResponse } from 'axios'
+import { EventBus } from '../../../utils/eventBus'
+import { EventName } from '../../../utils/processCenter'
 
 export default Vue.extend({
   name: 'offline-list',
@@ -79,19 +81,22 @@ export default Vue.extend({
       switch (command) {
         case 'delete':
         case 'cancel':
+          this.deleteTask(model.id)
           break
         case 'pause':
           this.pauseTask(model.id)
           break
         case 'continue':
+          this.continueTask(model.id)
           break
         case 'refresh':
-          break
-        case 'jump':
+          this.continueTask(model.id)
           break
         case 'open':
           break
+        case 'jump':
         case 'openInFinder':
+          EventBus.$emit(EventName.jump, { path: model.path, uuid: model.uuid })
           break
         default:
           break
@@ -151,7 +156,7 @@ export default Vue.extend({
     cancelDoingTasks () {
       this.loading = true
       const status = OfflineTaskStatus.pausing | OfflineTaskStatus.running | OfflineTaskStatus.prepare | OfflineTaskStatus.ready | OfflineTaskStatus.error
-      NasFileAPI.resumeOfflineTask(undefined, status).then(response => {
+      NasFileAPI.deleteOfflineTask(undefined, status).then(response => {
         this.handleRequestSuccess(response)
       }).catch(error => {
         this.handleRequestError(error, '全部取消失败')
@@ -160,7 +165,7 @@ export default Vue.extend({
     clearDoneTasks () {
       this.loading = true
       const status = OfflineTaskStatus.completed
-      NasFileAPI.resumeOfflineTask(undefined, status).then(response => {
+      NasFileAPI.deleteOfflineTask(undefined, status).then(response => {
         this.handleRequestSuccess(response)
       }).catch(error => {
         this.handleRequestError(error, '全部删除失败')
@@ -168,7 +173,31 @@ export default Vue.extend({
     },
     // single operations
     pauseTask (id: number) {
-      
+      this.loading = true
+      const status = OfflineTaskStatus.running | OfflineTaskStatus.prepare | OfflineTaskStatus.ready
+      NasFileAPI.pauseOfflineTask(id).then(response => {
+        this.handleRequestSuccess(response)
+      }).catch(error => {
+        this.handleRequestError(error, '暂停失败')
+      })
+    },
+    continueTask (id: number) {
+      this.loading = true
+      const status = OfflineTaskStatus.pausing
+      NasFileAPI.resumeOfflineTask(id).then(response => {
+        this.handleRequestSuccess(response)
+      }).catch(error => {
+        this.handleRequestError(error, '继续失败')
+      })
+    },
+    deleteTask (id: number) {
+      this.loading = true
+      const status = OfflineTaskStatus.completed
+      NasFileAPI.deleteOfflineTask(id).then(response => {
+        this.handleRequestSuccess(response)
+      }).catch(error => {
+        this.handleRequestError(error, '删除失败')
+      })
     },
     handleRequestSuccess (response: AxiosResponse<BasicResponse>) {
       console.log(response)

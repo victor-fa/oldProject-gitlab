@@ -171,16 +171,12 @@ export default {
   removeSelectedItems (showArray: Array<ResourceItem>) {
     return showArray.filter(item => {
       return item.isSelected !== true
-    }).map((item, index) => {
-      item.index = index
-      return item
     })
   },
   // 格式化资源列表，用于界面展示
   formatResourceList (list: ResourceItem[], selectedPath?: string) {
     const path = selectedPath === undefined ? '' : selectedPath
-    return list.map((item, index) => {
-      item.index = index
+    return list.map(item => {
       item.name = StringUtility.formatName(item.path)
       item.showMtime = StringUtility.formatShowMtime(item.mtime)
       item.showSize = StringUtility.formatShowSize(item.size)

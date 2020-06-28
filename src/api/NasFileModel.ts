@@ -51,7 +51,6 @@ interface ResourceItem {
   // calculate property
   showMtime: string,
   showSize: string,
-  index: number,
   // custom property
   isSelected?: boolean, // 当前item是否是选中状态
   disable?: boolean, // 当前item是否是禁用状态

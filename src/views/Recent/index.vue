@@ -73,11 +73,7 @@ export default Vue.extend({
       let ulist = _.get(data.data, 'list') as Array<ResourceItem>
       if (_.isEmpty(ulist) || ulist.length < 20) this.busy = true
       ulist = ResourceHandler.formatResourceList(ulist)
-      ulist = this.page === 1 ? ulist : this.dataArray.concat(ulist)
-      this.dataArray = ulist.map((item, index) => {
-        item.index = index
-        return item
-      })
+      this.dataArray = this.page === 1 ? ulist : this.dataArray.concat(ulist)
     },
     // 重写父类中的方法
     handleRefreshAction () {

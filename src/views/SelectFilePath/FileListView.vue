@@ -194,11 +194,7 @@ export default Vue.extend({
       })
       list = ResourceHandler.formatResourceList(list)
       list = this.updateselectedCell(list)
-      list = this.page === 1 ? list : this.dataArray.concat(list)
-      this.dataArray = list.map((item, index) => {
-        item.index = index
-        return item
-      })
+      this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
     },
     // 根据params更新list中选中的item
     updateselectedCell (list: ResourceItem[]) {
