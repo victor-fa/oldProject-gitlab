@@ -105,7 +105,7 @@ export default Vue.extend({
       this.loading = true
       ClientAPI.setNasName(nas.name)
       ClientAPI.searchNas(nas.sn, nas.mac).then(data => {
-        const secretKey = StringUtility.filterPublicKey(nas.publicKey)
+        const secretKey = StringUtility.formatPublicKey(nas.publicKey)
         this.loginToNas(data, secretKey)
       }).catch(error => {
         console.log(error)

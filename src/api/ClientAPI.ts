@@ -2,12 +2,12 @@ import axios, { AxiosResponse, Canceler } from 'axios';
 import _ from 'lodash'
 import { User, BasicResponse } from './UserModel'
 import deviceMgr from '@/utils/deviceMgr'
-import JSEncrypt from 'jsencrypt'
 import { NasInfo } from './ClientModel'
-import os, { NetworkInterfaceInfo } from 'os'
+import os from 'os'
 import dgram from 'dgram'
 import { nasServer } from './NasServer';
 import TunnelAPI from './TunnelAPI'
+import crypto from 'crypto'
 
 const userModulePath = '/v1/user'
 
@@ -26,6 +26,7 @@ export default {
   // refresh_token过期时调用
   login (user: User, secretKey: string, tunnelIP?: string): Promise<AxiosResponse<BasicResponse>> {
     const userBasic = convertNasUser(user)
+    console.log(userBasic)
     const sign = encryptSign(userBasic, secretKey)
     if (sign === null) return Promise.reject(Error('rsa encrypt error'))
     return nasServer.post((tunnelIP ? `http://${tunnelIP}${userModulePath}` : userModulePath) + '/login', {
@@ -265,10 +266,13 @@ const encryptSign = (nasUser: any, secretKey: string) => {
   }
   if (!_.isElement(queryUser)) {
     // 利用crypto模块实现RSA加密
-    const jse = new JSEncrypt()
     queryUser = _.trimEnd(queryUser, '&')
-    jse.setPublicKey(secretKey)
-    return jse.encrypt(queryUser) as string
+    const ciphertext = crypto.publicEncrypt({
+      key: secretKey,
+      padding: crypto.constants.RSA_PKCS1_PADDING
+    }, Buffer.from(queryUser)).toString('base64')
+    console.log(ciphertext)
+    return ciphertext
   }
   return null
 }

@@ -9,5 +9,4 @@ declare module 'vue-infinite-scroll'
 declare module 'vue-virtual-scroller'
 declare module 'reqwest'
 declare module 'vue-grid-layout'
-declare module 'jsencrypt'
 declare var event: Event | undefined;

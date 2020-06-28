@@ -92,7 +92,7 @@ export default {
         title: '登录',
         backgroundColor: '#f6f8fb',
         maximizable: false,
-        resizable: true
+        resizable: false
       })
     }
     loginWindow.once('closed', () => {
@@ -116,7 +116,8 @@ export default {
         width: 800,
         height: 600,
         backgroundColor: '#f6f8fb',
-        title: 'nas_client'
+        title: 'nas_client',
+        resizable: true
       })
     }
     homeWindow.once('closed', () => {
@@ -211,7 +212,7 @@ export default {
       path: 'media-layout',
       width: 400,
       height: 450,
-      resizable: true, // 暂时为true
+      resizable: false,
       minimizable: false,
       title: 'meida',
       backgroundColor: '#f6f8fb',

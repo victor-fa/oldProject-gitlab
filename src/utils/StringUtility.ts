@@ -18,13 +18,8 @@ export default {
     return tmpStr.length === 0 ? str : tmpStr
   },
   // 过滤后台返回的公钥
-  filterPublicKey (secretKey: string) {
-    // filter prefix
-    let newSecretKey = secretKey.replace('-----BEGIN PUBLIC KEY-----', '')
-    // filter suffix
-    newSecretKey = newSecretKey.replace('-----END PUBLIC KEY-----', '')
-    // filter enter
-    return this.replaceString(newSecretKey, '/n', '')
+  formatPublicKey (secretKey: string) {
+    return secretKey
   },
   // 左斜撇转右斜撇
   convertL2R (path: string) {

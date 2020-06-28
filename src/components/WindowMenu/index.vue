@@ -1,30 +1,28 @@
 <template>
-  <div>
-    <div class="window-menu" style="-webkit-app-region: drag">
-      <custom-button
-        v-if="closable"
-        :image="menuIcons.close"
-        iconWidth="20px"
-        class="close-item"
-        @click.native="handleCallbackModal('askClose')"
-      />
-      <custom-button
-        v-if="resizable"
-        :image="menuIcons.maximize"
-        :selectedImage="menuIcons.minimun"
-        :isSelected="zoomChange"
-        iconWidth="20px"
-        class="resize-item"
-        @click.native="resizeAction"
-      />
-      <custom-button
-        v-if="minimizable"
-        :image="menuIcons.hide"
-        iconWidth="20px"
-        class="hide-item"
-        @click.native="hideAction"
-      />
-    </div>
+  <div class="window-menu" style="-webkit-app-region: drag">
+    <custom-button
+      v-if="closable"
+      :image="menuIcons.close"
+      iconWidth="20px"
+      class="close-item"
+      @click.native="handleCallbackModal('askClose')"
+    />
+    <custom-button
+      v-if="resizable"
+      :image="menuIcons.maximize"
+      :selectedImage="menuIcons.minimun"
+      :isSelected="zoomChange"
+      iconWidth="20px"
+      class="resize-item"
+      @click.native="resizeAction"
+    />
+    <custom-button
+      v-if="minimizable"
+      :image="menuIcons.hide"
+      iconWidth="20px"
+      class="hide-item"
+      @click.native="hideAction"
+    />
     <close-choice-model :visiable="showChoiceModal" v-on:choiceCallback="handleCallbackModal"/>
   </div>
 </template>
@@ -49,7 +47,6 @@ export default Vue.extend({
   data () {
     return {
       menuIcons,
-			ButtonState: 'sf-icon-window-maximize',
       win: false as any,
       zoomChange: false,
       showChoiceModal: false
@@ -87,21 +84,24 @@ export default Vue.extend({
 	created() {
     const _this = this as any
     this.win = _this.$electron.remote.getCurrentWindow();
-		this.bind();
+		this.bind()
+  },
+  destroyed () {
+    const win = BrowserWindow.getFocusedWindow()
+    if (win === null) return
+    win.removeAllListeners()
   },
   methods: {
 		bind() {
-			this.win.on('maximize', () => {
-				this.ButtonState = 'sf-icon-window-restore';
-			});
-			this.win.on('unmaximize', () => {
-				this.ButtonState = 'sf-icon-window-maximize';
-			});
+      const win = BrowserWindow.getFocusedWindow()
+      if (win === null) return
+      win.addListener('resize', () => {
+        this.zoomChange = !win.isNormal()
+      })
 		},
     closeAction () {
       const win = BrowserWindow.getFocusedWindow()
       if (win !== null) {
-        // this.$store.dispatch('Transform/saveTransInfo') // 关窗口时，对上传下载的store进行保存
         win.close()
       }
     },
@@ -112,9 +112,9 @@ export default Vue.extend({
       }
     },
     resizeAction () {
-      if (this.win !== null) {
-        this.win.isMaximized() ? this.win.restore() : this.win.maximize()
-        this.zoomChange = !this.zoomChange
+      const win = BrowserWindow.getFocusedWindow()
+      if (win !== null) {
+        win.isNormal() ? win.maximize() : win.unmaximize()
       }
     },
     handleCallbackModal (callback) {

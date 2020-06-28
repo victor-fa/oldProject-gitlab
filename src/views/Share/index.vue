@@ -61,7 +61,6 @@ export default Vue.extend({
         let name = _.isEmpty(item.nic_name) ? item.ugreen_no.toString() : item.nic_name
         if (item.ugreen_no === (this.user as User).ugreenNo)  name = '我'
         return {
-          index,
           type: ResourceType.folder,
           name: `${name}的分享`,
           path: item.ugreen_no.toString()

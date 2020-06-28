@@ -137,7 +137,7 @@ export default Vue.extend({
       const basrUrl = `http://${this.selectNas.ip}:${this.selectNas.port}`
       ClientAPI.setBaseUrl(basrUrl)
       const user = this.user as User
-      const secretKey = StringUtility.filterPublicKey(nas.publicKey)
+      const secretKey = StringUtility.formatPublicKey(nas.publicKey)
       this.connectLoading = true
       ClientAPI.login(user, secretKey).then(response => {
         this.connectLoading = false
@@ -198,7 +198,7 @@ export default Vue.extend({
         if (response.data.code !== 200) return
         const data = response.data.data as NasAccessInfo
         // cache nas access info
-        data.key = StringUtility.filterPublicKey(data.key)
+        data.key = StringUtility.formatPublicKey(data.key)
         this.$store.dispatch('NasServer/updateNasAccess', data)
         // cache nas info 
         this.$store.dispatch('NasServer/updateNasInfo', this.selectNas)

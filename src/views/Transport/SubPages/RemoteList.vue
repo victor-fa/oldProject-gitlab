@@ -94,7 +94,7 @@ export default Vue.extend({
           return TransportHandler.convertRemoteTask(item)
         })
         if (!_.isEmpty(this.dataArray)) {
-          timer = setInterval(this.fetchRemoteList, 1000)
+          timer = setInterval(this.fetchRemoteList, 2000)
           this.updateView()
         } else {
           if (timer !== null) clearInterval(timer)

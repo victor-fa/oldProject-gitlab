@@ -1,5 +1,9 @@
 <template>
-  <div class="basic-header" style="-webkit-app-region: drag">
+  <div
+    class="basic-header"
+    style="-webkit-app-region: drag"
+    @dblclick.stop="handleDbClickAction"
+  >
     <div class="basic-left">
       <span>绿联云</span>
       <span>{{ version }}</span>
@@ -118,6 +122,13 @@ export default Vue.extend({
     }
   },
   methods: {
+    handleDbClickAction () {
+      const { BrowserWindow } = require('electron').remote
+      const win = BrowserWindow.getFocusedWindow()
+      if (win !== null) {
+        win.isNormal() ? win.maximize() : win.unmaximize()
+      }
+    },
     handleMouseEnter (item: Setting) {
       this.showChildren = !_.isEmpty(item.childrens)
       if (!this.showChildren) return
