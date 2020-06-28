@@ -272,7 +272,7 @@ export default Vue.extend({
     font-size: 17px;
     font-weight: bold;
     box-shadow: none;
-    margin-top: 90px;
+    margin-top: 100px;
     background-color: white;
   }
 }

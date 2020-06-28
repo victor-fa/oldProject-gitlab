@@ -210,7 +210,7 @@ export default Vue.extend({
   justify-content: center;
   .content-wrapper {
     width: 100%;
-    padding: 0px 59px 0px 52px;
+    padding: 0px 52px 0px 52px;
     li {
       text-align: left;
     }

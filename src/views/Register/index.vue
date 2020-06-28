@@ -35,7 +35,7 @@
     </div>
     <div class="check-box-item">
       <a-checkbox :checked="hasRead" @change="handleCheckChange"/>
-      我已阅读<span @click="handleProtcolAction">《xxx用户协议》</span>
+      我已阅读<span @click="handleProtcolAction">《绿联云用户服务协议》</span>
     </div>
     <a-button
       @click="handleRegisterAction"
@@ -54,7 +54,9 @@ import Vue from 'vue'
 import BasicForm from '@/components/BasicForm/index.vue'
 import StringUtility from '@/utils/StringUtility'
 import UserAPI from '@/api/UserAPI'
+import { nasCloudIP } from '@/api/CloudServer'
 import { SmsType, LoginResponse } from '@/api/UserModel'
+
 
 export default Vue.extend({
   name: 'register',
@@ -102,7 +104,7 @@ export default Vue.extend({
     handleProtcolAction () {
       this.hasRead = true
       const { shell } = require('electron')
-      shell.openExternal('http://www.baidu.com')
+      shell.openExternal(nasCloudIP + '/sys/file/resource/pc/serviceAgreement.htm')
     },
     handleRegisterAction () {
       const result = this.checkInput()
@@ -255,7 +257,7 @@ const icons = {
     background-color: #2CD18A;
   }
   .account-btn {
-    margin-top: 50px;
+    margin-top: 35px;
     width: 130px;
     font-size: 17px;
     font-weight: bold;
