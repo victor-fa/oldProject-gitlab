@@ -61,9 +61,9 @@ const handleExceptionSence = (response: AxiosResponse) => {
     if (refreshTokenCodes.indexOf(basicData.code) !== -1) {
       return handleTokenExpiredSence(response)
     } else if (reconnectCodes.indexOf(basicData.code) !== -1) {
-      handleReconnectSence(basicData, false)
+      handleReconnectSence(basicData)
     } else if (reLoginCodes.indexOf(basicData.code) !== -1) {
-      handleReconnectSence(basicData, true)
+      handleReLoginSence()
     } else if (whiteListCodes.indexOf(basicData.code) !== -1) {
       // EventBus.$emit(EventType.showToast, basicData.msg)
     } else if (basicData.code !== 200) {
@@ -78,7 +78,7 @@ const handleExceptionSence = (response: AxiosResponse) => {
 const handleTokenExpiredSence = (aResponse: AxiosResponse) => {
   const refreshToken = getRefreshToken()
   if (refreshToken === null) {
-    handleReconnectSence(aResponse.data, false)
+    handleReconnectSence(aResponse.data)
     return aResponse
   }
   return ClientAPI.refreshAccessToken(refreshToken).then(response => {
@@ -94,7 +94,7 @@ const handleTokenExpiredSence = (aResponse: AxiosResponse) => {
      return axios.request(aResponse.config)
   })
 }
-const handleReconnectSence = (data: BasicResponse, isLogin: boolean) => {
+const hasLoginWindow = () => {
   const matched = router.currentRoute.matched
   let isLoginWindow = false
   for (let index = 0; index < matched.length; index++) {
@@ -104,16 +104,41 @@ const handleReconnectSence = (data: BasicResponse, isLogin: boolean) => {
       break
     }
   }
+  return isLoginWindow
+}
+const handleReconnectSence = (data: BasicResponse) => {
+  const isLoginWindow = hasLoginWindow()
   if (isLoginWindow) {
     if (router.currentRoute.name !== 'login') {
       router.replace('connecting')
     }
     EventBus.$emit(EventType.showToast, data.msg)
-  } else if (isLogin === true) {
-    processCenter.renderSend(EventName.login, data.msg)
   } else {
-    processCenter.renderSend(EventName.connecting)
+    processCenter.renderSend(EventName.connecting, data.msg)
   }
+}
+const handleReLoginSence = () => {
+  showKickedDialog().then(() => {
+    const isLoginWindow = hasLoginWindow()
+    if (isLoginWindow) {
+      router.replace('login')
+    } else {
+      processCenter.renderSend(EventName.login)
+    }
+  })
+}
+const showKickedDialog = () => {
+  return new Promise((resolve) => {
+    const { dialog } = require('electron').remote
+    dialog.showMessageBox({
+      message: '您的帐号在另一设备登录，已被迫下线。\n如非您本人操作，那么您的密码有可能已泄露，建议您修改密码',
+      buttons: ['确定'],
+      defaultId: 0,
+      cancelId: 0
+    }).then(() => {
+      resolve()
+    })
+  })
 }
 
 export {

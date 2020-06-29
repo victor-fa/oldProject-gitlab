@@ -34,14 +34,14 @@ enum MainEventName {
 export default {
   // on main process observing
   mainObserverChannel () {
-    ipcMain.on(ChannelName.async, (event, eventName: EventName, ...args: any[]) => {
+    ipcMain.addListener(ChannelName.async, (event, eventName: EventName, ...args: any[]) => {
       event.reply(ChannelName.replay)
       switch (eventName) {
         case EventName.login:
           windowManager.presentLoginWindow('login', args[0])
           break
         case EventName.connecting:
-          windowManager.presentLoginWindow('connecting')
+          windowManager.presentLoginWindow('connecting', args[0])
           break
         case EventName.home:
           windowManager.presentHomeWindow()
@@ -70,14 +70,14 @@ export default {
           break
       }
     })
-    ipcMain.on(ChannelName.sync, (event, eventName: EventName, data: any) => {
+    ipcMain.addListener(ChannelName.sync, (event, eventName: EventName, data: any) => {
       event.returnValue = 'returnValue'
       console.log(eventName)
     })
   },
   // add render process observer
   renderObserver (eventName: MainEventName | EventName, listener: (event: Electron.IpcRendererEvent, ...args: any[]) => void) {
-    ipcRenderer.on(eventName, listener)
+    ipcRenderer.addListener(eventName, listener)
   },
   rednerObserverOnce (eventName: MainEventName | EventName, listener: (event: Electron.IpcRendererEvent, ...args: any[]) => void) {
     ipcRenderer.once(eventName, listener)

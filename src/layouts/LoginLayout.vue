@@ -13,6 +13,7 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import LoginStatusBar from '@/components/LoginStatusBar/index.vue'
+import processCenter, { MainEventName } from '../utils/processCenter'
 
 export default Vue.extend({
   name: 'login',
@@ -21,6 +22,17 @@ export default Vue.extend({
   },
   mounted () {
     if (this.$route.name === 'login-layout') this.$router.push('launch')
+    this.observerToastNotify()
+  },
+  destroyed () {
+    processCenter.removeRenderObserver(MainEventName.toast)
+  },
+  methods: {
+    observerToastNotify () {
+      processCenter.renderObserver(MainEventName.toast, (event, message: string) => {
+        this.$message.error(message)
+      })
+    }
   }
 })
 </script>

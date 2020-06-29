@@ -91,12 +91,8 @@ export default Vue.extend({
     ...mapGetters('NasServer', ['nasInfo'])
   },
   mounted () {
-    this.observerToastNotify()
     this.dropdownItems = _.cloneDeep(this.cacheAccounts)
     this.clearCache()
-  },
-  destroyed () {
-    processCenter.removeRenderObserver(MainEventName.toast)
   },
   methods: {
     checkboxChange() {
@@ -110,11 +106,6 @@ export default Vue.extend({
       this.$store.dispatch('User/clearCacheUserInfo')
       // clear nas cache
       this.$store.dispatch('NasServer/clearCacheNas')
-    },
-    observerToastNotify () {
-      processCenter.renderObserver(MainEventName.toast, (event, message: string) => {
-        this.$message.error(message)
-      })
     },
     codeLoginBtnClick () {
       this.$router.push({
@@ -155,10 +146,10 @@ export default Vue.extend({
     },
     checkInputFrom () {
       if (this.account.length === 0) {
-        this.$message.warning('请输入账号', 1.5)
+        this.$message.warning('请输入账号')
         return false
       } else if (this.password.length === 0) {
-        this.$message.warning('请输入密码', 1.5)
+        this.$message.warning('请输入密码')
         return false
       }
       return true

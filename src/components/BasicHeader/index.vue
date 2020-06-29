@@ -165,24 +165,41 @@ export default Vue.extend({
       }
     },
     switchUser () {
-      UserAPI.logout().then(response => {
-        console.log(response)
-        if (response.data.code !== 200) return
-        // 清除缓存的用户相关信息
-        this.$store.dispatch('User/clearCacheUserInfo')
-        this.$store.dispatch('NasServer/clearCacheNas')
-        TransportHelper.clearQueueCache()
-        processCenter.renderSend(EventName.login)
-      }).catch(error => {
-        console.log(error)
-        this.$message.error('网络连接错误,请检测网络')
+      this.showTipDialog().then(() => {
+        UserAPI.logout().then(response => {
+          console.log(response)
+          if (response.data.code !== 200) return
+          // 清除缓存的用户相关信息
+          this.$store.dispatch('User/clearCacheUserInfo')
+          this.$store.dispatch('NasServer/clearCacheNas')
+          TransportHelper.clearQueueCache()
+          processCenter.renderSend(EventName.login)
+        }).catch(error => {
+          console.log(error)
+          this.$message.error('网络连接错误,请检测网络')
+        })
       })
     },
     switchDevice () {
-      this.nasInfo.ip === '127.0.0.1' ? ClientAPI.closeP2PTunnel() : null
-      this.$store.dispatch('NasServer/clearCacheNas')
-      TransportHelper.clearQueueCache()
-      processCenter.renderSend(EventName.bindList)
+      this.showTipDialog().then(() => {
+        if (this.nasInfo.ip === '127.0.0.1') ClientAPI.closeP2PTunnel()
+        this.$store.dispatch('NasServer/clearCacheNas')
+        TransportHelper.clearQueueCache()
+        processCenter.renderSend(EventName.bindList)
+      })
+    },
+    showTipDialog () {
+      return new Promise((resolve, reject) => {
+        const { dialog } = require('electron').remote
+        dialog.showMessageBox({
+          message: '确认退出登录？\n该操作将中断所有正在进行中的任务！',
+          buttons: ['确定', '取消'],
+          defaultId: 0,
+          cancelId: 1
+        }).then(result => {
+          result.response === 0 ? resolve() : reject(new Error('cancel'))
+        })
+      })
     }
   }
 })
