@@ -11,7 +11,7 @@
         />
       </div>
       <div class="body">
-        <a-input placeholder="请输入本地账号" v-model="account" :max-length="15"/>
+        <a-input placeholder="请输入本地帐号" v-model="account" :max-length="15"/>
         <a-input
           type="password"
           placeholder="请输入本地密码"
@@ -62,7 +62,7 @@ export default Vue.extend({
     },
     handleLogin () {
       if (_.isEmpty(this.account)) {
-        this.$message.error('账号不能为空')
+        this.$message.error('帐号不能为空')
       } else if (_.isEmpty(this.password)) {
         this.$message.error('密码不能为空')
       } else {

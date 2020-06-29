@@ -4,10 +4,10 @@
 			<p class="cd-setting-title">用户离线设置</p>
 			<p class="cd-setting-title"><a-switch v-model="offlinePass.isUsed" defaultChecked @change="onOfflineChange"/></p>
 			<template v-if="offlinePass.isUsed">
-				<p class="cd-setting-title">{{offlinePass.already_set ? '修改' : '添加'}}账号密码</p>
+				<p class="cd-setting-title">{{offlinePass.already_set ? '修改' : '添加'}}帐号密码</p>
 				<div class="cd-setting-form">
-					<a-input v-if="!offlinePass.already_set" type="text" v-model="offlinePass.offline_username" placeholder="离线账号" clearable style="width: 100%;margin-bottom: 10px;" :max-length="15" />
-					<p v-if="offlinePass.already_set" class="cd-setting-info">当前离线账号：<font style="float: right;">{{ offlinePass.offline_username }}</font></p>
+					<a-input v-if="!offlinePass.already_set" type="text" v-model="offlinePass.offline_username" placeholder="离线帐号" clearable style="width: 100%;margin-bottom: 10px;" :max-length="15" />
+					<p v-if="offlinePass.already_set" class="cd-setting-info">当前离线帐号：<font style="float: right;">{{ offlinePass.offline_username }}</font></p>
 					<a-input v-if="!offlinePass.already_set" type="password" v-model="offlinePass.offline_password" placeholder="离线密码" clearable style="width: 100%;margin-bottom: 10px;" />
 					<a-button v-if="offlinePass.already_set" @click="showModifyOffline">修改密码</a-button>
 					<a-button v-if="!offlinePass.already_set" @click="setOfflineAccount">保存</a-button>
@@ -72,20 +72,19 @@ export default Vue.extend({
 			_this.$electron.remote.getCurrentWindow().close()
 		},
 		onOfflineChange(e) {
-			console.log(this.offlinePass.already_set);
 			const _this = this as any
 			if (!this.offlinePass.isUsed && this.offlinePass.already_set) {
 				this.offlinePass.isUsed = true
 				this.$confirm({
 					title: '删除',
-					content: '是否删除离线账号？',
+					content: '是否删除离线帐号？',
 					okText: '删除',
 					okType: 'danger',
 					cancelText: '取消',
 					onOk() {
 						NasFileAPI.deleteOfflineAccount().then(response => {
 							if (response.data.code !== 200) return
-							_this.$message.success('离线账号删除成功')
+							_this.$message.success('离线帐号删除成功')
 							_this.getOfflineName()
 						}).catch(error => {
 							console.log(error)
@@ -97,9 +96,10 @@ export default Vue.extend({
 				this.offlinePass.offline_username = ''
 				this.offlinePass.offline_password = ''
 			}
+			e ? this.$message.info('在联网受限时，本地帐号与设备在同一局域网内可建立连接。') : null
 		},
 		setOfflineAccount () {
-			if (!this.offlinePass.offline_username.length) { this.$message.warning('请输入离线账号'); return; }
+			if (!this.offlinePass.offline_username.length) { this.$message.warning('请输入离线帐号'); return; }
 			if (!this.offlinePass.offline_password.length) { this.$message.warning('请输入离线密码'); return; }
 			const input = {
 				offline_username: this.offlinePass.offline_username,
@@ -107,7 +107,7 @@ export default Vue.extend({
 			}
 			NasFileAPI.setOfflineAccount(input).then(response => {
 				if (response.data.code !== 200) return
-				this.$message.success('添加离线账号成功')
+				this.$message.success('添加离线帐号成功')
 				this.offlinePass.offline_password = ''
 				this.getOfflineName()
 			}).catch(error => {

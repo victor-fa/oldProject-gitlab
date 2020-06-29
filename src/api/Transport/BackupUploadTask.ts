@@ -5,11 +5,7 @@ import { AxiosResponse, CancelTokenSource } from 'axios';
 import { BasicResponse } from '../UserModel';
 import NasFileAPI from '../NasFileAPI';
 import { UploadParams } from '../NasFileModel';
-import StringUtility from '@/utils/StringUtility'
-import ClientAPI from '../ClientAPI'
 import { FileInfo } from './BaseTask';
-
-let fileInfos: FileInfo[] = []
 
 export default class BackupUploadTask extends UploadTask {
   icon = require('../../assets/resource/folder_icon.png')

@@ -19,7 +19,7 @@ interface Setting {
 }
 
 let settingList: Setting[] = [
-  { type: SettingType.logout, title: '切换账号' },
+  { type: SettingType.logout, title: '切换帐号' },
   { type: SettingType.switching_device, title: '切换设备' },
   { type: SettingType.system, title: '系统设置' },
   { type: SettingType.help,

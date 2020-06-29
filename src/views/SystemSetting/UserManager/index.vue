@@ -11,7 +11,9 @@
 						<span>{{item.nic_name}}（{{item.ugreen_no}}）</span>
 						<span>{{item.atime | filterTime}}</span>
 					</div>
-					<span style="margin: 20px 10px 0 0;">{{item.status === 0 ? '已禁用' : item.is_connecting === 0 ? '不在线' : '在线'}}</span>
+					<span class="describe" :style="{color: item.is_connecting === 0 ? '#000' : '#007934'}">
+						{{item.status === 0 ? '已禁用' : item.is_connecting === 0 ? '不在线' : '在线'}}
+					</span>
 				</div>
 			</div>
 		</div>
@@ -93,7 +95,10 @@ export default Vue.extend({
       NasFileAPI.fetchBindUserList().then(response => {
 				if (response.data.code !== 200) return
 				this.nasUsers = _.get(response.data.data, 'nas_users')
-				this.nasUsers.sort((a, b) => {
+				this.nasUsers.sort((a, b) => {	// 在线靠前
+					if (a.is_connecting > b.is_connecting) return -1
+				})
+				this.nasUsers.sort((a, b) => {	// 管理员置顶
 					if (a.role > b.role) return -1
 				})
 				console.log(JSON.parse(JSON.stringify(this.nasUsers)));
@@ -105,47 +110,46 @@ export default Vue.extend({
 		enableUser (item) {
 			const status = item.status === 0 ? 1 : 0
 			const ugreen_no = item.ugreen_no
-      NasFileAPI.enableUser(ugreen_no, status).then(response => {
-				if (response.data.code !== 200) return
-				this.fetchBindUserList()
-				console.log(response.data);
-      }).catch(error => {
-        this.$message.error('网络连接错误，请检测网络')
-        console.log(error)
+      this.showDeleteDialog('您确定禁用该用户吗？', '禁用该用户后，该用户将无法登录设备', '禁用').then(result => {
+        if (result === 1) return
+				NasFileAPI.enableUser(ugreen_no, status).then(response => {
+					if (response.data.code !== 200) return
+					this.fetchBindUserList()
+					console.log(response.data);
+				}).catch(error => {
+					this.$message.error('网络连接错误，请检测网络')
+					console.log(error)
+				})
       })
 		},
 		deleteCommonUser (item) {
 			const ugreen_no = item.ugreen_no
-      NasFileAPI.deleteCommonUser(ugreen_no).then(response => {
-				if (response.data.code !== 200) return
-				this.fetchBindUserList()
-				console.log(response.data);
-      }).catch(error => {
-        this.$message.error('网络连接错误，请检测网络')
-        console.log(error)
+      this.showDeleteDialog('您确定删除该用户吗？', '删除用户后，会清除该用户上传的所有数据。', '删除').then(result => {
+        if (result === 1) return
+				NasFileAPI.deleteCommonUser(ugreen_no).then(response => {
+					if (response.data.code !== 200) return
+					this.fetchBindUserList()
+					console.log(response.data);
+				}).catch(error => {
+					this.$message.error('网络连接错误，请检测网络')
+					console.log(error)
+				})
       })
 		},
 		showDeliverModal (item) {
-			const { dialog } = require('electron').remote
-			dialog.showMessageBox({
-				type: 'info',
-				message: '每台设备只有一个管理员，确定后您将失去这台设备的\n管理权限！是否确定提升该用户为管理员用户？',
-				buttons: ['确定', '取消'],
-				cancelId: 1
-			}).then(result => {
-				if (result.response === 0) {
-					this.deliver.ugreen_no = item.ugreen_no
-					const curNas = this.nasInfo as NasInfo
-					UserAPI.smsShortCode(this.user.phoneNo, 6, curNas.sn, curNas.mac).then(response => {
-						if (response.data.code !== 200) return
-						this.deliver.visiable = true
-						this.$message.success('短信已发送到手机')
-					}).catch(error => {
-						console.log(error)
-						this.$message.error('网络连接错误,请检测网络')
-					})
-				}
-			}).catch(error => console.log(error))
+			this.deliver.ugreen_no = item.ugreen_no
+			const curNas = this.nasInfo as NasInfo
+      this.showDeleteDialog('确认转让您的管理员身份？', '每台设备只有一个管理员！\n身份转让后，您将失去该设备的管理员权限。', '确定').then(result => {
+        if (result === 1) return
+				UserAPI.smsShortCode(this.user.phoneNo, 6, curNas.sn, curNas.mac).then(response => {
+					if (response.data.code !== 200) return
+					this.deliver.visiable = true
+					this.$message.success('短信已发送到手机')
+				}).catch(error => {
+					console.log(error)
+					this.$message.error('网络连接错误,请检测网络')
+				})
+			})
 		},
 		handleDeliver (item) {
 			const ugreen_no = this.deliver.ugreen_no
@@ -185,7 +189,17 @@ export default Vue.extend({
 				}));
 			}
       menu.popup(remote.getCurrentWindow())
-    }
+    },
+    showDeleteDialog (title: string, message: string, command: string): Promise<number> {
+      return new Promise((resolve, reject) => {
+        const { dialog } = require('electron').remote
+        dialog.showMessageBox({
+          type: 'info', title, message, buttons: [command, '取消'], cancelId: 1
+        }).then(result => {
+          resolve(result.response)
+        }).catch(error => { reject(error) })
+      })
+    },
   }
 })
 </script>
@@ -233,6 +247,9 @@ p { text-align: left; }
 			flex-flow: column;
 			text-align: left;
 			padding: 20px;
+		}
+		.describe {
+			margin: 20px 10px 0 0;
 		}
 	}
 }

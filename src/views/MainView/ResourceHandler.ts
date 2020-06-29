@@ -281,7 +281,7 @@ export default {
       disableShare, // 是否禁用分享菜单项
       disableCollect, // 是否禁用收藏菜单项
       disableDownload, // 是否禁用下载菜单项
-      disableInit
+      disableInit // 是否禁用初始化菜单项
     }
   },
   // list的右键菜单显示规则

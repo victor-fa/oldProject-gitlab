@@ -192,6 +192,7 @@ export default Vue.extend({
       return new Promise((resolve, reject) => {
         const { dialog } = require('electron').remote
         dialog.showMessageBox({
+					title: '绿联云',
           message: '确认退出登录？\n该操作将中断所有正在进行中的任务！',
           buttons: ['确定', '取消'],
           defaultId: 0,

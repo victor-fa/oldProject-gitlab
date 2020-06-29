@@ -54,7 +54,7 @@ nasServer.interceptors.response.use((response: AxiosResponse) => {
 const refreshTokenCodes = [8024, 8013]
 const reconnectCodes = [8044, 8045]
 const reLoginCodes = [8052]
-const whiteListCodes = [8048, 8049, 40103, 4050, 8025]
+const whiteListCodes = [8031, 8032, 8048, 8049, 40103, 4050, 8025]
 const handleExceptionSence = (response: AxiosResponse) => {
   if (response.status === 200) {
     const basicData = response.data as BasicResponse
@@ -131,6 +131,7 @@ const showKickedDialog = () => {
   return new Promise((resolve) => {
     const { dialog } = require('electron').remote
     dialog.showMessageBox({
+      title: '绿联云',
       message: '您的帐号在另一设备登录，已被迫下线。\n如非您本人操作，那么您的密码有可能已泄露，建议您修改密码',
       buttons: ['确定'],
       defaultId: 0,

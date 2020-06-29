@@ -51,7 +51,7 @@ export default Vue.extend({
       return show
     },
     backTitle: function () {
-      return this.$route.params.type === 'offline' ? '扫描列表' : '账号密码登录'
+      return this.$route.params.type === 'offline' ? '扫描列表' : '帐号密码登录'
     },
     nasInfo: function () {
       const json = this.$route.params.nasInfo

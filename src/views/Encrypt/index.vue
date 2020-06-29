@@ -86,7 +86,6 @@ export default Vue.extend({
       // this.$store.dispatch('Resource/decreaseTask')
       setTimeout(() => { this.getEncryptList() }, 1000);
     })
-    console.log(this.alreadyLogin);
   },
   destroyed() {
     if (this.alreadyLogin === true) { // 已登录情况下才需要登录
@@ -214,7 +213,19 @@ export default Vue.extend({
       this.loading = true
       NasFileAPI.loginEncrypt(security_password).then(response => {
         this.loading = false
-        if (response.data.code !== 200) return
+        const resCode = response.data.code
+        if (resCode !== 200) {
+          let msg = ''
+          if (resCode === 8031) {
+            msg = '密码错误，请重试'
+          } else if (resCode === 8032) {
+            msg = '您未激活加密空间'
+            this.encryptLogin.isVisiable = false
+            this.encryptSet.isVisiable = true
+          }
+          this.$message.error(msg)
+          return
+        }
         if (this.encryptSet.isVisiable) {
           this.$message.success('激活成功')
           this.cancleEncryptSet()

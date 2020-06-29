@@ -149,7 +149,7 @@ export default Vue.extend({
     },
     checkInputFrom () {
       if (this.account.length === 0) {
-        this.$message.warning('请输入账号', 1.5)
+        this.$message.warning('请输入帐号', 1.5)
         return false
       } else if (this.password.length === 0) {
         this.$message.warning('请输入密码', 1.5)

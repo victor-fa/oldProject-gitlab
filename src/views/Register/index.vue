@@ -44,7 +44,7 @@
     >
       注册
     </a-button>
-    <a-button class="account-btn" @click="handleBackAction">账号登录</a-button>
+    <a-button class="account-btn" @click="handleBackAction">帐号登录</a-button>
   </div>
 </template>
 

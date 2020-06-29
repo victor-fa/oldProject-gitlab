@@ -74,6 +74,7 @@ export default Vue.extend({
       return new Promise((resolve, reject) => {
         const { dialog } = require('electron').remote
         dialog.showMessageBox({
+					title: '绿联云',
           type: 'info',
           message,
           buttons: ['删除', '取消'],
@@ -138,7 +139,7 @@ export default Vue.extend({
     handleDeletAction () {
       const items = ResourceHandler.getSelectItems(this.dataArray)
       if (_.isEmpty(items)) return
-      const message = items.length > 1 ? `你确定要永久删除所选的${items.length}个项目吗？` : `你确定要永久删除”${items[0].name}“吗？`
+      const message = items.length > 1 ? `您确定要永久删除所选的${items.length}个项目吗？` : `您确定要永久删除”${items[0].name}“吗？`
       this.showDeleteDialog(message).then(result => {
         if (result === 1) return
         this.handleDeletRequest(items)
@@ -146,7 +147,7 @@ export default Vue.extend({
     },
     handleClearTrashAction () {
       if (_.isEmpty(this.dataArray)) return
-      const message = '你确定要清空回收站吗？'
+      const message = '您确定要清空回收站吗？'
       this.showDeleteDialog(message).then(result => {
         if (result === 1) return
         this.handleClearRequest()

@@ -11,7 +11,7 @@
 				</div>
 			</form>
 			<p class="cd-setting-info nick">
-				昵称：<a-input type="text" v-model="user.nicName" placeholder="请输入昵称" clearable class="nick-name" :max-length="15" />
+				昵称：<a-input type="text" v-model="user.nicName" placeholder="请输入昵称" clearable class="nick-name" :max-length="20" />
 			</p>
 			<p class="cd-setting-info">
 				手机号：<a-input type="text" v-model="user.phoneNo" placeholder="请输入手机号" clearable style="width: 200px;" :max-length="11" />

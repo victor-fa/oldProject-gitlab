@@ -5,7 +5,7 @@ const SettingRouters = [
     disable: false,
     component: () => import('../../views/SystemSetting/Profile/index.vue'),
     meta: {
-      title: '我的账号',
+      title: '我的帐号',
       isSelected: true
     }
   },
@@ -55,7 +55,7 @@ const SettingRouters = [
     disable: false,
     component: () => import('../../views/SystemSetting/LocalAccount/index.vue'),
     meta: { 
-      title: '本地账号',
+      title: '本地帐号',
       isSelected: false
     }
   }

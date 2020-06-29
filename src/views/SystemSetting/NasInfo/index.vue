@@ -36,15 +36,6 @@
 				<a-button class="cd-purple-button" @click="handleDangerousOperation('delete')">删除设备</a-button>
 			</p>
 		</div>
-		<a-modal
-			:visible="detach.visiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
-			okText="确定" cancelText="取消" @ok="handleAdminDelete" @cancel="detach.visiable = false;detach.choice = 0">
-			<p>是否删除用户数据？</p>
-			<a-radio-group v-model="detach.choice">
-				<a-radio :value="0">不删除</a-radio>
-				<a-radio :value="1">删除</a-radio>
-			</a-radio-group>
-		</a-modal>
 		<a-modal title="检测到有新版本固件更新"
 			:visible="update.visiable" :mask="false" :closable="false" :maskClosable="false" width="450px"
 			okText="确认升级" cancelText="取消升级" @ok="handleUpdate" @cancel="update.visiable = false,update.info = {}">
@@ -118,10 +109,6 @@ export default Vue.extend({
 				closeChoice: 'tray'
 			},
 			loginIcons,
-			detach: {
-				visiable: false,
-				choice: 0
-			},
 			update: {
 				visiable: false,
 				info: {} as any
@@ -156,44 +143,50 @@ export default Vue.extend({
 		},
 		handleDangerousOperation (flag) {
 			let message = ''
+			let leftBut = ''
+			let rightBut = ''
 			const { dialog } = require('electron').remote
 			if (flag === 'shutdown') {
-				message = `关机会导致所有正在进行的任务停止，\n并且绿联云设备断开与桌面端之间的连接`
+				message = `该操作将中断所有正在进行中的任务！`
 			} else if (flag === 'reboot') {
-				message = `重启会导致所有正在进行的任务停止，\n并且绿联云设备断开与桌面端之间的连接，\n直到绿联云设备重启成功！`
+				message = `该操作将中断所有正在进行中的任务！`
 			} else if (flag === 'factory') {
-				message = `1、恢复出厂设置将会清除所有用户信息与缓存数据，并重新同步数据。\n2、操作并不会删除您硬盘里面的文件。\n3、恢复出厂过程可能会比较长，请耐心等待！`
+				message = `该操作将设备恢复至初始状态，但不会清除您硬盘的任何数据。\n恢复出厂时间可能较长，请您耐心等待！`
 			} else if (flag === 'update') {
 				this.fetchUpdateInfo()
 				return
 			} else if (flag === 'delete') {
+				leftBut = '解绑并保留数据'
+				rightBut = '解绑并删除数据'
 				if (this.isUserAdmin) {
-					this.detach.visiable = true
-					return
+					message = `该操作将会清除所有用户信息，用户数据可保留或删除。\n解绑过程需设备连接互联网，是否继续？`
 				} else {
-					message = `确定删除设备？`
+					message = `该操作将会清除您的用户信息，用户数据可保留或删除。\n解绑过程需设备连接互联网，是否继续？`
 				}
 			}
-			setTimeout(() => {
-				dialog.showMessageBox({
-					type: 'info',
-					message,
-					buttons: ['确定', '取消'],
-					cancelId: 1
-				}).then(result => {
-					if (result.response === 0) {
-						if (flag === 'shutdown') {
-							this.handleShutdown()
-						} else if (flag === 'reboot') {
-							this.handleReboot()
-						} else if (flag === 'factory') {
-							this.handleFactory()
-						} else if (flag === 'delete') {
-							this.handleCommonDelete()
-						}
+			dialog.showMessageBox({
+				type: 'info',
+				title: '绿联云',
+				message,
+				buttons: [leftBut ? leftBut : '确定', rightBut ? rightBut : '取消'],
+				cancelId: 2	// 右上角关闭
+			}).then(result => {
+				if (result.response === 0) {
+					if (flag === 'shutdown') {
+						this.handleShutdown()
+					} else if (flag === 'reboot') {
+						this.handleReboot()
+					} else if (flag === 'factory') {
+						this.handleFactory()
+					} else if (flag === 'delete') {
+						this.isUserAdmin ? this.handleAdminDelete(1) : this.handleCommonDelete()
 					}
-				}).catch(error => console.log(error))
-			}, 100);
+				} else if (result.response === 1) {
+					if (flag === 'delete') {
+						this.isUserAdmin ? this.handleAdminDelete(0) : this.handleCommonDelete()
+					}
+				}
+			}).catch(error => console.log(error))
 		},
 		handleShutdown () {
 			NasFileAPI.shutdown().then(response => {
@@ -253,8 +246,8 @@ export default Vue.extend({
 				console.log(error)
 			})
 		},
-		handleAdminDelete () {
-			ClientAPI.adminDetach(this.detach.choice).then(response => {
+		handleAdminDelete (choice: number) {	// 不删除:0 删除:1
+			ClientAPI.adminDetach(choice).then(response => {
 				if (response.data.code !== 200) return
 				this.switchDevice()
 			}).catch(error => {

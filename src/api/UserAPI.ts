@@ -4,7 +4,6 @@ import { SmsType, AccessToken, BasicResponse, User } from './UserModel'
 import deviceMgr from '@/utils/deviceMgr'
 import store from '@/store'
 import { nasCloud } from './CloudServer'
-import { type } from 'os'
 
 const userModulePath = '/api/user/v1'
 const updateModulePath = '/api/device/v1'

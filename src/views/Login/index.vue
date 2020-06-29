@@ -1,7 +1,7 @@
 <template>
   <div class="login">
     <ul class="content-wrapper">
-      <li class="tip">账号密码登录</li>
+      <li class="tip">帐号密码登录</li>
       <li class="account-form">
         <basic-form
           :icon="loginIcons.account"
@@ -24,7 +24,7 @@
       </li>
       <li class="password-checkbox">
         <a-checkbox :checked="rememberPassword" @change="checkboxChange">记住密码</a-checkbox>
-        <a-button @click="handleRegisterAction">注册账号</a-button>
+        <a-button @click="handleRegisterAction">注册帐号</a-button>
       </li>
       <li class="login-button">
         <a-button
@@ -132,7 +132,8 @@ export default Vue.extend({
     showOfflineDialog () {
       const { dialog } = require('electron').remote
       dialog.showMessageBox({
-        message: '连接不上云账号\n是否用本地账号登录？',
+        title: '绿联云',
+        message: '连接不上云帐号\n是否用本地帐号登录？',
         buttons: ['确定', '取消'],
         defaultId: 0,
         cancelId: 1
@@ -146,7 +147,7 @@ export default Vue.extend({
     },
     checkInputFrom () {
       if (this.account.length === 0) {
-        this.$message.warning('请输入账号')
+        this.$message.warning('请输入帐号')
         return false
       } else if (this.password.length === 0) {
         this.$message.warning('请输入密码')

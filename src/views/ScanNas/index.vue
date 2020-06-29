@@ -71,7 +71,7 @@ export default Vue.extend({
     },
     backBtnTitle: function () {
       if (this.type === 'offlineLogin') {
-        return 'Cloud账号登录'
+        return 'Cloud帐号登录'
       }
       return '绑定设备列表'
     }
@@ -210,7 +210,7 @@ export default Vue.extend({
         this.handleConnectFailure(error)
       })
     },
-    // 离线账号登录接口
+    // 离线帐号登录接口
     offlineLogin (account: string, password: string) {
       const encryptPwd = StringUtility.encryptPassword(password)
       this.connectLoading = true
