@@ -83,6 +83,7 @@ export default Vue.extend({
     parseResponse (data: BasicResponse) {
       this.totalSize = _.get(data.data, 'total')
       let list = _.get(data.data, 'list') as Array<ResourceItem>
+      if (list.length === 0) return
       if (this.isSourcePath(list[0])) {
         this.fetchBackupDetail(list[0].path, list[0].uuid)
         return

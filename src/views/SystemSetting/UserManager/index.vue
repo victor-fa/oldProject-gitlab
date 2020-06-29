@@ -6,12 +6,12 @@
 				<span class="role" v-show="item.role === 0 && index === 1">共享者</span>
 				<div class="detail" @contextmenu="rightClick(item)">
 					<img class="userImg" v-if="item.image" :src="item.image">
-					<img class="userImg" v-else :src="loginIcons.account">
+					<img class="userImg" v-else :src="loginIcons.user">
 					<div class="userContent">
 						<span>{{item.nic_name}}（{{item.ugreen_no}}）</span>
 						<span>{{item.atime | filterTime}}</span>
 					</div>
-					<span class="describe" :style="{color: item.is_connecting === 0 ? '#000' : '#007934'}">
+					<span class="describe" :style="{color: item.is_connecting === 0 ? '#9C9FA9' : '#007934'}">
 						{{item.status === 0 ? '已禁用' : item.is_connecting === 0 ? '不在线' : '在线'}}
 					</span>
 				</div>

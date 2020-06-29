@@ -38,8 +38,8 @@ import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import { FuncListItem } from '@/router/modules/HomeList'
-import { User } from '../../api/UserModel'
 import { StorageInfo } from '../../api/NasFileModel'
+import { NasInfo } from '@/api/ClientModel'
 
 export default Vue.extend({
   name: 'sider-menu',
@@ -56,8 +56,8 @@ export default Vue.extend({
     }
   },
   computed: {
-    ...mapGetters('User', ['user']),
-    ...mapGetters('Resource', ['storages'])
+    ...mapGetters('Resource', ['storages']),
+    ...mapGetters('NasServer', ['nasInfo'])
   },
   watch: {
     storages: function () {
@@ -66,17 +66,12 @@ export default Vue.extend({
   },
   methods: {
     getStorageInfo () {
-      const user = this.user as User
-      if (_.isEmpty(user)) return
+      const nasInfo = this.nasInfo as NasInfo
+      if (_.isEmpty(nasInfo)) return 
       const storage = (this.storages as StorageInfo[])[0]
       if (_.isEmpty(storage)) return
-      let name = '未知设备'
-      if (!_.isEmpty(user.nicName)) {
-        name = user.nicName
-      } else if (!_.isEmpty(user.userName)) {
-        name = user.userName
-      }
-      name += '的设备'
+      let name = ''
+      if (!_.isEmpty(nasInfo.name)) name = nasInfo.name
       const precent = storage.showProgress
       const info = storage.showSize
       this.storageInfo = { name, precent, info }

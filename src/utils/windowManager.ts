@@ -1,5 +1,5 @@
 import processCenter, { MainEventName } from '@/utils/processCenter'
-import { BrowserWindow, Menu, Tray } from 'electron'
+import { BrowserWindow, Menu, Tray, app } from 'electron'
 import windowControl from './windowControl'
 
 interface WindowOptions extends Electron.BrowserWindowConstructorOptions {
@@ -188,7 +188,7 @@ export default {
         },
         {
           label: '退出',
-          click: () => this.closeOtherWindow()
+          click: () => app.quit()
         }
       ];
       const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);

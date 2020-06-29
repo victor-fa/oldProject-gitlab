@@ -2,6 +2,7 @@
 	<div class="cd-setting-main">
 		<div class="cd-setting-content">
 			<p class="cd-setting-title">设备信息</p>
+			<p class="cd-setting-info">设备名：{{nasInfo.name}}</p>
 			<p class="cd-setting-info">序列号：{{nasInfo.sn}}</p>
 			<p class="cd-setting-info">固件版本：{{nasInfo.softversion}}</p>
 			<p class="cd-setting-info">IP地址：{{nasInfo.ip}}</p>

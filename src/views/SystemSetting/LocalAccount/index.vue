@@ -1,8 +1,11 @@
 <template>
 	<div class="cd-setting-main">
 		<div class="cd-setting-content">
-			<p class="cd-setting-title">用户离线设置</p>
-			<p class="cd-setting-title"><a-switch v-model="offlinePass.isUsed" defaultChecked @change="onOfflineChange"/></p>
+			<p class="cd-setting-title">
+				用户离线设置
+				<a-switch class="switch" v-model="offlinePass.isUsed" defaultChecked @change="onOfflineChange"/>
+			</p>
+			<p class="cd-setting-info describe">在联网受限时，本地帐号与设备在同一局域网内可建立连接。</p>
 			<template v-if="offlinePass.isUsed">
 				<p class="cd-setting-title">{{offlinePass.already_set ? '修改' : '添加'}}帐号密码</p>
 				<div class="cd-setting-form">
@@ -96,7 +99,6 @@ export default Vue.extend({
 				this.offlinePass.offline_username = ''
 				this.offlinePass.offline_password = ''
 			}
-			e ? this.$message.info('在联网受限时，本地帐号与设备在同一局域网内可建立连接。') : null
 		},
 		setOfflineAccount () {
 			if (!this.offlinePass.offline_username.length) { this.$message.warning('请输入离线帐号'); return; }
@@ -179,6 +181,9 @@ p { text-align: left; }
 			margin-bottom: 10px;
 			font-weight: bold;
 		}
+		.switch {
+			float: right;
+		}
 		.cd-setting-info {
 			width: 100%;
 			font-size: 14px;
@@ -204,6 +209,7 @@ p { text-align: left; }
 				margin: 15px 0 0 -3px;
 			}
 		}
+		.describe { color: #00000040; }
 		.cd-setting-form {
 			margin: 8px 0;
 			width: 230px;
