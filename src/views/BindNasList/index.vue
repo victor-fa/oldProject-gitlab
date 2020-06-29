@@ -7,9 +7,11 @@
     <a-spin :spinning="loading">
       <nas-device-list
         ref="nasDeviceList"
+        type="bind"
         :dataSource="deviceList"
         :listHeight="listHeight"
         v-on:didSelectItem="didSelectItem"
+        v-on:unbind="handleUnbindAction"
       />
     </a-spin>
     <a-button class="add-device-btn" @click="addAction">添加设备</a-button>
@@ -40,7 +42,6 @@ export default Vue.extend({
     return {
       loading: false,
       deviceList: [] as DeviceInfo[],
-      currentDevice: 0,
       listHeight: 0
     }
   },
@@ -89,9 +90,23 @@ export default Vue.extend({
       if (this.autoLogin) this.handleAutoLogin()
     },
     didSelectItem (index: number) {
-      this.currentDevice = index
-      const item = this.deviceList[index]
-      this.searchNas(item)
+      const device = this.deviceList[index]
+      this.searchNas(device)
+    },
+    handleUnbindAction (index: number) {
+      this.loading = true
+      const device = this.deviceList[index]
+      UserAPI.unbindDevice(device).then(response => {
+        console.log(response)
+        this.loading = false
+        if (response.data.code !== 200) return
+        this.$message.info('解绑成功')
+        this.deviceList.splice(index, 1)
+      }).catch(error => {
+        console.log(error)
+        this.loading = false
+        this.$message.error('解绑失败')
+      })
     },
     handleAutoLogin () {
       let device = this.deviceList[0]
@@ -105,8 +120,7 @@ export default Vue.extend({
       this.loading = true
       ClientAPI.setNasName(nas.name)
       ClientAPI.searchNas(nas.sn, nas.mac).then(data => {
-        const secretKey = StringUtility.formatPublicKey(nas.publicKey)
-        this.loginToNas(data, secretKey)
+        this.loginToNas(data, nas.publicKey)
       }).catch(error => {
         console.log(error)
         this.loading = false

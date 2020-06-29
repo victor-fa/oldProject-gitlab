@@ -19,7 +19,7 @@ export default {
       progress: this.formatProgress(model.curr_size, model.total_size),
       progressPercent: this.caculatePercent(model.curr_size, model.total_size),
       name: StringUtility.formatName(model.curr_src_path),
-      icon: ResourceHandler.searchResourceIcon(ResourceType.document, model.curr_src_path),
+      icon: ResourceHandler.matchMineTypeIcon(model.curr_src_path),
       controlItems: items,
       path: model.curr_src_path,
       uuid: model.curr_src_uuid

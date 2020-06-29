@@ -65,7 +65,7 @@ function createWindow () {
 		minWidth: 420,
     icon: './src/assets/logo.png',
     frame: false,
-    resizable: true,
+    resizable: false,
     backgroundColor: '#f6f8fb',
     webPreferences: {
       nodeIntegration: true,

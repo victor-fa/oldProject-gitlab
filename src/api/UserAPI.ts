@@ -1,12 +1,13 @@
 import _ from 'lodash'
 import axios, { AxiosResponse, Canceler } from 'axios'
-import { SmsType, AccessToken, BasicResponse, User } from './UserModel'
+import { SmsType, AccessToken, BasicResponse, User, DeviceInfo } from './UserModel'
 import deviceMgr from '@/utils/deviceMgr'
 import store from '@/store'
 import { nasCloud } from './CloudServer'
+import crypto from 'crypto'
 
 const userModulePath = '/api/user/v1'
-const updateModulePath = '/api/device/v1'
+const deviceModule = '/api/device/v1'
 const CancelToken = axios.CancelToken
 let cancel: Canceler | null = null
 type CloudResponse = Promise<AxiosResponse<BasicResponse>>
@@ -77,6 +78,20 @@ export default {
       cancelToken: new CancelToken(function executor(c) {
         cancel = c
       })
+    })
+  },
+  unbindDevice (device: DeviceInfo): CloudResponse {
+    const user = _.get(store.getters, 'User/user') as User
+    const timestamp = (new Date()).getDate()
+    const plaintext = `${device.mac}${device.sn}${timestamp}UGN123NAS@#$`
+    const sign = crypto.createHash('SHA256').update(plaintext).digest('hex')
+    return nasCloud.post(deviceModule + '/device/user', {
+      sn: device.sn,
+      mac: device.mac,
+      timestamp,
+      sign,
+      ugreenNo: user.ugreenNo,
+      isAdmin: device.role
     })
   },
   cancelFetchBindDevices () {
@@ -181,6 +196,6 @@ export default {
     return nasCloud.post(userModulePath + '/basic/qrCode/login', { qrCode })
   },
   fetchSoftVerUpdateInfo (appNo: string, versionNo: number): CloudResponse {
-    return nasCloud.post(updateModulePath + '/softVer/latest', { appNo, versionNo })
+    return nasCloud.post(deviceModule + '/softVer/latest', { appNo, versionNo })
   }
 }

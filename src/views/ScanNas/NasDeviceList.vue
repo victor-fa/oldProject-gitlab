@@ -50,6 +50,9 @@ export default Vue.extend({
     dataSource: Array,
     listHeight: {
       default: 430
+    },
+    type: {
+      default: 'scan'
     }
   },
   computed: {
@@ -57,6 +60,9 @@ export default Vue.extend({
       const { Menu, MenuItem } = require('electron').remote
       const menu = new Menu()
       menu.append(new MenuItem({ label: '连接设备', click: this.handleMenuItemClick }))
+      if (this.type === 'bind') {
+        menu.append(new MenuItem({ label: '解绑设备', click: this.handleUnbindAction }))
+      }
       return menu
     }
   },
@@ -95,6 +101,9 @@ export default Vue.extend({
     },
     handleMenuItemClick (item: MenuItem) {
       this.$emit('didSelectItem', this.selectedIndex)
+    },
+    handleUnbindAction () {
+      this.$emit('unbind', this.selectedIndex)
     }
   },
   filters: {

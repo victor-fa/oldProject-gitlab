@@ -137,7 +137,7 @@ export default Vue.extend({
       const basrUrl = `http://${this.selectNas.ip}:${this.selectNas.port}`
       ClientAPI.setBaseUrl(basrUrl)
       const user = this.user as User
-      const secretKey = StringUtility.formatPublicKey(nas.publicKey)
+      const secretKey = nas.publicKey
       this.connectLoading = true
       ClientAPI.login(user, secretKey).then(response => {
         this.connectLoading = false

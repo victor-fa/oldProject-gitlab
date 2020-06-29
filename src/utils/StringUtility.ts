@@ -19,7 +19,7 @@ export default {
   },
   // 过滤后台返回的公钥
   formatPublicKey (secretKey: string) {
-    return secretKey
+    return `-----BEGIN PUBLIC KEY-----\n${secretKey}\n-----END PUBLIC KEY-----\n`
   },
   // 左斜撇转右斜撇
   convertL2R (path: string) {

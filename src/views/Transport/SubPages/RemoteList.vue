@@ -40,6 +40,7 @@ export default Vue.extend({
     this.fetchRemoteList()
   },
   destroyed () {
+    console.log('123')
     if (timer !== null) clearInterval(timer)
   },
   methods: {
@@ -87,18 +88,14 @@ export default Vue.extend({
     fetchRemoteList () {
       this.loading = true
       NasFileAPI.fetchRemoteTaskList().then(response => {
+        console.log(response)
         this.loading = false
         if (response.data.code !== 200) return
         const tasks = _.get(response.data.data, 'list') as RemoteTask[] 
         this.dataArray = tasks.map(item => {
           return TransportHandler.convertRemoteTask(item)
         })
-        if (!_.isEmpty(this.dataArray)) {
-          timer = setInterval(this.fetchRemoteList, 2000)
-          this.updateView()
-        } else {
-          if (timer !== null) clearInterval(timer)
-        }
+        this.updateView()
       }).catch(error => {
         console.log(error)
         this.loading = false

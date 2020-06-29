@@ -383,7 +383,7 @@ export default {
   },
   matchMineTypeIcon (filePath: string) {
     const type = path.extname(filePath).split('.').pop()
-    if (type === undefined) return require('../../assets/resource/unkonw_icon.png')
+    if (type === undefined) return require('../../assets/resource/folder_icon.png')
     const mine = type.toLowerCase()
     if (mine === 'pdf') return require('../../assets/resource/pdf_icon.png')
     if (mine === 'html') return require('../../assets/resource/html_icon.png')
