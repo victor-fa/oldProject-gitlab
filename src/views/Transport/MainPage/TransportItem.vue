@@ -133,7 +133,8 @@ export default Vue.extend({
         margin-left: 12px;
         font-size: 14px;
         color: #ff183e;
-        justify-content: flex-start;
+        flex: 1;
+        text-align: left;
       }
       .operate-item {
         width: 19px;

@@ -20,7 +20,7 @@ import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
 import NewOfflineModal from '../MainPage/NewOfflineModal.vue'
 import { TransportModel, offlineCategorys } from '../MainPage/TransportModel'
-import NasFileAPI from '../../../api/NasFileAPI'
+import NasFileAPI, { maxSize } from '../../../api/NasFileAPI'
 import { OfflineTask, OfflineTaskStatus } from '../../../api/NasFileModel'
 import TransportHandler from '../TransportHandler'
 import { BasicResponse } from '../../../api/UserModel'
@@ -114,7 +114,7 @@ export default Vue.extend({
         this.loading = false
         if (response.data.code !== 200) return
         let list = _.get(response.data.data, 'list') as OfflineTask[]
-        if (_.isEmpty(list) || list.length < 40) this.busy = true
+        if (_.isEmpty(list) || list.length < maxSize) this.busy = true
         const newList = list.map(item => {
           return TransportHandler.convertOfflineTask(item)
         })

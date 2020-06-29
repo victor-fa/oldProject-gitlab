@@ -21,7 +21,7 @@ import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
 import { ResourceItem, OrderType, ResourceType } from '@/api/NasFileModel'
-import NasFileAPI, { TaskMode } from '@/api/NasFileAPI'
+import NasFileAPI, { TaskMode, maxSize } from '@/api/NasFileAPI'
 import { BasicResponse, User } from '@/api/UserModel'
 import ResourceHandler from './ResourceHandler'
 import { ClipboardModel } from '../../store/modules/Resource'
@@ -108,7 +108,7 @@ export default Vue.extend({
     parseResponse (data: BasicResponse) {
       this.totalSize = _.get(data.data, 'total')
       let list = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(list) || list.length < 40) this.busy = true
+      if (_.isEmpty(list) || list.length < maxSize) this.busy = true
       list = ResourceHandler.formatResourceList(list, this.selectedPath)
       this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
     },

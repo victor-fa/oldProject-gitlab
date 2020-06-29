@@ -41,7 +41,7 @@ import Vue from 'vue'
 import BasicList from '@/components/BasicList/index.vue'
 import { ResourceItem, StorageInfo, PartitionInfo, CustomModule, ResourceType } from '@/api/NasFileModel'
 import ResourceHandler from '../MainView/ResourceHandler'
-import NasFileAPI from '../../api/NasFileAPI'
+import NasFileAPI, { maxSize } from '../../api/NasFileAPI'
 import { CacheParams, CacheType } from './FileModalHandler'
 import { BasicResponse } from '../../api/UserModel'
 
@@ -184,7 +184,7 @@ export default Vue.extend({
     },
     parseResponse (data: BasicResponse) {
       let list = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(list) || list.length < 40) this.busy = true
+      if (_.isEmpty(list) || list.length < maxSize) this.busy = true
       list = list.filter(item => {
         if (item.type !== ResourceType.folder) {
           this.busy = true

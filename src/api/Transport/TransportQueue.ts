@@ -23,6 +23,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     super()
     this.tableName = tableName
     this.queue = []
+    this.setMaxListeners(20)
   }
   // public methods
   /**获取全部任务 */

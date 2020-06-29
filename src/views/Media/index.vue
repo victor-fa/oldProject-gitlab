@@ -17,7 +17,7 @@ import Vue from 'vue'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
 import { ResourceItem, OrderType, ResourceType } from '../../api/NasFileModel'
-import NasFileAPI from '../../api/NasFileAPI'
+import NasFileAPI, { maxSize } from '../../api/NasFileAPI'
 import { BasicResponse } from '../../api/UserModel'
 import ResourceHandler from '../MainView/ResourceHandler'
 
@@ -88,7 +88,7 @@ export default Vue.extend({
     parseResponse (data: BasicResponse) {
       this.totalSize = _.get(data.data, 'total')
       let list = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(list) || list.length < 40) this.busy = true
+      if (_.isEmpty(list) || list.length < maxSize) this.busy = true
       list = ResourceHandler.formatResourceList(list)
       this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
     },

@@ -58,7 +58,7 @@ import { mapGetters } from 'vuex'
 import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
 import ResourceHandler from '../MainView/ResourceHandler'
-import NasFileAPI, { TaskMode } from '@/api/NasFileAPI'
+import NasFileAPI, { TaskMode, maxSize } from '@/api/NasFileAPI'
 import EncryptUploadTask from '@/api/Transport/EncryptUploadTask'
 import { encryptUploadQueue, encryptDownloadQueue } from '@/api/Transport/TransportHelper'
 import EncryptDownloadTask from '@/api/Transport/EncryptDownloadTask'
@@ -290,7 +290,7 @@ export default Vue.extend({
     parseResponse (data: BasicResponse) {
       this.totalSize = _.get(data.data, 'total')
       let list = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(list) || list.length < 20) this.busy = true
+      if (_.isEmpty(list) || list.length < maxSize) this.busy = true
       list = ResourceHandler.formatResourceList(list)
       this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
     },

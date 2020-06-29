@@ -3,7 +3,7 @@ import _ from 'lodash'
 import Vue from 'vue'
 import Recycle from './index.vue'
 import { ResourceItem, OrderType } from '@/api/NasFileModel'
-import NasFileAPI from '@/api/NasFileAPI'
+import NasFileAPI, { maxSize } from '@/api/NasFileAPI'
 import ResourceHandler from '../MainView/ResourceHandler'
 import { BasicResponse } from '../../api/UserModel'
 
@@ -41,7 +41,7 @@ export default Vue.extend({
     parseResponse (data: BasicResponse) {
       this.totalSize = _.get(data.data, 'total')
       let list = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(list) || list.length < 20) this.busy = true
+      if (_.isEmpty(list) || list.length < maxSize) this.busy = true
       list = ResourceHandler.formatResourceList(list).map(item => {
         item.name = item.alias
         return item

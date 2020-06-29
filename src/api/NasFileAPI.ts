@@ -75,7 +75,7 @@ export default {
       force
     })
   },
-  fetchResourceList (path: string, uuid: string, page: number, order: OrderType = OrderType.byNameDesc, size: number = 40): ServerResponse {
+  fetchResourceList (path: string, uuid: string, page: number, order: OrderType = OrderType.byNameDesc, size: number = maxSize): ServerResponse {
     return nasServer.get(fileModule + '/list', {
       params: {
         path: path,
@@ -115,12 +115,12 @@ export default {
       }
     })
   },
-  fetchTlist (page: number, last: number, type: ResourceType, order: OrderType = OrderType.ByModifyAsc, size: number = 40): ServerResponse {
+  fetchTlist (page: number, last: number, type: ResourceType, order: OrderType = OrderType.ByModifyAsc, size: number = maxSize): ServerResponse {
     return nasServer.get(fileModule + '/tlist', {
       params: { type, page, size, pos: last, order }
     })
   },
-  fetchUlist (page: number, last: number, order: UploadTimeSort = UploadTimeSort.descend, size: number = 40): ServerResponse {
+  fetchUlist (page: number, last: number, order: UploadTimeSort = UploadTimeSort.descend, size: number = maxSize): ServerResponse {
     return nasServer.get(fileModule + '/ulist', {
       params: { page, size, order, pos: last }
     })
@@ -460,7 +460,7 @@ export default {
   fetchCustomInfo (path: string, uuid: string): ServerResponse {
     return nasServer.post(myselfModule + '/get_myself_folder', { path, uuid })
   },
-  fetchRecycleList (page: number, size: number = 40): ServerResponse {
+  fetchRecycleList (page: number, size: number = maxSize): ServerResponse {
     return nasServer.post(recycleModule + '/list', { page, size })
   },
   recoveryFile (items: ResourceItem[]): ServerResponse {
@@ -518,7 +518,7 @@ export default {
   fetchRomUpgrade (): ServerResponse {
     return nasServer.post<BasicResponse>(upgradeModule + '/rom/upgrade')
   },
-  fetchOfflineList (page: number, size: number = 40): ServerResponse {
+  fetchOfflineList (page: number, size: number = maxSize): ServerResponse {
     return nasServer.get(offlineModule + '/get', {
       params: { page: page, size: size, order: 1 }
     })
@@ -567,7 +567,9 @@ enum TaskMode {
   rename = 2,
   cover = 3
 }
+const maxSize = 100
 
 export {
-  TaskMode
+  TaskMode,
+  maxSize
 }

@@ -18,7 +18,7 @@ import _ from 'lodash'
 import Vue from 'vue'
 import MainView from '../MainView/index.vue'
 import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
-import NasFileAPI from '@/api/NasFileAPI'
+import NasFileAPI, { maxSize } from '@/api/NasFileAPI'
 import { BasicResponse } from '@/api/UserModel'
 import { uploadSortList } from '@/model/sortList'
 import ResourceHandler from '../MainView/ResourceHandler'
@@ -71,7 +71,7 @@ export default Vue.extend({
     parseResponse (data: BasicResponse) {
       this.totalSize = _.get(data.data, 'total')
       let ulist = _.get(data.data, 'list') as Array<ResourceItem>
-      if (_.isEmpty(ulist) || ulist.length < 20) this.busy = true
+      if (_.isEmpty(ulist) || ulist.length < maxSize) this.busy = true
       ulist = ResourceHandler.formatResourceList(ulist)
       this.dataArray = this.page === 1 ? ulist : this.dataArray.concat(ulist)
     },

@@ -21,7 +21,7 @@ import MainViewMixin from '../MainView/MainViewMixin'
 import { BasicResponse } from '@/api/UserModel'
 import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
 import ResourceHandler from '../MainView/ResourceHandler'
-import NasFileAPI from '@/api/NasFileAPI'
+import NasFileAPI, { maxSize } from '@/api/NasFileAPI'
 import { backupResourceContextMenu } from '@/components/OperateListAlter/operateList'
 
 export default Vue.extend({
@@ -87,7 +87,7 @@ export default Vue.extend({
         this.fetchBackupDetail(list[0].path, list[0].uuid)
         return
       }
-      if (_.isEmpty(list) || list.length < 20) this.busy = true
+      if (_.isEmpty(list) || list.length < maxSize) this.busy = true
       list = ResourceHandler.formatResourceList(list)
       this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
     },
