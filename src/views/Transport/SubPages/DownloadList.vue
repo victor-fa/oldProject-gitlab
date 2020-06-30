@@ -15,7 +15,7 @@ import MainPage from '../MainPage/index.vue'
 import StringUtility from '../../../utils/StringUtility'
 import { TaskStatus, FileInfo, TaskError } from '../../../api/Transport/BaseTask'
 import DownloadTask from '../../../api/Transport/DownloadTask'
-import { downloadQueue } from '../../../api/Transport/TransportHelper'
+import { downloadQueue, encryptDownloadQueue } from '../../../api/Transport/TransportHelper'
 import { TransportModel, downloadCategorys, TransportStatus, TransportCategory } from '../MainPage/TransportModel'
 import TransportHandler from '../TransportHandler'
 import { EventBus } from '../../../utils/eventBus'
@@ -44,7 +44,8 @@ export default Vue.extend({
     // inner private methods
     fetchDownloadTasks () {
       const tasks = downloadQueue.getAllTasks()
-      this.dataArray = tasks.map(task => {
+      const encryptTasks = encryptDownloadQueue.getAllTasks()
+      this.dataArray = tasks.concat(encryptTasks).map(task => {
         return TransportHandler.convertTask(task)
       })
       this.updateView()

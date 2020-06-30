@@ -33,23 +33,23 @@ export default Vue.extend({
       loading: false,
       dataArray: [] as TransportModel[],
       showArray: [] as TransportModel[],
-      categorys: _.cloneDeep(remoteCategorys)
+      categorys: _.cloneDeep(remoteCategorys),
+      status: TransportStatus.doing
     }
   },
   created () {
     this.fetchRemoteList()
   },
   destroyed () {
-    console.log('123')
-    if (timer !== null) clearInterval(timer)
+    if (timer !== null) {
+      clearTimeout(timer)
+      timer = null
+    }
   },
   methods: {
     // handle subviews action
-    handleCategoryChange (aIndex: number) {
-      this.categorys = this.categorys.map((item, index) => {
-        item.isSelected = index === aIndex
-        return item
-      })
+    handleCategoryChange (index: number) {
+      this.status = this.categorys[index].status
       this.updateView()
     },
     handleOperateAction (command: string) {
@@ -85,8 +85,8 @@ export default Vue.extend({
       }
     },
     // private methods
-    fetchRemoteList () {
-      this.loading = true
+    fetchRemoteList (showLoading: boolean = true) {
+      this.loading = showLoading
       NasFileAPI.fetchRemoteTaskList().then(response => {
         console.log(response)
         this.loading = false
@@ -96,6 +96,7 @@ export default Vue.extend({
           return TransportHandler.convertRemoteTask(item)
         })
         this.updateView()
+        this.pollRemoteList()
       }).catch(error => {
         console.log(error)
         this.loading = false
@@ -103,20 +104,18 @@ export default Vue.extend({
       })
     },
     updateView () {
-      const category = this.categorys.filter(item => {
-        return item.isSelected
-      })[0].status
       let canResumeAll = false
       this.showArray = this.dataArray.filter(model => {
         if (model.status !== TaskStatus.suspend && model.status !== TaskStatus.error) canResumeAll = false
-        return model.category === category
+        return model.category === this.status
       })
       this.categorys = this.categorys.map(item => {
-        if (item.status === category) {
+        if (item.status === this.status) {
           item.count = this.showArray.length
         } else {
           item.count = this.dataArray.length - this.showArray.length
         }
+        item.isSelected = item.status === this.status
         item.batchItems = item.batchItems.map(item => {
           item.disable = this.showArray.length === 0
           if (item.command === 'pauseAll') item.isHidden = canResumeAll
@@ -125,6 +124,26 @@ export default Vue.extend({
         })
         return item
       })
+    },
+    pollRemoteList () {
+      let hasDoingTask = false
+      for (let index = 0; index < this.dataArray.length; index++) {
+        const task = this.dataArray[index]
+        if (task.category === TransportStatus.doing) {
+          hasDoingTask = true
+          break
+        }
+      }
+      if (hasDoingTask) {
+        timer = setTimeout(() => {
+          this.fetchRemoteList(false)
+        }, 1500)
+      } else {
+        if (timer !== null) {
+          clearTimeout(timer)
+          timer = null
+        }
+      }
     },
     pauseRemoteTask (id: number) {
       const refKey = 'renderItem' + id

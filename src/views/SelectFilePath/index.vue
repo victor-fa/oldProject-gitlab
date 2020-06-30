@@ -6,6 +6,7 @@
         'show-move-modal': !hideModal,
         'hide-move-modal': hideModal
       }"
+      @dblclick="handleDbClick($event)"
     >
       <div class="modal-header">
         <div class="indicator">
@@ -176,6 +177,9 @@ export default Vue.extend({
     document.removeEventListener('keyup', this.handleKeyupAction)
   },
   methods: {
+    handleDbClick (event: MouseEvent) {
+      event.stopPropagation()
+    },
     handleBackwardAction () {
       const index = this.cacheArray.length - 1
       this.cacheArray.pop()
@@ -209,7 +213,13 @@ export default Vue.extend({
     },
     handleMoveAction () {
       const item = this.selectedItem
-      if (item === undefined) return
+      if (item === undefined) {
+        const cache = _.last(this.cacheArray)!
+        if (cache.path !== undefined && cache.uuid !== undefined) {
+          this.hideModalAnimate(cache.path, cache.uuid)
+        }
+        return
+      }
       const result = FileModalHandler.generatePathAndUuid(item)
       if (result === undefined) return
       this.hideModalAnimate(result.path, result.uuid)

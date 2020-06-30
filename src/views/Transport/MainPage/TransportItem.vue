@@ -6,7 +6,7 @@
     <img class="task-icon" :src="model.icon">
     <div class="item-content">
       <div class="item-top">
-        <span class="item-name">{{ model.name }}</span>
+        <span class="item-name" :title="model.name">{{ model.name }}</span>
         <span v-if="showError" class="item-error">传输失败</span>
         <div>
           <custom-button

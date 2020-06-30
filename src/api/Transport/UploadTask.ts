@@ -23,12 +23,8 @@ export default class UploadTask extends BaseTask {
 
   constructor(srcPath: string, destPath: string, uuid: string) {
     super(srcPath, destPath, uuid)
-    this.directory = uuid === '' ? srcPath : path.dirname(srcPath)
+    this.directory = path.dirname(srcPath)
     this.source = CancelToken.source()
-    if (!_.isEmpty(this.icon)) return
-    ResourceHandler.matchLocalPathIcon(srcPath).then(icon => {
-      this.icon = icon
-    })
   }
   // public methods
   async start () {
@@ -73,6 +69,15 @@ export default class UploadTask extends BaseTask {
   reload () {
     super.reload()
     this.source = CancelToken.source()
+  }
+  matchTaskIcon () {
+    if (!_.isEmpty(this.icon)) return
+    ResourceHandler.matchLocalPathIcon(this.srcPath).then(icon => {
+      this.icon = icon
+    }).catch(error => {
+      console.log(error)
+      this.icon = require('../../assets/resource/unkonw_icon.png')
+    })
   }
   // pricvate methods
   // 解析文件源路径

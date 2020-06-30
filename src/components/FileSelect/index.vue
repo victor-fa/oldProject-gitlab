@@ -13,6 +13,8 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
+import { User } from '../../api/UserModel'
 
 export default Vue.extend({
   name: 'file-select',
@@ -22,13 +24,19 @@ export default Vue.extend({
     options: Array
   },
   computed: {
+    ...mapGetters('User', ['user']),
     showPlaceholder: function () {
       const result: boolean = _.isEmpty(this.value)
       return result
     },
     showText: function () {
-      const result: boolean = _.isEmpty(this.value)
-      return result ? this.placeholder : this.value
+      if (_.isEmpty(this.value)) return this.placeholder
+      const user = this.user as User
+      const prefix = `/.ugreen_nas/${user.ugreenNo}`
+      let showText = this.value.substring(prefix.length, this.value.length)
+      showText = _.trimStart(showText, '/.library/')
+      if (_.isEmpty(showText)) return '/nas'
+      return `/nas/${showText}`
     }
   }
 })
@@ -45,6 +53,9 @@ export default Vue.extend({
     padding: 0px 11px;
     font-size: 13px;
     color: #9C9FA9;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .placeholder {
     color: #484848;

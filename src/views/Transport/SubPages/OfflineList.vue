@@ -19,7 +19,7 @@ import _ from 'lodash'
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
 import NewOfflineModal from '../MainPage/NewOfflineModal.vue'
-import { TransportModel, offlineCategorys } from '../MainPage/TransportModel'
+import { TransportModel, offlineCategorys, TransportStatus } from '../MainPage/TransportModel'
 import NasFileAPI, { maxSize } from '../../../api/NasFileAPI'
 import { OfflineTask, OfflineTaskStatus } from '../../../api/NasFileModel'
 import TransportHandler from '../TransportHandler'
@@ -27,6 +27,9 @@ import { BasicResponse } from '../../../api/UserModel'
 import { AxiosResponse } from 'axios'
 import { EventBus } from '../../../utils/eventBus'
 import { EventName } from '../../../utils/processCenter'
+import { TaskStatus } from '../../../api/Transport/BaseTask'
+
+let timer: NodeJS.Timeout | null = null
 
 export default Vue.extend({
   name: 'offline-list',
@@ -43,19 +46,22 @@ export default Vue.extend({
       showNewModal: false,
       dataArray: [] as TransportModel[],
       showArray: [] as TransportModel[],
-      categorys: _.cloneDeep(offlineCategorys)
+      categorys: _.cloneDeep(offlineCategorys),
+      status: TransportStatus.doing
     }
   },
   created () {
     this.fetchOfflineList()
   },
+  destroyed () {
+    this.dataArray = []
+    if (timer !== null) clearTimeout(timer)
+  },
   methods: {
     // action methods
-    handleCategoryChange (aIndex: number) {  // 切换"正在下载"、"下载完成"
-      this.categorys = this.categorys.map((item, index) => {
-        item.isSelected = index === aIndex
-        return item
-      })
+    handleCategoryChange (index: number) {  // 切换"正在下载"、"下载完成"
+      this.status = this.categorys[index].status
+      this.updateView()
     },
     handleOperateAction (command: string) {
       switch (command) {
@@ -107,8 +113,8 @@ export default Vue.extend({
       this.fetchOfflineList()
     },
     // private methods
-    fetchOfflineList () {
-      this.loading = true
+    fetchOfflineList (showLoading: boolean = true) {
+      this.loading = showLoading
       NasFileAPI.fetchOfflineList(this.page).then(response => {
         console.log(response)
         this.loading = false
@@ -119,15 +125,64 @@ export default Vue.extend({
           return TransportHandler.convertOfflineTask(item)
         })
         this.dataArray = this.page === 1 ? newList : this.dataArray.concat(newList)
+        this.updateView()
+        this.pollOfflineList()
       }).catch(error => {
         console.log(error)
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    handleModalDismiss () {
+    updateView () {
+      let canResumeAll = false
+      this.showArray = this.dataArray.filter(model => {
+        if (model.status !== TaskStatus.suspend && model.status !== TaskStatus.error) canResumeAll = false
+        return model.category === this.status
+      })
+      this.categorys = this.categorys.map(item => {
+        if (item.status === this.status) {
+          item.count = this.showArray.length
+        } else {
+          item.count = this.dataArray.length - this.showArray.length
+        }
+        item.isSelected = item.status === this.status
+        item.batchItems = item.batchItems.map(item => {
+          if (item.command === 'pauseAll') {
+            item.isHidden = canResumeAll
+            item.disable = this.showArray.length === 0
+          }
+          if (item.command === 'resumeAll') {
+            item.isHidden = !canResumeAll
+            item.disable = this.showArray.length === 0
+          }
+          item.disable = false
+          return item
+        })
+        return item
+      })
+    },
+    pollOfflineList () {
+      let hasDoingTask = false
+      for (let index = 0; index < this.dataArray.length; index++) {
+        const task = this.dataArray[index]
+        if (task.category === TransportStatus.doing) {
+          hasDoingTask = true
+          break
+        }
+      }
+      if (hasDoingTask) {
+        timer = setTimeout(() => {
+          this.fetchOfflineList(false)
+        }, 1500)
+      } else {
+        if (timer !== null) clearTimeout(timer)
+      }
+    },
+    handleModalDismiss (isCompleted?: boolean) {
       this.showNewModal = false
-      this.refreshListData()
+      if (isCompleted === true) {
+        this.refreshListData()
+      }
     },
     refreshListData () {
       this.busy = false

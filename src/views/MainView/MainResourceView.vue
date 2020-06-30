@@ -76,10 +76,6 @@ export default Vue.extend({
   created () {
     this.updateView()
   },
-  destroyed () {
-    uploadQueue.off('taskFinished', this.handleTaskFinished)
-    uploadQueue.off('error', this.handleTaskError)
-  },
   methods: {
     updateView () {
       if (this.checkQuery()) this.fetchResourceList()
@@ -136,9 +132,10 @@ export default Vue.extend({
       filePaths.forEach(path => {
         console.log(path);
         const task = new UploadTask(path, this.path, this.uuid)
+        task.matchTaskIcon()
         uploadQueue.addTask(task)
-        uploadQueue.once('taskFinished', this.handleTaskFinished)
-        uploadQueue.once('error', this.handleTaskError)
+        task.once('taskFinished', this.handleTaskFinished)
+        task.once('error', this.handleTaskError)
         this.$store.dispatch('Resource/increaseTask')
       })
     },

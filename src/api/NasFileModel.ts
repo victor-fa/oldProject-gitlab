@@ -178,20 +178,20 @@ interface TransportTask {
 }
 
 enum RemoteTaskStatus { // 对应的是16进制
-  prerunning = 1,
-  running = 2,
-  error = 3,
-  pause = 4,
-  completed = 5
+  prerunning = 0x1,
+  running = 0x2,
+  error = 0x4,
+  pause = 0x8,
+  completed = 0x10
 }
 
 enum RemoteType {
-  copy = 1,
-  move = 2,
-  delete = 3,
-  encryptDelete = 4,
-  encryptIn = 5,
-  encryptOut = 6
+  copy = 0x1,
+  move = 0x2,
+  delete = 0x4,
+  encryptDelete = 0x5,
+  encryptIn = 0x6,
+  encryptOut = 0x7
 }
 
 interface RemoteTask {

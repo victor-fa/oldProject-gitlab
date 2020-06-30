@@ -99,7 +99,7 @@ export default Vue.extend({
       this.showContextMenu()
     },
     customClick (index: number) {
-      const item = this.storages[index]
+      const item = this.showCustoms[index]
       this.selectedCell = item
       this.$emit('didSelectItem', item)
       this.showCustoms = FileModalHandler.setItemSelected(this.showCustoms, index)

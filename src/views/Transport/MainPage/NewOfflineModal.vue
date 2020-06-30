@@ -116,7 +116,7 @@ export default Vue.extend({
         console.log(response)
         this.loading = false
         if (response.data.code !== 200) return
-        this.hidden()
+        this.hidden(true)
       }).catch(error => {
         console.log(error)
         this.loading = false
@@ -129,10 +129,10 @@ export default Vue.extend({
     handleModalClick (event: MouseEvent) {
       event.stopPropagation()
     },
-    hidden () {
+    hidden (isCompleted?: boolean) {
       this.hideModal = true
       setTimeout(() => {
-        this.$emit('dismiss')
+        this.$emit('dismiss', isCompleted)
       }, 250);
     },
     showFileDialog () {
