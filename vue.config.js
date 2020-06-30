@@ -15,7 +15,7 @@ module.exports = {
     electronBuilder: {
       builderOptions: {
         "appId": "com.ugreen.nas",
-        "productName": "Nas-uGreen", // 项目名，也是生成的安装文件名，即aDemo.exe
+        "productName": "绿联云", // 项目名，也是生成的安装文件名，即aDemo.exe
         "copyright": "Copyright © 2020", // 版权信息
         "directories": {
           "output": "./dist_electron"//输出文件路径
@@ -45,7 +45,7 @@ module.exports = {
           "allowToChangeInstallationDirectory": true, // 允许修改安装目录
           "createDesktopShortcut": true, // 创建桌面图标
           "createStartMenuShortcut": true, // 创建开始菜单图标
-          "shortcutName": "Nas-uGreen", // 图标名称
+          "shortcutName": "绿联云", // 图标名称
         }
       }
     }

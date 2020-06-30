@@ -16,7 +16,6 @@
 				</a-radio-group>
 			</p>
 		</div>
-		<SettingBottom @callback="handleBottom" />
 	</div>
 </template>
 
@@ -24,13 +23,9 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import SettingBottom from '@/components/Disk/SettingBottom.vue'
 
 export default Vue.extend({
   name: 'common',
-	components: {
-		SettingBottom
-	},
 	data() {
 		return {
 			loading: '',
@@ -41,6 +36,14 @@ export default Vue.extend({
 			},
 		};
   },
+	watch: {
+		loginSetting: {
+			handler() {
+				this.handleSave()
+			},
+			deep: true
+		}
+	},
 	computed: {
     ...mapGetters('Setting', ['autoPowerOn']),
 		...mapGetters('Setting', ['closeInfo']),
@@ -52,37 +55,21 @@ export default Vue.extend({
 		this.loginSetting.autoLogin = _.isEmpty(this.autoLogin) ? true : this.autoLogin.flag
 	},
   methods: {
-		handleBottom(data) {
-			switch (data) {
-				case 0:
-					this.handleSave(data)
-					break;
-				case 1:
-					this.close()
-					break;
-				case 2:
-					this.handleSave(data)
-					break;
-				default:
-					break;
-			}
-		},
 		close() {
 			const _this = this as any
 			_this.$electron.remote.getCurrentWindow().close()
 		},
-		handleSave (data) {
+		handleSave () {
 			const input = {
 				'remember': this.loginSetting.closeChoice ? true : false,
 				'trayOrExit': this.loginSetting.closeChoice
 			}
-				const _this = this as any
+			const _this = this as any
 			_this.$ipc.send('system', 'auto-launch', this.loginSetting.autoPowerOn);
 			this.$store.dispatch('Setting/updateCloseChoiceInfo', input)
 			this.$store.dispatch('Setting/updateAutoPowerOnInfo', { flag: this.loginSetting.autoPowerOn })
 			this.$store.dispatch('Setting/updateAutoLoginInfo', { flag: this.loginSetting.autoLogin })
-			this.$message.success('修改成功')
-			// if (data === 0) setTimeout(() => this.close(), 3000);
+			// this.$message.success('修改成功')
 		},
   }
 })
@@ -103,11 +90,12 @@ p { text-align: left; }
 		overflow-y: scroll;
 		position: relative;
 		.title {
-			font-weight: bold;
-			font-size: 15px;
+			font-weight: 500;
+			font-size: 14px;
 		}
 		.checkbox { margin-right: 10px; }
 		.close { margin-top: 20px; }
 	}
+	.ant-checkbox-wrapper, .ant-radio-wrapper { font-size: 12px; }
 }
 </style>

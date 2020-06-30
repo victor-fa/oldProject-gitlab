@@ -487,6 +487,9 @@ export default {
   factory (): ServerResponse {
     return nasServer.put(settingModule + '/factory')
   },
+  fetchSysInfo (): ServerResponse {
+    return nasServer.get(settingModule + '/info')
+  },
   fetchBindUserList (): ServerResponse {
     return nasServer.post(userModule + '/list')
   },

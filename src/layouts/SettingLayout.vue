@@ -102,13 +102,13 @@ export default Vue.extend({
     align-items: stretch;
     flex-direction: column;
     background-color: #F8F9FC;
+    padding-top: 15px;
     .sider-item {
       height: 44px;
       line-height: 44px;
       font-size: 14px;
       font-weight: 500;
       color: #484848;
-      margin-top: 10px;
     }
     .sider-item-selected {
       background-color: #06b6501a;

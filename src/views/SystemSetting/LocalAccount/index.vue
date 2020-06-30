@@ -176,10 +176,10 @@ p { text-align: left; }
 		overflow-y: scroll;
 		.cd-setting-title {
 			width: 100%;
-			font-size: 16px;
+			font-size: 14px;
 			line-height: 35px;
 			margin-bottom: 10px;
-			font-weight: bold;
+			font-weight: 500;
 		}
 		.switch {
 			float: right;
@@ -209,7 +209,10 @@ p { text-align: left; }
 				margin: 15px 0 0 -3px;
 			}
 		}
-		.describe { color: #00000040; }
+		.describe {
+			color: #00000040;
+			font-size: 12px;
+		}
 		.cd-setting-form {
 			margin: 8px 0;
 			width: 230px;

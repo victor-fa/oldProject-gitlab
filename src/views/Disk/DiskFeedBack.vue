@@ -3,7 +3,7 @@
 		<WindowsHeader :data="header" />
 		<div class="cd-about-main">
 			<div class="app-version">
-				<div class="logo">Nas-uGreen</div>
+				<div class="logo">绿联云</div>
 				<span>Version&nbsp;&nbsp;{{ version }}</span>
 			</div>
 			<div class="cd-feedback-main">
@@ -12,7 +12,7 @@
 				<textarea v-model="FeedBackContent" placeholder="尽量详细的描述遇到的问题" />
 			</div>
 			<div class="bottom">
-				<p class="release">©2020 Nas-uGreen</p>
+				<p class="release">©2020 绿联云</p>
 				<a-button class="cd-cancel-button" :disabled="loading" @click="FeedBack">提交</a-button>
 			</div>
 		</div>

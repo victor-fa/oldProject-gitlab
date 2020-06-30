@@ -153,7 +153,7 @@ export default {
             aboutWindow = windowControl.create({
               url: 'disk-about',
               icon: './src/assets/logo.png',
-              title: '关于uGgreen-Nas',
+              title: '关于绿联云',
               width: 600,
               height: 400,
               maximizable: false,
@@ -192,7 +192,7 @@ export default {
         }
       ];
       const contextMenu = Menu.buildFromTemplate(trayMenuTemplate);
-      appTray.setToolTip('uGgreen-Nas');  // 设置此托盘图标的悬停提示内容
+      appTray.setToolTip('绿联云');  // 设置此托盘图标的悬停提示内容
       appTray.setContextMenu(contextMenu);  // 设置此图标的上下文菜单
       appTray.on('click', function() {
         if (homeWindow) {
@@ -230,6 +230,11 @@ export default {
   refreshHomeWindow () {
     if (homeWindow !== null) {
       this.refreshWindow(homeWindow)
+    }
+  },
+  refreshSettingWindow () {
+    if (settingWindow !== null) {
+      this.refreshWindow(settingWindow)
     }
   },
   presentMoveModal () {

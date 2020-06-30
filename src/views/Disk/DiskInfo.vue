@@ -1,81 +1,81 @@
 <template>
 	<div class="cd-disk-info-main" @keyup.stop.esc="close" tabindex="-1">
-		<WindowsHeader :data="header" />
-		<div class="cd-disk-info-head">
-			<span v-if="DiskData.path">{{ DiskData.path | filterName }}</span>
+    <a-layout-header class="setting-header">
+      <span v-if="DiskData.path">{{DiskData.path | filterName}} 属性</span>
 			<span v-else>{{ DiskData.showName }}</span>
-		</div>
+      <window-menu :configure="'unable'" class="window-menu"/>
+    </a-layout-header>
 
 		<div v-if="DiskData.path">
 			<div class="cd-disk-info-item">
-				<span>文件类型:</span>
+				<span>文件类型：</span>
 				<div :title="DiskData.type | filterNameType">{{ DiskData.type | filterNameType }}</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>文件位置:</span>
+				<span>文件位置：</span>
 				<div ref="address" :title="DiskData.name">{{getPathSource()}}/{{ DiskData.name }}</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>文件大小:</span>
+				<span>文件大小：</span>
 				<div :title="DiskData.size | filterSize">{{ DiskData.size | filterSize }}</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>创建时间:</span>
+				<span>创建时间：</span>
 				<div :title="DiskData.ctime | filterTime">{{ DiskData.ctime | filterTime }}</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>修改时间:</span>
+				<span>修改时间：</span>
 				<div v-if="DiskData.mtime === 0">未修改</div>
 				<div v-else :title="DiskData.mtime | filterTime">{{ DiskData.mtime | filterTime }}</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>唯一标识:</span>
+				<span>唯一标识：</span>
 				<div :title="DiskData.uuid">{{ DiskData.uuid }}</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>文件分享:</span>
+				<span>文件分享：</span>
 				<div>{{ DiskData.shared === 0 ? '未分享' : '已分享' }}</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>文件收藏:</span>
+				<span>文件收藏：</span>
 				<div>{{ DiskData.collected === 0 ? '未收藏' : '已收藏' }}</div>
 			</div>
 		</div>
 		<div v-else>
 			<div class="cd-disk-info-item">
-				<span>名称:</span>
+				<span>名称：</span>
 				<div :title="DiskData.showName">{{ DiskData.showName }}</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>状态:</span>
+				<span>状态：</span>
 				<div :title="DiskData.status === 0 ? '非格式化' : '格式化'">
 					{{ DiskData.status === 0 ? '非格式化' : '格式化' }}
 				</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>当前温度:</span>
+				<span>当前温度：</span>
 				<div :title="DiskData.temp">{{ DiskData.temp }}</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>硬盘容量:</span>
+				<span>硬盘容量：</span>
 				<div :title="DiskData.size | filterSize">{{ DiskData.size | filterSize }}</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>硬盘类型:</span>
+				<span>硬盘类型：</span>
 				<div :title="DiskData.type | filterStorageType">{{ DiskData.type | filterStorageType }}</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>SMART状态:</span>
+				<span>SMART状态：</span>
 				<div :title="DiskData.smartStatus">
 					{{ DiskData.smartStatus === 0 ? '未打开' : '已打开' }}
 				</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>坏区数量:</span>
+				<span>坏区数量：</span>
 				<div :title="DiskData.bad">{{ DiskData.bad }}</div>
 			</div>
 			<div class="cd-disk-info-item">
-				<span>使用时长:</span>
+				<span>使用时长：</span>
 				<div :title="DiskData.used | filterTime">{{ DiskData.used | filterTime }}</div>
 			</div>
 		</div>
@@ -87,14 +87,12 @@
 </template>
 
 <script>
-import WindowsHeader from '@/components/Disk/WindowHeader.vue'
+import WindowMenu from '@/components/WindowMenu/index.vue'
 import StringUtility from '@/utils/StringUtility'
 import StorageHandler from '../Storage/StorageHandler';
 export default {
 	name: 'DiskInfo',
-	components: {
-		WindowsHeader
-	},
+	components: { WindowMenu },
 	filters: {
 		filterName (data) {
 			return StringUtility.formatName(data)
@@ -133,12 +131,12 @@ export default {
 				bad: 0,
 				used: 0
 			},
-			header: {
-				title: '',
-				resize: false,
-				mini: false,
-				color: '#000'
-			},
+			// header: {
+			// 	title: '',
+			// 	resize: false,
+			// 	mini: false,
+			// 	color: '#000'
+			// },
 			window: false
 		};
 	},
@@ -155,7 +153,7 @@ export default {
 				this.DiskData.mtime = data.myself_folder.mtime
 			}
 			console.log(JSON.parse(JSON.stringify(this.DiskData)));
-			this.header.title = StringUtility.formatName(data.path) + ' 属性';
+			// this.header.title = StringUtility.formatName(data.path) + ' 属性';
 			this.window.setTitle(StringUtility.formatName(data.path) + ' 属性');
 		});
 	},
@@ -185,24 +183,21 @@ export default {
 	box-shadow: 0 3px 3px 0 rgba(0, 0, 0, 0.14), 0 1px 7px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -1px rgba(0, 0, 0, 0.2);
 	border: 1px solid #efefef;
 	// -webkit-app-region: drag;
-	.cd-disk-info-head {
-		height: 56px;
-		border-bottom: 1px solid #ccc;
-		padding: 10px;
-		* {
-			display: inline-block;
-			line-height: 35px;
-			text-indent: 10px;
-			text-overflow: ellipsis;
-		}
-		span {
-			width: calc(100%);
-			font-size: 16px;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-			text-align: left;
-		}
-	}
+  .setting-header {
+    height: 35px;
+    width: 100%;
+    padding: 0px;
+    background-color: #EDEFF4;
+    display: flex;
+    align-items: center;
+		justify-content: space-between;
+		margin-bottom: 35px;
+    -webkit-app-region: drag;
+    span {
+      margin-left: 20px;
+    }
+    .window-menu { margin-right: 20px; }
+  }
 	.cd-disk-info-item {
 		width: 100%;
 		padding: 0 50px;
@@ -213,7 +208,6 @@ export default {
 			height: 30px;
 			display: block;
 			font-size: 14px;
-			font-weight: 600;
 		}
 		div {
 			flex: 1;
@@ -243,7 +237,6 @@ export default {
 			padding: 0 10px;
 			position: absolute;
 			right: 35px;
-			// -webkit-app-region: no-drag;
 		}
 	}
 }

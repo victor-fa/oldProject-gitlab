@@ -4,7 +4,7 @@
 			<p class="cd-setting-title">设备信息</p>
 			<p class="cd-setting-info">设备名：{{nasInfo.name}}</p>
 			<p class="cd-setting-info">序列号：{{nasInfo.sn}}</p>
-			<p class="cd-setting-info">固件版本：{{nasInfo.softversion}}</p>
+			<p class="cd-setting-info">固件版本：{{firmwareVer}}</p>
 			<p class="cd-setting-info">IP地址：{{nasInfo.ip}}</p>
 			<p class="cd-setting-info">MAC地址：{{nasInfo.mac | filterMac}}</p>
 			<p class="cd-setting-title">磁盘信息</p>
@@ -33,7 +33,7 @@
 				<a-button class="cd-purple-button" @click="handleDangerousOperation('shutdown')" v-show="isUserAdmin">关机</a-button>
 				<a-button class="cd-purple-button" @click="handleDangerousOperation('reboot')" v-show="isUserAdmin">重启</a-button>
 				<a-button class="cd-purple-button" @click="handleDangerousOperation('factory')" v-show="isUserAdmin">恢复出厂设置</a-button>
-				<a-button class="cd-purple-button" @click="handleDangerousOperation('update')" v-show="isUserAdmin">固件升级</a-button>
+				<a-button class="cd-purple-button" @click="handleDangerousOperation('update')" v-show="isUserAdmin" :disabled="disable">固件升级</a-button>
 				<a-button class="cd-purple-button" @click="handleDangerousOperation('delete')">删除设备</a-button>
 			</p>
 		</div>
@@ -42,7 +42,7 @@
 			okText="确认升级" cancelText="取消升级" @ok="handleUpdate" @cancel="update.visiable = false,update.info = {}">
 			<p>版本名称：{{update.info.versionName}}（{{update.info.size | filterSize}}）</p>
 			<p>发布时间：{{update.info.pubtime | filterTime}}</p>
-			<p>描述：{{update.info.desc}}</p>
+			<p>描述：{{update.info.desc === 'null' ? '无' : update.info.desc}}</p>
 		</a-modal>
 		<a-modal
 			:visible="mode.visiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
@@ -130,11 +130,14 @@ export default Vue.extend({
 				visiable: false,
 				input: '',
 				message: ''
-			}
+			},
+			disable: false,
+			firmwareVer: ''
 		};
   },
 	created() {
 		this.fetchDisks()
+		this.fetchSysInfo()
 		this.isUserAdmin = this.accessInfo.role === DeviceRole.admin
 	},
   methods: {
@@ -154,15 +157,16 @@ export default Vue.extend({
 			} else if (flag === 'factory') {
 				message = `该操作将设备恢复至初始状态，但不会清除您硬盘的任何数据。\n恢复出厂时间可能较长，请您耐心等待！`
 			} else if (flag === 'update') {
+				this.disable = true
 				this.fetchUpdateInfo()
 				return
 			} else if (flag === 'delete') {
-				leftBut = '解绑并保留数据'
-				rightBut = '解绑并删除数据'
 				if (this.isUserAdmin) {
+					leftBut = '解绑并保留数据'
+					rightBut = '解绑并删除数据'
 					message = `该操作将会清除所有用户信息，用户数据可保留或删除。\n解绑过程需设备连接互联网，是否继续？`
 				} else {
-					message = `该操作将会清除您的用户信息，用户数据可保留或删除。\n解绑过程需设备连接互联网，是否继续？`
+					message = `您是否确定删除该设备？`
 				}
 			}
 			dialog.showMessageBox({
@@ -184,7 +188,7 @@ export default Vue.extend({
 					}
 				} else if (result.response === 1) {
 					if (flag === 'delete') {
-						this.isUserAdmin ? this.handleAdminDelete(0) : this.handleCommonDelete()
+						this.isUserAdmin ? this.handleAdminDelete(0) : null
 					}
 				}
 			}).catch(error => console.log(error))
@@ -273,6 +277,16 @@ export default Vue.extend({
         console.log(error)
       })
 		},
+		fetchSysInfo () {
+      NasFileAPI.fetchSysInfo().then(response => {
+        if (response.data.code !== 200) return
+				this.firmwareVer = _.get(response.data.data, 'firmware_ver')
+				console.log(this.firmwareVer);
+      }).catch(error => {
+        this.$message.error('网络连接错误，请检测网络')
+        console.log(error)
+      })
+		},
 		handleInitialize (item) {
 			if (this.mode.visiable) {	// 已有弹框，选择后切换
 				this.finalMode = this.mode.choice
@@ -343,15 +357,15 @@ p { text-align: left; }
 		overflow-y: scroll;
 		.cd-setting-title {
 			width: 100%;
-			font-size: 16px;
+			font-size: 14px;
 			line-height: 35px;
 			margin-bottom: 10px;
-			font-weight: bold;
+			font-weight: 500;
 			.cd-purple-button { margin-right: 10px; }
 		}
 		.cd-setting-info {
 			width: 100%;
-			font-size: 14px;
+			font-size: 12px;
 			padding-left: 5px;
 			line-height: 30px;
 			color: #000;

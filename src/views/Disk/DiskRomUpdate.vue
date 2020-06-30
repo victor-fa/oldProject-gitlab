@@ -7,7 +7,7 @@
       width="450px" okText="确认升级" cancelText="取消升级" @ok="handleUpdate" @cancel="handleCancleUpdate">
 			<p>版本名称：{{updateInfo.versionName}}（{{updateInfo.size | filterSize}}）</p>
 			<p>发布时间：{{updateInfo.pubtime | filterTime}}</p>
-			<p>描述：{{updateInfo.desc}}</p>
+			<p>描述：{{updateInfo.desc === 'null' ? '无' : updateInfo.desc}}</p>
 		</a-modal>
   </div>
 </template>

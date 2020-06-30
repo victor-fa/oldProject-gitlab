@@ -33,9 +33,10 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import NasFileAPI from '@/api/NasFileAPI'
+import processCenter, { EventName } from '@/utils/processCenter'
 import UserAPI from '@/api/UserAPI'
 import { DeviceInfo, DeviceRole, User } from '@/api/UserModel'
-import { NasInfo } from '@/api/ClientModel'
+import { NasInfo, NasAccessInfo } from '@/api/ClientModel'
 import StringUtility from '@/utils/StringUtility'
 import { loginIcons } from '@/views/Login/iconList'
 import { mapGetters } from 'vuex'
@@ -69,21 +70,6 @@ export default Vue.extend({
 		this.isUserAdmin = this.accessInfo.role === DeviceRole.admin
 	},
   methods: {
-		handleBottom(data) {
-			switch (data) {
-				case 0:
-					this.handleSave(data)
-					break;
-				case 1:
-					this.close()
-					break;
-				case 2:
-					this.handleSave(data)
-					break;
-				default:
-					break;
-			}
-		},
 		close() {
 			const _this = this as any
 			_this.$electron.remote.getCurrentWindow().close()
@@ -162,6 +148,10 @@ export default Vue.extend({
 					visiable: false,
 					ugreen_no: ''
 				}
+				const nasAccess = this.accessInfo as NasAccessInfo
+				nasAccess.role = 0	// 将管理员状态改为非管理员
+				this.$store.dispatch('NasServer/updateNasAccess', nasAccess)
+				processCenter.renderSend(EventName.refreshSetting);
 				console.log(response.data);
 				this.$message.success('管理员转让成功！')
 				this.fetchBindUserList()

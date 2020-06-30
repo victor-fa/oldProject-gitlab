@@ -21,7 +21,8 @@ enum EventName {
   moveModal = 'presnet_move_modal',
   moveCallback = 'move_callback',
   drag = 'ondragstart',
-  setting = 'system_setting'
+  setting = 'system_setting',
+  refreshSetting = 'refresh_setting'
 }
 
 // use in main process
@@ -65,6 +66,9 @@ export default {
           windowManager.presentSettingWindow()
           break
         case EventName.drag:
+          break
+        case EventName.refreshSetting:
+          windowManager.refreshSettingWindow()
           break
         default:
           break

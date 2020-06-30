@@ -3,7 +3,7 @@
 		<div class="cd-setting-content" >
 			<p class="cd-setting-title">存储模式</p>
 			<p class="cd-setting-title">
-				<a-radio-group v-model="mode">
+				<a-radio-group v-model="mode" @change="handleSave()">
 					<a-radio :value="0">{{firstMode.title}}</a-radio>
 					<br><br><font>{{firstMode.content[0]}}<br>{{firstMode.content[1]}}<br>{{firstMode.content[2]}}</font><br><br>
 					<a-radio :value="1">{{secondMode.title}}</a-radio>
@@ -11,7 +11,6 @@
 				</a-radio-group>
 			</p>
 		</div>
-		<SettingBottom @callback="handleBottom" />
 		<a-modal :title="makesureModal.title"
 			:visible="makesureModal.visiable" :mask="false" :closable="false" :maskClosable="false" width="400px"
 			:okText="commonInfo.okText" :cancelText="commonInfo.cancelText" @ok="handleMakesure"
@@ -26,7 +25,6 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import SettingBottom from '@/components/Disk/SettingBottom.vue'
 import { loginIcons } from '@/views/Login/iconList'
 import NasFileAPI from '@/api/NasFileAPI'
 import StorageHandler from '../../Storage/StorageHandler'
@@ -38,9 +36,6 @@ import TransportHelper from '../../../api/Transport/TransportHelper'
 
 export default Vue.extend({
   name: 'nas-info',
-	components: {
-		SettingBottom
-	},
   filters: {
     filterSize (bytes) {
       return StringUtility.formatShowSize(bytes)
@@ -54,7 +49,7 @@ export default Vue.extend({
 	},
 	data() {
 		return {
-			mode: 0,
+			mode: -1,
 			loginSetting: {
 				autoLogin: false,
 				autoPowerOn: false,
@@ -80,21 +75,6 @@ export default Vue.extend({
 		this.fetchDisks()
 	},
   methods: {
-		handleBottom(data) {
-			switch (data) {
-				case 0:
-					this.handleSave(data)
-					break;
-				case 1:
-					this.close()
-					break;
-				case 2:
-					this.handleSave(data)
-					break;
-				default:
-					break;
-			}
-		},
 		close() {
 			const _this = this as any
 			_this.$electron.remote.getCurrentWindow().close()
