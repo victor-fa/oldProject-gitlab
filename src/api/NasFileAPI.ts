@@ -490,6 +490,11 @@ export default {
   fetchSysInfo (): ServerResponse {
     return nasServer.get(settingModule + '/info')
   },
+  setDeviceName (name: string): ServerResponse {
+    return nasServer.put(settingModule + '/device_name/set', null, { 
+      params: { device_name: name }
+    })
+  },
   fetchBindUserList (): ServerResponse {
     return nasServer.post(userModule + '/list')
   },

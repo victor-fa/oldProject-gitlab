@@ -2,8 +2,9 @@
 	<div class="cd-setting-main">
 		<div class="cd-setting-content">
 			<p class="cd-setting-info">
-				<img draggable="false" v-if="UploadSrc" :src="UploadSrc" alt="" />
-				<img draggable="false" v-else-if="user.image" :src="user.image" alt="" />
+				<img class="photo" draggable="false" v-if="UploadSrc" :src="UploadSrc" alt="" />
+				<img class="photo" draggable="false" v-else-if="user.image" :src="user.image" alt="" />
+				<img class="photo" draggable="false" v-else :src="loginIcons.user">
 			</p>
 			<form @submit.prevent="onSubmit" ref="form">
 				<div class="cd-user-head" onclick="this.childNodes[0].click()">
@@ -11,15 +12,24 @@
 				</div>
 			</form>
 			<p class="cd-setting-info nick">
-				昵称：<a-input type="text" v-model="user.nicName" placeholder="请输入昵称" clearable class="nick-name" :max-length="20" />
+				昵称：{{!edit_nick ? user.nicName : ''}}
+				<a-input type="text" v-show="edit_nick"
+					v-model="user.nicName" placeholder="请输入昵称" clearable
+					class="nick-name" :max-length="20" ref="input_nick"
+					@blur.native.capture="handleSave()"/>
+				<img class="edit" v-show="!edit_nick" :src="loginIcons.edit" @click="edit_nick = true">
 			</p>
 			<p class="cd-setting-info">
-				手机号：<a-input type="text" v-model="user.phoneNo" placeholder="请输入手机号" clearable style="width: 200px;" :max-length="11" />
+				手机号：{{!edit_phone ? user.phoneNo : ''}}
+				<a-input type="text" v-show="edit_phone"
+					v-model="user.phoneNo" placeholder="请输入手机号" clearable
+					style="width: 200px;" :max-length="11" ref="input_phone"
+					@blur.native.capture="handleSave()"/>
+				<img class="edit" v-show="!edit_phone" :src="loginIcons.edit" @click="edit_phone = true">
 			</p>
 			<p class="cd-setting-info">
 				<a-button @click="changePassword">修改密码</a-button>
 			</p>
-			<SettingBottom @callback="handleBottom" />
 		</div>
 		<a-modal
 			:visible="codePhoneVisiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
@@ -34,15 +44,12 @@ import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import StringUtility from '@/utils/StringUtility'
 import UserAPI from '@/api/UserAPI'
-import SettingBottom from '@/components/Disk/SettingBottom.vue'
 import processCenter, { EventName } from '@/utils/processCenter'
 import { USER_MODEL } from '@/common/constants'
+import { loginIcons } from '@/views/Login/iconList'
 
 export default Vue.extend({
   name: 'profil',
-	components: {
-		SettingBottom
-	},
 	computed: {
 		...mapGetters('User', ['user']),
 	},
@@ -57,9 +64,18 @@ export default Vue.extend({
 				phone: '',
 				code: ''
 			},
+			loginIcons,
+			edit_nick: false,
+			edit_phone: false
 		};
   },
-	created() {
+	watch: {
+    edit_nick: function (newValue) {
+			this.$nextTick(() => (this.$refs.input_nick as any).focus())
+    },
+    edit_phone: function (newValue) {
+			this.$nextTick(() => (this.$refs.input_phone as any).focus())
+    }
 	},
   methods: {
 		changePhoto () {
@@ -87,33 +103,22 @@ export default Vue.extend({
 			const _this = this as any
 			_this.$ipc.send('system', 'forget-pass');
 		},
-		handleBottom(data) {
-			switch (data) {
-				case 0:
-					this.handleSave(data); break;
-				case 1:
-					this.close(); break;
-				case 2:
-					this.handleSave(data); break;
-				default:
-					break;
-			}
-		},
 		close() {
 			const _this = this as any
 			_this.$electron.remote.getCurrentWindow().close()
 		},
-		handleSave (data) {
+		handleSave () {
 			const input = { nicName: this.user.nicName ? this.user.nicName : '' }
 			const userJson = localStorage.getItem(USER_MODEL)
 			if (userJson === null) return
 			const userObj = JSON.parse(userJson)
+			this.edit_nick = false
+			this.edit_phone = false
 			if (this.user.nicName !== userObj.nicName) this.handleNickname()
 			if (this.user.phoneNo !== userObj.phoneNo) {
 				this.changePhoneData.phone = this.user.phoneNo
 				this.getPhoneCode()
 			}
-			// if (data === 0) setTimeout(() => this.close(), 3000);
 		},
 		handleNickname() {
 			const input = { nicName: this.user.nicName ? this.user.nicName : '' }
@@ -123,6 +128,7 @@ export default Vue.extend({
 				this.user = response.data.data.userVO
 				processCenter.renderSend(EventName.account);
         this.$message.success('修改成功')
+				this.edit_nick = false
       }).catch(error => {
         console.log(error)
         this.$message.error('网络连接错误,请检测网络')
@@ -166,7 +172,7 @@ export default Vue.extend({
 p { text-align: left; }
 .cd-setting-main {
 	width: 100%;
-	height: 86%;
+	height: 100%;
 	padding: 10px;
 	display: inline-flex;
 	.cd-setting-content {
@@ -194,10 +200,16 @@ p { text-align: left; }
 				font-size: 14px;
 				margin-right: 10px;
 			}
-			img {
+			.photo {
 				width: 70px;
 				height: 70px;
 				border-radius: 50%;
+			}
+			.edit {
+				width: 20px;
+				height: 20px;
+				margin: 3px 0 0 10px;
+				cursor: pointer;
 			}
 		}
 		.nick {

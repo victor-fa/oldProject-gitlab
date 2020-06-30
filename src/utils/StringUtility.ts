@@ -47,7 +47,8 @@ export default {
   },
   // 格式化文件修改时间
   formatShowMtime (value: number) {
-    var date = new Date(value * 1000);
+    if (String(value).length < 11) value = value * 1000 // 区分秒、毫秒
+    var date = new Date(value);
     var Y = date.getFullYear() + '-';
     var M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
     var D = date.getDate() + ' ';

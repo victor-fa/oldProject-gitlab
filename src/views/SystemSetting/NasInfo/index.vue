@@ -2,7 +2,14 @@
 	<div class="cd-setting-main">
 		<div class="cd-setting-content">
 			<p class="cd-setting-title">设备信息</p>
-			<p class="cd-setting-info">设备名：{{nasInfo.name}}</p>
+			<p class="cd-setting-info">
+				设备名：{{!edit_device_name ? nasInfo.name : ''}}
+				<a-input type="text" v-show="edit_device_name"
+					v-model="nasInfo.name" placeholder="请输入昵称" clearable
+					:max-length="15" ref="input_device_name" style="width: 200px;"
+					@blur.native.capture="handleSetDeviceName()"/>
+				<img class="edit" v-show="!edit_device_name && isUserAdmin" :src="loginIcons.edit" @click="edit_device_name = true">
+			</p>
 			<p class="cd-setting-info">序列号：{{nasInfo.sn}}</p>
 			<p class="cd-setting-info">固件版本：{{firmwareVer}}</p>
 			<p class="cd-setting-info">IP地址：{{nasInfo.ip}}</p>
@@ -11,7 +18,7 @@
 			<div class="content" v-for="(item, index) in disks" :key="index">
 				<template v-if="item.type !== 7">
 					<div class="left-side">
-						<img :src="loginIcons.disk">
+						<img class="disk" :src="loginIcons.disk">
 					</div>
 					<div class="right-side">
 						<span>盘位{{index + 1}}<font>{{item.status | filterStatus}}</font></span>
@@ -132,9 +139,15 @@ export default Vue.extend({
 				message: ''
 			},
 			disable: false,
-			firmwareVer: ''
+			firmwareVer: '',
+			edit_device_name: false,
 		};
   },
+	watch: {
+    edit_device_name: function (newValue) {
+			this.$nextTick(() => (this.$refs.input_device_name as any).focus())
+    },
+	},
 	created() {
 		this.fetchDisks()
 		this.fetchSysInfo()
@@ -144,6 +157,18 @@ export default Vue.extend({
 		close() {
 			const _this = this as any
 			_this.$electron.remote.getCurrentWindow().close()
+		},
+		handleSetDeviceName() {
+			NasFileAPI.setDeviceName(this.nasInfo.name).then(response => {
+				if (response.data.code !== 200) return
+				this.edit_device_name = false
+        this.$store.dispatch('NasServer/updateNasInfo', this.nasInfo)
+				processCenter.renderSend(EventName.account);
+        this.$message.success('修改成功')
+      }).catch(error => {
+        console.log(error)
+        this.$message.error('网络连接错误,请检测网络')
+      })
 		},
 		handleDangerousOperation (flag) {
 			let message = ''
@@ -346,7 +371,7 @@ export default Vue.extend({
 p { text-align: left; }
 .cd-setting-main {
 	width: 100%;
-	height: 86%;
+	height: 100%;
 	padding: 10px;
 	display: inline-flex;
 	.cd-setting-content {
@@ -382,10 +407,16 @@ p { text-align: left; }
 				font-size: 14px;
 				margin-right: 10px;
 			}
-			img {
+			.disk {
 				width: 70px;
 				height: 70px;
 				margin: 15px 0 0 -3px;
+			}
+			.edit {
+				width: 20px;
+				height: 20px;
+				margin: 3px 0 0 10px;
+				cursor: pointer;
 			}
 		}
 		.content {
