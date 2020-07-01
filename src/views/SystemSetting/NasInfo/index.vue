@@ -31,8 +31,6 @@
 							<span>已使用 {{item.used | filterSize}}</span>
 						</div>
 					</div>
-					<!-- <a-button v-show="isUserAdmin && diskFormatting === 0 && (item.status === 0 || item.status === 2)" @click="handleInitialize(item)">初始化</a-button> -->
-					<!-- 管理员可以进行格式化（2020.3.22伟明说针对某个内置的初始化不要了） -->
 				</template>
 			</div>
 			<p class="cd-setting-title"><br></p>
@@ -111,11 +109,6 @@ export default Vue.extend({
 	data() {
 		return {
 			disks: [] as any,
-			loginSetting: {
-				autoLogin: false,
-				autoPowerOn: false,
-				closeChoice: 'tray'
-			},
 			loginIcons,
 			update: {
 				visiable: false,
@@ -131,7 +124,6 @@ export default Vue.extend({
 			firstMode,
 			secondMode,
 			commonInfo,
-			diskFormatting: 0,
 			makesureModal: {
 				title: '',
 				visiable: false,
@@ -154,10 +146,6 @@ export default Vue.extend({
 		this.isUserAdmin = this.accessInfo.role === DeviceRole.admin
 	},
   methods: {
-		close() {
-			const _this = this as any
-			_this.$electron.remote.getCurrentWindow().close()
-		},
 		handleSetDeviceName() {
 			NasFileAPI.setDeviceName(this.nasInfo.name).then(response => {
 				if (response.data.code !== 200) return
@@ -296,7 +284,6 @@ export default Vue.extend({
 				this.disks = _.get(response.data.data, 'disks')
 				console.log(JSON.parse(JSON.stringify(response.data.data)));
 				this.diskMode = _.get(response.data.data, 'mode')
-				this.diskFormatting = _.get(response.data.data, 'formatting')
       }).catch(error => {
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)

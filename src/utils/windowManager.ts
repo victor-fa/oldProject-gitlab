@@ -11,6 +11,7 @@ let homeWindow: BrowserWindow | null = null
 let mediaWindow: BrowserWindow | null = null
 let moveWindow: BrowserWindow | null = null
 let settingWindow: BrowserWindow | null = null
+let initializeWindow: BrowserWindow | null = null
 let aboutWindow, feedBackWindow
 let appTray:any = null;
 const packageInfo = require('../../package.json')
@@ -55,7 +56,7 @@ export default {
     } else {
       // Load the index.html when not in development
       window.loadURL('app://./index.html#/' + newOptions.path)
-      window.webContents.openDevTools()
+      // window.webContents.openDevTools()
     }
     window.webContents.on('page-title-updated', () => {
       if (window !== null) {	// win环境
@@ -290,6 +291,32 @@ export default {
     })
     settingWindow.on('ready-to-show', () => {
       this.activeWindow(settingWindow!)
+    })
+  },
+  presentInitializeWindow () {
+    if (initializeWindow !== null) {
+      this.activeWindow(initializeWindow)
+      return initializeWindow
+    }
+    initializeWindow = this.createWindow({
+      path: 'system-initialize',
+      width: 530,
+      height: 180,
+      icon: './src/assets/logo.png',
+      minWidth: 530,
+      maxHeight: 180,
+      title: '磁盘正在初始化',
+      backgroundColor: '#ffffff',
+      maximizable: false,
+      resizable: false,
+      parent: homeWindow!
+    })
+    initializeWindow.once('closed', () => {
+      initializeWindow!.removeAllListeners()
+      initializeWindow = null
+    })
+    initializeWindow.on('ready-to-show', () => {
+      this.activeWindow(initializeWindow!)
     })
   }
 }

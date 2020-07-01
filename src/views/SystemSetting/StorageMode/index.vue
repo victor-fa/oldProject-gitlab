@@ -25,62 +25,38 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
-import { loginIcons } from '@/views/Login/iconList'
 import NasFileAPI from '@/api/NasFileAPI'
-import StorageHandler from '../../Storage/StorageHandler'
-import StringUtility from '@/utils/StringUtility'
 import processCenter, { EventName } from '@/utils/processCenter'
 import { firstMode, secondMode, commonInfo } from '../settingModel'
 import TransportHelper from '../../../api/Transport/TransportHelper'
 
-
 export default Vue.extend({
   name: 'nas-info',
-  filters: {
-    filterSize (bytes) {
-      return StringUtility.formatShowSize(bytes)
-		},
-    filterStatus (status) {
-      return StringUtility.formatDiskStatus(status)
-		},
-		filterStorageType (data, index) {
-			return StorageHandler.matchStorageName(data, index)
-		}
-	},
 	data() {
 		return {
 			mode: -1,
-			loginSetting: {
-				autoLogin: false,
-				autoPowerOn: false,
-				closeChoice: 'tray'
-			},
-			loginIcons,
 			firstMode,
 			secondMode,
 			commonInfo,
-			detach: {
-				visiable: false,
-				choice: 0
-			},
 			makesureModal: {
 				title: '',
 				visiable: false,
 				input: '',
 				message: ''
-			}
+			},
+			diskFormatting: 0
 		};
   },
 	created() {
 		this.fetchDisks()
 	},
   methods: {
-		close() {
-			const _this = this as any
-			_this.$electron.remote.getCurrentWindow().close()
-		},
 		handleSave (data) {
-			this.mode !== -1 ? this.handleOperation('makesure') : null
+			if (this.diskFormatting !== 0) {	// 有磁盘任务，不可初始化
+				this.$message.error('当前有磁盘任务，不可初始化')
+				return
+			}
+			this.handleOperation('makesure')
 		},
 		handleOperation (flag) {
 			if (flag === 'makesure') {
@@ -127,12 +103,13 @@ export default Vue.extend({
 				input: '',
 				message: ``
 			}
+			this.fetchDisks()
 		},
     fetchDisks () {
       NasFileAPI.fetchDisks().then(response => {
         if (response.data.code !== 200) return
 				this.mode = _.get(response.data.data, 'mode')
-				console.log(this.mode);
+				this.diskFormatting = _.get(response.data.data, 'formatting')
       }).catch(error => {
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)

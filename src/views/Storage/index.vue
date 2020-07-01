@@ -28,6 +28,15 @@
         <font class="modal-font">{{commonInfo.tips}}</font>
         <a-input :placeholder="commonInfo.placeholder" v-model="makesureModal.input" :max-length="4"/>
       </a-modal>
+      <a-modal
+        :visible="mode.visiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
+        okText="确定" cancelText="取消" @ok="handleInitialize(null)" @cancel="mode.visiable = false;fetchStorages()">
+        <p>请选择存储模式</p>
+        <a-radio-group v-model="mode.choice">
+          <a-radio :value="0">{{firstMode.title}}</a-radio>
+          <a-radio :value="1">{{secondMode.title}}</a-radio>
+        </a-radio-group>
+      </a-modal>
     </template>
   </main-view>
 </template>
@@ -39,13 +48,11 @@ import MainView from '../MainView/index.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
 import { storageFuncList } from '../MainView/ResourceFuncList'
 import StorageListItem from './StorageListItem.vue'
-import { StorageInfo, PartitionInfo, ArrangeWay, StorageType, ResourceItem } from '@/api/NasFileModel'
+import { StorageInfo, ResourceItem } from '@/api/NasFileModel'
 import NasFileAPI from '@/api/NasFileAPI'
 import StorageHandler from './StorageHandler'
-import { storageContextMenu, OperateGroup } from '@/components/OperateListAlter/operateList'
+import { storageContextMenu } from '@/components/OperateListAlter/operateList'
 import RouterUtility from '@/utils/RouterUtility'
-import StringUtility from '@/utils/StringUtility'
-import { SortList, SortKindItem } from '@/model/sortList'
 import processCenter, { EventName } from '@/utils/processCenter'
 import { firstMode, secondMode, commonInfo } from '@/views/SystemSetting/settingModel'
 import TransportHelper from '../../api/Transport/TransportHelper'
@@ -66,6 +73,7 @@ export default Vue.extend({
 				choice: 0
       },
 			diskMode: 0,
+			diskFormatting: 0,
 			finalMode: 0,
 			firstMode,
 			secondMode,
@@ -82,6 +90,7 @@ export default Vue.extend({
   },
   mounted () {
     this.fetchStorages()
+    // processCenter.renderSend(EventName.initialize)
   },
   methods: {
     fetchStorages () {
@@ -92,6 +101,7 @@ export default Vue.extend({
         if (response.data.code !== 200) return
         const storages = _.get(response.data.data, 'storages')
         this.diskMode = _.get(response.data.data, 'mode')
+        this.diskFormatting = _.get(response.data.data, 'formatting')
         this.dataArray = StorageHandler.formatStorages(storages)
         this.$store.dispatch('Resource/updateStorages', this.dataArray)
       }).catch(error => {
@@ -167,21 +177,23 @@ export default Vue.extend({
       _this.$ipc.send('file-control', 0, this.dataArray[index]);
     },
     handleInitialize () {
-			if (this.mode.visiable) {	// 已有弹框，选择后切换
-				// this.handleOperation('detail', this.mode.choice)
+      if (this.diskFormatting !== 0) {	// 当前有磁盘任务
+				this.$message.error('当前有磁盘任务，无法初始化')
+				return
+			}
+      if (this.mode.visiable) {	// 已有弹框，选择后切换
 				this.finalMode = this.mode.choice
 				this.handleOperation('makesure')
 				return
 			}
-      if (this.diskMode === -1) {	// 打开弹框
-				this.mode.visiable = true
+      if (this.diskMode === -1) {	// 打开弹框【当用户不曾选过mode时，需要让用户选择模式再进行格式化】
+        this.mode.visiable = true
 				return
-			}
+      }
+      this.fetchStorages()  // 刷新列表，取消所有选中
       const index = StorageHandler.getFristSelectedIndex(this.dataArray)
       if (index === null) return
       const item = this.dataArray[index] as any
-      console.log(JSON.parse(JSON.stringify(item)));
-			// this.handleOperation('detail', item.raidMode)	// 按原先的默认模式处理
 			this.finalMode = item.raidMode
 			this.handleOperation('makesure')
     },
@@ -220,7 +232,8 @@ export default Vue.extend({
 				visiable: false,
 				input: '',
 				message: ``
-			}
+      }
+      this.fetchStorages()  // 刷新列表，取消所有选中
 		},
 		handleSwitchMode () {
 			NasFileAPI.switchMode(this.finalMode, 1).then(response => {

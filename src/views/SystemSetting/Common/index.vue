@@ -28,7 +28,6 @@ export default Vue.extend({
   name: 'common',
 	data() {
 		return {
-			loading: '',
 			loginSetting: {
 				autoLogin: true,
 				autoPowerOn: false,
@@ -55,10 +54,6 @@ export default Vue.extend({
 		this.loginSetting.autoLogin = _.isEmpty(this.autoLogin) ? true : this.autoLogin.flag
 	},
   methods: {
-		close() {
-			const _this = this as any
-			_this.$electron.remote.getCurrentWindow().close()
-		},
 		handleSave () {
 			const input = {
 				'remember': this.loginSetting.closeChoice ? true : false,
@@ -69,7 +64,6 @@ export default Vue.extend({
 			this.$store.dispatch('Setting/updateCloseChoiceInfo', input)
 			this.$store.dispatch('Setting/updateAutoPowerOnInfo', { flag: this.loginSetting.autoPowerOn })
 			this.$store.dispatch('Setting/updateAutoLoginInfo', { flag: this.loginSetting.autoLogin })
-			// this.$message.success('修改成功')
 		},
   }
 })

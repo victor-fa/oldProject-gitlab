@@ -35,7 +35,7 @@ import Vue from 'vue'
 import NasFileAPI from '@/api/NasFileAPI'
 import processCenter, { EventName } from '@/utils/processCenter'
 import UserAPI from '@/api/UserAPI'
-import { DeviceInfo, DeviceRole, User } from '@/api/UserModel'
+import { DeviceRole, User } from '@/api/UserModel'
 import { NasInfo, NasAccessInfo } from '@/api/ClientModel'
 import StringUtility from '@/utils/StringUtility'
 import { loginIcons } from '@/views/Login/iconList'
@@ -46,7 +46,6 @@ export default Vue.extend({
 	data() {
 		return {
 			nasUsers: [] as any,
-			UploadSrc: false,
 			loginIcons,
 			deliver: {
 				code: '',
@@ -70,10 +69,6 @@ export default Vue.extend({
 		this.isUserAdmin = this.accessInfo.role === DeviceRole.admin
 	},
   methods: {
-		close() {
-			const _this = this as any
-			_this.$electron.remote.getCurrentWindow().close()
-		},
 		handleSave (data) {
 			// if (data === 0) setTimeout(() => this.close(), 3000);
 		},

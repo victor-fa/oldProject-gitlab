@@ -103,10 +103,6 @@ export default Vue.extend({
 			const _this = this as any
 			_this.$ipc.send('system', 'forget-pass');
 		},
-		close() {
-			const _this = this as any
-			_this.$electron.remote.getCurrentWindow().close()
-		},
 		handleSave () {
 			const input = { nicName: this.user.nicName ? this.user.nicName : '' }
 			const userJson = localStorage.getItem(USER_MODEL)

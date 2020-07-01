@@ -34,6 +34,11 @@ const routes = [
     ]
   },
   {
+    path: '/system-initialize',
+    name: 'system-initialize',
+    component: () => import('../views/Storage/StorageProgress.vue')
+  },
+  {
     path: '/info',
     name: 'DiskInfo',
     component: () => import('../views/Disk/DiskInfo.vue')

@@ -22,6 +22,7 @@ enum EventName {
   moveCallback = 'move_callback',
   drag = 'ondragstart',
   setting = 'system_setting',
+  initialize = 'system_initialize',
   refreshSetting = 'refresh_setting'
 }
 
@@ -64,6 +65,9 @@ export default {
           break
         case EventName.setting:
           windowManager.presentSettingWindow()
+          break
+        case EventName.initialize:
+          windowManager.presentInitializeWindow()
           break
         case EventName.drag:
           break

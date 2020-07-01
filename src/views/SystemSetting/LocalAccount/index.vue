@@ -40,7 +40,6 @@ import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import StringUtility from '@/utils/StringUtility'
-import { USER_MODEL } from '@/common/constants'
 import NasFileAPI from '@/api/NasFileAPI'
 
 export default Vue.extend({
@@ -50,12 +49,6 @@ export default Vue.extend({
 	},
 	data() {
 		return {
-			loading: '',
-			codeVisiable: false,
-			codePhoneVisiable: false,
-			storages: [],
-			nasUsers: [],
-			UploadSrc: false,
 			offlinePass: {
 				isUsed: false,
 				offline_username: '',
@@ -70,10 +63,6 @@ export default Vue.extend({
 		this.getOfflineName()
 	},
   methods: {
-		close() {
-			const _this = this as any
-			_this.$electron.remote.getCurrentWindow().close()
-		},
 		onOfflineChange(e) {
 			const _this = this as any
 			if (!this.offlinePass.isUsed && this.offlinePass.already_set) {
