@@ -24,6 +24,7 @@
       </li>
       <li class="password-checkbox">
         <a-checkbox :checked="rememberPassword" @change="checkboxChange">记住密码</a-checkbox>
+        <a-button @click="changePassword">忘记密码</a-button>
         <a-button @click="handleRegisterAction">注册帐号</a-button>
       </li>
       <li class="login-button">
@@ -189,7 +190,11 @@ export default Vue.extend({
         }
       }
       this.$store.dispatch('User/removeAccount', item.account)
-    }
+    },
+		changePassword() {
+			const _this = this as any
+			_this.$ipc.send('system', 'forget-pass');
+		},
   }
 })
 </script>
