@@ -72,13 +72,20 @@ export default Vue.extend({
     searchNasInLAN () {
       this.loading = true
       ClientAPI.searchNas(this.sn, this.mac).then(data => {
-        console.log(data)
-        this.onlineConnectNas(data)
+        const nas = this.complementNasInfo(data)
+        this.onlineConnectNas(nas)
       }).catch(error => {
         console.log(error)
         this.loading = false
         this.pushFailedPage()
       })
+    },
+    complementNasInfo (nas: NasInfo) {
+      if (nas.ip !== '127.0.0.1') return nas
+      const newNas = _.cloneDeep(this.nasInfo) as NasInfo
+      newNas.ip = nas.ip
+      newNas.port = nas.port
+      return newNas
     },
     onlineConnectNas (nasInfo: NasInfo) {
       ClientAPI.setBaseUrl(`http://${nasInfo.ip}:${nasInfo.port}`)

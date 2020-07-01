@@ -173,7 +173,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
       completedBytes: task.completedBytes,
       fileInfos: task.fileInfos,
       status: task.status,
-      type: task.icon
+      icon: task.icon
     }
   }
   // 将DB中存储的对象转换成task

@@ -30,7 +30,7 @@ import StringUtility from '@/utils/StringUtility'
 import ClientAPI from '@/api/ClientAPI'
 import { nasServer } from '@/api/NasServer';
 import TunnelAPI from '@/api/TunnelAPI'
-import { NasInfo, NasAccessInfo } from '@/api/ClientModel'
+import { NasInfo, NasAccessInfo, NasActive } from '@/api/ClientModel'
 import processCenter, { EventName } from '@/utils/processCenter'
 
 export default Vue.extend({
@@ -116,16 +116,24 @@ export default Vue.extend({
       })
       this.searchNas(device)
     },
-    searchNas (nas: DeviceInfo) {
+    searchNas (device: DeviceInfo) {
       this.loading = true
-      ClientAPI.setNasName(nas.name)
-      ClientAPI.searchNas(nas.sn, nas.mac).then(data => {
-        this.loginToNas(data, nas.publicKey)
+      ClientAPI.searchNas(device.sn, device.mac).then(data => {
+        const nas = this.complementNasInfo(device, data)
+        this.loginToNas(nas, device.publicKey)
       }).catch(error => {
         console.log(error)
         this.loading = false
         this.$message.error('连接失败')
       })
+    },
+    complementNasInfo (device: DeviceInfo, nas: NasInfo) {
+      if (nas.ip === '127.0.0.1') {
+        nas.name = device.name
+        nas.model = device.model
+        nas.active = NasActive.Bind
+      }
+      return nas
     },
     loginToNas (nas: NasInfo, secretKey: string) {
       ClientAPI.setBaseUrl(`http://${nas.ip}:${nas.port}`)

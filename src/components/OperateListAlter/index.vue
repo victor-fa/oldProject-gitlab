@@ -184,7 +184,7 @@ const dialogCommands = ['download', 'upload', 'uploadFile', 'uploadFolder']
 <style lang="less" scoped>
 .operate-list-alter {
   position: absolute;
-  width: 100px;
+  width: 120px;
   height: 189px;
   border: 1px solid #acacb7;
   background-color: white;
@@ -203,9 +203,9 @@ const dialogCommands = ['download', 'upload', 'uploadFile', 'uploadFolder']
       .operate-item {
         display: flex;
         flex: 1;
-        padding: 0px 8px;
+        padding: 0px 12px;
         color: #484848;
-        font-size: 10px;
+        font-size: 11px;
         line-height: 16px;
       }
       .operate-item:hover {

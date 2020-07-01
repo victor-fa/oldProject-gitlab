@@ -40,7 +40,7 @@
             </li>
           </ul>
         </template>
-        <div class="setting">
+        <div class="setting" title="设置">
           <img class="setting-icon" src="../../assets/setting_icon.png">
           <img
             src="../../assets/arrow_down.png"

@@ -4,7 +4,8 @@
       <li
         v-for="(item, index) in silderItems"
         :key="index"
-        v-bind:class="{ 'silder-item-selected': item.meta.isSelected }"
+        class="menu-item"
+        v-bind:class="{ 'menu-item-selected': item.meta.isSelected }"
         @click="onSelectAction(index)"
       >
         <div v-if="item.meta.icon !== undefined" class="silder-item">
@@ -15,15 +16,14 @@
         <span v-else class="silder-type-item">{{ item.meta.title }}</span>
       </li>
     </ul>
-    <div class="silder-storage" v-show="showStorage">
-      <span>{{ storageInfo.name }}</span>
+    <div class="silder-storage">
+      <span class="storage-name">{{ nasInfo.name }}</span>
       <a-progress
         class="progress"
         :percent="storageInfo.precent"
         :showInfo="false"
         :strokeColor="'#7C7C7C'"
         :strokeWidth="6"
-        :title="storageInfo.precent + '%'"
       />
       <div class="storage-info">
         <span>存储空间</span>
@@ -51,8 +51,7 @@ export default Vue.extend({
   },
   data () {
     return {
-      showStorage: false,
-      storageInfo: {}
+      storageInfo: {} as any
     }
   },
   computed: {
@@ -64,18 +63,16 @@ export default Vue.extend({
       this.getStorageInfo()
     }
   },
+  mounted () {
+    this.getStorageInfo()
+  },
   methods: {
     getStorageInfo () {
-      const nasInfo = this.nasInfo as NasInfo
-      if (_.isEmpty(nasInfo)) return 
       const storage = (this.storages as StorageInfo[])[0]
       if (_.isEmpty(storage)) return
-      let name = ''
-      if (!_.isEmpty(nasInfo.name)) name = nasInfo.name
       const precent = storage.showProgress
       const info = storage.showSize
-      this.storageInfo = { name, precent, info }
-      this.showStorage = true
+      this.storageInfo = { precent, info }
     },
     onSelectAction (index: number) {
       const item = this.silderItems[index] as FuncListItem
@@ -103,31 +100,49 @@ export default Vue.extend({
   flex-direction: column;
   align-items: stretch;
   justify-content: space-between;
-  .silder-item {
-    display: flex;
-    align-items: center;
-    height: 32px;
-    img {
-      width: 20px;
-      margin:0px 18px 0px 32px;
+  .menu-item {
+    .silder-item {
+      display: flex;
+      align-items: center;
+      height: 32px;
+      img {
+        width: 20px;
+        margin:0px 18px 0px 32px;
+      }
+      .silder-item-title {
+        display: inline-block;
+        font-size: 15px;
+        color: black;
+        width: 70px;
+        text-align: left;
+      }
     }
-    .silder-item-title {
-      display: inline-block;
-      font-size: 15px;
+    .silder-type-item {
+      line-height: 30px;
+      height: 30px;
+      font-size: 14px;
       color: black;
-      width: 70px;
-      text-align: left;
     }
   }
-  .silder-type-item {
-    line-height: 30px;
-    height: 30px;
-    font-size: 14px;
-    color: black;
+  .menu-item:hover {
+    background-color: #06B65010;
+    .silder-item {
+      .silder-item-title {
+        color: #007934;
+      }
+    }
+    .silder-type-item {
+      color: #007934;
+    }
   }
-  .silder-item-selected {
-    background-color: #06B6501A;
-    .silder-item-title {
+  .menu-item-selected, .menu-item-selected:hover {
+    background-color: #06B65019;
+    .silder-item {
+      .silder-item-title {
+        color: #007934;
+      }
+    }
+    .silder-type-item {
       color: #007934;
     }
   }
@@ -137,7 +152,7 @@ export default Vue.extend({
     flex-direction: column;
     justify-content: flex-start;
     align-items: flex-start;
-    span:first-child {
+    .storage-name {
       color: black;
       font-size: 12px;
       text-overflow: ellipsis;

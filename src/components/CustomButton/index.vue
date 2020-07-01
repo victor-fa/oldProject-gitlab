@@ -7,6 +7,7 @@
       ghost
       block
       :disabled="disable"
+      :title="title"
       @click.native="clickAction"
       @mousedown="mousedownAction"
       @mouseup="mouseupAction"
@@ -32,6 +33,7 @@ export default Vue.extend({
   },
   props: {
     title: String,
+    text: String,
     selectedTitle: String,
     iconWidth: String,
     isSelected: {
@@ -64,7 +66,7 @@ export default Vue.extend({
   },
   data () {
     return {
-      currentTitle: this.title,
+      currentTitle: this.text,
       currentImage: this.image,
       currentBackgroundImage: this.backgroundImage,
       isHover: false,
@@ -83,7 +85,7 @@ export default Vue.extend({
       }
     },
     isShowLabel: function (): boolean {
-      if (this.title || this.selectedTitle) {
+      if (this.text || this.selectedTitle) {
         return true
       }
       return false
@@ -123,7 +125,7 @@ export default Vue.extend({
       this.isHover = false
     },
     changeNormalStyle () {
-      this.currentTitle = this.title
+      this.currentTitle = this.text
       this.currentImage = this.image
       this.currentBackgroundImage = this.backgroundImage
     },
@@ -150,6 +152,7 @@ export default Vue.extend({
 .custom-button {
   display: inline-block;
   line-height: 100%;
+  -webkit-app-region: no-drag;
   .button-title {
     font-size: 14px;
     color: #000;

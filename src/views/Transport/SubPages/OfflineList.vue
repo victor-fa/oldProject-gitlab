@@ -147,15 +147,10 @@ export default Vue.extend({
         }
         item.isSelected = item.status === this.status
         item.batchItems = item.batchItems.map(item => {
-          if (item.command === 'pauseAll') {
-            item.isHidden = canResumeAll
-            item.disable = this.showArray.length === 0
-          }
-          if (item.command === 'resumeAll') {
-            item.isHidden = !canResumeAll
-            item.disable = this.showArray.length === 0
-          }
-          item.disable = false
+          item.disable = this.showArray.length === 0
+          if (item.command === 'pauseAll') item.isHidden = canResumeAll
+          if (item.command === 'resumeAll') item.isHidden = !canResumeAll
+          if (item.command === 'newOffline') item.disable = false
           return item
         })
         return item
@@ -165,7 +160,7 @@ export default Vue.extend({
       let hasDoingTask = false
       for (let index = 0; index < this.dataArray.length; index++) {
         const task = this.dataArray[index]
-        if (task.category === TransportStatus.doing) {
+        if (task.status === TaskStatus.progress || task.status === TaskStatus.pending) {
           hasDoingTask = true
           break
         }

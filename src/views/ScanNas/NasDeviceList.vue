@@ -162,7 +162,10 @@ export default Vue.extend({
       margin-right: 40px;
     }
   }
-  .nas-item-selected {
+  .nas-item:hover {
+    background-color: #DEF1EA80;
+  }
+  .nas-item-selected, .nas-item-selected:hover {
     background-color: #DEF1EA;
   }
 }

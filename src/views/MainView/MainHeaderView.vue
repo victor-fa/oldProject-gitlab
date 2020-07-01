@@ -41,6 +41,7 @@
       >
         <a-popover
           v-if="showPopover(item)"
+          trigger="click"
           v-model="visible"
           placement="bottom"
         >
@@ -53,6 +54,7 @@
             class="right-button"
             :image="item.icon"
             :ref="item.command"
+            :title="item.title"
             :iconWidth="item.iconWidth"
             v-show="item.isHidden !== true"
             @click.native="handleItemClick(index)"
@@ -61,7 +63,9 @@
         <custom-button
           v-show="showItem(item)"
           class="right-button"
+          :key="item.command"
           :image="item.icon"
+          :title="item.title"
           :selectedImage="item.selectedIcon"
           :isSelected="item.isSelected"
           :iconWidth="item.iconWidth"
@@ -82,7 +86,7 @@ import CustomButton from '@/components/CustomButton/index.vue'
 import SortPopoverList from '@/components/SortPopoverList/index.vue'
 import { SortWay, SortKind, SortType, sortList, uploadSortList, SortList } from '@/model/sortList'
 import { ArrangeWay, OrderType, ResourceType } from '@/api/NasFileModel'
-import { commonFuncList, ResourceFuncItem } from './ResourceFuncList'
+import { commonFuncList, ResourceFuncItem, searchItem } from './ResourceFuncList'
 import { CacheRoute } from '@/store/modules/Router'
 import RouterUtility from '@/utils/RouterUtility'
 import FileModalHandler, { CacheParams } from '../SelectFilePath/FileModalHandler'
@@ -245,9 +249,11 @@ export default Vue.extend({
       this.setHiddenSearch(false)
     },
     setHiddenSearch (hide: boolean) {
-      const item = this.funcList[0] as ResourceFuncItem
-      item.isHidden = hide
-      this.funcList.splice(0, 1, item)
+      if (hide) {
+        this.funcList.splice(0, 1)
+      } else {
+        this.funcList.splice(0, 0, _.cloneDeep(searchItem))
+      }
     },
     searchAction () {
       this.showSearchInput()
@@ -256,7 +262,7 @@ export default Vue.extend({
       // 监听清除按钮的点击
       const searchInput = this.$refs.searchInput as Vue
       const clearButton = searchInput.$el.lastChild as ChildNode
-      clearButton.addEventListener('click', () => {
+      clearButton.addEventListener('click', event => {
         this.endSearch()
       })
     },

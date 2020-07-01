@@ -6,7 +6,6 @@
         'show-move-modal': !hideModal,
         'hide-move-modal': hideModal
       }"
-      @dblclick="handleDbClick($event)"
     >
       <div class="modal-header">
         <div class="indicator">
@@ -177,9 +176,6 @@ export default Vue.extend({
     document.removeEventListener('keyup', this.handleKeyupAction)
   },
   methods: {
-    handleDbClick (event: MouseEvent) {
-      event.stopPropagation()
-    },
     handleBackwardAction () {
       const index = this.cacheArray.length - 1
       this.cacheArray.pop()
@@ -359,6 +355,7 @@ const moveModalIcons = {
       overflow: hidden;
       white-space: nowrap;
       border-bottom: 1px solid #e8e8e8;
+      -webkit-app-region: no-drag;
       .modal-breadcrumb-item:hover {
         color: #06b650;
       }

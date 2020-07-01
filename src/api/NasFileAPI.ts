@@ -271,20 +271,23 @@ export default {
   fetchRemoteTaskList (): ServerResponse {
     return nasServer.get(taskModule + '/list')
   },
-  pauseRemoteTask (id: number): ServerResponse {
-    return nasServer.get(taskModule + '/pause', {
-      params: { task_id: id }
-    })
+  pauseRemoteTask (id?: number, status?: number): ServerResponse {
+    if (id !== undefined) {
+      return nasServer.get(taskModule + '/pause', { params: { task_id: id } })
+    }
+    return nasServer.get(taskModule + '/pause', { params: { status: status } })
   },
-  continueRemoteTask (id: number): ServerResponse {
-    return nasServer.get(taskModule + '/continue', {
-      params: { task_id: id }
-    })
+  continueRemoteTask (id?: number, status?: number): ServerResponse {
+    if (id !== undefined) {
+      return nasServer.get(taskModule + '/continue', { params: { task_id: id } })
+    }
+    return nasServer.get(taskModule + '/continue', { params: { status: status } })
   },
-  removeRemoteTask (id: number): ServerResponse {
-    return nasServer.get(taskModule + '/remove', {
-      params: { task_id: id }
-    })
+  removeRemoteTask (id?: number, status?: number): ServerResponse {
+    if (id !== undefined) {
+      return nasServer.get(taskModule + '/remove', { params: { task_id: id } })
+    }
+    return nasServer.get(taskModule + '/remove', { params: { status: status } })
   },
   uploadData (params: UploadParams, data: Buffer, source?: CancelTokenSource): ServerResponse {
     return nasServer.post(fileModule + '/upload', data, { 

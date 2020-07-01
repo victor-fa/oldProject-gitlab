@@ -49,6 +49,7 @@ import NasFileAPI from '../../../api/NasFileAPI'
 import FileHandle from '../../../utils/FileHandle'
 import { Stats } from 'fs'
 import { User } from '../../../api/UserModel'
+import { OfflineTaskType } from '../../../api/NasFileModel'
 
 export default Vue.extend({
   name: 'new-offline-modal',
@@ -160,24 +161,24 @@ export default Vue.extend({
         fromData.append('path', this.savePath)
         const path = this.sourcePath
         if (this.validateHttpFormat(path)) { // HTTP
-          fromData.append('type', '1')
+          fromData.append('type', OfflineTaskType.http.toString())
           fromData.append('uri', path)
           resolve(fromData)
         } else if (this.validateFilePathFormat(path)) { // 本地BT
           this.readFileData(path).then(buffer => {
-            fromData.append('type', '2')
+            fromData.append('type', OfflineTaskType.localBt.toString())
             fromData.append('bt_file', buffer.toString())
             resolve(fromData)
           }).catch(error => {
             reject(error)
           })
         } else if (this.validateRemotePathFormat(path)) { // 远程BT
-          fromData.append('type', '4')
+          fromData.append('type', OfflineTaskType.remoteBt.toString())
           fromData.append('bt_uuid', this.sourceUuid)
           fromData.append('bt_path', this.sourcePath)
           resolve(fromData)
         } else if (this.validateMagnetURIFormat(path)) { // 磁力链接
-          fromData.append('type', '8')
+          fromData.append('type', OfflineTaskType.magnet.toString())
           fromData.append('uri', path)
           resolve(fromData)
         } else {

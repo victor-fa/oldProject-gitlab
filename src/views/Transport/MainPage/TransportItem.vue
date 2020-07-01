@@ -107,9 +107,9 @@ export default Vue.extend({
   align-items: center;
   justify-content: flex-start;
   .task-icon {
-    width: 23px;
-    height: 19px;
-    margin: 0px 15px 0px 20px;
+    width: 30px;
+    height: 30px;
+    margin-left: 20px;
   }
   .item-content {
     flex: 1;

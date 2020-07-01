@@ -19,7 +19,7 @@ export default {
       progress: this.formatProgress(model.curr_size, model.total_size),
       progressPercent: this.caculatePercent(model.curr_size, model.total_size),
       name: StringUtility.formatName(model.curr_src_path),
-      icon: ResourceHandler.matchMineTypeIcon(model.curr_src_path),
+      icon: ResourceHandler.searchResourceIcon(model.file_type, model.curr_src_path),
       controlItems: items,
       path: model.curr_src_path,
       uuid: model.curr_src_uuid
@@ -59,13 +59,13 @@ export default {
       progress: this.formatProgress(task.curr_size, task.total_size),
       progressPercent: this.caculatePercent(task.curr_size, task.total_size),
       name: task.filename,
-      icon: ResourceHandler.searchResourceIcon(ResourceType.document, task.path),
+      icon: ResourceHandler.searchResourceIcon(task.file_type, task.path),
       controlItems: items,
       path: task.path,
       uuid: ''
     }
   },
-  converOfflineStatus (status: OfflineTaskStatus): TaskStatus {
+  converOfflineStatus (status: OfflineTaskStatus) {
     switch (status) {
       case OfflineTaskStatus.prepare:
       case OfflineTaskStatus.ready:
@@ -79,6 +79,7 @@ export default {
       case OfflineTaskStatus.error:
         return TaskStatus.error
     }
+    return TaskStatus.error
   },
   formatSpeed (speed: number) {
     const kByte = 1024

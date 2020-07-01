@@ -63,8 +63,7 @@ export {
   border-bottom: 1px solid #BCC0CE40;
   li {
     display: inline-block;
-    color: #010101;
-    font-weight: bold;
+    color: black;
     font-size: 14px;
     width: 56px;
     margin-right: 40px;

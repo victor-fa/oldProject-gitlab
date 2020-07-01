@@ -91,13 +91,15 @@ export default Vue.extend({
         border: none;
         color: #484848;
         font-size: 14px;
-        font-weight: bold;
         line-height: 14px;
         padding: 0px;
         margin: 0px 10px;
         background-color: #F8F9FC;
       }
-      .ant-btn-selected {
+      .ant-btn:hover {
+        color: #007934B0;
+      }
+      .ant-btn-selected, .ant-btn-selected:hover {
         color: #007934;
       }
       .split-line {

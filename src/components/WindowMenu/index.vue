@@ -2,6 +2,7 @@
   <div class="window-menu" style="-webkit-app-region: drag">
     <custom-button
       v-if="closable"
+      title="关闭"
       :image="menuIcons.close"
       iconWidth="20px"
       class="close-item"
@@ -9,6 +10,7 @@
     />
     <custom-button
       v-if="resizable"
+      :title="showResizeTitle"
       :image="menuIcons.maximize"
       :selectedImage="menuIcons.minimun"
       :isSelected="zoomChange"
@@ -18,6 +20,7 @@
     />
     <custom-button
       v-if="minimizable"
+      title="隐藏"
       :image="menuIcons.hide"
       iconWidth="20px"
       class="hide-item"
@@ -58,6 +61,7 @@ export default Vue.extend({
 		}
 	},
   computed: {
+    ...mapGetters('Setting', ['closeInfo']),
     closable: function () {
       const win = BrowserWindow.getFocusedWindow()
       if (win !== null) {
@@ -79,7 +83,10 @@ export default Vue.extend({
       }
       return true
     },
-    ...mapGetters('Setting', ['closeInfo'])
+    showResizeTitle: function () {
+      const zoom = this.zoomChange as boolean
+      return zoom ? '最小化' : '最大化'
+    }
   },
 	created() {
     const _this = this as any

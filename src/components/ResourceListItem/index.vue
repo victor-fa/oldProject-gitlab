@@ -317,7 +317,15 @@ export default Vue.extend({
     }
   }
 }
-.horizontalSelectedItem {
+.horizontal-item:hover {
+  .icon-wrapper {
+    background-color: #DEF1EA80;
+  }
+  p {
+    background-color: #DEF1EA80;
+  }
+}
+.horizontalSelectedItem, .horizontalSelectedItem:hover {
   // border-radius: 8px;
   // background-color: #def1ea;
   .icon-wrapper {

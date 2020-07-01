@@ -14,14 +14,10 @@ const userModulePath = '/v1/user'
 let client: dgram.Socket | null = null
 const CancelToken = axios.CancelToken
 let cancel: Canceler | null = null
-let curNasName = ''
 
 export default {
   setBaseUrl (url: string) {
     nasServer.defaults.baseURL = url
-  },
-  setNasName (nas) {  // 获取P2P下的设备名称，用于对应到IndexDB的数据库名称
-    curNasName = nas
   },
   // refresh_token过期时调用
   login (user: User, secretKey: string, tunnelIP?: string): Promise<AxiosResponse<BasicResponse>> {
@@ -107,7 +103,7 @@ export default {
         resolve(data)
       }, error => {
         console.log(error)
-        // this.closeBoardcast()
+        this.closeBoardcast()
       })
       this.initP2PTunnel(sn, mac, data => {
         clearTimeout(timer)
@@ -141,11 +137,11 @@ export default {
         })
       })
     })
-    client.on('error', (error) => {
+    client.addListener('error', (error) => {
       console.log('socket error: ' + error)
       failure('socket error')
     })
-    client.on('message', (msg: Buffer, rinfo) => {
+    client.addListener('message', (msg: Buffer, rinfo) => {
       // parse reponse
       const dataJson = msg.toString('utf8')
       const data = JSON.parse(dataJson)
@@ -167,17 +163,12 @@ export default {
   launchP2PProcess () {
   },
   initP2PTunnel (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
-    const tunnelNas:NasInfo = {
-      active: 1,
-      name: curNasName,
-      model: '',
-      mac: mac,
+    const tunnelNas = {
+      sn,
+      mac,
       ip: '127.0.0.1',
-      sn: sn,
-      port: 9001,
-      ssl_port: '000',
-      softversion: 'V1.0.1'
-    }
+      port: 9001
+    } as NasInfo
     TunnelAPI.tunnelCheck().then(() => {
       return TunnelAPI.queryConnectInfo(sn)
     }).then((connectRes: any) => {
@@ -197,7 +188,6 @@ export default {
         return Promise.reject(Error('tunnel error'))
       }
     }).then(() => {
-      // TODO: 连接成功需要补全nasInfo
       success(tunnelNas)
     }).catch(error => {
       failure('tunnel error')

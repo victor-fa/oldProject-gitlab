@@ -253,17 +253,24 @@ interface CustomInfo {
 }
 
 enum OfflineTaskStatus {
-  prepare = 0x0,
-  ready = 0x1,
-  running = 0x2,
-  pausing = 0x3,
-  error = 0x4,
-  completed = 0x5
+  prepare = 1 << 0,
+  ready = 1 << 1,
+  running = 1 << 2,
+  pausing = 1 << 3,
+  error = 1 << 4,
+  completed = 1 << 5
+}
+
+enum OfflineTaskType {
+  http = 0x1,
+  localBt = 0x2,
+  remoteBt = 0x4,
+  magnet = 0x8
 }
 
 interface OfflineTask {
   id: number,
-  type: ResourceType,
+  type: OfflineTaskType,
   status: OfflineTaskStatus,
   itime: number,
   reousrce: string,
@@ -273,7 +280,8 @@ interface OfflineTask {
   errmsg: string,
   total_size: number,
   curr_size: number,
-  speed: number
+  speed: number,
+  file_type: ResourceType
 }
 
 export {
@@ -301,5 +309,6 @@ export {
   DownloadParams,
   RemoteType,
   OfflineTask,
-  OfflineTaskStatus
+  OfflineTaskStatus,
+  OfflineTaskType
 }

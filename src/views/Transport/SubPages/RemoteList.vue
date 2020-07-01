@@ -13,13 +13,15 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
-import { RemoteTask } from '../../../api/NasFileModel'
+import { RemoteTask, RemoteTaskStatus } from '../../../api/NasFileModel'
 import NasFileAPI from '../../../api/NasFileAPI'
 import { TransportModel, remoteCategorys, TransportStatus } from '../MainPage/TransportModel'
 import TransportHandler from '../TransportHandler'
 import { EventBus } from '../../../utils/eventBus'
 import { EventName } from '../../../utils/processCenter'
 import { TaskStatus } from '../../../api/Transport/BaseTask'
+import { AxiosResponse } from 'axios'
+import { BasicResponse } from '../../../api/UserModel'
 
 let timer: NodeJS.Timeout | null = null
 
@@ -55,12 +57,16 @@ export default Vue.extend({
     handleOperateAction (command: string) {
       switch (command) {
         case 'pauseAll':
+          this.pauseAllTask()
           break
         case 'continue':
+          this.continueAllTask()
           break
         case 'cancelAll':
+          this.cancelDoingTasks()
           break;
         case 'clearAll':
+          this.cancelDoneTasks()
           break
       }
     },
@@ -129,7 +135,7 @@ export default Vue.extend({
       let hasDoingTask = false
       for (let index = 0; index < this.dataArray.length; index++) {
         const task = this.dataArray[index]
-        if (task.category === TransportStatus.doing) {
+        if (task.status === TaskStatus.progress || task.status === TaskStatus.pending) {
           hasDoingTask = true
           break
         }
@@ -145,52 +151,78 @@ export default Vue.extend({
         }
       }
     },
-    pauseRemoteTask (id: number) {
-      const refKey = 'renderItem' + id
-      const item: any = this.$refs[refKey]
-      item.setOperateItemDisable('pause', true)
-      NasFileAPI.pauseRemoteTask(id).then(response => {
-        item.setOperateItemDisable('pause', false)
-        if (response.data.code !== 200) return
-        item.updatePauseItem()
+    // batch operation
+    pauseAllTask () {
+      this.loading = true
+      const status = RemoteTaskStatus.prerunning | RemoteTaskStatus.running
+      NasFileAPI.pauseRemoteTask(undefined, status).then(response => {
+        this.handleRequestSuccess(response)
       }).catch(error => {
-        console.log(error)
-        this.$message.error('网络连接错误，请检测网络')
-        item.setOperateItemDisable('pause', false)
+        this.handleRequestError(error, '全部暂停失败')
+      })
+    },
+    continueAllTask () {
+      this.loading = true
+      const status = RemoteTaskStatus.pause
+      NasFileAPI.continueRemoteTask(undefined, status).then(response => {
+        this.handleRequestSuccess(response)
+      }).catch(error => {
+        this.handleRequestError(error, '全部继续失败')
+      })
+    },
+    cancelDoingTasks () {
+      this.loading = true
+      const status = RemoteTaskStatus.prerunning | RemoteTaskStatus.running | RemoteTaskStatus.error | RemoteTaskStatus.pause
+      NasFileAPI.removeRemoteTask(undefined, status).then(response => {
+        this.handleRequestSuccess(response)
+      }).catch(error => {
+        this.handleRequestError(error, '全部删除失败')
+      })
+    },
+    cancelDoneTasks () {
+      this.loading = true
+      const status = RemoteTaskStatus.completed
+      NasFileAPI.removeRemoteTask(undefined, status).then(response => {
+        this.handleRequestSuccess(response)
+      }).catch(error => {
+        this.handleRequestError(error, '全部删除失败')
+      })
+    },
+    // single operation
+    pauseRemoteTask (id: number) {
+      this.loading = true
+      NasFileAPI.pauseRemoteTask(id).then(response => {
+        this.handleRequestSuccess(response)
+      }).catch(error => {
+        this.handleRequestError(error, '暂停失败')
       })
     },
     continueRemoteTask (id: number) {
-      const refKey = 'renderItem' + id
-      const item: any = this.$refs[refKey]
-      item.setOperateItemDisable('continue', true)
+      this.loading = true
       NasFileAPI.continueRemoteTask(id).then(response => {
-        item.setOperateItemDisable('continue', false)
-        if (response.data.code !== 200) return
-        item.updateContinueItem()
+        this.handleRequestSuccess(response)
       }).catch(error => {
-        console.log(error)
-        this.$message.error('网络连接错误，请检测网络')
-        item.setOperateItemDisable('continue', false)
+        this.handleRequestError(error, '继续失败')
       })
     },
     cancelRemoteTask (id: number) {
-      const refKey = 'renderItem' + id
-      const item: any = this.$refs[refKey]
-      item.setOperateItemDisable('cancel', true)
+      this.loading = true
       NasFileAPI.removeRemoteTask(id).then(response => {
-        item.setOperateItemDisable('cancel', false)
-        if (response.data.code !== 200) return
-        this.removeTaskFromShowArray(id)
+        this.handleRequestSuccess(response)
       }).catch(error => {
-        console.log(error)
-        this.$message.error('网络连接错误，请检测网络')
-        item.setOperateItemDisable('cancel', false)
+        this.handleRequestError(error, '删除失败')
       })
     },
-    removeTaskFromShowArray (id: number) {
-      this.showArray = this.showArray.filter(item => {
-        return item.id !== id
-      })
+    handleRequestSuccess (response: AxiosResponse<BasicResponse>) {
+      console.log(response)
+      this.loading = false
+      if (response.data.code !== 200) return
+      this.fetchRemoteList()
+    },
+    handleRequestError (error: any, tip: string) {
+      console.log(error)
+      this.loading = false
+      this.$message.error(tip)
     }
   }
 })

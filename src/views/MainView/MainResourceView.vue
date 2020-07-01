@@ -31,6 +31,7 @@ import StringUtility from '../../utils/StringUtility'
 import processCenter, { EventName } from '../../utils/processCenter'
 import { TaskError } from '../../api/Transport/BaseTask'
 import { uploadQueue } from '../../api/Transport/TransportHelper'
+import RouterUtility from '../../utils/RouterUtility'
 
 export default Vue.extend({
   name: 'main-resource-view',
@@ -76,8 +77,13 @@ export default Vue.extend({
   created () {
     this.updateView()
   },
+  destroyed () {
+    uploadQueue.off('taskFinished', this.handleTaskFinished)
+    uploadQueue.off('error', this.handleTaskError)
+  },
   methods: {
     updateView () {
+      this.dataArray = [] // 新的界面，需要清空缓存的数据
       if (this.checkQuery()) this.fetchResourceList()
       const mainView = this.$refs.mainView as any
       mainView !== undefined && mainView.resetHeaderView()
@@ -134,8 +140,8 @@ export default Vue.extend({
         const task = new UploadTask(path, this.path, this.uuid)
         task.matchTaskIcon()
         uploadQueue.addTask(task)
-        task.once('taskFinished', this.handleTaskFinished)
-        task.once('error', this.handleTaskError)
+        uploadQueue.once('taskFinished', this.handleTaskFinished)
+        uploadQueue.once('error', this.handleTaskError)
         this.$store.dispatch('Resource/increaseTask')
       })
     },
