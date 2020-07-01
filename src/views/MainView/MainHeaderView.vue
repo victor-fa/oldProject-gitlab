@@ -299,10 +299,12 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .main-header-view {
-  height: 100%;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background-color: #F7F9FB;
+  border-bottom: 1px solid #BCC0CE40;
   .header-left-view {
     flex: 1;
     display: flex;
@@ -320,7 +322,7 @@ export default Vue.extend({
     .modal-breadcrumb {
       width: 100%;
       text-align: left;
-      font-size: 14px;
+      font-size: 13px;
       color: black;
       line-height: 22px;
       overflow: hidden;

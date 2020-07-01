@@ -67,9 +67,7 @@ export default Vue.extend({
     arrangeWay: {
       default: ArrangeWay.horizontal
     },
-    adjust: {
-      default: 123
-    }
+    adjust: Number
   },
   data () {
     return {

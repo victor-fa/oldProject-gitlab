@@ -111,7 +111,7 @@ export default Vue.extend({
       }
       .silder-item-title {
         display: inline-block;
-        font-size: 15px;
+        font-size: 13px;
         color: black;
         width: 70px;
         text-align: left;
@@ -120,7 +120,7 @@ export default Vue.extend({
     .silder-type-item {
       line-height: 30px;
       height: 30px;
-      font-size: 14px;
+      font-size: 13px;
       color: black;
     }
   }
@@ -166,7 +166,7 @@ export default Vue.extend({
     .storage-info {
       span {
         color: black;
-        font-size: 9px;
+        font-size: 10px;
       }
       span:last-child {
         margin-left: 12px;

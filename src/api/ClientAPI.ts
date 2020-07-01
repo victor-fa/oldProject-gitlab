@@ -115,6 +115,17 @@ export default {
       })
     })
   },
+  reconnectionToNas (sn: string, mac: string) {
+    // boardcast
+    this.boardcastInLan(sn, mac, data => {
+      this.closeP2PTunnel()
+      this.closeBoardcast()
+    }, error => {
+      console.log(error)
+      this.closeBoardcast()
+    })
+    // TODO: P2P重新连接
+  },
   boardcastInLan (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
     const hosts = calculateBoardcastAddress()
     if (hosts === null) {

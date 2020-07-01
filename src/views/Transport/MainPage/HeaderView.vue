@@ -90,8 +90,8 @@ export default Vue.extend({
         max-width: 100px;
         border: none;
         color: #484848;
-        font-size: 14px;
-        line-height: 14px;
+        font-size: 13px;
+        line-height: 13px;
         padding: 0px;
         margin: 0px 10px;
         background-color: #F8F9FC;
@@ -104,7 +104,6 @@ export default Vue.extend({
       }
       .split-line {
         color: #484848;
-        font-size: 14px;
       }
     }
   }

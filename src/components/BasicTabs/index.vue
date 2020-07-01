@@ -64,7 +64,7 @@ export {
   li {
     display: inline-block;
     color: black;
-    font-size: 14px;
+    font-size: 13px;
     width: 56px;
     margin-right: 40px;
     height: 33px;

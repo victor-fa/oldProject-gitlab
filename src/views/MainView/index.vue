@@ -1,6 +1,6 @@
 <template>
-  <a-layout class="main-view">
-    <a-layout-header class="main-header-view">
+  <div class="main-view">
+    <div class="layout-header-view">
       <slot 
         name="header"
         :popoverList="popoverList"
@@ -13,12 +13,13 @@
           v-on:CallbackAction="handleHeaderViewAction"
         />
       </slot>
-    </a-layout-header>
-    <a-layout-content class="main-content-view">
+      <network-tip v-if="showNetworkTip" :loading="reconnection"/>
+    </div>
+    <div class="layout-content-view">
       <a-spin :spinning="loading">
         <resource-list
           :busy="busy"
-          :adjust="adjust"
+          :adjust="showAdjust"
           :customGrid="listGrid"
           :dataSource="showArray"
           :arrangeWay="arrangeWay"
@@ -40,12 +41,12 @@
           </template>
         </resource-list>
       </a-spin>
-    </a-layout-content>
-    <a-layout-footer class="main-footer-view">
+    </div>
+    <div class="layout-footer-view">
       <slot name="footer" :itemCount="itemCount">
         <main-bottom-view :itemCount="itemCount"/>
       </slot>
-    </a-layout-footer>
+    </div>
     <operate-list-alter
       v-show="showAlter"
       ref="operateListAlter"
@@ -55,7 +56,7 @@
     />
     <select-file-path v-if="showSelectModal" v-on:dismiss="handleSelectModalDismiss"/>
     <encrypt-pass-model :visiable="showEncryptModal" v-on:passCallback="handleEncryptPassModal"/>
-  </a-layout>
+  </div>
 </template>
 
 <script lang="ts">
@@ -66,6 +67,7 @@ import MainHeaderView from './MainHeaderView.vue'
 import MainBottomView from './MainBottomView.vue'
 import ResourceList from '@/components/ResourceList/index.vue'
 import ResourceListItem from '@/components/ResourceListItem/index.vue'
+import NetworkTip from '@/components/NetworkTip/index.vue'
 import { ResourceItem, ArrangeWay, OrderType, ResourceType } from '@/api/NasFileModel'
 import processCenter, { EventName } from '@/utils/processCenter'
 import StringUtility from '@/utils/StringUtility'
@@ -79,6 +81,8 @@ import RouterUtility from '@/utils/RouterUtility'
 import EncryptPassModel from '../Encrypt/EncryptPassModel.vue'
 import { User } from '@/api/UserModel'
 import { ResourceFuncItem, commonFuncList } from './ResourceFuncList'
+import ClientAPI from '../../api/ClientAPI'
+import { NasInfo } from '../../api/ClientModel'
 
 export default Vue.extend({
   name: 'main-view',
@@ -88,13 +92,16 @@ export default Vue.extend({
     ResourceList,
     OperateListAlter,
     ResourceListItem,
+    NetworkTip,
     SelectFilePath,
     EncryptPassModel
   },
   props: {
     count: Number, // 条目总数
     dataSource: Array, // 展示的条目数据
-    adjust: Number, // 列表高度与窗口的高度差
+    adjust: { // 列表高度与窗口的高度差
+      default: 123
+    }, 
     loading: {
       default: false
     },
@@ -123,12 +130,15 @@ export default Vue.extend({
       arrangeWay: ArrangeWay.horizontal, // 列表排列方式
       showOperateList: [] as OperateGroup[], // 展示的右键菜单数据
       showSelectModal: false, // 控制路径选择弹窗的显示与隐藏
-      showEncryptModal: false // 控制输入加密密码弹窗的显示与隐藏
+      showEncryptModal: false, // 控制输入加密密码弹窗的显示与隐藏
+      showNetworkTip: false, // 控制断开连接提示条是否展示
+      reconnection: false // 控制重新连接加载圈 
     }
   },
   computed: {
     ...mapGetters('Resource', ['clipboard']),
     ...mapGetters('User', ['user']),
+    ...mapGetters('NasServer', ['nasInfo']),
     alterStyle: function (): object {
       return {
         left: this.alterPosition.left,
@@ -139,6 +149,11 @@ export default Vue.extend({
       if (_.isNumber(this.count)) return this.count as number
       const count = this.showArray.length as number
       return count
+    },
+    showAdjust: function () {
+      const adjust: number = this.adjust
+      const tipHeight: number = this.showNetworkTip ? 28 : 0
+      return adjust + tipHeight
     }
   },
   watch: {
@@ -148,10 +163,10 @@ export default Vue.extend({
   },
   mounted () {
     this.updateArrangeWay()
-    const { BrowserWindow } = require('electron').remote
-    const win = BrowserWindow.getFocusedWindow()
-    if (win === null) return
-		win.on('blur', event => { this.showAlter =  false });
+    this.observationWindowAction()
+  },
+  destroyed () {
+    this.removeWindowObserver()
   },
   methods: {
     // public methods
@@ -178,6 +193,16 @@ export default Vue.extend({
       const item = this.showFuncList[arrangeIndex]
       item.isSelected = this.arrangeWay === ArrangeWay.vertical
       this.showFuncList.splice(arrangeIndex, 1, item)
+    },
+    observationWindowAction () {
+      window.addEventListener('blur', this.handleWinBlurAction)
+      window.addEventListener('online', this.handleWinOnlineAction)
+      window.addEventListener('offline', this.handleWinOfflineAction)
+    },
+    removeWindowObserver () {
+      window.removeEventListener('blur', this.handleWinBlurAction)
+      window.removeEventListener('online', this.handleWinOnlineAction)
+      window.removeEventListener('offline', this.handleWinOfflineAction)
     },
     // handle header view callback actions
     handleHeaderViewAction (action: string, ...args: any[]) {
@@ -386,6 +411,19 @@ export default Vue.extend({
         this.showArray = ResourceHandler.resetDisableState(this.showArray)
         this.$message.error('移入失败')
       })
+    },
+    handleWinBlurAction () {
+      this.showAlter = false
+    },
+    handleWinOnlineAction () {
+      // this.showNetworkTip = true
+      // this.reconnection = true
+      // const nas = this.nasInfo as NasInfo
+      // ClientAPI.reconnectionToNas(nas.sn, nas.mac)
+    },
+    handleWinOfflineAction () {
+      // this.showNetworkTip = true
+      // this.reconnection = false
     }
   }
 })
@@ -394,16 +432,19 @@ export default Vue.extend({
 <style lang="less" scoped>
 .main-view {
   height: 100%;
-  .main-header-view {
-    height: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  .layout-header-view {
+    display: block;
     padding: 0px;
-    background-color: #F7F9FB;
-    border-bottom: 1px solid #BCC0CE40;
+    background-color: white;
   }
-  .main-content-view {
+  .layout-content-view {
+    flex: 1;
     padding: 0px;
   }
-  .main-footer-view {
+  .layout-footer-view {
     height: 24px;
     padding: 0px;
     background-color: #F7F9FB;
