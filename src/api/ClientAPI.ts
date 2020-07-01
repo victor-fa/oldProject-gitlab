@@ -160,34 +160,16 @@ export default {
     }
   },
   /**启动P2P进程 */
-  launchP2PProcess () {
-  },
   initP2PTunnel (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
     const tunnelNas = {
       sn,
       mac,
       ip: '127.0.0.1',
-      port: 9001
+      port: 9001,
+      ssl_port: '000',
+      softversion: 'V1.0.1'
     } as NasInfo
-    TunnelAPI.tunnelCheck().then(() => {
-      return TunnelAPI.queryConnectInfo(sn)
-    }).then((connectRes: any) => {
-      if (connectRes.result === '0') {
-        return Promise.resolve(tunnelNas)
-      } else if (connectRes.result === '18') {
-        return TunnelAPI.addConnectFun(sn)
-      } else {
-        return Promise.reject(Error('tunnel error'))
-      }
-    }).then((addConnectRes: any) => {
-      if (addConnectRes === tunnelNas) {
-        return Promise.resolve(tunnelNas)
-      } else if (addConnectRes.result === '0') {
-        return TunnelAPI.getPeerinfoFun(sn)
-      } else {
-        return Promise.reject(Error('tunnel error'))
-      }
-    }).then(() => {
+    TunnelAPI.initP2PTunnel(sn, tunnelNas).then(() => {
       success(tunnelNas)
     }).catch(error => {
       failure('tunnel error')

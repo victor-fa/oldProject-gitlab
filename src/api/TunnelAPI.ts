@@ -1,5 +1,6 @@
-import axios, { AxiosResponse } from 'axios';
 import _ from 'lodash'
+import axios, { AxiosResponse } from 'axios';
+import { NasInfo } from './ClientModel'
 
 enum TunnelStatus {
   continue,
@@ -28,11 +29,7 @@ export default {
   },
   // 获取状态
   getStatus (): Promise<AxiosResponse<any>> {
-    return tunnelServer.get('/statusget', {
-      params: {
-        option: 0
-      }
-    })
+    return tunnelServer.get('/statusget?option=0')
   },
   // 关闭P2P进程
   deleteConnect (): Promise<AxiosResponse<any>> {
@@ -64,29 +61,19 @@ export default {
   },
   // 连接信息
   getPeerinfo (peerid): Promise<AxiosResponse<any>> {
-    return tunnelServer.get('/peerinfoget', {
-      params: {
-        peerid
-      }
-    })
+    return tunnelServer.get(`/peerinfoget?peerid=${peerid}`)
   },
   // 检查是否有启动起来
   tunnelCheck () {
     return new Promise((resolve, reject) => {
       this.getStatus().then(response => {
-        if (response.status !== 200) {
-          ipcRenderer.send('system', 'awaken-tunnel');
-          return
-        }
+        if (response.status !== 200) return
         console.log(response.data);
         const resJson = JSON.parse(response.data.substring(10, response.data.length))
         if (resJson.result === '0') {
           resolve(resJson)
-        } else {
-          ipcRenderer.send('system', 'awaken-tunnel');
         }
       }).catch(error => {
-        ipcRenderer.send('system', 'awaken-tunnel');
         reject(error)
       })
     })
@@ -156,6 +143,33 @@ export default {
       }
     }).catch(error => {
       reject(error)
+    })
+  },
+  // 单独暴露出去给ClientAPI使用
+  initP2PTunnel (sn: string, tunnelNas: NasInfo) {
+    ipcRenderer.send('system', 'awaken-tunnel');
+    return new Promise((resolve, reject) => {
+      this.tunnelCheck().then(() => {
+        return this.queryConnectInfo(sn)
+      }).then((connectRes: any) => {
+        if (connectRes.result === '0') {
+          return Promise.resolve(tunnelNas)
+        } else if (connectRes.result === '18') {
+          return this.addConnectFun(sn)
+        } else {
+          return Promise.reject(Error('tunnel error'))
+        }
+      }).then((addConnectRes: any) => {
+        if (addConnectRes === tunnelNas) {
+          return Promise.resolve(tunnelNas)
+        } else if (addConnectRes.result === '0') {
+          return this.getPeerinfoFun(sn)
+        } else {
+          return Promise.reject(Error('tunnel error'))
+        }
+      }).then(() => {
+        resolve()
+      }).catch((error) => reject(error))
     })
   }
 }

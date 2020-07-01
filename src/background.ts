@@ -85,7 +85,6 @@ function createWindow () {
 		win.loadURL('app://./index.html')
 		win.webContents.openDevTools()
 	}
-	awakeTunnel()	// 启动P2P隧道程序
   win.on('closed', () => {
     win = null
   })

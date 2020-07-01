@@ -2,9 +2,6 @@
 	<div class="cd-image-container" @mousewheel="MouseZoom" tabindex="-1" @keydown.left="Prev" @keydown.right="Next">
 		<WindowsHeader :data="header" />
 		<img :class="'cd-image-show ' + (!Control ? 'cd-image-animated' : '')" :src="NowShow.URL" ref="imageShow" @load="onload" @mousedown="Drag" alt="" />
-		<Spin v-show="loaded">
-			<a-icon type="ios-loading" size="26" class="loading" />
-		</Spin>
 		<ul class="cd-image-control">
 			<li class="sf-icon-search-plus" @click="Zoom(1)" />
 			<li class="sf-icon-search-minus" @click="Zoom(-1)" />
