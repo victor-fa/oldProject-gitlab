@@ -21,7 +21,7 @@
           {{ subItem.title }}
           <img v-show="subItem.childrens" src="../../assets/operate_icon.png">
           <ul v-show="subItem.childrens && showChildren" class="operate-children"
-            :style="{ 'left': (isChildPosLeft ? '100' : '-79') + 'px', 'border-left': (isChildPosLeft ? 'none' : '1px solid #acacb7') }">
+            :style="{ 'left': (isChildPosLeft ? '120' : '-79') + 'px', 'border-left': (isChildPosLeft ? 'none' : '1px solid #acacb7') }">
             <li
               v-for="(cell, index) in subItem.childrens"
               :key="index"
@@ -227,7 +227,6 @@ const dialogCommands = ['download', 'upload', 'uploadFile', 'uploadFolder']
         margin: 0;
       }
       .operate-children {
-        // left: 100px;
         top: -1px;
         flex: 1;
         padding: 3px 0px;
@@ -235,7 +234,7 @@ const dialogCommands = ['download', 'upload', 'uploadFile', 'uploadFolder']
         border-bottom: 1px solid #acacb7;
         border-top: 1px solid #acacb7;
         position: absolute;
-        width: 79px;
+        width: 80px;
         background-color: #fff;
       }
     }

@@ -181,7 +181,7 @@ export default class UploadTask extends BaseTask {
       this.clearSpeedTimer()
       return
     }
-    if (this.uuid === '' && fileInfo.newCompleted !== true) {
+    if (fileInfo.newCompleted !== true) {
       fileInfo.newCompleted = true
       this.uploadFile()
       return

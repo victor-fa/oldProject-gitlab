@@ -38,6 +38,32 @@ export default {
   getServerUrl () {
     return host
   },
+  download (option) {
+    const input = { uuid: option.uuid, path: option.path }
+    return host + fileModule + '/download?' + jsonToParams(input)
+  },
+  httpDownload (option) { // 针对pdf处理
+    const input = { uuid: option.uuid, path: option.path }
+    return host + fileModule + '/http_download?' + jsonToParamsForPdf(input)
+  },
+  encryptDownload (option) {
+    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
+    if (cryptoJson === null) {
+      return Promise.reject(Error('not find crypto_info'))
+    }
+    const token = JSON.parse(cryptoJson) as CryptoInfo
+    const input = { uuid: option.uuid, path: option.path, crypto_token: token.crypto_token }
+    return host + cryptoModule + '/download?' + jsonToParams(input)
+  },
+  httpEncryptDownload (option) {
+    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
+    if (cryptoJson === null) {
+      return Promise.reject(Error('not find crypto_info'))
+    }
+    const token = JSON.parse(cryptoJson) as CryptoInfo
+    const input = { uuid: option.uuid, path: option.path, crypto_token: token.crypto_token }
+    return host + cryptoModule + '/http_download?' + jsonToParams(input)
+  },
   heartbeat () {
     return nasServer.get(selfCheck + '/heartbeat')
   },

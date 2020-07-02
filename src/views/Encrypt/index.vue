@@ -60,12 +60,13 @@ import MainViewMixin from '../MainView/MainViewMixin'
 import ResourceHandler from '../MainView/ResourceHandler'
 import NasFileAPI, { TaskMode, maxSize } from '@/api/NasFileAPI'
 import EncryptUploadTask from '@/api/Transport/EncryptUploadTask'
-import { encryptUploadQueue, encryptDownloadQueue } from '@/api/Transport/TransportHelper'
 import EncryptDownloadTask from '@/api/Transport/EncryptDownloadTask'
+import { TaskError } from '@/api/Transport/BaseTask'
+import { encryptUploadQueue, encryptDownloadQueue } from '@/api/Transport/TransportHelper'
 import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
+import { User, BasicResponse } from '@/api/UserModel'
 import StringUtility from '@/utils/StringUtility'
 import { encryptContextMenu, encryptMisTokenContextMenu, encryptResourceContextMenu } from '@/components/OperateListAlter/operateList'
-import { User, BasicResponse } from '@/api/UserModel'
 import RouterUtility from '@/utils/RouterUtility'
 import SelectFilePath from '../SelectFilePath/index.vue'
 
@@ -91,6 +92,8 @@ export default Vue.extend({
     if (this.alreadyLogin === true) { // 已登录情况下才需要登录
       this.logout()
     }
+    encryptUploadQueue.off('taskFinished', this.handleTaskFinished)
+    encryptUploadQueue.off('error', this.handleTaskError)
   },
   data () {
     return {
@@ -417,8 +420,18 @@ export default Vue.extend({
       filePaths.forEach(path => {
         const task = new EncryptUploadTask(path, path, '')
         encryptUploadQueue.addTask(task)
+        encryptUploadQueue.once('taskFinished', this.handleTaskFinished)
+        encryptUploadQueue.once('error', this.handleTaskError)
         this.$store.dispatch('Resource/increaseTask')
       })
+    },
+    handleTaskFinished () {
+      setTimeout(() => {
+        this.handleRefreshAction()
+      }, 1000)
+    },
+    handleTaskError (taskId: number, error: TaskError) {
+      this.$message.error(error.desc)
     },
     handleSelectModalDismiss (path?: string, uuid?: string) {
       this.showSelectModal = false

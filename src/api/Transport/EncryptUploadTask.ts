@@ -11,7 +11,6 @@ import { CryptoInfo } from '../ClientModel';
 import { FileInfo } from './BaseTask';
 import store from '@/store'
 import { User } from '@/api/UserModel'
-import path from 'path'
 
 export default class EncryptUploadTask extends UploadTask {
   convertFileStats (path: string, stats: fs.Stats): Promise<FileInfo> {
