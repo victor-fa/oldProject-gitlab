@@ -2,7 +2,7 @@
 	<div class="cloudSeries-about-win">
     <a-layout-header class="setting-header">
       <span>关于绿联云</span>
-      <window-menu :configure="'unable'" class="window-menu"/>
+      <window-menu v-if="percent === 0" :configure="'unable'" class="window-menu"/>
     </a-layout-header>
 		<div class="cloudSeries-about-main">
 			<div class="content">
@@ -23,7 +23,7 @@
 				</div>
 			</div>
 			<div class="bottom">
-				<p class="release">版本号：{{ version }}</p>
+				<p class="release" v-if="percent === 0">当前版本号：{{ version }}</p>
 				<div class="button">
 					<a-button class="update" @click="openUpdateInfo"><span>{{ CheckText }}</span></a-button>
 					<a-button class="privacy" @click="$electron.shell.openExternal(nasCloudIP + '/sys/file/resource/pc/secretAgreement.htm')">隐私协议</a-button>
@@ -121,8 +121,7 @@ export default {
 				}
 			});
 			this.$ipc.on('newVersion', (event, message) => {
-				this.message = '有新版本！'
-				this.CheckText = '点我更新'
+				this.CheckText = '下载更新'
 			});
 		},
 		openUpdateInfo() {
@@ -144,17 +143,20 @@ export default {
           return
 				}
 				if (response.data.data) {
-					this.updateInfo.visiable = true
-					this.updateInfo.pkgUrl = _.get(response.data.data, 'pkgUrl')
-					this.updateInfo.appNo = _.get(response.data.data, 'appNo')
-					this.updateInfo.appName = _.get(response.data.data, 'appName')
-					this.updateInfo.verNo = _.get(response.data.data, 'verNo')
-					this.updateInfo.verName = _.get(response.data.data, 'verName')
-					this.updateInfo.size = _.get(response.data.data, 'size')
-					this.updateInfo.desc = _.get(response.data.data, 'desc')
-					this.updateInfo.remark = _.get(response.data.data, 'remark')
-					this.updateInfo.pubTime = _.get(response.data.data, 'pubTime')
-					console.log(this.updateInfo);
+					const verNo = _.get(response.data.data, 'verNo')
+					// if (Number(verNo) > appVersion) { // 当版本号超过，则更新
+						this.updateInfo.visiable = true
+						this.updateInfo.pkgUrl = _.get(response.data.data, 'pkgUrl')
+						this.updateInfo.appNo = _.get(response.data.data, 'appNo')
+						this.updateInfo.appName = _.get(response.data.data, 'appName')
+						this.updateInfo.verNo = verNo
+						this.updateInfo.verName = _.get(response.data.data, 'verName')
+						this.updateInfo.size = _.get(response.data.data, 'size')
+						this.updateInfo.desc = _.get(response.data.data, 'desc')
+						this.updateInfo.remark = _.get(response.data.data, 'remark')
+						this.updateInfo.pubTime = _.get(response.data.data, 'pubTime')
+						console.log(this.updateInfo);
+					// }
 				} else {
 					this.$message.info("当前已为最新版")
 				}

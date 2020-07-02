@@ -83,7 +83,7 @@ function createWindow () {
     createProtocol('app')
     // Load the index.html when not in development
 		win.loadURL('app://./index.html')
-		// win.webContents.openDevTools()
+		win.webContents.openDevTools()
 	}
   win.on('closed', () => {
     win = null
@@ -217,8 +217,8 @@ let DiskSystem = {
 				}
 			})
 		})
-		if (data === 'new') {
-			setTimeout(() => { AboutWindow.webContents.send('newVersion', '有新版本') }, 2000);
+		if (data !== '') {
+			setTimeout(() => { AboutWindow.webContents.send('newVersion', data) }, 2000);
 		}
 	},
 	FeedBackWindow: () => {
@@ -476,7 +476,9 @@ function bindIpc() {
 function awakeTunnel () {
   if (process.env.WEBPACK_DEV_SERVER_URL) {	// 开发环境
 		if (process.platform === 'win32') {
-			spawn(path.join(__filename, '../../public/tunnel/win/ugreenTunnel.exe'));
+			const result = spawn(path.join(__filename, '../../public/tunnel/win/ugreenTunnel.exe'));
+			// if (result.exitCode === null) {
+			// }
 		} else {
 			const cwdPath = path.join(__filename, '../../public/tunnel/mac')
 			const filePath = path.join(cwdPath, 'pgTunnelStatic')

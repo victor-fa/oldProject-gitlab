@@ -45,7 +45,7 @@ export default {
 			win.setTitle(options.title);
 			win.callback(options.data || '无数据');
 			isDevelopment && win.webContents.openDevTools();
-			// win.webContents.openDevTools();
+			win.webContents.openDevTools();
 		});
 		return win;
 	},

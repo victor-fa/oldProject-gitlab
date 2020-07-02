@@ -103,7 +103,12 @@ export default Vue.extend({
       }
       UserAPI.fetchSoftVerUpdateInfo(appId, appVersion).then(response => {
         if (response.data.code !== 200) return
-        processCenter.renderSend(EventName.newVersion, response.data.data)
+        if (response.data.data !== null) {
+          const verNo = _.get(response.data.data, 'verNo')
+          if (Number(verNo) > appVersion) { // 当版本号超过，则更新
+            processCenter.renderSend(EventName.newVersion, response.data.data)
+          }
+        }
       }).catch(error => {
         console.log(error)
       })

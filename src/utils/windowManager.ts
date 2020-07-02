@@ -57,7 +57,7 @@ export default {
     } else {
       // Load the index.html when not in development
       window.loadURL('app://./index.html#/' + newOptions.path)
-      // window.webContents.openDevTools()
+      window.webContents.openDevTools()
     }
     window.webContents.on('page-title-updated', () => {
       if (window !== null) {	// win环境

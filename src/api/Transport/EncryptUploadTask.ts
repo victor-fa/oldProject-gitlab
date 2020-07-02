@@ -57,11 +57,8 @@ export default class EncryptUploadTask extends UploadTask {
     if (cryptoJson !== null) {
       token = JSON.parse(cryptoJson) as CryptoInfo
     }
-    console.log(fileInfo);
-    console.log(path.dirname(fileInfo.srcPath));
     return {
-      // path: `/.ugreen_nas/${user.ugreenNo}/.safe/${fileInfo.name}`,
-      path: `/.ugreen_nas/${user.ugreenNo}/.safe/${fileInfo.relativePath === '' ? fileInfo.name :  fileInfo.srcPath}`,
+      path: `/.ugreen_nas/${user.ugreenNo}/.safe/${fileInfo.name}`,
       start: fileInfo.completedSize,
       end: fileInfo.completedSize + chunkLength - 1,
       size: fileInfo.totalSize,

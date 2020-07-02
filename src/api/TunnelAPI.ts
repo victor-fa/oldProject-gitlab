@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import axios, { AxiosResponse } from 'axios';
 import { NasInfo } from './ClientModel'
+import { spawn, exec } from 'child_process'
 
 enum TunnelStatus {
   continue,
@@ -31,9 +32,18 @@ export default {
   getStatus (): Promise<AxiosResponse<any>> {
     return tunnelServer.get('/statusget?option=0')
   },
-  // 关闭P2P进程
+  // 关闭P2P隧道连接
   deleteConnect (): Promise<AxiosResponse<any>> {
     return tunnelServer.get(`/cnntlcldelete?clientaddr=${this.getClientIP()}`)
+  },
+  // 关闭隧道进程
+  exitTunnel () {
+    if (process.platform === 'win32') {
+      // TODO: 区分win10、win7 win7【tskill pgTunnelStatic.exe】
+      exec('taskkill /F /IM ugreenTunnel.exe');
+    } else {
+      exec('killall pgTunnelStatic');
+    }
   },
   // 查询连接
   queryConnect (peerid): Promise<AxiosResponse<any>> {
@@ -62,6 +72,10 @@ export default {
   // 连接信息
   getPeerinfo (peerid): Promise<AxiosResponse<any>> {
     return tunnelServer.get(`/peerinfoget?peerid=${peerid}`)
+  },
+  // 控制隧道
+  controlTunnel (): Promise<AxiosResponse<any>> {
+    return tunnelServer.get(`/control?ctrl=0`)
   },
   // 检查是否有启动起来
   tunnelCheck () {
@@ -145,6 +159,22 @@ export default {
       reject(error)
     })
   },
+  // 单独暴露出去的重连接口
+  reConnection (sn: string, tunnelNas: NasInfo) {
+    return new Promise((resolve, reject) => {
+      this.addConnectFun(sn).then((addConnectRes: any) => {
+        if (addConnectRes === tunnelNas) {
+          return Promise.resolve(tunnelNas)
+        } else if (addConnectRes.result === '0') {
+          return this.getPeerinfoFun(sn)
+        } else {
+          return Promise.reject(Error('tunnel error'))
+        }
+      }).then(() => {
+        resolve()
+      }).catch((error) => reject(error))
+    })
+  },
   // 单独暴露出去给ClientAPI使用
   initP2PTunnel (sn: string, tunnelNas: NasInfo) {
     ipcRenderer.send('system', 'awaken-tunnel');
@@ -167,7 +197,8 @@ export default {
         } else {
           return Promise.reject(Error('tunnel error'))
         }
-      }).then(() => {
+      })
+      .then(() => {
         resolve()
       }).catch((error) => reject(error))
     })
