@@ -1,6 +1,7 @@
 import processCenter, { MainEventName } from '@/utils/processCenter'
 import { BrowserWindow, Menu, Tray, app } from 'electron'
 import windowControl from './windowControl'
+import path from 'path'
 
 interface WindowOptions extends Electron.BrowserWindowConstructorOptions {
   path: string
@@ -12,10 +13,10 @@ let mediaWindow: BrowserWindow | null = null
 let moveWindow: BrowserWindow | null = null
 let settingWindow: BrowserWindow | null = null
 let initializeWindow: BrowserWindow | null = null
-let aboutWindow, feedBackWindow
-let appTray:any = null;
-const packageInfo = require('../../package.json')
-const path = require('path');
+let aboutWindow: BrowserWindow | null = null
+let feedBackWindow: BrowserWindow | null = null
+let newVersionWindow: BrowserWindow | null = null
+let appTray:any = null
 
 export {
   homeWindow
@@ -30,7 +31,7 @@ export default {
 			icon: './src/assets/logo.png',
       minWidth: 600,
       minHeight: 420,
-      title: packageInfo.name,
+      title: 'nas_client',
       useContentSize: true,
       transparent: false,
       minimizable: true,
@@ -100,7 +101,7 @@ export default {
       loginWindow!.removeAllListeners()
       loginWindow = null
     })
-    loginWindow.on('ready-to-show', () => {
+    loginWindow.once('ready-to-show', () => {
       this.activeWindow(loginWindow!)
       this.closeOtherWindow(loginWindow!)
       msg !== undefined && processCenter.mainSend(loginWindow!, MainEventName.toast, msg)
@@ -125,7 +126,7 @@ export default {
       homeWindow!.removeAllListeners()
       homeWindow = null
     })
-    homeWindow.on('ready-to-show', () => {
+    homeWindow.once('ready-to-show', () => {
       this.activeWindow(homeWindow!)
       this.closeOtherWindow(homeWindow!)
     })
@@ -201,7 +202,6 @@ export default {
         }
       });
 		}
-
     return homeWindow
   },
   presentMediaWindow (data: any) { // mediawindow 他应该是homewindow的子窗口
@@ -315,8 +315,35 @@ export default {
       initializeWindow!.removeAllListeners()
       initializeWindow = null
     })
-    initializeWindow.on('ready-to-show', () => {
+    initializeWindow.once('ready-to-show', () => {
       this.activeWindow(initializeWindow!)
+    })
+  },
+  presentNewVersionWindow (data: any) {
+    if (newVersionWindow !== null) {
+      this.activeWindow(newVersionWindow)
+      return newVersionWindow
+    }
+    newVersionWindow = this.createWindow({
+      path: 'disk-about',
+      width: 600,
+      height: 400,
+      minWidth: 680,
+      title: '版本更新',
+      backgroundColor: '#f6f8fb',
+      maximizable: false,
+      transparent: false,
+      resizable: false,
+      parent: homeWindow!,
+      show: false
+    })
+    newVersionWindow.once('closed', () => {
+      newVersionWindow!.removeAllListeners()
+      newVersionWindow = null
+    })
+    newVersionWindow.once('ready-to-show', () => {
+      this.activeWindow(newVersionWindow!)
+      processCenter.mainSend(newVersionWindow!, MainEventName.newVersionInfo, data)
     })
   }
 }

@@ -35,6 +35,7 @@
         />
       </div>
       <a-breadcrumb separator=">" class="modal-breadcrumb" ref="breadcrumb">
+        <img slot="separator" class="separator-icon" src="../../assets/accessory_icon.png">
         <a-breadcrumb-item
           v-for=" (path, index) in showPaths"
           :key="index"
@@ -356,6 +357,9 @@ const moveModalIcons = {
       white-space: nowrap;
       border-bottom: 1px solid #e8e8e8;
       -webkit-app-region: no-drag;
+      .separator-icon {
+        width: 10px;
+      }
       .modal-breadcrumb-item:hover {
         color: #06b650;
       }

@@ -10,7 +10,8 @@
         iconWidth="6px"
         @click.native="backAction"
       />
-      <a-breadcrumb separator=">" class="modal-breadcrumb" ref="breadcrumb">
+      <a-breadcrumb class="modal-breadcrumb" ref="breadcrumb">
+        <img slot="separator" class="separator-icon" src="../../assets/accessory_icon.png">
         <a-breadcrumb-item
           v-for=" (item, index) in showPaths"
           :key="index"
@@ -327,6 +328,9 @@ export default Vue.extend({
       line-height: 22px;
       overflow: hidden;
       white-space: nowrap;
+      .separator-icon {
+        width: 10px;
+      }
       .modal-breadcrumb-item:hover {
         color: #06b650;
       }

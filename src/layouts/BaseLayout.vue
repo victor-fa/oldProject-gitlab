@@ -36,6 +36,9 @@ import NasFileAPI from '../api/NasFileAPI'
 import processCenter, { EventName } from '@/utils/processCenter'
 import TransportHelper from '../api/Transport/TransportHelper'
 import StorageHandler from '../views/Storage/StorageHandler'
+import UserAPI from '../api/UserAPI'
+
+const packageInfo = require('../../package')
 
 export default Vue.extend({
   name: 'base-layout',
@@ -61,6 +64,7 @@ export default Vue.extend({
   mounted () {
     this.filterSilderItems()
     this.initCacheRoutes()
+    this.checkSoftUpdate()
     EventBus.$on(EventName.jump, this.jumpSpecifiedPath)
     if (this.$route.path !== '/recent') this.$router.push('recent')
   },
@@ -85,6 +89,24 @@ export default Vue.extend({
         pathsMap[item.name] = [route] 
       })
       this.$store.dispatch('Router/initPaths', pathsMap)
+    },
+    // 调接口判断是否需要更新
+    checkSoftUpdate () {
+      let appId = ''
+      let appVersion = 0
+      if (process.platform === 'win32') {	// win环境
+        appId = packageInfo.winAppId
+        appVersion = packageInfo.winAppVersion
+      } else {	// mac环境
+        appId = packageInfo.macAppId
+        appVersion = packageInfo.macAppVersion
+      }
+      UserAPI.fetchSoftVerUpdateInfo(appId, appVersion).then(response => {
+        if (response.data.code !== 200) return
+        processCenter.renderSend(EventName.newVersion, response.data.data)
+      }).catch(error => {
+        console.log(error)
+      })
     },
     handleSilderChange (index: number) {
       const item = this.silderItems[index]

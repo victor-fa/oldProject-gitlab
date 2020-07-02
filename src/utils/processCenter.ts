@@ -14,6 +14,7 @@ enum EventName {
   connecting = 'present_connecting',
   bindList = 'bind_device_list',
   home = 'present_home',
+  newVersion = 'new_version',
   file = 'present_file',
   mediaInfo = 'media_info',
   jump = 'jump_to_localtion',
@@ -30,7 +31,8 @@ enum EventName {
 enum MainEventName {
   toast = 'show_toast',
   file = 'present_file',
-  mediaInfo = 'media_info'
+  mediaInfo = 'media_info',
+  newVersionInfo = 'new_version_info'
 }
 
 export default {
@@ -50,6 +52,9 @@ export default {
           break
         case EventName.mediaInfo:
           windowManager.presentMediaWindow(args[0])
+          break
+        case EventName.newVersion:
+          windowManager.presentNewVersionWindow(args[0])
           break
         case EventName.account:
           windowManager.refreshHomeWindow()
