@@ -29,6 +29,10 @@ export default {
   getStatus (): Promise<AxiosResponse<any>> {
     return tunnelServer.get('/statusget?option=0')
   },
+  // 获取版本
+  getVersion (): Promise<AxiosResponse<any>> {
+    return tunnelServer.get('/versionget')
+  },
   // 关闭P2P隧道连接
   deleteConnect (): Promise<AxiosResponse<any>> {
     status = TunnelStatus.stop
@@ -165,63 +169,60 @@ export default {
       arg === 1 ? status = TunnelStatus.continue : null // 仅当隧道进程启动成功时处理为成功
     })
   },
-  // 单独暴露出去的重连接口
-  reConnection (sn: string, tunnelNas: NasInfo): Promise<NasInfo> {
-    const timer = setInterval(() => {
-      if (status === TunnelStatus.stop) {
-        ipcRenderer.send('system', 'awaken-tunnel');
-        this.watchTunnelLaunch()  // 监听主线程返回的结果
-      } else {
-        timer && clearInterval(timer);
-      }
-    }, 500);
+  // 启动一次进程
+  runTunnelProcess () {
     return new Promise((resolve, reject) => {
-      this.addConnectFun(sn).then((addConnectRes: any) => {
-        if (addConnectRes === tunnelNas) {
-          return Promise.resolve(tunnelNas)
-        } else if (addConnectRes.result === '0') {
-          return this.getPeerinfoFun(sn)
-        } else {
-          return Promise.reject(Error('tunnel error'))
+      ipcRenderer.send('system', 'awaken-tunnel');
+      this.watchTunnelLaunch()
+      const timer = setInterval(() => {
+        if (status === TunnelStatus.continue) {
+          resolve()
+          timer && clearInterval(timer);
         }
-      }).then(() => {
-        resolve(tunnelNas)
-      }).catch((error) => reject(error))
+      }, 500);
+    })
+  },
+  // 单独暴露出去的重连接口
+  reConnection (sn: string, tunnelNas: NasInfo) {
+    return this.getVersion().then(() => { // 通过接口检查进程是否起来
+      return this.addConnectFun(sn) // 已起来，直接添加连接
+    }).then((addConnectRes: any) => {
+      if (addConnectRes === tunnelNas) {
+        return Promise.resolve(tunnelNas)
+      } else if (addConnectRes.result === '0') {
+        return this.getPeerinfoFun(sn)
+      } else {
+        return Promise.reject(Error('tunnel error'))
+      }
+    }).catch(error => {
+      // 不存在，从头开始连
+      this.initP2PTunnel(sn, tunnelNas).then(() => {
+        Promise.resolve(tunnelNas)
+      }).catch((error) => Promise.reject(error))
     })
   },
   // 单独暴露出去给ClientAPI使用
   initP2PTunnel (sn: string, tunnelNas: NasInfo) {
-    const timer = setInterval(() => {
-      if (status === TunnelStatus.stop) {
-        ipcRenderer.send('system', 'awaken-tunnel');
-        this.watchTunnelLaunch()  // 监听主线程返回的结果
+    return this.runTunnelProcess().then(() => {
+      return this.tunnelCheck()
+    }).then(() => {
+      return this.queryConnectInfo(sn)
+    }).then((connectRes: any) => {
+      if (connectRes.result === '0') {
+        return Promise.resolve(tunnelNas)
+      } else if (connectRes.result === '18') {
+        return this.addConnectFun(sn)
       } else {
-        timer && clearInterval(timer);
+        return Promise.reject(Error('tunnel error'))
       }
-    }, 500);
-    return new Promise((resolve, reject) => {
-      this.tunnelCheck().then(() => {
-        return this.queryConnectInfo(sn)
-      }).then((connectRes: any) => {
-        if (connectRes.result === '0') {
-          return Promise.resolve(tunnelNas)
-        } else if (connectRes.result === '18') {
-          return this.addConnectFun(sn)
-        } else {
-          return Promise.reject(Error('tunnel error'))
-        }
-      }).then((addConnectRes: any) => {
-        if (addConnectRes === tunnelNas) {
-          return Promise.resolve(tunnelNas)
-        } else if (addConnectRes.result === '0') {
-          return this.getPeerinfoFun(sn)
-        } else {
-          return Promise.reject(Error('tunnel error'))
-        }
-      })
-      .then(() => {
-        resolve(tunnelNas)
-      }).catch((error) => reject(error))
+    }).then((addConnectRes: any) => {
+      if (addConnectRes === tunnelNas) {
+        return Promise.resolve(tunnelNas)
+      } else if (addConnectRes.result === '0') {
+        return this.getPeerinfoFun(sn)
+      } else {
+        return Promise.reject(Error('tunnel error'))
+      }
     })
   }
 }
