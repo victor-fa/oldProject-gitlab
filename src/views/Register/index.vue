@@ -3,6 +3,7 @@
     <span class="title">注册</span>
     <basic-form
       :icon="icons.phone"
+      :maxLength=11
       placeholder="请输入手机号"
       v-model="phone"
       class="input-item"
@@ -11,6 +12,7 @@
     <basic-form
       :icon="icons.password"
       :isSecure="true"
+      :maxLength=16
       placeholder="设置登录密码"
       v-model="password"
       class="input-item"
@@ -19,6 +21,7 @@
     <basic-form
       :icon="icons.password"
       :isSecure="true"
+      :maxLength=16
       placeholder="再次确认密码"
       v-model="confirmPwd"
       class="input-item"

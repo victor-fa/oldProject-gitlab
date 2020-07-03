@@ -5,9 +5,10 @@
       <li class="account-form">
         <basic-form
           :icon="loginIcons.account"
+          :maxLength=20
+          :selectItems="dropdownItems"
           placeholder="用户名/手机号/邮箱"
           v-model="account"
-          :selectItems="dropdownItems"
           v-on:change="accountChangeAction"
           v-on:select="accountSelectAction"
           v-on:delete="accountDeleteAction"
@@ -16,6 +17,7 @@
       <li class="password-from">
         <basic-form
           :icon="loginIcons.password"
+          :maxLength=16
           placeholder="输入您的密码"
           v-model="password"
           isSecure="ture"

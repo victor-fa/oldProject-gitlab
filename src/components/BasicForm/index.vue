@@ -9,6 +9,7 @@
         :value="text"
         :allowClear="true"
         :suffix="suffixContent"
+        :max-length="maxLength"
         @change="handleChange($event.target.value)"
         @focus="handleFocus"
         @blur="handleBlur"
@@ -63,6 +64,9 @@ export default Vue.extend({
     },
     suffix: {
       default: ''
+    },
+    maxLength: {
+      default: 15
     },
     selectItems: Array
   },

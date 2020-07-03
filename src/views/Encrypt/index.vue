@@ -88,7 +88,7 @@ export default Vue.extend({
       setTimeout(() => { this.getEncryptList() }, 1000);
     })
   },
-  destroyed() {
+  destroyed () {
     if (this.alreadyLogin === true) { // 已登录情况下才需要登录
       this.logout()
     }

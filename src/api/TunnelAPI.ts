@@ -160,7 +160,7 @@ export default {
     })
   },
   // 单独暴露出去的重连接口
-  reConnection (sn: string, tunnelNas: NasInfo) {
+  reConnection (sn: string, tunnelNas: NasInfo): Promise<NasInfo> {
     return new Promise((resolve, reject) => {
       this.addConnectFun(sn).then((addConnectRes: any) => {
         if (addConnectRes === tunnelNas) {
@@ -171,7 +171,7 @@ export default {
           return Promise.reject(Error('tunnel error'))
         }
       }).then(() => {
-        resolve()
+        resolve(tunnelNas)
       }).catch((error) => reject(error))
     })
   },

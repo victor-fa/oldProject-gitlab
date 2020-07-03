@@ -5,45 +5,19 @@
       <ul class="content-wrapper">
         <li class="tip">重置密码</li>
         <li class="account-form">
-          <basic-form
-            :icon="loginIcons.account"
-            placeholder="请输入手机号"
-            v-model="account"
-          />
+          <basic-form :icon="loginIcons.account" :maxLength=11 placeholder="请输入手机号" v-model="account"/>
         </li>
         <li class="password-from">
-          <basic-form
-            :icon="loginIcons.password"
-            placeholder="请输入新密码"
-            v-model="password"
-            isSecure="ture"
-          />
+          <basic-form :icon="loginIcons.password" :maxLength=16 placeholder="请输入新密码" v-model="password" isSecure="ture"/>
         </li>
         <li class="password-from">
-          <basic-form
-            :icon="loginIcons.password"
-            placeholder="重新输入新密码"
-            v-model="rePassword"
-            isSecure="ture"
-          />
+          <basic-form :icon="loginIcons.password" :maxLength=16 placeholder="重新输入新密码" v-model="rePassword" isSecure="ture"/>
         </li>
         <li class="password-from" v-if="codeVisiable">
-          <basic-form
-            :icon="loginIcons.password"
-            placeholder="请输入短信验证码"
-            v-model="code"
-            v-on:pressEnter="resetAction"
-            :suffix="codeTips"
-          />
+          <basic-form :icon="loginIcons.password" :suffix="codeTips" :maxLength=6 placeholder="请输入短信验证码" v-model="code" v-on:pressEnter="resetAction"/>
         </li>
         <li class="login-button">
-          <a-button
-            block
-            @click="resetAction"
-            :loading="loading"
-          >
-            重置
-          </a-button>
+          <a-button block @click="resetAction" :loading="loading">{{submitText}}</a-button>
         </li>
       </ul>
     </div>
@@ -81,21 +55,19 @@ export default Vue.extend({
       codeCount: 60,
       timer: null as any,
       loading: false,
-			codeVisiable: false,
+      codeVisiable: false,
+      submitText: '重置',
 			header: {
 				color: '#666',
 				title: '',
 				resize: false,
 				mini: false,
 				close: () => {
-					_this.$electron.remote.getCurrentWindow().hide();
+          _this.closeAndClear()
 					return true;
 				}
 			}
     }
-  },
-  mounted () {
-    this.clearCache()
   },
 	watch: {
 		codeCount: {
@@ -106,18 +78,8 @@ export default Vue.extend({
         }
 			}
 		}
-	},
+  },
   methods: {
-    showForgetPass() {
-      const _this = this as any
-      _this.$ipc.send('system', 'forget-pass');
-    },
-    clearCache () {
-      // clear user cache
-      this.$store.dispatch('User/clearCacheUserInfo')
-      // clear nas cache
-      this.$store.dispatch('NasServer/clearCacheNas')
-    },
     resetAction () {
       if (!this.checkInputFrom()) return
       this.loading = true
@@ -128,19 +90,16 @@ export default Vue.extend({
 			}
       UserAPI.changePass(input).then(response => {
 				if (response.data.code !== 200) return
-				this.$message.success('修改成功，请牢记密码');
 				this.account = '';
 				this.password = '';
 				this.rePassword = '';
 				this.code = '';
         this.codeVisiable = false
         this.loading = false
-        // TODO: 关闭窗口
-        const _this = this as any
-        _this.$message.success('重置成功')
+        this.$message.success('重置成功，请牢记密码')
         setTimeout(() => {
-          _this.$electron.remote.getCurrentWindow().close();
-        }, 2000);
+          this.closeAndClear()
+        }, 1000);
       }).catch(error => {
         this.loading = false
         console.log(error)
@@ -160,7 +119,7 @@ export default Vue.extend({
       } else if (this.password !== this.rePassword) {
 				this.$message.warning('密码不一致，请检查');
 				return;
-			} else if (this.code === '') {
+			} else if (this.code === '' || this.submitText === '发送验证码') {  // 两种情况下都要发送验证码
 				UserAPI.smsCode(this.account, 2).then(response => {
 					this.loading = false;
 					if (response.data.code !== 200) return
@@ -182,7 +141,8 @@ export default Vue.extend({
     handlecCountDown () {
       this.timer = setInterval(() => {
         this.codeCount--
-        this.codeTips = `${this.codeCount}s`
+        this.codeTips = this.codeCount === 0 ? '' : `${this.codeCount}s`  // 倒计时到0s时不展示
+        this.submitText = this.codeCount === 0 ? '发送验证码' : '重置'  // 倒计时到0s时用于发送验证码
       }, 1000)
     },
     cacheUserInfo (response: LoginResponse) {
@@ -190,6 +150,10 @@ export default Vue.extend({
       this.$store.dispatch('User/updateAccessToken', response.accessToken)
       const account: Account = { account: this.account, password: this.password }
       this.$store.dispatch('User/addAccount', account)
+    },
+    closeAndClear () {
+      const _this = this as any
+      _this.$electron.remote.getCurrentWindow().close();
     }
   }
 })
@@ -226,6 +190,8 @@ export default Vue.extend({
     }
     .password-from {
       padding-top: 18px;
+      .send-msg {
+      }
     }
     .password-checkbox {
       height: 22px;
