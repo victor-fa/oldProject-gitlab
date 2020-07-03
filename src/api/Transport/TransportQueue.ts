@@ -74,22 +74,30 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     this.checkUploadQueue()
   }
   /**删除进行中的任务 */
-  deleteDoingTasks () {
-    this.queue.forEach(task => {
+  async deleteDoingTasks () {
+    for (let index = 0; index < this.queue.length; index++) {
+      const task = this.queue[index]
       if (task.status !== TaskStatus.finished) {
         task.cancel()
-        this.deleteTask(task)
+        await this.deleteTaskInDB(task)
       }
+    }
+    this.queue = this.queue.filter(task => {
+      return task.status === TaskStatus.finished
     })
     this.emit('taskQueueChange')
   }
   /**删除已完成的任务 */
-  deleteDoneTasks () {
-    this.queue.forEach(task => {
+  async deleteDoneTasks () {
+    for (let index = 0; index < this.queue.length; index++) {
+      const task = this.queue[index]
       if (task.status === TaskStatus.finished) {
         task.cancel()
-        this.deleteTask(task)
+        await this.deleteTaskInDB(task)
       }
+    }
+    this.queue = this.queue.filter(task => {
+      return task.status !== TaskStatus.finished
     })
     this.emit('taskQueueChange')
   }
@@ -297,7 +305,6 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     this.reloadTaskInDB(task)
     this.checkUploadQueue()
     this.emit('taskStatusChange', task.taskId)
-    this.emit('taskFinished')
     task.removeAllListeners()
   }
   protected handleTaskError (index: number, error: TaskError) {

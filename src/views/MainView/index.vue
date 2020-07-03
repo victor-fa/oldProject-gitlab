@@ -138,6 +138,7 @@ export default Vue.extend({
   computed: {
     ...mapGetters('Resource', ['clipboard']),
     ...mapGetters('User', ['user']),
+    ...mapGetters('NasServer', ['nasInfo']),
     alterStyle: function (): object {
       return {
         left: this.alterPosition.left,
@@ -417,6 +418,12 @@ export default Vue.extend({
     handleWinOnlineAction () {
       // this.showNetworkTip = true
       // this.reconnection = true
+      // const nas = this.nasInfo as NasInfo
+      // ClientAPI.reconnectionToNas(nas.sn, nas.mac).then(data => {
+
+      // }).catch(error => {
+      //   console.log(error)
+      // })
     },
     handleWinOfflineAction () {
       // this.showNetworkTip = true

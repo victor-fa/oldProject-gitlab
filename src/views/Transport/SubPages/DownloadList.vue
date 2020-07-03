@@ -13,13 +13,14 @@ import _ from 'lodash'
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
 import StringUtility from '../../../utils/StringUtility'
-import { TaskStatus, FileInfo, TaskError } from '../../../api/Transport/BaseTask'
+import BaseTask, { TaskStatus, FileInfo, TaskError } from '../../../api/Transport/BaseTask'
 import DownloadTask from '../../../api/Transport/DownloadTask'
-import { downloadQueue, encryptDownloadQueue } from '../../../api/Transport/TransportHelper'
+import { downloadQueue, encryptDownloadQueue, encryptUploadQueue } from '../../../api/Transport/TransportHelper'
 import { TransportModel, downloadCategorys, TransportStatus, TransportCategory } from '../MainPage/TransportModel'
 import TransportHandler from '../TransportHandler'
 import { EventBus } from '../../../utils/eventBus'
 import { EventName } from '../../../utils/processCenter'
+import TaskQueue from '../../../api/Transport/TransportQueue'
 
 export default Vue.extend({
   name: 'download-list',
@@ -79,14 +80,26 @@ export default Vue.extend({
     observerDownloadQueue () {
       downloadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)
       downloadQueue.addListener('taskQueueChange', this.handleTaskQueueChange)
+      encryptUploadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)
+      encryptUploadQueue.addListener('taskQueueChange', this.handleTaskQueueChange)
     },
     removeObserver () {
       downloadQueue.removeAllListeners()
+      encryptUploadQueue.removeAllListeners()
     },
     handleTaskStatusChange (taskId: number) {
       const task = downloadQueue.searchTask(taskId)
-      const index = TransportHandler.searchModel(this.dataArray, taskId)
-      if (task === undefined || index === undefined) return
+      if (task === undefined) return
+      this.reloadTaskStatus(task)
+    },
+    handleEncryptTaskStatusChange (taskId: number) {
+      const task = encryptDownloadQueue.searchTask(taskId)
+      if (task === undefined) return
+      this.reloadTaskStatus(task)
+    },
+    reloadTaskStatus<T extends BaseTask> (task: T) {
+      const index = TransportHandler.searchModel(this.dataArray, task.taskId)
+      if (index === undefined) return
       const newItem = TransportHandler.convertTask(task)
       this.dataArray.splice(index, 1, newItem)
       this.updateView()
@@ -109,15 +122,19 @@ export default Vue.extend({
       switch (command) {
         case 'pauseAll':
           downloadQueue.suspendAllTasks()
+          encryptDownloadQueue.suspendAllTasks()
           break;
         case 'resumeAll':
           downloadQueue.resumeAllTasks()
+          encryptDownloadQueue.resumeAllTasks()
           break;
         case 'cancelAll':
           downloadQueue.deleteDoingTasks()
+          encryptDownloadQueue.deleteDoingTasks()
           break;
         case 'clearAll':
           downloadQueue.deleteDoneTasks()
+          encryptDownloadQueue.deleteDoneTasks()
           break;
         default:
           break;
@@ -125,22 +142,29 @@ export default Vue.extend({
     },
     handleItemAction(command: string, index: number, ...args: any[]) {
       const model = this.showArray[index]
-      const task = downloadQueue.searchTask(model.id)
+      if (model.type === 'download') {
+        this.handleTaskOperate(command, downloadQueue, model.id)
+      } else {
+        this.handleTaskOperate(command, encryptDownloadQueue, model.id)
+      }
+    },
+    handleTaskOperate<T extends BaseTask> (command: string, queue: TaskQueue<T>, taskId: number) {
+      const task = queue.searchTask(taskId)
       if (task === undefined) return
       const { shell } = require('electron')
       switch (command) {
         case 'delete':
         case 'cancel':
-          downloadQueue.deleteTask(task)
+          queue.deleteTask(task)
           break
         case 'pause':
-          downloadQueue.suspendTask(task)
+          queue.suspendTask(task)
           break
         case 'continue':
-          downloadQueue.resumeTask(task)
+          queue.resumeTask(task)
           break
         case 'refresh':
-          downloadQueue.reloadTask(task)
+          queue.reloadTask(task)
           break
         case 'jump':
           EventBus.$emit(EventName.jump, { path: task.srcPath, uuid: task.uuid })

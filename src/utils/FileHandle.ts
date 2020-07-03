@@ -1,6 +1,6 @@
 // 文件句柄工具类,让文件操作支持Promise
 import fs from 'fs'
-import _, { Primitive } from 'lodash'
+import _ from 'lodash'
 import StringUtility from './StringUtility'
 
 const downloadingSuffix = '.nas_downloading'
@@ -32,7 +32,7 @@ export default {
       })
     })
   },
-  /**创建目录 */
+  /**新建目录 */
   newDirectory (dir: string): Promise<void> {
     return new Promise((resolve) => {
       const exist = fs.existsSync(dir)
@@ -40,6 +40,14 @@ export default {
         fs.mkdirSync(dir, { recursive: true })
       }
       resolve()
+    })
+  },
+  /**新建文件 */
+  newFile (path: string): Promise<void> {
+    return new Promise((resolve) => {
+      fs.writeFile(path, '', () => {
+        resolve()
+      })
     })
   },
   /**打开写文件句柄，(创建中间目录，文件重命名) */
@@ -105,15 +113,14 @@ export default {
   },
   /**移除文件 */
   removeFile (path: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const stats = fs.statSync(path)
-      if (stats.isDirectory()) {
-        fs.rmdirSync(path)
+    return new Promise(resolve => {
+      if (!fs.existsSync(path)) {
+        resolve
       } else {
-        const newPath = fs.existsSync(path) ? path : path + downloadingSuffix
-        fs.unlinkSync(newPath)
+        const stats = fs.statSync(path)
+        stats.isDirectory() ? fs.rmdirSync(path) : fs.unlinkSync(path)
+        resolve()
       }
-      resolve()
     })
   },
   /**重命名下载完成文件 */
@@ -169,5 +176,6 @@ enum FileHandleError {
 }
 
 export {
-  FileHandleError
+  FileHandleError,
+  downloadingSuffix
 }

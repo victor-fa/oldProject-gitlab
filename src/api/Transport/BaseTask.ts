@@ -14,6 +14,7 @@ export default class BaseTask extends EventEmitter {
   readonly destPath: string
   readonly uuid: string
   readonly maxChunkSize = 1 * 1024 * 1024 // 单次读取的最大字节数
+  type = '' // 任务类型，用于区分不同任务
   name: string // 文件名
   /**任务索引 */
   taskId: number = 0
@@ -72,7 +73,7 @@ interface FileInfo {
   completedSize: number,
   md5?: string,
   isDirectory?: boolean,
-  newCompleted?: boolean,
+  completed?: boolean,
   filter?: boolean
 }
 

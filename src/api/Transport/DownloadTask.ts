@@ -1,7 +1,7 @@
 // 下载任务类，支持断点下载
 import _ from 'lodash'
 import NasFileAPI from '../NasFileAPI'
-import FileHandle, { FileHandleError } from '@/utils/FileHandle'
+import FileHandle, { FileHandleError, downloadingSuffix } from '@/utils/FileHandle'
 import axios, { AxiosResponse, CancelTokenSource } from 'axios'
 import { DownloadParams, ResourceItem, ResourceType } from '../NasFileModel'
 import BaseTask, { TaskStatus, TaskError, TaskErrorCode, FileInfo } from './BaseTask'
@@ -22,6 +22,7 @@ export default class DownloadTask extends BaseTask {
     super(srcPath, destPath, uuid)
     const CancelToken = axios.CancelToken
     this.source = CancelToken.source()
+    this.type = 'download'
   }
   // public methods
   setResourceItem (item: ResourceItem) {
@@ -51,7 +52,9 @@ export default class DownloadTask extends BaseTask {
       this.source.cancel()
       this.source = undefined
     }
-    await FileHandle.removeFile(this.fullPath())
+    let filePath = this.fullPath()
+    if (this.status !== TaskStatus.finished) filePath += downloadingSuffix 
+    await FileHandle.removeFile(filePath)
     this.fileInfos = []
   }
   suspend () {
@@ -79,10 +82,10 @@ export default class DownloadTask extends BaseTask {
   // private methods
   // 获取待下载的文件
   private fetchFileInfos (item: ResourceItem): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
+      const fileInfo = this.convertFileInfo(item)
+      this.fileInfos = [fileInfo]
       if (item.type !== ResourceType.folder) {
-        const fileInfo = this.convertFileInfo(item)
-        this.fileInfos = [fileInfo]
         resolve()
       } else {
         this.recursionFetchTree(1, error => {
@@ -103,11 +106,15 @@ export default class DownloadTask extends BaseTask {
       } else {
         this.fileCount = _.get(response.data.data, 'total')
         const list = _.get(response.data.data, 'list') as ResourceItem[]
+        if (_.isEmpty(list)) {
+          completionHandler()
+          return
+        }
         const fileInfos = list.map(item => {
           return this.convertFileInfo(item)
         })
         this.fileInfos = page === 1 ? fileInfos : this.fileInfos.concat(fileInfos)
-        if (_.isEmpty(list) || this.fileInfos.length >= this.fileCount) {
+        if (this.fileInfos.length >= this.fileCount) {
           completionHandler()
         } else {
           this.recursionFetchTree(page + 1, completionHandler)
@@ -183,12 +190,12 @@ export default class DownloadTask extends BaseTask {
   // 创建目录
   private createDirectory (fileInfo: FileInfo) {
     FileHandle.newDirectory(fileInfo.destPath).then(() => {
-      fileInfo.newCompleted = true
+      fileInfo.completed = true
       this.name = fileInfo.relativePath
       this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.downloadFile()
     }).catch(_ => {
-      fileInfo.newCompleted = true
+      fileInfo.completed = true
       this.downloadFile()
     })
   }
@@ -223,11 +230,9 @@ export default class DownloadTask extends BaseTask {
   private getNextFileInfo () {
     for (let index = 0; index < this.fileInfos!.length; index++) {
       const item = this.fileInfos[index]
-      if (item.isDirectory === true) {
-        if (item.newCompleted !== true) return item
-      } else {
-        if (item.completedSize < item.totalSize) return item
-      }
+      if (item.filter === true) continue
+      if (item.completed === true) continue
+      return item
     }
     return null
   }
@@ -240,7 +245,9 @@ export default class DownloadTask extends BaseTask {
         } else {
           this.completedBytes += bytes
           this.emit('progress', this.taskId)
-          fileInfo.completedSize >= fileInfo.totalSize && resolve(fd)
+          const isCompleted = fileInfo.completedSize >= fileInfo.totalSize || fileInfo.totalSize === 0
+          fileInfo.completed = isCompleted
+          isCompleted && resolve(fd)
         }
       })
     })
@@ -255,8 +262,11 @@ export default class DownloadTask extends BaseTask {
       }
       const result = this.parseResponse(response)
       if (result === null) {
-        const error = new TaskError(TaskErrorCode.serverError, 'response headers is null')
-        return Promise.reject(error)
+        if (this.resourceItem!.type === ResourceType.folder) {
+          return FileHandle.newDirectory(fileInfo.destPath)
+        } else {
+          return FileHandle.newFile(fileInfo.destPath)
+        }
       }
       fileInfo.completedSize += result.bytes
       chunkLength = result.bytes
@@ -267,7 +277,7 @@ export default class DownloadTask extends BaseTask {
       if (fileInfo.completedSize < fileInfo.totalSize) this.downloadFileChunk(fd, fileInfo, completionHandler)
     }).catch(error => { // catch error
       if (this.status !== TaskStatus.progress || axios.isCancel(error)) return
-      if (error === FileHandleError.writeError) {
+      if (_.isNumber(error)) {
         const error = new TaskError(TaskErrorCode.writeDataError)
         completionHandler(0, error)
       } else {

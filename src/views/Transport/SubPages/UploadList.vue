@@ -13,13 +13,14 @@ import _ from 'lodash'
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
 import { uploadQueue, encryptUploadQueue } from '../../../api/Transport/TransportHelper'
-import { TaskStatus, TaskError, FileInfo } from '../../../api/Transport/BaseTask'
+import BaseTask, { TaskStatus, TaskError, FileInfo } from '../../../api/Transport/BaseTask'
 import UploadTask from '../../../api/Transport/UploadTask'
 import StringUtility from '../../../utils/StringUtility'
 import TransportHandler from '../TransportHandler'
 import { TransportModel, uploadCategorys, TransportStatus } from '../MainPage/TransportModel'
 import { EventBus } from '../../../utils/eventBus'
 import { EventName } from '../../../utils/processCenter'
+import TaskQueue from '../../../api/Transport/TransportQueue'
 
 export default Vue.extend({
   name: 'upload-list',
@@ -77,14 +78,26 @@ export default Vue.extend({
       this.removeObserver()
       uploadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)
       uploadQueue.addListener('taskQueueChange', this.handleTaskQueueChange)
+      encryptUploadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)
+      encryptUploadQueue.addListener('taskQueueChange', this.handleTaskQueueChange)
     },
     removeObserver () {
       uploadQueue.removeAllListeners()
+      encryptUploadQueue.removeAllListeners()
     },
     handleTaskStatusChange (taskId: number) {
       const task = uploadQueue.searchTask(taskId)
-      const index = TransportHandler.searchModel(this.dataArray, taskId)
-      if (task === undefined || index === undefined) return
+      if (task === undefined) return
+      this.reloadListItem(task)
+    },
+    handleEncryptTaskStatusChange (taskId: number) {
+      const task = encryptUploadQueue.searchTask(taskId)
+      if (task === undefined) return
+      this.reloadListItem(task)
+    },
+    reloadListItem<T extends BaseTask> (task: T) {
+      const index = TransportHandler.searchModel(this.dataArray, task.taskId)
+      if (index === undefined) return
       const newItem = TransportHandler.convertTask(task)
       this.dataArray.splice(index, 1, newItem)
       this.updateView()
@@ -107,38 +120,49 @@ export default Vue.extend({
       switch (command) {
         case 'pauseAll':
           uploadQueue.suspendAllTasks()
+          encryptUploadQueue.suspendAllTasks()
           break;
         case 'resumeAll':
           uploadQueue.resumeAllTasks()
+          encryptUploadQueue.resumeAllTasks()
           break;
         case 'cancelAll':
           uploadQueue.deleteDoingTasks()
+          encryptUploadQueue.deleteDoingTasks()
           break;
         case 'clearAll':
           uploadQueue.deleteDoneTasks()
+          encryptUploadQueue.deleteDoneTasks()
           break;
         default:
           break;
       }
     },
-    handleItemAction(command: string, index: number, ...args: any[]) {
+    handleItemAction (command: string, index: number, ...args: any[]) {
       const model = this.showArray[index]
-      const task = uploadQueue.searchTask(model.id)
+      if (model.type === 'upload') {
+        this.handleTaskOperate(command, uploadQueue, model.id)
+      } else {
+        this.handleTaskOperate(command, encryptUploadQueue, model.id)
+      }
+    },
+    handleTaskOperate<T extends BaseTask> (command: string, queue: TaskQueue<T>, taskId: number) {
+      const task = queue.searchTask(taskId)
       if (task === undefined) return
       const { shell } = require('electron')
       switch (command) {
         case 'delete':
         case 'cancel':
-          uploadQueue.deleteTask(task)
+          queue.deleteTask(task)
           break
         case 'pause':
-          uploadQueue.suspendTask(task)
+          queue.suspendTask(task)
           break
         case 'continue':
-          uploadQueue.resumeTask(task)
+          queue.resumeTask(task)
           break
         case 'refresh':
-          uploadQueue.reloadTask(task)
+          queue.reloadTask(task)
           break
         case 'jump':
           EventBus.$emit(EventName.jump, { path: task.fullPath(), uuid: task.uuid })

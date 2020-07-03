@@ -115,18 +115,24 @@ export default {
       })
     })
   },
-  reconnectionToNas (sn: string, mac: string): Promise<void> {
+  /**重新连接
+   * notes: 重连没有超时限制
+   */
+  reconnectionToNas (sn: string, mac: string): Promise<NasInfo> {
     return new Promise(resolve => {
-      // boardcast
+      this.closeBoardcast()
+      this.closeP2PTunnel()
       this.boardcastInLan(sn, mac, data => {
         this.closeP2PTunnel()
         this.closeBoardcast()
-        resolve()
+        resolve(data)
       }, error => {
         console.log(error)
         this.closeBoardcast()
       })
       // TODO: P2P重新连接
+      // 1. 进程存在， 调用control接口等待重连
+      // 2. 进程不存在， 调用重新连接过程
     })
   },
   boardcastInLan (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {

@@ -7,6 +7,11 @@ import { FileInfo } from './BaseTask'
 import DownloadTask from './DownloadTask'
 
 export default class EncryptDownloadTask extends DownloadTask {
+  constructor (srcPath: string, destPath: string, uuid: string) {
+    super(srcPath, destPath, uuid)
+    this.type = 'encryptDownload'
+  }
+
   downloadChunkData (fileInfo: FileInfo, source?: CancelTokenSource) {
     const params = this.generateDownloadParams(fileInfo)
     return NasFileAPI.encryptDownloadData(params, source)

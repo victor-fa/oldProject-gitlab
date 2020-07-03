@@ -24,13 +24,14 @@ export default Vue.extend({
   data () {
     return {
       visible: false,
-      authCode: 'UGREEN',
+      authCode: '',
       showAlter: false
     }
   },
   methods: {
     show () {
       this.visible = true
+      this.authCode = ''
       this.$nextTick(() => {
         this.showAlter = true
       })

@@ -25,6 +25,7 @@ export default class UploadTask extends BaseTask {
     super(srcPath, destPath, uuid)
     this.directory = path.dirname(srcPath)
     this.source = CancelToken.source()
+    this.type = 'upload'
   }
   // public methods
   async start () {
@@ -83,7 +84,7 @@ export default class UploadTask extends BaseTask {
   // 解析文件源路径
   private async parseSourcePath (path: string) {
     await FileHandle.statFile(path).then(stats => {
-      return this.getUploadFileInfos(stats)
+      return this.generateUploadFileInfos(stats)
     }).then(fileInfos => {
       this.fileInfos = _.cloneDeep(fileInfos)
       tmpFileInfos = []
@@ -92,7 +93,7 @@ export default class UploadTask extends BaseTask {
     })
   }
   // 获取需要上传的文件对象
-  private getUploadFileInfos (stats: fs.Stats): Promise<FileInfo[]> {
+  private generateUploadFileInfos (stats: fs.Stats): Promise<FileInfo[]> {
     return new Promise((resolve, reject) => {
       if (stats.isFile()) {
         this.convertFileStats(this.srcPath, stats).then(fileInfo => {
@@ -115,24 +116,28 @@ export default class UploadTask extends BaseTask {
       const stats = fs.statSync(directory)
       await this.convertFileStats(directory, stats).then(fileInfo => {
         tmpFileInfos.push(fileInfo)
-        // this.uuid !== ''? tmpFileInfos.push(fileInfo) : null
       })
-      fs.readdirSync(directory).forEach(async filename => {
-        const path = StringUtility.convertR2L(directory + '/' + filename)
-        const stats = fs.statSync(path)
-        if (stats.isDirectory()) {
-          await this.deepTraverseDirectory(path).then(fileInfos => {
-            resolve(tmpFileInfos.concat(fileInfos))
-          })
-        } else {
-          await this.convertFileStats(path, stats).then(fileInfo => {
-            tmpFileInfos.push(fileInfo)
-            resolve(tmpFileInfos)
-          }).catch(error => {
-            reject(error)
-          })
-        }
-      })
+      const files = fs.readdirSync(directory)
+      if (_.isEmpty(files)) {
+        resolve(tmpFileInfos)
+      } else {
+        files.forEach(async filename => {
+          const path = StringUtility.convertR2L(directory + '/' + filename)
+          const stats = fs.statSync(path)
+          if (stats.isDirectory()) {
+            await this.deepTraverseDirectory(path).then(fileInfos => {
+              resolve(tmpFileInfos.concat(fileInfos))
+            })
+          } else {
+            await this.convertFileStats(path, stats).then(fileInfo => {
+              tmpFileInfos.push(fileInfo)
+              resolve(tmpFileInfos)
+            }).catch(error => {
+              reject(error)
+            })
+          }
+        })
+      }
     })
   }
   // 开启计算速度定时器
@@ -173,7 +178,7 @@ export default class UploadTask extends BaseTask {
     // check status
     if (this.status !== TaskStatus.progress) return
     // check upload file
-    const fileInfo = this.getUploadFileInfo()
+    const fileInfo = this.getNextFileInfo()
     if (fileInfo === null) {
       this.status = TaskStatus.finished
       this.name = path.basename(this.srcPath)
@@ -181,16 +186,16 @@ export default class UploadTask extends BaseTask {
       this.clearSpeedTimer()
       return
     }
-    if (fileInfo.newCompleted !== true) {
-      fileInfo.newCompleted = true
-      this.uploadFile()
-      return
-    }
-    if (fileInfo.isDirectory === true || fileInfo.totalSize <= 0) {
+    if (fileInfo.isDirectory === true) {
       this.createFolder(fileInfo)
     } else {
       this.filterFilesInfo(fileInfo).then(isFilter => {
-        isFilter ? this.uploadFile() : this.startUpload(fileInfo)
+        if (isFilter) {
+          fileInfo.filter = true
+          this.uploadFile()
+        } else {
+          this.startUpload(fileInfo)
+        }
       })
     }    
   }
@@ -199,12 +204,12 @@ export default class UploadTask extends BaseTask {
     NasFileAPI.newFolder(fileInfo.destPath, this.uuid).then(response => {
       console.log(response)
       if (response.data.code !== 200) return
-      fileInfo.newCompleted = true
+      fileInfo.completed = true
       this.name = fileInfo.relativePath
       this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.uploadFile()
     }).catch(_ => {
-      fileInfo.newCompleted = true
+      fileInfo.completed = true
       this.uploadFile()
     })
   }
@@ -231,15 +236,12 @@ export default class UploadTask extends BaseTask {
     })
   }
   // 获取待上传的文件对象
-  private getUploadFileInfo () {
+  private getNextFileInfo () {
     for (let index = 0; index < this.fileInfos.length; index++) {
       const item = this.fileInfos[index]
-      // if (item.filter !== true) return item
-      if (item.isDirectory === true) {
-        if (item.newCompleted !== true) return item
-      } else {
-        if (item.completedSize < item.totalSize) return item
-      }
+      if (item.filter === true) continue
+      if (item.completed === true) continue
+      return item
     }
     return null
   }
@@ -253,6 +255,7 @@ export default class UploadTask extends BaseTask {
           this.completedBytes += bytes
           this.emit('progress', this.taskId)
           const isCompleted = file.completedSize >= file.totalSize
+          file.completed = isCompleted
           isCompleted && resolve(fd)
         }
       })
@@ -286,11 +289,12 @@ export default class UploadTask extends BaseTask {
   }
   // 生成上传参数
   private generateUploadParams (fileInfo: FileInfo, chunkLength: number): UploadParams {
+    const end = chunkLength === 0 ? chunkLength : fileInfo.completedSize + chunkLength - 1
     return {
+      end,
       uuid: this.uuid,
       path: fileInfo.destPath,
       start: fileInfo.completedSize,
-      end: fileInfo.completedSize + chunkLength - 1,
       size: fileInfo.totalSize
     }
   }

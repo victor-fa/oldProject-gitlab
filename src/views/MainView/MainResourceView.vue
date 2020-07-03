@@ -29,7 +29,7 @@ import UploadTask from '../../api/Transport/UploadTask'
 import { resourceContextMenu, listContextMenu } from '../../components/OperateListAlter/operateList'
 import StringUtility from '../../utils/StringUtility'
 import processCenter, { EventName } from '../../utils/processCenter'
-import { TaskError } from '../../api/Transport/BaseTask'
+import { TaskError, TaskStatus } from '../../api/Transport/BaseTask'
 import { uploadQueue } from '../../api/Transport/TransportHelper'
 import RouterUtility from '../../utils/RouterUtility'
 
@@ -48,7 +48,8 @@ export default Vue.extend({
       dataArray: [] as ResourceItem[],
       order: OrderType.byNameDesc, // 当前选择的排序规则
       itemMenu: resourceContextMenu, // item的右键菜单
-      listMenu: listContextMenu // list的右键菜单
+      listMenu: listContextMenu, // list的右键菜单
+      delayTimer: null as NodeJS.Timer | null
     }
   },
   computed: {
@@ -78,8 +79,7 @@ export default Vue.extend({
     this.updateView()
   },
   destroyed () {
-    uploadQueue.off('taskFinished', this.handleTaskFinished)
-    uploadQueue.off('error', this.handleTaskError)
+    uploadQueue.off('taskStatusChange', this.handleTaskStatusChange)
   },
   methods: {
     updateView () {
@@ -136,22 +136,25 @@ export default Vue.extend({
     },
     handleUploadAction (filePaths: string[]) {
       filePaths.forEach(path => {
-        console.log(path);
         const task = new UploadTask(path, this.path, this.uuid)
         task.matchTaskIcon()
         uploadQueue.addTask(task)
-        uploadQueue.once('taskFinished', this.handleTaskFinished)
-        uploadQueue.once('error', this.handleTaskError)
+        uploadQueue.on('taskStatusChange', this.handleTaskStatusChange)
         this.$store.dispatch('Resource/increaseTask')
       })
     },
-    handleTaskFinished () {
-      setTimeout(() => {
-        this.handleRefreshAction()
-      }, 1000)
-    },
-    handleTaskError (taskId: number, error: TaskError) {
-      this.$message.error(error.desc)
+    handleTaskStatusChange (taskId: number) {
+      const task = uploadQueue.searchTask(taskId)
+      if (task === undefined) return
+      if (task.status === TaskStatus.finished) {
+        if (this.delayTimer !== null) clearTimeout(this.delayTimer)
+        this.delayTimer = setTimeout(() => {
+          this.handleRefreshAction()
+          this.delayTimer = null
+        }, 1000)
+      } else if (task.status === TaskStatus.error) {
+        this.$message.error(task.error!.desc)
+      }
     },
     handleNewFolderAction () {
       const newName = ResourceHandler.calculateNewFolderName(this.dataArray)

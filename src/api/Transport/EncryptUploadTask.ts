@@ -13,6 +13,11 @@ import store from '@/store'
 import { User } from '@/api/UserModel'
 
 export default class EncryptUploadTask extends UploadTask {
+  constructor (srcPath: string, destPath: string, uuid: string) {
+    super(srcPath, destPath, uuid)
+    this.type = 'encryptUpload'
+  }
+
   convertFileStats (path: string, stats: fs.Stats): Promise<FileInfo> {
     return new Promise(resolve => {
       let fileInfo: FileInfo | null = null
@@ -56,10 +61,11 @@ export default class EncryptUploadTask extends UploadTask {
     if (cryptoJson !== null) {
       token = JSON.parse(cryptoJson) as CryptoInfo
     }
+    const end = chunkLength === 0 ? chunkLength : fileInfo.completedSize + chunkLength - 1
     return {
+      end,
       path: `/.ugreen_nas/${user.ugreenNo}/.safe/${fileInfo.name}`,
       start: fileInfo.completedSize,
-      end: fileInfo.completedSize + chunkLength - 1,
       size: fileInfo.totalSize,
       md5: fileInfo.md5,
       crypto_token: token.crypto_token

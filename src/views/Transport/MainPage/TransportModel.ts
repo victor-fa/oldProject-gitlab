@@ -152,7 +152,8 @@ interface TransportModel {
   name: string, // 原路径
   controlItems: TransportOpItem[], // 操作按钮集合
   path: string,
-  uuid: string
+  uuid: string,
+  type: string
 }
 
 export {

@@ -22,7 +22,8 @@ export default {
       icon: ResourceHandler.searchResourceIcon(model.file_type, model.curr_src_path),
       controlItems: items,
       path: model.curr_src_path,
-      uuid: model.curr_src_uuid
+      uuid: model.curr_src_uuid,
+      type: 'remote'
     }
   },
   convertRemoteTaskStatus (status: RemoteTaskStatus): TaskStatus {
@@ -62,7 +63,8 @@ export default {
       icon: ResourceHandler.searchResourceIcon(task.file_type, task.path),
       controlItems: items,
       path: task.path,
-      uuid: ''
+      uuid: '',
+      type: 'offline'
     }
   },
   converOfflineStatus (status: OfflineTaskStatus) {
@@ -132,7 +134,8 @@ export default {
       name: task.name,
       controlItems: items,
       path: task.srcPath,
-      uuid: task.uuid
+      uuid: task.uuid,
+      type: task.type
     }
     return model
   },

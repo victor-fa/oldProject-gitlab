@@ -50,11 +50,12 @@ export default class BackupUploadTask extends UploadTask {
   }
   /** 参数整理 */
   backupUploadParams (fileInfo: FileInfo, chunkLength: number): UploadParams {
+    const end = chunkLength === 0 ? chunkLength : fileInfo.completedSize + chunkLength - 1
     const hostname = require("os").hostname()
     return {
+      end,
       path: '/' + fileInfo.destPath,
       start: fileInfo.completedSize,
-      end: fileInfo.completedSize + chunkLength - 1,
       size: fileInfo.totalSize,
       md5: fileInfo.md5,
       alias: `${hostname}的${process.platform === 'win32' ? 'PC' : 'Mac'}`,

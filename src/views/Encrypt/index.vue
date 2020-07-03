@@ -61,7 +61,7 @@ import ResourceHandler from '../MainView/ResourceHandler'
 import NasFileAPI, { TaskMode, maxSize } from '@/api/NasFileAPI'
 import EncryptUploadTask from '@/api/Transport/EncryptUploadTask'
 import EncryptDownloadTask from '@/api/Transport/EncryptDownloadTask'
-import { TaskError } from '@/api/Transport/BaseTask'
+import { TaskError, TaskStatus } from '@/api/Transport/BaseTask'
 import { encryptUploadQueue, encryptDownloadQueue } from '@/api/Transport/TransportHelper'
 import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
 import { User, BasicResponse } from '@/api/UserModel'
@@ -92,8 +92,7 @@ export default Vue.extend({
     if (this.alreadyLogin === true) { // 已登录情况下才需要登录
       this.logout()
     }
-    encryptUploadQueue.off('taskFinished', this.handleTaskFinished)
-    encryptUploadQueue.off('error', this.handleTaskError)
+    encryptUploadQueue.off('taskStatusChange', this.handleTaskStatusChange)
   },
   data () {
     return {
@@ -127,7 +126,8 @@ export default Vue.extend({
       encryptContextMenu, // list右键菜单选项
       encryptMisTokenContextMenu, // list未登录时，右键菜单选项
       encryptResourceContextMenu, // item右键菜单选项
-      showSelectModal: false // 控制路径选择弹窗的显示与隐藏
+      showSelectModal: false, // 控制路径选择弹窗的显示与隐藏
+      delayTimer: null as NodeJS.Timer | null
     }
   },
   methods: {
@@ -419,19 +419,24 @@ export default Vue.extend({
     handleUploadAction (filePaths: string[]) {
       filePaths.forEach(path => {
         const task = new EncryptUploadTask(path, path, '')
+        task.matchTaskIcon()
         encryptUploadQueue.addTask(task)
-        encryptUploadQueue.once('taskFinished', this.handleTaskFinished)
-        encryptUploadQueue.once('error', this.handleTaskError)
+        encryptUploadQueue.on('taskStatusChange', this.handleTaskStatusChange)
         this.$store.dispatch('Resource/increaseTask')
       })
     },
-    handleTaskFinished () {
-      setTimeout(() => {
-        this.handleRefreshAction()
-      }, 1000)
-    },
-    handleTaskError (taskId: number, error: TaskError) {
-      this.$message.error(error.desc)
+    handleTaskStatusChange (taskId: number) {
+      const task = encryptUploadQueue.searchTask(taskId)
+      if (task === undefined) return
+      if (task.status === TaskStatus.finished) {
+        if (this.delayTimer !== null) clearTimeout(this.delayTimer)
+        this.delayTimer = setTimeout(() => {
+          this.handleRefreshAction()
+          this.delayTimer = null
+        }, 1000)
+      } else if (task.status === TaskStatus.error) {
+        this.$message.error(task.error!.desc)
+      }
     },
     handleSelectModalDismiss (path?: string, uuid?: string) {
       this.showSelectModal = false
