@@ -16,14 +16,11 @@ const tunnelServer = axios.create({
 const ipcRenderer = require('electron').ipcRenderer
 const serverIP = '127.0.0.1:9999'
 const clientIP = '127.0.0.1:9001'
-let status = TunnelStatus.continue
+let status = TunnelStatus.stop  // 默认关闭
 
 export default {
   getClientIP () {
     return clientIP
-  },
-  getTunnelStatus () {
-    return status
   },
   changeStatusToStop () {
     status = TunnelStatus.stop
@@ -34,10 +31,12 @@ export default {
   },
   // 关闭P2P隧道连接
   deleteConnect (): Promise<AxiosResponse<any>> {
+    status = TunnelStatus.stop
     return tunnelServer.get(`/cnntlcldelete?clientaddr=${this.getClientIP()}`)
   },
   // 关闭隧道进程
   exitTunnel () {
+    status = TunnelStatus.stop
     if (process.platform === 'win32') {
       // TODO: 区分win10、win7 win7【tskill pgTunnelStatic.exe】
       exec('taskkill /F /IM ugreenTunnel.exe');
@@ -98,6 +97,7 @@ export default {
       this.deleteConnect().then(response => {
         if (response.status !== 200) return
         console.log(response.data);
+        status = TunnelStatus.stop
         const resJson:any = JSON.parse(response.data.substring(14, response.data.length))
         resolve(resJson)
       }).catch(error => {
@@ -159,8 +159,22 @@ export default {
       reject(error)
     })
   },
+  // 监听主进程返回的隧道启动结果
+  watchTunnelLaunch () {
+    ipcRenderer.on('tunnel', (event, arg) => {
+      arg === 1 ? status = TunnelStatus.continue : null // 仅当隧道进程启动成功时处理为成功
+    })
+  },
   // 单独暴露出去的重连接口
   reConnection (sn: string, tunnelNas: NasInfo): Promise<NasInfo> {
+    const timer = setInterval(() => {
+      if (status === TunnelStatus.stop) {
+        ipcRenderer.send('system', 'awaken-tunnel');
+        this.watchTunnelLaunch()  // 监听主线程返回的结果
+      } else {
+        timer && clearInterval(timer);
+      }
+    }, 500);
     return new Promise((resolve, reject) => {
       this.addConnectFun(sn).then((addConnectRes: any) => {
         if (addConnectRes === tunnelNas) {
@@ -177,7 +191,14 @@ export default {
   },
   // 单独暴露出去给ClientAPI使用
   initP2PTunnel (sn: string, tunnelNas: NasInfo) {
-    ipcRenderer.send('system', 'awaken-tunnel');
+    const timer = setInterval(() => {
+      if (status === TunnelStatus.stop) {
+        ipcRenderer.send('system', 'awaken-tunnel');
+        this.watchTunnelLaunch()  // 监听主线程返回的结果
+      } else {
+        timer && clearInterval(timer);
+      }
+    }, 500);
     return new Promise((resolve, reject) => {
       this.tunnelCheck().then(() => {
         return this.queryConnectInfo(sn)
@@ -199,12 +220,8 @@ export default {
         }
       })
       .then(() => {
-        resolve()
+        resolve(tunnelNas)
       }).catch((error) => reject(error))
     })
   }
-}
-
-export {
-  TunnelStatus
 }

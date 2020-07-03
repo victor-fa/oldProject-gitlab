@@ -28,7 +28,6 @@ let win: BrowserWindow | null,
 let PlayerIcon = path.join(__filename, 'start_icon');
 let NextBtn = nativeImage.createFromPath(path.join(PlayerIcon, 'start_icon.png'));
 let PlayBtn = nativeImage.createFromPath(path.join(PlayerIcon, 'start_icon.png'));
-let PauseBtn = nativeImage.createFromPath(path.join(PlayerIcon, 'start_icon.png'));
 let PrevBtn = nativeImage.createFromPath(path.join(PlayerIcon, 'start_icon.png'));
 let MusicButtons = [
 	{
@@ -436,7 +435,8 @@ function bindIpc() {
 				AboutWindow.webContents.downloadURL(data);
 				break;
 			case 'awaken-tunnel':
-				awakeTunnel();
+				const res = awakeTunnel();
+				event.sender.send('tunnel', res)	// 发送结果给渲染进程
 				break;
 			case 'auto-launch':
 				app.setLoginItemSettings({
@@ -476,18 +476,17 @@ function bindIpc() {
 function awakeTunnel () {
   if (process.env.WEBPACK_DEV_SERVER_URL) {	// 开发环境
 		if (process.platform === 'win32') {
-			const result = spawn(path.join(__filename, '../../public/tunnel/win/ugreenTunnel.exe'));
-			// if (result.exitCode === null) {
-			// }
+			const result = spawn(path.join(__filename, '../../public/tunnel/win/ugreenTunnel.exe')) as any;
+			return result.exitCode === null ? 1 : 0
 		} else {
 			const cwdPath = path.join(__filename, '../../public/tunnel/mac')
 			const filePath = path.join(cwdPath, 'pgTunnelStatic')
 			const child = spawn(filePath, { shell: true, cwd: cwdPath })
-			// child.stdout.pipe(process.stdout)
 		}
   } else {	// 生产环境
 		if (process.platform === 'win32') {
-			spawn(path.join(__filename, '../tunnel/win/ugreenTunnel.exe').replace(new RegExp("\\\\", "g"), '/'));
+			const result = spawn(path.join(__filename, '../tunnel/win/ugreenTunnel.exe').replace(new RegExp("\\\\", "g"), '/')) as any;
+			return result.exitCode === null ? 1 : 0
 		} else {
 			const cwdPath = path.join(__filename, '../tunnel/mac')
 			const filePath = path.join(cwdPath, 'pgTunnelStatic')
