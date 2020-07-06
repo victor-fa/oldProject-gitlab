@@ -23,7 +23,7 @@ export default class UploadTask extends BaseTask {
 
   constructor(srcPath: string, destPath: string, uuid: string) {
     super(srcPath, destPath, uuid)
-    this.directory = path.dirname(srcPath)
+    this.directory = StringUtility.formatDirectory(srcPath)
     this.source = CancelToken.source()
     this.type = 'upload'
   }

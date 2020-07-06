@@ -82,7 +82,7 @@ export default class TransportHelper {
     backupUploadQueue.readDBTasks(db)
     encryptUploadQueue.readDBTasks(db)
     downloadQueue.readDBTasks(db)
-    encryptUploadQueue.readDBTasks(db)
+    encryptDownloadQueue.readDBTasks(db)
   }
   // 打开数据库
   private static openTransportDB (): Promise<Event> {

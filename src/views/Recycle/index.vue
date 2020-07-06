@@ -105,6 +105,7 @@ export default Vue.extend({
         console.log(response)
         this.loading = false
         if (response.data.code !== 200) return
+        this.dataArray = []
         this.$message.info('回收站已清空')
       }).catch(error => {
         console.log(error)

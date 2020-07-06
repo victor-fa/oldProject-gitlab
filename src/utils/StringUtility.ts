@@ -34,6 +34,11 @@ export default {
     const name = _.last(path.split('/'))
     return name === undefined ? '' : name
   },
+  // 格式化目录
+  formatDirectory (path: string) {
+    const index = path.lastIndexOf('/')
+    return path.substring(0, index)
+  },
   // 文件后缀
   formatSuffix (path: string) {
     const name = _.last(path.split('.'))

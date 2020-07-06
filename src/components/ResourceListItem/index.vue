@@ -139,6 +139,9 @@ export default Vue.extend({
     model: function (newValue: ResourceItem) {
       this.inputName = newValue.name
       this.showIcon = this.calculateShowIcon()
+    },
+    arrangeWay: function (newValue: ArrangeWay) {
+      this.showIcon = this.calculateShowIcon()
     }
   },
   computed: {

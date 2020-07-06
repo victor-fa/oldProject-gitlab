@@ -58,7 +58,6 @@ export default Vue.extend({
       showItems: items,
       showChildren: false, // 默认children不展示
       isChildPosLeft: false // 二级菜单是否展示在左侧
-
     }
   },
   watch: {
