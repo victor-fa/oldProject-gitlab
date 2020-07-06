@@ -10,6 +10,7 @@ import TunnelAPI from './TunnelAPI'
 import crypto from 'crypto'
 
 const userModulePath = '/v1/user'
+const selfCheck = '/v1/selfcheck'
 
 let client: dgram.Socket | null = null
 const CancelToken = axios.CancelToken
@@ -18,6 +19,9 @@ let cancel: Canceler | null = null
 export default {
   setBaseUrl (url: string) {
     nasServer.defaults.baseURL = url
+  },
+  heartbeat (): Promise<AxiosResponse<BasicResponse>> {
+    return nasServer.get(selfCheck + '/heartbeat')
   },
   // refresh_token过期时调用
   login (user: User, secretKey: string, tunnelIP?: string): Promise<AxiosResponse<BasicResponse>> {
@@ -92,26 +96,24 @@ export default {
   searchNas (sn: string, mac: string): Promise<NasInfo> {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
-        this.closeBoardcast()
-        this.closeP2PTunnel()
+        this.closeConnection()
         reject(Error('search time out'))
       }, 10000)
       this.boardcastInLan(sn, mac, data => {
         clearTimeout(timer)
-        this.closeP2PTunnel()
-        this.closeBoardcast()
+        this.closeConnection()
         resolve(data)
       }, error => {
         console.log(error)
         this.closeBoardcast()
       })
-      this.initP2PTunnel(sn, mac, data => {
+      TunnelAPI.initP2PTunnel(sn, mac).then(data => {
         clearTimeout(timer)
         this.closeBoardcast()
         resolve(data)
-      }, error => {
+      }).catch(error => {
         console.log(error)
-        this.closeP2PTunnel()
+        TunnelAPI.deleteConnect()
       })
     })
   },
@@ -119,20 +121,28 @@ export default {
    * notes: 重连没有超时限制
    */
   reconnectionToNas (sn: string, mac: string): Promise<NasInfo> {
-    return new Promise(resolve => {
-      this.closeBoardcast()
-      this.closeP2PTunnel()
+    return new Promise((resolve, reject) => {
+      this.closeConnection()
+      const timer = setTimeout(() => {
+        this.closeConnection()
+        reject(Error('reconnection time out'))
+      }, 10000)
       this.boardcastInLan(sn, mac, data => {
-        this.closeP2PTunnel()
-        this.closeBoardcast()
+        this.closeConnection()
+        clearTimeout(timer)
         resolve(data)
       }, error => {
         console.log(error)
         this.closeBoardcast()
       })
-      // TODO: P2P重新连接
-      // 1. 进程存在， 调用control接口等待重连
-      // 2. 进程不存在， 调用重新连接过程
+      TunnelAPI.reConnection(sn, mac).then(nas => {
+        this.closeConnection()
+        clearTimeout(timer)
+        resolve(nas)
+      }).catch(error => {
+        console.log(error)
+        this.closeConnection()
+      })
     })
   },
   boardcastInLan (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
@@ -179,28 +189,9 @@ export default {
       client = null
     }
   },
-  /**启动P2P进程 */
-  initP2PTunnel (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
-    const tunnelNas = {
-      sn,
-      mac,
-      ip: '127.0.0.1',
-      port: 9001,
-      ssl_port: '000',
-      softversion: 'V1.0.1'
-    } as NasInfo
-    TunnelAPI.initP2PTunnel(sn, tunnelNas).then(() => {
-      success(tunnelNas)
-    }).catch(error => {
-      failure('tunnel error')
-    })
-  },
-  closeP2PTunnel () {
-    TunnelAPI.deleteConnect().then(response => {
-      if (response.status === 200) {
-        console.log('close p2p tunnel completed')
-      }
-    })
+  closeConnection () {
+    this.closeBoardcast()
+    TunnelAPI.deleteConnect()
   },
   fetchQrCode (): Promise<AxiosResponse<BasicResponse>> {
     return nasServer.post(userModulePath + '/login/qr/meta_info')

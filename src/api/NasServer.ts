@@ -48,6 +48,7 @@ nasServer.interceptors.response.use((response: AxiosResponse) => {
   return handleExceptionSence(response)
 }, (error: AxiosError) => {
   // Do something with response error
+  handleErrorResponse(error)
   return Promise.reject(error)
 })
 
@@ -139,6 +140,13 @@ const showKickedDialog = () => {
     }).then(() => {
       resolve()
     })
+  })
+}
+
+const handleErrorResponse = (error: AxiosError) => {
+  if (error.config.url === '/v1/selfcheck/heartbeat') return
+  ClientAPI.heartbeat().catch(error => {
+    EventBus.$emit(EventType.disconnect)
   })
 }
 

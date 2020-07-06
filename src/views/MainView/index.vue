@@ -82,7 +82,8 @@ import EncryptPassModel from '../Encrypt/EncryptPassModel.vue'
 import { User } from '@/api/UserModel'
 import { ResourceFuncItem, commonFuncList } from './ResourceFuncList'
 import ClientAPI from '../../api/ClientAPI'
-import { NasInfo } from '../../api/ClientModel'
+import { NasInfo, NasAccessInfo } from '../../api/ClientModel'
+import { EventBus, EventType } from '../../utils/eventBus'
 
 export default Vue.extend({
   name: 'main-view',
@@ -138,7 +139,7 @@ export default Vue.extend({
   computed: {
     ...mapGetters('Resource', ['clipboard']),
     ...mapGetters('User', ['user']),
-    ...mapGetters('NasServer', ['nasInfo']),
+    ...mapGetters('NasServer', ['nasInfo', 'accessInfo']),
     alterStyle: function (): object {
       return {
         left: this.alterPosition.left,
@@ -196,13 +197,15 @@ export default Vue.extend({
     },
     observationWindowAction () {
       window.addEventListener('blur', this.handleWinBlurAction)
-      window.addEventListener('online', this.handleWinOnlineAction)
-      window.addEventListener('offline', this.handleWinOfflineAction)
+      window.addEventListener('online', this.handleOnlineAction)
+      window.addEventListener('offline', this.handleOfflineAction)
+      EventBus.$on(EventType.disconnect, this.handleOnlineAction)
     },
     removeWindowObserver () {
       window.removeEventListener('blur', this.handleWinBlurAction)
-      window.removeEventListener('online', this.handleWinOnlineAction)
-      window.removeEventListener('offline', this.handleWinOfflineAction)
+      window.removeEventListener('online', this.handleOnlineAction)
+      window.removeEventListener('offline', this.handleOfflineAction)
+      EventBus.$off(EventType.disconnect, this.handleOnlineAction)
     },
     // handle header view callback actions
     handleHeaderViewAction (action: string, ...args: any[]) {
@@ -217,9 +220,6 @@ export default Vue.extend({
         case 'refresh':
           this.handleInnerRefreshAction()
           break;
-        case 'click':
-          this.handleListClickAction()
-          break
         default:
           break;
       }
@@ -326,6 +326,7 @@ export default Vue.extend({
       const item = this.dataSource[index] as ResourceItem
       if (item.isSelected === true) return
       this.showArray = ResourceHandler.setSingleSelectState(this.showArray, index, true)
+      this.showAlter = false
     },
     handleCommandSelection (index: number) {
       if (process.platform === 'darwin') {
@@ -415,19 +416,44 @@ export default Vue.extend({
     handleWinBlurAction () {
       this.showAlter = false
     },
-    handleWinOnlineAction () {
-      // this.showNetworkTip = true
-      // this.reconnection = true
-      // const nas = this.nasInfo as NasInfo
-      // ClientAPI.reconnectionToNas(nas.sn, nas.mac).then(data => {
-
-      // }).catch(error => {
-      //   console.log(error)
-      // })
+    handleOnlineAction () {
+      console.log('online')
+      this.showNetworkTip = true
+      if (this.reconnection) true
+      this.reconnection = true
+      this.handleReconnectionLogic(1)
     },
-    handleWinOfflineAction () {
-      // this.showNetworkTip = true
-      // this.reconnection = false
+    handleOfflineAction () {
+      this.showNetworkTip = true
+      this.reconnection = false
+    },
+    handleReconnectionLogic (delay: number) {
+      const nas = this.nasInfo as NasInfo
+      const secretKey = (this.accessInfo as NasAccessInfo).key
+      ClientAPI.reconnectionToNas(nas.sn, nas.mac).then(data => {
+        const nas = this.updateNasInfo(data)
+        ClientAPI.setBaseUrl(`http://${nas.ip}:${nas.port}`)
+        return ClientAPI.login(this.user, secretKey)
+      }).then(response => {
+        console.log(response)
+        if (response.data.code !== 200) return
+        const accessInfo = response.data.data as NasAccessInfo
+        accessInfo.key = secretKey
+        this.$store.dispatch('NasServer/updateNasAccess', accessInfo)
+        this.showNetworkTip = false
+      }).catch(error => {
+        setTimeout(() => {
+          this.handleReconnectionLogic(delay * 2)
+        }, delay * 1000)
+      })
+    },
+    updateNasInfo (nas: NasInfo) {
+      if (nas.ip !== '127.0.0.1') return nas
+      const newNas = _.cloneDeep(this.nasInfo) as NasInfo
+      newNas.ip = nas.ip
+      newNas.port = nas.port
+      this.$store.dispatch('NasServer/updateNasInfo', newNas)
+      return newNas
     }
   }
 })

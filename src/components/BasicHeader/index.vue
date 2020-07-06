@@ -182,7 +182,6 @@ export default Vue.extend({
     },
     switchDevice () {
       this.showTipDialog().then(() => {
-        if (this.nasInfo.ip === '127.0.0.1') ClientAPI.closeP2PTunnel()
         this.$store.dispatch('NasServer/clearCacheNas')
         TransportHelper.clearQueueCache()
         processCenter.renderSend(EventName.bindList)

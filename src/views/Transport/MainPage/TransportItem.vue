@@ -89,8 +89,11 @@ export default Vue.extend({
     handleOperationAction (index: number) {
       const item = this.showItems[index]
       this.$emit('operationAction', item.command, this.index)
+      const syncCommands = ['jump', 'open', 'openInFinder']
       this.showItems = this.showItems.map((item, aIndex) => {
-        item.disable = index === aIndex
+        if (syncCommands.indexOf(item.command) === -1) {
+          item.disable = index === aIndex
+        }
         return item
       })
     }

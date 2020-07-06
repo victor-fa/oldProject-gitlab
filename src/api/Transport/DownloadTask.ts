@@ -52,10 +52,12 @@ export default class DownloadTask extends BaseTask {
       this.source.cancel()
       this.source = undefined
     }
-    let filePath = this.fullPath()
-    if (this.status !== TaskStatus.finished) filePath += downloadingSuffix 
-    await FileHandle.removeFile(filePath)
     this.fileInfos = []
+    // let filePath = this.fullPath()
+    // if (this.status !== TaskStatus.finished) filePath += downloadingSuffix
+    // console.log(this.status)
+    // console.log(filePath)
+    // await FileHandle.removeFile(filePath)
   }
   suspend () {
     super.suspend()
@@ -189,10 +191,11 @@ export default class DownloadTask extends BaseTask {
   }
   // 创建目录
   private createDirectory (fileInfo: FileInfo) {
+    this.name = fileInfo.relativePath
+    if (this.fileInfos.length > 1) this.emit('fileBegin', this.taskId, fileInfo)
     FileHandle.newDirectory(fileInfo.destPath).then(() => {
       fileInfo.completed = true
-      this.name = fileInfo.relativePath
-      this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
+      if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.downloadFile()
     }).catch(_ => {
       fileInfo.completed = true
@@ -201,6 +204,8 @@ export default class DownloadTask extends BaseTask {
   }
   // 开始文件下载
   private startDownloadFile (fileInfo: FileInfo) {
+    this.name = fileInfo.relativePath
+    if (this.fileInfos.length > 1) this.emit('fileBegin', this.taskId, fileInfo)
     FileHandle.openWriteFileHandle(fileInfo.destPath).then(obj => { // open file handle
       this.fileHandle = obj.fd
       fileInfo.destPath = obj.path 
@@ -212,10 +217,8 @@ export default class DownloadTask extends BaseTask {
       return FileHandle.renameFinishedFile(fileInfo.destPath)
     }).then(path => { // rename file
       fileInfo.destPath = path
+      if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.downloadFile()
-      this.name = fileInfo.relativePath
-      this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
-      console.log(fileInfo)
     }).catch(error => {
       if (error instanceof TaskError) {
         this.handleDownloadError(error.code)

@@ -4,10 +4,11 @@ import { EventEmitter } from 'events'
 import StringUtility from '@/utils/StringUtility'
 
 /** 传输任务事件
- * progress (index) 上传进度事件
- * fileFinished (index, fileInfo) 单个文件传输完成事件
- * taskFinished (index) 任务完成事件
- * error (index, error) 任务出错事件
+ * progress (taskId) 上传进度事件
+ * fileBegin (taskId, fileInfo) 单个文件开始上传
+ * fileFinished (taskId, fileInfo) 单个文件传输完成事件
+ * taskFinished (taskId) 任务完成事件
+ * error (taskId, error) 任务出错事件
  */
 export default class BaseTask extends EventEmitter {
   readonly srcPath: string

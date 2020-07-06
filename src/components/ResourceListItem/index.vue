@@ -24,10 +24,9 @@
       </div>
       <div class="name-wrapper">
         <a-input
+          v-focus
           v-if="isRenaming"
           ref="inputName"
-          v-focus
-          type="text"
           v-model="inputName"
           placeholder="请输入文件名"
           @blur="handleBlur($event)"
@@ -66,9 +65,18 @@
         justify="space-around"
         align="middle"
       >
-        <a-col :span="13">
+        <a-col :span="13" class="vertical-first-col">
           <img :src="showIcon">
-          {{ showName }}
+          <a-input
+            v-focus
+            v-if="isRenaming"
+            ref="inputName"
+            v-model="inputName"
+            placeholder="请输入文件名"
+            @blur="handleBlur($event)"
+            @focus="handleFocus($event)"
+          />
+          <span v-else :title="showName">{{ showName }}</span>
         </a-col>
         <a-col :span="6">{{ model.showMtime }}</a-col>
         <a-col :span="5">{{ model.showSize }}</a-col>
@@ -341,11 +349,29 @@ export default Vue.extend({
   font-size: 12px;
   text-align: left;
   background-color: white;
-  img {
-    width: 19px;
-    height: 16px;
-    margin: 10px 10px 10px 20px;
-    vertical-align: middle;
+  .vertical-first-col {
+    display: flex;
+    align-items: center;
+    img {
+      width: 19px;
+      height: 16px;
+      margin: 10px 10px 10px 20px;
+    }
+    input {
+      flex: 1;
+      height: 22px;
+      font-size: 12px;
+      color: #484848;
+      max-width: 200px;
+    }
+    span {
+      flex: 1;
+      color: #484848;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 }
 .verticalSelectedItem {

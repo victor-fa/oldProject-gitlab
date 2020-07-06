@@ -283,6 +283,7 @@ export default {
       transparent: false,
       resizable: true,
       parent: homeWindow!,
+      modal: true,
       show: false
     })
     settingWindow.once('closed', () => {
@@ -309,7 +310,8 @@ export default {
       backgroundColor: '#ffffff',
       maximizable: false,
       resizable: false,
-      parent: homeWindow!
+      parent: homeWindow!,
+      modal: true
     })
     initializeWindow.once('closed', () => {
       initializeWindow!.removeAllListeners()
@@ -335,6 +337,7 @@ export default {
       transparent: false,
       resizable: false,
       parent: homeWindow!,
+      modal: true,
       show: false
     })
     newVersionWindow.once('closed', () => {

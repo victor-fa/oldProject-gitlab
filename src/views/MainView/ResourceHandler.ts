@@ -447,7 +447,7 @@ export default {
       }
     }
     return name
-  },
+  }
 }
 
 enum OrderEnum  {

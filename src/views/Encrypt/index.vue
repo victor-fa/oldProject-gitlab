@@ -93,6 +93,10 @@ export default Vue.extend({
       this.logout()
     }
     encryptUploadQueue.off('taskStatusChange', this.handleTaskStatusChange)
+    if (this.delayTimer !== null) {
+      clearTimeout(this.delayTimer)
+      this.delayTimer = null
+    }
   },
   data () {
     return {

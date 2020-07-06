@@ -21,6 +21,7 @@ import TransportHandler from '../TransportHandler'
 import { EventBus } from '../../../utils/eventBus'
 import { EventName } from '../../../utils/processCenter'
 import TaskQueue from '../../../api/Transport/TransportQueue'
+import fs from 'fs'
 
 export default Vue.extend({
   name: 'download-list',
@@ -151,7 +152,6 @@ export default Vue.extend({
     handleTaskOperate<T extends BaseTask> (command: string, queue: TaskQueue<T>, taskId: number) {
       const task = queue.searchTask(taskId)
       if (task === undefined) return
-      const { shell } = require('electron')
       switch (command) {
         case 'delete':
         case 'cancel':
@@ -170,13 +170,23 @@ export default Vue.extend({
           EventBus.$emit(EventName.jump, { path: task.srcPath, uuid: task.uuid })
           break
         case 'open':
-          shell.openItem(task.fullPath())
+          this.handleOpenAction(task, false)
           break
         case 'openInFinder':
-          shell.showItemInFolder(process.platform === 'win32' ? StringUtility.convertL2R(task.srcPath) : task.srcPath)
+          this.handleOpenAction(task, true)
           break
         default:
           break
+      }
+    },
+    handleOpenAction<T extends BaseTask> (task: T, isFinder: boolean) {
+      const localPath = process.platform === 'win32' ? StringUtility.convertL2R(task.fullPath()) : task.fullPath()
+      const exist = fs.existsSync(task.fullPath())
+      if (!exist) {
+        this.$message.error('文件不存在')
+      } else {
+        const { shell } = require('electron')
+        isFinder ? shell.showItemInFolder(localPath) : shell.openItem(localPath)
       }
     }
   }

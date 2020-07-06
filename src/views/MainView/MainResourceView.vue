@@ -80,6 +80,10 @@ export default Vue.extend({
   },
   destroyed () {
     uploadQueue.off('taskStatusChange', this.handleTaskStatusChange)
+    if (this.delayTimer !== null) {
+      clearTimeout(this.delayTimer)
+      this.delayTimer = null
+    }
   },
   methods: {
     updateView () {

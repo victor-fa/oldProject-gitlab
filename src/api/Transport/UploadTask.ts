@@ -201,12 +201,13 @@ export default class UploadTask extends BaseTask {
   }
   // 创建文件夹
   private createFolder (fileInfo: FileInfo) {
+    this.name = fileInfo.relativePath
+    if (this.fileInfos.length > 1) this.emit('fileBegin', this.taskId, fileInfo)
     NasFileAPI.newFolder(fileInfo.destPath, this.uuid).then(response => {
       console.log(response)
       if (response.data.code !== 200) return
       fileInfo.completed = true
-      this.name = fileInfo.relativePath
-      this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
+      if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.uploadFile()
     }).catch(_ => {
       fileInfo.completed = true
@@ -215,6 +216,8 @@ export default class UploadTask extends BaseTask {
   }
   // 开始上传文件数据
   private startUpload (fileInfo: FileInfo) {
+    this.name = fileInfo.relativePath
+    if (this.fileInfos.length > 1) this.emit('fileBegin', this.taskId, fileInfo)
     FileHandle.openReadFileHandle(fileInfo.srcPath).then(fd => { // open file handle success
       this.fileHandle = fd
       return this.uploadSingleFile(fd, fileInfo)
@@ -222,8 +225,7 @@ export default class UploadTask extends BaseTask {
       return FileHandle.closeFileHandle(fd)
     }).then(() => { // close file handle success
       this.fileHandle = -1
-      this.name = fileInfo.relativePath
-      this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
+      if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.uploadFile()
     }).catch(error => { // handler error
       if (error instanceof TaskError) {

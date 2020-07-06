@@ -11,7 +11,8 @@ enum EventType {
   transportChangeAction = 'transport_change_action',
   leftMenuChangeAction = 'left_Menu_change_action',
   showToast = 'show_toast',
-  downloadChangeAction = 'download_change_action'
+  downloadChangeAction = 'download_change_action',
+  disconnect = 'disconnect_action'
 }
 
 export {

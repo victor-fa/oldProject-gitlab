@@ -276,6 +276,9 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     task.addListener('progress', (index: number) => {
       this.handleTaskProcess(index)
     })
+    task.addListener('fileBegin', (index: number, fileInfo: FileInfo) => {
+      this.handleFileBegin(index, fileInfo)
+    })
     task.addListener('fileFinished', (index: number, fileInfo: FileInfo) => {
       this.handleFileFinished(index, fileInfo)
     })
@@ -291,13 +294,16 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   protected handleTaskProcess (index: number) {
     this.emit('taskStatusChange', index)
   }
+  protected handleFileBegin (index: number, fileInfo: FileInfo) {
+    const task = this.searchTask(index)
+    if (task === undefined) return
+    this.emit('taskStatusChange', task.taskId)
+  }
   protected handleFileFinished (index: number, fileInfo: FileInfo) {
     console.log(fileInfo)
     const task = this.searchTask(index)
     if (task === undefined) return
-    const newTask = _.cloneDeep(task)
-    this.reloadTaskInDB(newTask)
-    this.emit('taskStatusChange', task.taskId)
+    this.reloadTaskInDB(task)
   }
   protected handleTaskFinished (index: number) {
     const task = this.searchTask(index)
