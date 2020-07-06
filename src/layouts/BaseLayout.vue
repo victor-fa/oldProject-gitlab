@@ -106,7 +106,7 @@ export default Vue.extend({
         if (response.data.data !== null) {
           const verNo = _.get(response.data.data, 'verNo')
           if (Number(verNo) > appVersion) { // 当版本号超过，则更新
-            processCenter.renderSend(EventName.newVersion, response.data.data)
+            processCenter.renderSend(EventName.update)
           }
         }
       }).catch(error => {

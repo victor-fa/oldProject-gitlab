@@ -26,7 +26,7 @@
               @mouseenter="handleMouseEnter(item)"
             >
               {{ item.title }}
-              <img src="../../assets/operate_icon.png">
+              <img src="../../assets/operate_icon.png" v-show="item.childrens">
               <ul v-show="item.childrens && showChildren" class="operate-children">
                 <li
                   v-for="(cell, index) in item.childrens"

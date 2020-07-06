@@ -90,7 +90,6 @@ export default Vue.extend({
   },
   mounted () {
     this.fetchStorages()
-    // processCenter.renderSend(EventName.initialize)
   },
   methods: {
     fetchStorages () {
@@ -241,17 +240,12 @@ export default Vue.extend({
 				this.mode = {
 					visiable: false,
 					choice: 0
-				}
-				this.switchDevice()
+        }
+        processCenter.renderSend(EventName.initialize)  // 打开获取初始化进度窗口
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
 			})
-		},
-		switchDevice () {
-			this.$store.dispatch('NasServer/clearCacheNas')
-			TransportHelper.clearQueueCache()
-			processCenter.renderSend(EventName.bindList)
 		},
     // 重写父类中的方法
     handleRefreshAction () {

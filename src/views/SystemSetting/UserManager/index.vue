@@ -172,6 +172,8 @@ export default Vue.extend({
 				menu.append(new MenuItem({label: '提升为管理员',
 					click: function () { _this.showDeliverModal(item) }
 				}));
+			} else {
+				menu.append(new MenuItem({label: '非管理员无法操作'}));
 			}
       menu.popup(remote.getCurrentWindow())
     },

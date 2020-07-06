@@ -39,7 +39,7 @@ export default {
   exitTunnel () {
     status = TunnelStatus.stop
     if (process.platform === 'win32') {
-      // TODO: 区分win10、win7 win7【tskill pgTunnelStatic.exe】
+      // TODO: 区分win10、win7 win7【tskill ugreenTunnel.exe】
       exec('taskkill /F /IM ugreenTunnel.exe');
     } else {
       exec('killall pgTunnelStatic');

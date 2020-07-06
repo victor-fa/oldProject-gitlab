@@ -192,30 +192,6 @@ let DiskSystem = {
 				AboutWindow = null;
 			}
 		});
-		AboutWindow.webContents.session.on('will-download', (event, item, webContents) => {
-			const savePath = path.join(app.getPath('downloads'), item.getFilename());
-			item.setSavePath(savePath);
-			item.on('updated', (event, state) => {
-				if (state === 'interrupted') {
-					console.log('Download is interrupted but can be resumed')
-				} else if (state === 'progressing') {
-					if (item.isPaused()) {
-						console.log('Download is paused')
-					} else {
-						AboutWindow.webContents.send('percent', (item.getReceivedBytes() / item.getTotalBytes()));
-					}
-				}
-			})
-			item.once('done', (event, state) => {
-				if (state === 'completed') {
-					console.log('Download successfully')
-					const { spawn } = require('child_process')
-					spawn(savePath)	// 打开对应路径
-				} else {
-					console.log(`Download failed: ${state}`)
-				}
-			})
-		})
 		if (data !== '') {
 			setTimeout(() => { AboutWindow.webContents.send('newVersion', data) }, 2000);
 		}
@@ -430,9 +406,6 @@ function bindIpc() {
 				break;
 			case 'feedback':
 				DiskSystem.FeedBackWindow();
-				break;
-			case 'check-for-update':
-				AboutWindow.webContents.downloadURL(data);
 				break;
 			case 'awaken-tunnel':
 				const res = awakeTunnel();

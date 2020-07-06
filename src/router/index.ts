@@ -39,6 +39,11 @@ const routes = [
     component: () => import('../views/Storage/StorageProgress.vue')
   },
   {
+    path: '/system-update',
+    name: 'system-update',
+    component: () => import('../views/Disk/DiskUpdateProgress.vue')
+  },
+  {
     path: '/info',
     name: 'DiskInfo',
     component: () => import('../views/Disk/DiskInfo.vue')

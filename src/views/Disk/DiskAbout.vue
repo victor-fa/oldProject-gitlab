@@ -2,7 +2,7 @@
 	<div class="cloudSeries-about-win">
     <a-layout-header class="setting-header">
       <span>关于绿联云</span>
-      <window-menu v-if="percent === 0" :configure="'unable'" class="window-menu"/>
+      <window-menu :configure="'unable'" class="window-menu"/>
     </a-layout-header>
 		<div class="cloudSeries-about-main">
 			<div class="content">
@@ -15,32 +15,15 @@
 					<p>xxxxx</p><br>
 				</div>
 			</div>
-			<div class="update-info" v-if="percent > 0">
-				<p class="tips">{{ message }}</p>
-				<div class="process">
-					<Progress :percent="percent" v-show="percent > 0" />
-					<p class="process-p" v-show="percent > 0">{{ percent }}%</p>
-				</div>
-			</div>
 			<div class="bottom">
-				<p class="release" v-if="percent === 0">当前版本号：{{ version }}</p>
+				<p class="release">当前版本号：{{ version }}</p>
 				<div class="button">
-					<a-button class="update" @click="openUpdateInfo"><span>{{ CheckText }}</span></a-button>
+					<a-button class="update" @click="doUpdate"><span>检查更新</span></a-button>
 					<a-button class="privacy" @click="$electron.shell.openExternal(nasCloudIP + '/sys/file/resource/pc/secretAgreement.htm')">隐私协议</a-button>
 					<a-button class="user" @click="$electron.shell.openExternal(nasCloudIP + '/sys/file/resource/pc/serviceAgreement.htm')">用户协议</a-button>
 				</div>
 			</div>
 		</div>
-		<a-modal
-			:visible="updateInfo.visiable" :mask="false" :closable="false" :maskClosable="false" width="450px" style="top: 60px;"
-			okText="下载" cancelText="取消" @ok="doUpdate" @cancel="updateInfo.visiable = false">
-			<p v-show="updateInfo.appName">{{updateInfo.appName}} 有新版本【{{updateInfo.verNo}}】更新！</p>
-			<p v-show="updateInfo.desc">描述：{{updateInfo.desc}}</p>
-			<p>
-				<font v-show="updateInfo.pubTime">时间：{{updateInfo.pubTime | filterTime}}</font>
-				<font v-show="updateInfo.size" style="margin-left: 20px">大小：{{updateInfo.size | filterSize}}</font>
-			</p>
-		</a-modal>
 	</div>
 </template>
 
@@ -49,16 +32,13 @@ import WindowMenu from '@/components/WindowMenu/index.vue'
 import UserAPI from '@/api/UserAPI'
 import StringUtility from '@/utils/StringUtility'
 import { nasCloudIP } from '@/api/CloudServer'
-
+import processCenter, { EventName } from '@/utils/processCenter'
 
 const packageInfo = require('../../../package');
 export default {
 	name: 'DiskAbout',
 	data() {
 		return {
-			CheckText: '检查更新',
-			message: '',
-			percent: 0,
 			header: {
 				color: '#666',
 				title: '',
@@ -70,32 +50,10 @@ export default {
 				}
 			},
 			electron: ' ' + process.versions.electron,
-			InfoList: {
-				Author: '绿联科技有限公司',
-				Email: '827542599@qq.com',
-				Platform: process.platform + ' ' + process.arch,
-				Vue: require('vue/package.json').version,
-				Node: process.versions.node
-			},
-			updateInfo: {
-				visiable: false,
-				pkgUrl: '',
-				appNo: '',
-				appName: '',
-				verNo: '',
-				verName: '',
-				size: '',
-				desc: '',
-				remark: '',
-				pubTime: 0
-			},
 			nasCloudIP
 		};
 	},
 	components: { WindowMenu },
-	beforeMount() {
-		this.bind();
-	},
 	computed: {
 		version() {
 			return packageInfo.version;
@@ -113,60 +71,8 @@ export default {
 		}
 	},
 	methods: {
-		bind() {
-			this.$ipc.on('percent', (event, message) => {
-				this.percent = Number((message * 100).toFixed(0))
-				if (this.percent === 100) {
-					this.percent = 0
-				}
-			});
-			this.$ipc.on('newVersion', (event, message) => {
-				this.CheckText = '下载更新'
-			});
-		},
-		openUpdateInfo() {
-			this.getUpdateInfo()
-		},
-		getUpdateInfo() {
-			let appId = ''
-			let appVersion = ''
-			if (process.platform === 'win32') {	// win环境
-				appId = packageInfo.winAppId
-				appVersion = packageInfo.winAppVersion
-			} else {	// mac环境
-				appId = packageInfo.macAppId
-				appVersion = packageInfo.macAppVersion
-			}
-      UserAPI.fetchSoftVerUpdateInfo(appId, appVersion).then(response => {
-        if (response.data.code !== 200) {
-					this.$message.error('获取更新信息失败')
-          return
-				}
-				if (response.data.data) {
-					const verNo = _.get(response.data.data, 'verNo')
-					// if (Number(verNo) > appVersion) { // 当版本号超过，则更新
-						this.updateInfo.visiable = true
-						this.updateInfo.pkgUrl = _.get(response.data.data, 'pkgUrl')
-						this.updateInfo.appNo = _.get(response.data.data, 'appNo')
-						this.updateInfo.appName = _.get(response.data.data, 'appName')
-						this.updateInfo.verNo = verNo
-						this.updateInfo.verName = _.get(response.data.data, 'verName')
-						this.updateInfo.size = _.get(response.data.data, 'size')
-						this.updateInfo.desc = _.get(response.data.data, 'desc')
-						this.updateInfo.remark = _.get(response.data.data, 'remark')
-						this.updateInfo.pubTime = _.get(response.data.data, 'pubTime')
-						console.log(this.updateInfo);
-					// }
-				} else {
-					this.$message.info("当前已为最新版")
-				}
-      }).catch(error => {
-        console.log(error)
-      })
-		},
 		doUpdate() {
-			this.$ipc.send('system', 'check-for-update', this.updateInfo.pkgUrl);
-			this.updateInfo.visiable = false
+			processCenter.renderSend(EventName.update)  // 打开更新窗口
 		}
 	}
 };

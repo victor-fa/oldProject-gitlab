@@ -13,6 +13,7 @@ let mediaWindow: BrowserWindow | null = null
 let moveWindow: BrowserWindow | null = null
 let settingWindow: BrowserWindow | null = null
 let initializeWindow: BrowserWindow | null = null
+let updateWindow: BrowserWindow | null = null
 let aboutWindow: BrowserWindow | null = null
 let feedBackWindow: BrowserWindow | null = null
 let newVersionWindow: BrowserWindow | null = null
@@ -301,14 +302,11 @@ export default {
     }
     initializeWindow = this.createWindow({
       path: 'system-initialize',
-      width: 530,
-      height: 180,
+      fullscreen: true,
       icon: './src/assets/logo.png',
-      minWidth: 530,
-      maxHeight: 180,
       title: '磁盘正在初始化',
-      backgroundColor: '#ffffff',
       maximizable: false,
+      transparent: true,
       resizable: false,
       parent: homeWindow!,
       modal: true
@@ -320,6 +318,61 @@ export default {
     initializeWindow.once('ready-to-show', () => {
       this.activeWindow(initializeWindow!)
     })
+  },
+  presentUpdateSoftWindow () {
+    if (updateWindow !== null) {
+      this.activeWindow(updateWindow)
+      return updateWindow
+    }
+    updateWindow = this.createWindow({
+      path: 'system-update',
+      fullscreen: true,
+      icon: './src/assets/logo.png',
+      maximizable: false,
+      transparent: true,
+      resizable: false,
+      parent: homeWindow!
+    })
+    updateWindow.once('closed', () => {
+      updateWindow!.removeAllListeners()
+      updateWindow = null
+    })
+    updateWindow.once('ready-to-show', () => {
+      this.activeWindow(updateWindow!)
+    })
+		updateWindow.webContents.session.on('will-download', (event, item, webContents) => {
+			const savePath = path.join(app.getPath('downloads'), item.getFilename());
+			item.setSavePath(savePath);
+			item.on('updated', (event, state) => {
+				if (state === 'interrupted') {
+					console.log('Download is interrupted but can be resumed')
+				} else if (state === 'progressing') {
+					if (item.isPaused()) {
+						console.log('Download is paused')
+					} else {
+            if (updateWindow !== null) {
+              updateWindow.webContents.send('percent', (item.getReceivedBytes() / item.getTotalBytes()));
+            }
+					}
+				}
+			})
+			item.once('done', (event, state) => {
+				if (state === 'completed') {
+					console.log('Download successfully')
+					const { spawn } = require('child_process')
+					spawn(savePath)	// 打开对应路径
+				} else {
+					console.log(`Download failed: ${state}`)
+				}
+			})
+		})
+  },
+  upload (data) {
+    console.log(data);
+    if (updateWindow !== null) {
+      console.log(3333);
+      updateWindow.webContents.downloadURL(data);
+    }
   },
   presentNewVersionWindow (data: any) {
     if (newVersionWindow !== null) {
