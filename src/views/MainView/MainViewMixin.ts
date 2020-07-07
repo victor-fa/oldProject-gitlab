@@ -77,8 +77,14 @@ export default Vue.extend({
         case "delelteItems":
           this.handleDeleteItems()
           break
-        case "paste":
+        case 'paste':
           this.handlePasteAction(TaskMode.rename)
+          break 
+        case 'copy':
+          this.handleClipboardAction(false)
+          break
+        case 'cut':
+          this.handleClipboardAction()
           break
         default:
           break;

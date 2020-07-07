@@ -23,6 +23,7 @@
           :customGrid="listGrid"
           :dataSource="showArray"
           :arrangeWay="arrangeWay"
+          :itemMenu="contextItemMenu"
           v-on:callbackAction="handleResourceListAction"
         >
           <template v-slot:resourceItem="{ item, index, arrangeWay }">

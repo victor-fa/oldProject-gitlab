@@ -51,6 +51,7 @@ import StringUtility from '@/utils/StringUtility'
 import { ArrangeWay, ResourceType, ResourceItem } from '@/api/NasFileModel'
 import ResourceHeader from './ResourceHeader.vue'
 import { SortWay } from '@/model/sortList'
+import { OperateGroup } from '../OperateListAlter/operateList'
 
 export default Vue.extend({
   name: 'resource-list',
@@ -67,7 +68,8 @@ export default Vue.extend({
     arrangeWay: {
       default: ArrangeWay.horizontal
     },
-    adjust: Number
+    adjust: Number,
+    itemMenu: Array // item右键菜单
   },
   data () {
     return {
@@ -96,8 +98,18 @@ export default Vue.extend({
     },
     isSupportDrag: function () {
       const name = this.$route.name as string
-      const supportDragViews = ['main-resource-view', 'custom', 'encrypt']
+      const supportDragViews = ['main-resource-view', 'encrypt']
       return supportDragViews.indexOf(name) !== -1
+    },
+    isSupportCopy: function () {
+      const itemMenus = this.itemMenu as OperateGroup[]
+      if (_.isEmpty(itemMenus)) return false
+      const commands = itemMenus.flatMap(group => {
+        return group.items.flatMap(item => {
+          return item.command
+        })
+      })
+      return commands.indexOf('copy') !== -1
     }
   },
   mounted () {
@@ -122,31 +134,38 @@ export default Vue.extend({
         this.handleCommandAEvent(event)
       } else if (code === 'KeyV') {
         this.handleCommandVEvent(event)
+      } else if (code === 'KeyC') {
+        this.handleCommandCopyEvent(event)
+      } else if (code === 'KeyX') {
+        this.handleCommandCutEvent(event)
       } else if (code === 'Backspace') {
         this.handleDeleteEvent(event)
       }
     },
     handleCommandAEvent (event: KeyboardEvent) {
-      const isCommand = process.platform === 'darwin'
-      event.stopPropagation()
-      if (isCommand && event.metaKey === true) {
-        event.preventDefault()
-        this.$emit('callbackAction', 'selectAllItems')
-      } else if (event.ctrlKey === true) {
-        event.preventDefault()
-        this.$emit('callbackAction', 'selectAllItems')
-      }
+      this.sendShortcutKeyAction(event, 'selectAllItems')
     },
     handleCommandVEvent (event: KeyboardEvent) {
       if (!this.isSupportDrag) return
+      this.sendShortcutKeyAction(event, 'paste')
+    },
+    handleCommandCopyEvent (event: KeyboardEvent) {
+      if (!this.isSupportCopy) return
+      this.sendShortcutKeyAction(event, 'copy')
+    },
+    handleCommandCutEvent (event: KeyboardEvent) {
+      if (!this.isSupportCopy) return
+      this.sendShortcutKeyAction(event, 'cut')
+    },
+    sendShortcutKeyAction (event: KeyboardEvent, command: string) {
       const isCommand = process.platform === 'darwin'
       event.stopPropagation()
       if (isCommand && event.metaKey === true) {
         event.preventDefault()
-        this.$emit('callbackAction', 'paste')
+        this.$emit('callbackAction', command)
       } else if (event.ctrlKey === true) {
         event.preventDefault()
-        this.$emit('callbackAction', 'paste')
+        this.$emit('callbackAction', command)
       }
     },
     handleDeleteEvent (event: KeyboardEvent) {

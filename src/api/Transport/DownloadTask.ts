@@ -211,16 +211,17 @@ export default class DownloadTask extends BaseTask {
       this.fileHandle = obj.fd
       fileInfo.destPath = obj.path 
       return this.downloadSingleFile(obj.fd, fileInfo)
-    }).then(fd => { // download file
+    }).then(fd => { // 1. download file
       return FileHandle.closeFileHandle(fd)
-    }).then(() => { // close file handle
+    }).then(() => { // 2. close file handle
       this.fileHandle = -1
       return FileHandle.renameFinishedFile(fileInfo.destPath)
-    }).then(path => { // rename file
+    }).then(path => { // 3. rename file
       fileInfo.destPath = path
       if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.downloadFile()
-    }).catch(error => {
+    }).catch(error => { // 4. catch error
+      if (this.fileHandle !== -1) FileHandle.closeFileHandle(this.fileHandle)
       if (error instanceof TaskError) {
         this.handleDownloadError(error.code)
       } else if (error === FileHandleError.openError) {

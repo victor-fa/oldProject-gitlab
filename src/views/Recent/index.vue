@@ -5,7 +5,7 @@
     :loading="loading"
     :dataSource="dataArray"
     :popoverList="uploadSortList"
-    :contextItemMenu="recentContextMenu"
+    :contextItemMenu="itemMenu"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
     v-on:itemCallbackActions="handleItemActions"
@@ -41,7 +41,7 @@ export default Vue.extend({
       uploadSortList,
       dataArray: [] as ResourceItem[],
       uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
-      recentContextMenu // item右键菜单
+      itemMenu: _.cloneDeep(recentContextMenu) // item右键菜单
     }
   },
   mounted () {

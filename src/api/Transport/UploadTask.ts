@@ -229,6 +229,7 @@ export default class UploadTask extends BaseTask {
       if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.uploadFile()
     }).catch(error => { // handler error
+      if (this.fileHandle !== -1) FileHandle.closeFileHandle(this.fileHandle)
       if (error instanceof TaskError) {
         this.handlerTaskError(error.code, error.desc)
       } else if (error === FileHandleError.openError) {

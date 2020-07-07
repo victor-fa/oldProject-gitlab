@@ -4,6 +4,7 @@
     :count="totalSize"
     :loading="loading"
     :dataSource="dataArray"
+    :contextItemMenu="itemMenu"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
     v-on:itemCallbackActions="handleItemActions"
@@ -20,6 +21,7 @@ import { ResourceItem, OrderType, ResourceType } from '../../api/NasFileModel'
 import NasFileAPI, { maxSize } from '../../api/NasFileAPI'
 import { BasicResponse } from '../../api/UserModel'
 import ResourceHandler from '../MainView/ResourceHandler'
+import { resourceContextMenu } from '../../components/OperateListAlter/operateList'
 
 export default Vue.extend({
   name: 'media',
@@ -34,7 +36,8 @@ export default Vue.extend({
       totalSize: 0,
       loading: false,
       dataArray: [] as ResourceItem[],
-      order: OrderType.byNameDesc // 当前选择的排序规则
+      order: OrderType.byNameDesc, // 当前选择的排序规则
+      itemMenu: _.cloneDeep(resourceContextMenu) // item的右键菜单
     }
   },
   watch: {

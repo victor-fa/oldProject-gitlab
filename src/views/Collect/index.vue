@@ -2,7 +2,7 @@
   <main-view
     :loading="loading"
     :dataSource="dataArray"
-    :contextItemMenu="collectContextMenu"
+    :contextItemMenu="itemMenu"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
     v-on:itemCallbackActions="handleItemActions"
@@ -31,7 +31,7 @@ export default Vue.extend({
     return {
       loading: false,
       dataArray: [] as ResourceItem[],
-      collectContextMenu // item的右键菜单列表数据
+      itemMenu: _.cloneDeep(collectContextMenu) // item的右键菜单列表数据
     }
   },
   mounted () {

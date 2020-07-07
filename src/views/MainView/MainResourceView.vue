@@ -47,8 +47,8 @@ export default Vue.extend({
       totalSize: 0,
       dataArray: [] as ResourceItem[],
       order: OrderType.byNameDesc, // 当前选择的排序规则
-      itemMenu: resourceContextMenu, // item的右键菜单
-      listMenu: listContextMenu, // list的右键菜单
+      itemMenu: _.cloneDeep(resourceContextMenu), // item的右键菜单
+      listMenu: _.cloneDeep(listContextMenu), // list的右键菜单
       delayTimer: null as NodeJS.Timer | null
     }
   },
@@ -234,6 +234,7 @@ export default Vue.extend({
     handlePasteAction (mode: TaskMode) {
       const clipboard = this.clipboard as ClipboardModel
       const srcItems = clipboard.items
+      if (_.isEmpty(srcItems)) return
       const destItem = { path: this.path, uuid: this.uuid } as ResourceItem
       const isClip = clipboard.isClip
       if (isClip) {

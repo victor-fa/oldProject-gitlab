@@ -1,4 +1,5 @@
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
 import MainResourceView from '../MainView/MainResourceView.vue'
 import { recentContextMenu } from '@/components/OperateListAlter/operateList'
@@ -10,7 +11,7 @@ export default Vue.extend({
   extends: MainResourceView,
   data () {
     return {
-      itemMenu: recentContextMenu,
+      itemMenu: _.cloneDeep(recentContextMenu),
       listMenu: []
     }
   },

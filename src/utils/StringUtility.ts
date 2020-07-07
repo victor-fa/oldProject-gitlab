@@ -72,7 +72,7 @@ export default {
 		let k = 1024,
 			sizes = ['B', 'KB', 'MB', 'GB', 'TB'],
 			i = Math.floor(Math.log(bytes) / Math.log(k));
-		return (bytes / Math.pow(k, i)).toPrecision(3) + sizes[i];
+		return (bytes / Math.pow(k, i)).toFixed(2) + sizes[i];
   },
   // 获取磁盘状态
   formatDiskStatus(status) {

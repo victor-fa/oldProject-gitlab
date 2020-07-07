@@ -107,6 +107,12 @@ const encryptResourceContextMenu: Array<OperateGroup> = [
     ]
   },
   {
+    items: [
+      { title: '复制', command: 'copy' },
+      { title: '剪切', command: 'cut' }
+    ]
+  },
+  {
     icon: require('../../assets/delet_accessory.png'),
     items: [
       { title: '移出空间', command: 'moveout' },
@@ -188,10 +194,15 @@ const shareContextMenu: Array<OperateGroup> = [
     icon: require('../../assets/open_accessory.png'),
     items: [
       { title: '打开', command: 'open' },
-      { title: '复制', command: 'copy' },
       { title: '删除', command: 'delete' },
       { title: '重命名', command: 'rename' },
       { title: '下载', command: 'download' }
+    ]
+  },
+  {
+    items: [
+      { title: '复制', command: 'copy' },
+      { title: '剪切', command: 'cut' }
     ]
   },
   {
@@ -209,10 +220,15 @@ const shareResourceContextMenu: Array<OperateGroup> = [
     icon: require('../../assets/open_accessory.png'),
     items: [
       { title: '打开', command: 'open' },
-      { title: '复制', command: 'copy' },
       { title: '删除', command: 'delete' },
       { title: '重命名', command: 'rename' },
       { title: '下载', command: 'download' }
+    ]
+  },
+  {
+    items: [
+      { title: '复制', command: 'copy' },
+      { title: '剪切', command: 'cut' }
     ]
   },
   {

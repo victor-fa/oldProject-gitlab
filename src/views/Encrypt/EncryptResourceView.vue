@@ -1,4 +1,5 @@
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
 import MainResourceView from '../MainView/MainResourceView.vue'
 import { encryptContextMenu } from '@/components/OperateListAlter/operateList'
@@ -11,7 +12,7 @@ export default Vue.extend({
   data () {
     return {
       dataArray: [] as ResourceItem[],
-      itemMenu: encryptContextMenu,
+      itemMenu: _.cloneDeep(encryptContextMenu),
       listMenu: []
     }
   },

@@ -1,4 +1,5 @@
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
 import MainResourceView from '../MainView/MainResourceView.vue'
 import { collectContextMenu } from '@/components/OperateListAlter/operateList'
@@ -13,7 +14,7 @@ export default Vue.extend({
   data () {
     return {
       dataArray: [] as ResourceItem[],
-      itemMenu: collectContextMenu,
+      itemMenu: _.cloneDeep(collectContextMenu),
       listMenu: []
     }
   },
