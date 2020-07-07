@@ -96,7 +96,8 @@ export default Vue.extend({
     },
     isSupportDrag: function () {
       const name = this.$route.name as string
-      return name === 'main-resource-view' || name === 'custom'
+      const supportDragViews = ['main-resource-view', 'custom', 'encrypt']
+      return supportDragViews.indexOf(name) !== -1
     }
   },
   mounted () {
@@ -119,6 +120,8 @@ export default Vue.extend({
       const code = event.code
       if (code === 'KeyA') { // cmd + a
         this.handleCommandAEvent(event)
+      } else if (code === 'KeyV') {
+        this.handleCommandVEvent(event)
       } else if (code === 'Backspace') {
         this.handleDeleteEvent(event)
       }
@@ -132,6 +135,18 @@ export default Vue.extend({
       } else if (event.ctrlKey === true) {
         event.preventDefault()
         this.$emit('callbackAction', 'selectAllItems')
+      }
+    },
+    handleCommandVEvent (event: KeyboardEvent) {
+      if (!this.isSupportDrag) return
+      const isCommand = process.platform === 'darwin'
+      event.stopPropagation()
+      if (isCommand && event.metaKey === true) {
+        event.preventDefault()
+        this.$emit('callbackAction', 'paste')
+      } else if (event.ctrlKey === true) {
+        event.preventDefault()
+        this.$emit('callbackAction', 'paste')
       }
     },
     handleDeleteEvent (event: KeyboardEvent) {

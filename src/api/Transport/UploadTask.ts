@@ -203,6 +203,7 @@ export default class UploadTask extends BaseTask {
   private createFolder (fileInfo: FileInfo) {
     this.name = fileInfo.relativePath
     if (this.fileInfos.length > 1) this.emit('fileBegin', this.taskId, fileInfo)
+    this.completedBytes += fileInfo.totalSize
     NasFileAPI.newFolder(fileInfo.destPath, this.uuid).then(response => {
       console.log(response)
       if (response.data.code !== 200) return

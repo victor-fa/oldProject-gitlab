@@ -77,6 +77,9 @@ export default Vue.extend({
         case "delelteItems":
           this.handleDeleteItems()
           break
+        case "paste":
+          this.handlePasteAction(TaskMode.rename)
+          break
         default:
           break;
       }

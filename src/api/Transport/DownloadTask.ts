@@ -193,6 +193,7 @@ export default class DownloadTask extends BaseTask {
   private createDirectory (fileInfo: FileInfo) {
     this.name = fileInfo.relativePath
     if (this.fileInfos.length > 1) this.emit('fileBegin', this.taskId, fileInfo)
+    this.completedBytes += fileInfo.totalSize
     FileHandle.newDirectory(fileInfo.destPath).then(() => {
       fileInfo.completed = true
       if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))

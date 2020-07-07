@@ -419,6 +419,9 @@ export default Vue.extend({
       this.showSelectModal = true
       console.log(JSON.parse(JSON.stringify(items)));
     },
+    handleDropAction (paths: string[]) {
+      this.handleUploadAction(paths)
+    },
     handleUploadAction (filePaths: string[]) {
       filePaths.forEach(path => {
         const task = new EncryptUploadTask(path, path, '')
