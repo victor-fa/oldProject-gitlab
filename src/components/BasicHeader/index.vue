@@ -304,7 +304,6 @@ export default Vue.extend({
 <style>
 .settingPopover .ant-popover-inner-content {
   padding: 8px 0px;
-  font-family: "Microsoft YaHei";
   cursor: pointer;
 }
 .settingPopover .setting-item {

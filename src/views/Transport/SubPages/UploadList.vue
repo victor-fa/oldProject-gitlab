@@ -12,7 +12,7 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
-import { uploadQueue, encryptUploadQueue } from '../../../api/Transport/TransportHelper'
+import { uploadQueue } from '../../../api/Transport/TransportHelper'
 import BaseTask, { TaskStatus, TaskError, FileInfo } from '../../../api/Transport/BaseTask'
 import UploadTask from '../../../api/Transport/UploadTask'
 import StringUtility from '../../../utils/StringUtility'
@@ -45,8 +45,7 @@ export default Vue.extend({
   methods: {
     fetchUploadTasks () {
       const tasks = uploadQueue.getAllTasks()
-      const encryptTasks = encryptUploadQueue.getAllTasks()
-      this.dataArray = tasks.concat(encryptTasks).map(task => {
+      this.dataArray = tasks.map(task => {
         return TransportHandler.convertTask(task)
       })
       this.updateView()
@@ -76,25 +75,19 @@ export default Vue.extend({
       })
     },
     observerUploadQueue () {
-      this.removeObserver()
       uploadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)
-      uploadQueue.addListener('taskQueueChange', this.handleTaskQueueChange)
-      encryptUploadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)
-      encryptUploadQueue.addListener('taskQueueChange', this.handleTaskQueueChange)
+      uploadQueue.addListener('taskQueueChange', this.handleUploadQueueChange)
     },
     removeObserver () {
       uploadQueue.removeAllListeners()
-      encryptUploadQueue.removeAllListeners()
     },
     handleTaskStatusChange (taskId: number) {
       const task = uploadQueue.searchTask(taskId)
       if (task === undefined) return
       this.reloadListItem(task)
     },
-    handleEncryptTaskStatusChange (taskId: number) {
-      const task = encryptUploadQueue.searchTask(taskId)
-      if (task === undefined) return
-      this.reloadListItem(task)
+    handleUploadQueueChange () {
+      this.fetchUploadTasks()
     },
     reloadListItem<T extends BaseTask> (task: T) {
       const index = TransportHandler.searchModel(this.dataArray, task.taskId)
@@ -105,9 +98,6 @@ export default Vue.extend({
       if (task.error !== undefined && task.status === TaskStatus.error) {
         this.$message.error(task.error.desc)
       }
-    },
-    handleTaskQueueChange () {
-      this.fetchUploadTasks()
     },
     // handle views action
     handleCategoryChange (aIndex: number) { 
@@ -121,19 +111,15 @@ export default Vue.extend({
       switch (command) {
         case 'pauseAll':
           uploadQueue.suspendAllTasks()
-          encryptUploadQueue.suspendAllTasks()
           break;
         case 'resumeAll':
           uploadQueue.resumeAllTasks()
-          encryptUploadQueue.resumeAllTasks()
           break;
         case 'cancelAll':
           uploadQueue.deleteDoingTasks()
-          encryptUploadQueue.deleteDoingTasks()
           break;
         case 'clearAll':
           uploadQueue.deleteDoneTasks()
-          encryptUploadQueue.deleteDoneTasks()
           break;
         default:
           break;
@@ -141,28 +127,21 @@ export default Vue.extend({
     },
     handleItemAction (command: string, index: number, ...args: any[]) {
       const model = this.showArray[index]
-      if (model.type === 'upload') {
-        this.handleTaskOperate(command, uploadQueue, model.id)
-      } else {
-        this.handleTaskOperate(command, encryptUploadQueue, model.id)
-      }
-    },
-    handleTaskOperate<T extends BaseTask> (command: string, queue: TaskQueue<T>, taskId: number) {
-      const task = queue.searchTask(taskId)
+      const task = uploadQueue.searchTask(model.id)
       if (task === undefined) return
       switch (command) {
         case 'delete':
         case 'cancel':
-          queue.deleteTask(task)
+          uploadQueue.deleteTask(task)
           break
         case 'pause':
-          queue.suspendTask(task)
+          uploadQueue.suspendTask(task)
           break
         case 'continue':
-          queue.resumeTask(task)
+          uploadQueue.resumeTask(task)
           break
         case 'refresh':
-          queue.reloadTask(task)
+          uploadQueue.reloadTask(task)
           break
         case 'jump':
           EventBus.$emit(EventName.jump, { path: task.fullPath(), uuid: task.uuid })
@@ -178,8 +157,8 @@ export default Vue.extend({
       }
     },
     handleOpenAction<T extends BaseTask> (task: T, isFinder: boolean) {
-      const localPath = process.platform === 'win32' ? StringUtility.convertL2R(task.fullPath()) : task.fullPath()
-      const exist = fs.existsSync(task.fullPath())
+      const localPath = process.platform === 'win32' ? StringUtility.convertL2R(task.srcPath) : task.srcPath
+      const exist = fs.existsSync(localPath)
       if (!exist) {
         this.$message.error('文件不存在')
         return

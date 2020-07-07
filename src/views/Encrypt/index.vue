@@ -62,7 +62,7 @@ import NasFileAPI, { TaskMode, maxSize } from '@/api/NasFileAPI'
 import EncryptUploadTask from '@/api/Transport/EncryptUploadTask'
 import EncryptDownloadTask from '@/api/Transport/EncryptDownloadTask'
 import { TaskError, TaskStatus } from '@/api/Transport/BaseTask'
-import { encryptUploadQueue, encryptDownloadQueue } from '@/api/Transport/TransportHelper'
+import { uploadQueue, downloadQueue } from '@/api/Transport/TransportHelper'
 import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
 import { User, BasicResponse } from '@/api/UserModel'
 import StringUtility from '@/utils/StringUtility'
@@ -80,23 +80,6 @@ export default Vue.extend({
   computed: {
     ...mapGetters('NasServer', ['cryptoInfo']),
     ...mapGetters('User', ['user'])
-  },
-  mounted () {
-    this.checkEncryptStatus()
-    encryptUploadQueue.on('fileFinished', (task, fileInfo) => {  // 接收完成结果
-      // this.$store.dispatch('Resource/decreaseTask')
-      setTimeout(() => { this.getEncryptList() }, 1000);
-    })
-  },
-  destroyed () {
-    if (this.alreadyLogin === true) { // 已登录情况下才需要登录
-      this.logout()
-    }
-    encryptUploadQueue.off('taskStatusChange', this.handleTaskStatusChange)
-    if (this.delayTimer !== null) {
-      clearTimeout(this.delayTimer)
-      this.delayTimer = null
-    }
   },
   data () {
     return {
@@ -132,6 +115,19 @@ export default Vue.extend({
       encryptResourceContextMenu, // item右键菜单选项
       showSelectModal: false, // 控制路径选择弹窗的显示与隐藏
       delayTimer: null as NodeJS.Timer | null
+    }
+  },
+  mounted () {
+    this.checkEncryptStatus()
+  },
+  destroyed () {
+    if (this.alreadyLogin === true) { // 已登录情况下才需要登录
+      this.logout()
+    }
+    uploadQueue.off('taskStatusChange', this.handleTaskStatusChange)
+    if (this.delayTimer !== null) {
+      clearTimeout(this.delayTimer)
+      this.delayTimer = null
     }
   },
   methods: {
@@ -362,7 +358,7 @@ export default Vue.extend({
       items.forEach(item => {
         const task = new EncryptDownloadTask(item.path, destPath, item.uuid)
         task.setResourceItem(item)
-        encryptDownloadQueue.addTask(task)
+        downloadQueue.addTask(task)
         this.$store.dispatch('Resource/increaseTask')
       })
     },
@@ -406,12 +402,15 @@ export default Vue.extend({
       }
     },
     handleDeletRequest (items: ResourceItem[]) {
-      ResourceHandler.disableSelectItems(this.dataArray)
+      this.loading = true
       NasFileAPI.addEncryptRemoveTask(items).then(response => {
+        this.loading = false
         if (response.data.code !== 200) return
         this.$store.dispatch('Resource/increaseTask')
         setTimeout(() => this.getEncryptList(), 2000);
-      }).catch(_ => {
+      }).catch(error => {
+        console.log(error)
+        this.loading = false
         this.$message.error('删除失败')
       })
     },
@@ -424,13 +423,13 @@ export default Vue.extend({
       filePaths.forEach(path => {
         const task = new EncryptUploadTask(path, path, '')
         task.matchTaskIcon()
-        encryptUploadQueue.addTask(task)
-        encryptUploadQueue.on('taskStatusChange', this.handleTaskStatusChange)
+        uploadQueue.addTask(task)
+        uploadQueue.on('taskStatusChange', this.handleTaskStatusChange)
         this.$store.dispatch('Resource/increaseTask')
       })
     },
     handleTaskStatusChange (taskId: number) {
-      const task = encryptUploadQueue.searchTask(taskId)
+      const task = uploadQueue.searchTask(taskId)
       if (task === undefined) return
       if (task.status === TaskStatus.finished) {
         if (this.delayTimer !== null) clearTimeout(this.delayTimer)

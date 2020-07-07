@@ -23,7 +23,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     super()
     this.tableName = tableName
     this.queue = []
-    this.setMaxListeners(20)
+    this.setMaxListeners(25)
   }
   // public methods
   /**获取全部任务 */
@@ -46,7 +46,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     await task.cancel()
     this.queue = this.removeTask(task.taskId)
     this.emit('taskQueueChange')
-    await this.deleteTaskInDB(task)
+    this.deleteTaskInDB(task)
     this.checkUploadQueue()
   }
   /**刷新任务，当上传出错时，调用此接口刷新任务 */

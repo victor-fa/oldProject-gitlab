@@ -15,7 +15,7 @@ import MainPage from '../MainPage/index.vue'
 import StringUtility from '../../../utils/StringUtility'
 import BaseTask, { TaskStatus, FileInfo, TaskError } from '../../../api/Transport/BaseTask'
 import DownloadTask from '../../../api/Transport/DownloadTask'
-import { downloadQueue, encryptDownloadQueue, encryptUploadQueue } from '../../../api/Transport/TransportHelper'
+import { downloadQueue } from '../../../api/Transport/TransportHelper'
 import { TransportModel, downloadCategorys, TransportStatus, TransportCategory } from '../MainPage/TransportModel'
 import TransportHandler from '../TransportHandler'
 import { EventBus } from '../../../utils/eventBus'
@@ -46,8 +46,7 @@ export default Vue.extend({
     // inner private methods
     fetchDownloadTasks () {
       const tasks = downloadQueue.getAllTasks()
-      const encryptTasks = encryptDownloadQueue.getAllTasks()
-      this.dataArray = tasks.concat(encryptTasks).map(task => {
+      this.dataArray = tasks.map(task => {
         return TransportHandler.convertTask(task)
       })
       this.updateView()
@@ -81,20 +80,12 @@ export default Vue.extend({
     observerDownloadQueue () {
       downloadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)
       downloadQueue.addListener('taskQueueChange', this.handleTaskQueueChange)
-      encryptUploadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)
-      encryptUploadQueue.addListener('taskQueueChange', this.handleTaskQueueChange)
     },
     removeObserver () {
       downloadQueue.removeAllListeners()
-      encryptUploadQueue.removeAllListeners()
     },
     handleTaskStatusChange (taskId: number) {
       const task = downloadQueue.searchTask(taskId)
-      if (task === undefined) return
-      this.reloadTaskStatus(task)
-    },
-    handleEncryptTaskStatusChange (taskId: number) {
-      const task = encryptDownloadQueue.searchTask(taskId)
       if (task === undefined) return
       this.reloadTaskStatus(task)
     },
@@ -123,19 +114,15 @@ export default Vue.extend({
       switch (command) {
         case 'pauseAll':
           downloadQueue.suspendAllTasks()
-          encryptDownloadQueue.suspendAllTasks()
           break;
         case 'resumeAll':
           downloadQueue.resumeAllTasks()
-          encryptDownloadQueue.resumeAllTasks()
           break;
         case 'cancelAll':
           downloadQueue.deleteDoingTasks()
-          encryptDownloadQueue.deleteDoingTasks()
           break;
         case 'clearAll':
           downloadQueue.deleteDoneTasks()
-          encryptDownloadQueue.deleteDoneTasks()
           break;
         default:
           break;
@@ -143,28 +130,21 @@ export default Vue.extend({
     },
     handleItemAction(command: string, index: number, ...args: any[]) {
       const model = this.showArray[index]
-      if (model.type === 'download') {
-        this.handleTaskOperate(command, downloadQueue, model.id)
-      } else {
-        this.handleTaskOperate(command, encryptDownloadQueue, model.id)
-      }
-    },
-    handleTaskOperate<T extends BaseTask> (command: string, queue: TaskQueue<T>, taskId: number) {
-      const task = queue.searchTask(taskId)
+      const task = downloadQueue.searchTask(model.id)
       if (task === undefined) return
       switch (command) {
         case 'delete':
         case 'cancel':
-          queue.deleteTask(task)
+          downloadQueue.deleteTask(task)
           break
         case 'pause':
-          queue.suspendTask(task)
+          downloadQueue.suspendTask(task)
           break
         case 'continue':
-          queue.resumeTask(task)
+          downloadQueue.resumeTask(task)
           break
         case 'refresh':
-          queue.reloadTask(task)
+          downloadQueue.reloadTask(task)
           break
         case 'jump':
           EventBus.$emit(EventName.jump, { path: task.srcPath, uuid: task.uuid })

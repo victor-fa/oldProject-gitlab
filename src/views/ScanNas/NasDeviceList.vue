@@ -48,8 +48,8 @@ export default Vue.extend({
   name: 'nas-device-list',
   props: {
     dataSource: Array,
-    listHeight: {
-      default: 430
+    adjust: {
+      default: 250
     },
     type: {
       default: 'scan'
@@ -68,10 +68,20 @@ export default Vue.extend({
   },
   data () {
     return {
-      selectedIndex: -1
+      selectedIndex: -1,
+      listHeight: document.body.clientHeight - this.adjust
     }
   },
+  mounted () {
+    window.addEventListener('resize', this.handleResizeAction)
+  },
+  destroyed () {
+    window.removeEventListener('resize', this.handleResizeAction)
+  },
   methods: {
+    handleResizeAction () {
+      this.listHeight = document.body.clientHeight - this.adjust
+    },
     resetSelectedItem () {
       this.selectedIndex = -1
     },

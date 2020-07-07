@@ -142,7 +142,7 @@ export default Vue.extend({
           backupUploadQueue.reloadTask(task)
           break
         case 'jump':
-          EventBus.$emit(EventName.jump, { path: task.fullPath(), uuid: task.uuid })
+          EventBus.$emit(EventName.jump, { path: task.srcPath, uuid: task.uuid })
           break
         case 'open':
           shell.openItem(task.srcPath)

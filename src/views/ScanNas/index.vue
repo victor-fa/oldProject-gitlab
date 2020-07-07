@@ -14,7 +14,6 @@
         <nas-device-list
           ref="nasDeviceList"
           :dataSource="nasList"
-          :listHeight="listHeight"
           v-on:didSelectItem="didSelectItem"
         />
       </a-spin>
@@ -59,8 +58,7 @@ export default Vue.extend({
       scanLoading: true,
       nasList: [] as NasInfo[],
       selectNas: {} as NasInfo,
-      connectLoading: false,
-      listHeight: 0
+      connectLoading: false
     }
   },
   computed: {
@@ -78,21 +76,11 @@ export default Vue.extend({
   },
   mounted () {
     this.scanNasInLan()
-    this.bind()
   },
   destroyed () {
     ClientAPI.closeBoardcast()
   },
   methods: {
-    bind () {
-      this.listHeight = document.body.clientHeight - 250
-      window.onresize = () => {
-        const _this = this as any
-        return (() => {
-          _this.listHeight = document.body.clientHeight - 250
-        })();
-      };
-    },
     scanNasInLan () {
       this.scanLoading = true
       ClientAPI.scanNas(data => {

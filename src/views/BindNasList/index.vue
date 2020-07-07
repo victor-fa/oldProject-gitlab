@@ -9,7 +9,6 @@
         ref="nasDeviceList"
         type="bind"
         :dataSource="deviceList"
-        :listHeight="listHeight"
         v-on:didSelectItem="didSelectItem"
         v-on:unbind="handleUnbindAction"
       />
@@ -41,13 +40,11 @@ export default Vue.extend({
   data () {
     return {
       loading: false,
-      deviceList: [] as DeviceInfo[],
-      listHeight: 0
+      deviceList: [] as DeviceInfo[]
     }
   },
   mounted () {
     this.getBindDevices()
-    this.bind()
   },
   computed: {
     ...mapGetters('User', ['user']),
@@ -58,15 +55,6 @@ export default Vue.extend({
     }
   },
   methods: {
-    bind () {
-      this.listHeight = document.body.clientHeight - 250
-      window.onresize = () => {
-        const _this = this as any
-        return (() => {
-          _this.listHeight = document.body.clientHeight - 250
-        })();
-      };
-    },
     getBindDevices () {
       this.loading = true
       UserAPI.fetchBindDevices().then(response => {
@@ -108,6 +96,7 @@ export default Vue.extend({
         this.$message.error('解绑失败')
       })
     },
+    // 扫描登录
     handleAutoLogin () {
       let device = this.deviceList[0]
       const cacheNas = this.nasInfo as NasInfo
@@ -118,13 +107,24 @@ export default Vue.extend({
     },
     searchNas (device: DeviceInfo) {
       this.loading = true
-      ClientAPI.searchNas(device.sn, device.mac).then(data => {
+      ClientAPI.searchNas(device.sn, device.mac).then(data => { // 1. search nas
         const nas = this.complementNasInfo(device, data)
-        this.loginToNas(nas, device.publicKey)
-      }).catch(error => {
+        this.$store.dispatch('NasServer/updateNasInfo', nas)
+        ClientAPI.setBaseUrl(`http://${nas.ip}:${nas.port}`)
+        return ClientAPI.login(this.user, device.publicKey)
+      }).then(response => { // 2. login to nas
+        console.log(response.data)
+        this.loading = false
+        if (response.data.code !== 200) return
+        const accessInfo = response.data.data as NasAccessInfo
+        accessInfo.key = device.publicKey
+        this.$store.dispatch('NasServer/updateNasAccess', accessInfo)
+        processCenter.renderSend(EventName.home)
+      }).catch(error => { // 3. catch error
         console.log(error)
         this.loading = false
         this.$message.error('连接失败')
+        this.getBindDevices()
       })
     },
     complementNasInfo (device: DeviceInfo, nas: NasInfo) {
@@ -134,24 +134,6 @@ export default Vue.extend({
         nas.active = NasActive.Bind
       }
       return nas
-    },
-    loginToNas (nas: NasInfo, secretKey: string) {
-      ClientAPI.setBaseUrl(`http://${nas.ip}:${nas.port}`)
-      ClientAPI.login(this.user, secretKey).then(response => {
-        console.log(response.data)
-        this.loading = false
-        if (response.data.code !== 200) return
-        const accessInfo = response.data.data as NasAccessInfo
-        accessInfo.key = secretKey
-        // caceh nas info and token
-        this.$store.dispatch('NasServer/updateNasAccess', accessInfo)
-        this.$store.dispatch('NasServer/updateNasInfo', nas)
-        processCenter.renderSend(EventName.home)
-      }).catch(error => {
-        console.log(error)
-        this.loading = false
-        this.$message.error('网络连接失败，请检查网络')
-      })
     },
     addAction () {
       this.$router.push({
