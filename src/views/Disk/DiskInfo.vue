@@ -3,7 +3,7 @@
     <a-layout-header class="setting-header">
       <span v-if="DiskData.path">{{DiskData.path | filterName}} 属性</span>
 			<span v-else>{{ DiskData.showName }}</span>
-      <window-menu :configure="'unable'" class="window-menu"/>
+      <window-menu :configure="'unable'" :showResizable="false" class="window-menu"/>
     </a-layout-header>
 
 		<div v-if="DiskData.path">

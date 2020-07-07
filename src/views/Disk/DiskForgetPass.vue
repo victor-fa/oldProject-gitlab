@@ -53,7 +53,7 @@ export default Vue.extend({
       code: '',
       codeTips: '',
       codeCount: 60,
-      timer: null as any,
+      timer: null as NodeJS.Timer | null,
       loading: false,
       codeVisiable: false,
       submitText: '重置',

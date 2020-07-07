@@ -86,6 +86,8 @@ export default Vue.extend({
     align-items: center;
     .left-view-item {
       display: inline-block;
+      height: 34px;
+      line-height: 20px;
       .ant-btn {
         max-width: 100px;
         border: none;

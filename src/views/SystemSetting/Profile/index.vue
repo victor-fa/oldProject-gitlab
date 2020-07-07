@@ -1,34 +1,53 @@
 <template>
 	<div class="cd-setting-main">
 		<div class="cd-setting-content">
-			<p class="cd-setting-info">
-				<img class="photo" draggable="false" v-if="UploadSrc" :src="UploadSrc" alt="" />
-				<img class="photo" draggable="false" v-else-if="user.image" :src="user.image" alt="" />
-				<img class="photo" draggable="false" v-else :src="loginIcons.user">
-			</p>
-			<form @submit.prevent="onSubmit" ref="form">
-				<div class="cd-user-head" onclick="this.childNodes[0].click()">
-					<a-input type="file" name="userhead" @change="changePhoto()" ref="file" />
+			<div style="display: flex;">
+				<div>
+					<p class="cd-setting-info">
+						<img class="photo" draggable="false" v-if="UploadSrc" :src="UploadSrc" alt="" />
+						<img class="photo" draggable="false" v-else-if="user.image" :src="user.image" alt="" />
+						<img class="photo" draggable="false" v-else :src="loginIcons.user">
+					</p>
+					<form @submit.prevent="onSubmit" ref="form">
+						<div class="cd-user-head" onclick="this.childNodes[0].click()">
+							<a-input type="file" name="userhead" @change="changePhoto()" ref="file" />
+						</div>
+					</form>
 				</div>
-			</form>
-			<p class="cd-setting-info nick">
-				昵称：{{!edit_nick ? user.nicName : ''}}
-				<a-input type="text" v-show="edit_nick"
-					v-model="user.nicName" placeholder="请输入昵称" clearable
-					class="nick-name" :max-length="20" ref="input_nick"
-					@blur.native.capture="handleSave()"/>
-				<img class="edit" v-show="!edit_nick" :src="loginIcons.edit" @click="edit_nick = true">
-			</p>
-			<p class="cd-setting-info">
-				手机号：{{!edit_phone ? user.phoneNo : ''}}
-				<a-input type="text" v-show="edit_phone"
-					v-model="user.phoneNo" placeholder="请输入手机号" clearable
-					style="width: 200px;" :max-length="11" ref="input_phone"
-					@blur.native.capture="handleSave()"/>
-				<img class="edit" v-show="!edit_phone" :src="loginIcons.edit" @click="edit_phone = true">
-			</p>
+				<div>
+					<p class="cd-setting-info nick">
+						昵称：{{!edit_nick ? user.nicName : ''}}
+						<a-input type="text" v-show="edit_nick"
+							v-model="user.nicName" placeholder="请输入昵称" clearable
+							class="nick-name" :max-length="20" ref="input_nick"
+							@blur.native.capture="handleSave()"/>
+						<img class="edit" v-show="!edit_nick" :src="loginIcons.edit" @click="edit_nick = true">
+					</p>
+					<p class="cd-setting-info">
+						手机号：{{!edit_phone ? user.phoneNo : ''}}
+						<a-input type="text" v-show="edit_phone"
+							v-model="user.phoneNo" placeholder="请输入手机号" clearable
+							style="width: 200px;" :max-length="11" ref="input_phone"
+							@blur.native.capture="handleSave()"/>
+						<img class="edit" v-show="!edit_phone" :src="loginIcons.edit" @click="edit_phone = true">
+					</p>
+				</div>
+			</div>
 			<p class="cd-setting-info">
 				<a-button @click="changePassword">修改密码</a-button>
+			</p>
+			<p class="cd-setting-info title">登录设置</p>
+			<p class="cd-setting-info">
+				<a-checkbox class="checkbox" v-model="loginSetting.autoLogin">自动登录</a-checkbox>
+				<a-checkbox v-model="loginSetting.autoPowerOn">开机自启动</a-checkbox>
+			</p>
+			<p class="cd-setting-info close title">当关闭窗口时</p>
+			<p class="cd-setting-info">
+				<a-radio-group v-model="loginSetting.closeChoice">
+					<a-radio value="tray">最小化到托盘</a-radio>
+					<br><br>
+					<a-radio value="exit">退出程序</a-radio>
+				</a-radio-group>
 			</p>
 		</div>
 		<a-modal
@@ -40,6 +59,7 @@
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import StringUtility from '@/utils/StringUtility'
@@ -52,6 +72,9 @@ export default Vue.extend({
   name: 'profil',
 	computed: {
 		...mapGetters('User', ['user']),
+    ...mapGetters('Setting', ['autoPowerOn']),
+		...mapGetters('Setting', ['closeInfo']),
+		...mapGetters('Setting', ['autoLogin']),
 	},
 	data() {
 		return {
@@ -66,7 +89,12 @@ export default Vue.extend({
 			},
 			loginIcons,
 			edit_nick: false,
-			edit_phone: false
+			edit_phone: false,
+			loginSetting: {
+				autoLogin: true,
+				autoPowerOn: false,
+				closeChoice: 'tray'
+			},
 		};
   },
 	watch: {
@@ -75,7 +103,18 @@ export default Vue.extend({
     },
     edit_phone: function (newValue) {
 			this.$nextTick(() => (this.$refs.input_phone as any).focus())
-    }
+    },
+		loginSetting: {
+			handler() {
+				this.handleSave()
+			},
+			deep: true
+		}
+	},
+	created () {
+		this.loginSetting.autoPowerOn = _.isEmpty(this.autoPowerOn) ? false : this.autoPowerOn.flag
+		this.loginSetting.closeChoice = _.isEmpty(this.closeInfo) ? 'tray' : this.closeInfo.trayOrExit
+		this.loginSetting.autoLogin = _.isEmpty(this.autoLogin) ? true : this.autoLogin.flag
 	},
   methods: {
 		changePhoto () {
@@ -115,6 +154,15 @@ export default Vue.extend({
 				this.changePhoneData.phone = this.user.phoneNo
 				this.getPhoneCode()
 			}
+			const closoInput = {
+				'remember': this.loginSetting.closeChoice ? true : false,
+				'trayOrExit': this.loginSetting.closeChoice
+			}
+			const _this = this as any
+			_this.$ipc.send('system', 'auto-launch', this.loginSetting.autoPowerOn);
+			this.$store.dispatch('Setting/updateCloseChoiceInfo', closoInput)
+			this.$store.dispatch('Setting/updateAutoPowerOnInfo', { flag: this.loginSetting.autoPowerOn })
+			this.$store.dispatch('Setting/updateAutoLoginInfo', { flag: this.loginSetting.autoLogin })
 		},
 		handleNickname() {
 			const input = { nicName: this.user.nicName ? this.user.nicName : '' }
@@ -177,6 +225,7 @@ p { text-align: left; }
 		padding: 20px;
 		float: left;
 		overflow-y: scroll;
+		position: relative;
 		.cd-setting-info {
 			width: 100%;
 			font-size: 14px;
@@ -235,6 +284,12 @@ p { text-align: left; }
 				transition: all 0.35s;
 			}
 		}
+		.title {
+			font-weight: 500;
+			font-size: 14px;
+		}
+		.checkbox { margin-right: 10px; }
+		.close { margin-top: 20px; }
 	}
 }
 

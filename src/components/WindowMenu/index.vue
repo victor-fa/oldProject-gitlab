@@ -58,7 +58,7 @@ export default Vue.extend({
 	props: {
 		configure: {
 			type: String
-    },
+		},
     showMinimizable: {
       default: true
     },
@@ -73,20 +73,32 @@ export default Vue.extend({
     ...mapGetters('Setting', ['closeInfo']),
     closable: function () {
       const win = BrowserWindow.getFocusedWindow()
-      if (win !== null) return win.closable
-      if (!this.showClosable) return false
+      if (win !== null) {
+        return win.closable
+      }
+      if (!this.showClosable) {
+        return false
+      }
       return true
     },
     resizable: function () {
       const win = BrowserWindow.getFocusedWindow()
-      if (win !== null) return win.resizable
-      if (!this.showResizable) return false
+      if (win !== null) {
+        return win.resizable
+      }
+      if (!this.showResizable) {
+        return false
+      }
       return true
     },
     minimizable: function () {
       const win = BrowserWindow.getFocusedWindow()
-      if (win !== null) return win.minimizable
-      if (!this.showMinimizable) return false
+      if (win !== null) {
+        return win.minimizable
+      }
+      if (!this.showMinimizable) {
+        return false
+      }
       return true
     },
     showResizeTitle: function () {

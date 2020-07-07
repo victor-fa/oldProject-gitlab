@@ -367,10 +367,8 @@ export default {
 			})
 		})
   },
-  upload (data) {
-    console.log(data);
+  uploadPackage (data) {
     if (updateWindow !== null) {
-      console.log(3333);
       updateWindow.webContents.downloadURL(data);
     }
   },

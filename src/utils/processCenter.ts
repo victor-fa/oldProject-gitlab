@@ -80,7 +80,7 @@ export default {
           windowManager.presentUpdateSoftWindow()
           break
         case EventName.uploadPackage:
-          windowManager.upload(args[0])
+          windowManager.uploadPackage(args[0])
           break
         case EventName.drag:
           break

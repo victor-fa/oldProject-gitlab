@@ -14,26 +14,6 @@
 			<p class="cd-setting-info">固件版本：{{firmwareVer}}</p>
 			<p class="cd-setting-info">IP地址：{{nasInfo.ip}}</p>
 			<p class="cd-setting-info">MAC地址：{{nasInfo.mac | filterMac}}</p>
-			<p class="cd-setting-title">磁盘信息</p>
-			<div class="content" v-for="(item, index) in disks" :key="index">
-				<template v-if="item.type !== 7">
-					<div class="left-side">
-						<img class="disk" :src="loginIcons.disk">
-					</div>
-					<div class="right-side">
-						<span>盘位{{index + 1}}<font>{{item.status | filterStatus}}</font></span>
-						<div class="average">
-							<span>{{item.type | filterStorageType(index)}}</span>
-							<span>{{item.modelName}}</span>
-						</div>
-						<div class="average">
-							<span>容量 {{item.size | filterSize}}</span>
-							<span>已使用 {{item.used | filterSize}}</span>
-						</div>
-					</div>
-				</template>
-			</div>
-			<p class="cd-setting-title"><br></p>
 			<p class="cd-setting-title">
 				<a-button class="cd-purple-button" @click="handleDangerousOperation('shutdown')" v-show="isUserAdmin">关机</a-button>
 				<a-button class="cd-purple-button" @click="handleDangerousOperation('reboot')" v-show="isUserAdmin">重启</a-button>
@@ -108,7 +88,6 @@ export default Vue.extend({
 	},
 	data() {
 		return {
-			disks: [] as any,
 			loginIcons,
 			update: {
 				visiable: false,
@@ -227,7 +206,7 @@ export default Vue.extend({
 		handleFactory () {
 			NasFileAPI.factory().then(response => {
 				if (response.data.code !== 200) return
-				this.switchDevice()
+        processCenter.renderSend(EventName.initialize)  // 打开获取初始化进度窗口
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
@@ -283,7 +262,6 @@ export default Vue.extend({
     fetchDisks () {
       NasFileAPI.fetchDisks().then(response => {
         if (response.data.code !== 200) return
-				this.disks = _.get(response.data.data, 'disks')
 				console.log(JSON.parse(JSON.stringify(response.data.data)));
 				this.diskMode = _.get(response.data.data, 'mode')
       }).catch(error => {
@@ -406,37 +384,6 @@ p { text-align: left; }
 				height: 20px;
 				margin: 3px 0 0 10px;
 				cursor: pointer;
-			}
-		}
-		.content {
-			display: flex;
-			.left-side {
-				display: flex;
-				flex-flow: column;
-				text-align: left;
-				padding: 10px;
-				img {
-					width: 60px;
-					height: 60px;
-					margin: 0px;
-				}
-			}
-			.right-side {
-				flex: 1;
-				display: flex;
-				flex-flow: column;
-				text-align: left;
-				padding: 10px;
-				font { color: #06B650; }
-				.average {
-					display: flex;
-					span { flex: 1; }
-				}
-			}
-			button { margin: 30px 10px 0 0; }
-			&:active, &:focus, &:hover {
-				background: #06b6501a;
-				border-radius: 4px;
 			}
 		}
 	}
