@@ -24,7 +24,8 @@
 		</div>
 		<a-modal title="检测到有新版本固件更新"
 			:visible="update.visiable" :mask="false" :closable="false" :maskClosable="false" width="450px"
-			okText="确认升级" cancelText="取消升级" @ok="handleUpdate" @cancel="update.visiable = false;update.info = {}">
+			okText="确认升级" cancelText="取消升级" @ok="handleUpdate" @cancel="update.visiable = false;update.info = {}"
+			:ok-button-props="{ props: { disabled: disable } }">
 			<p>版本名称：{{update.info.versionName}}（{{update.info.size | filterSize}}）</p>
 			<p>发布时间：{{update.info.pubtime | filterTime}}</p>
 			<p>描述：{{update.info.desc === 'null' ? '无' : update.info.desc}}</p>
@@ -230,7 +231,6 @@ export default Vue.extend({
 				console.log(response);
 				this.update.visiable = false
 				this.update.info = {}
-				// this.switchDevice()
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)

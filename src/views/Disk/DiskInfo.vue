@@ -15,7 +15,11 @@
 				<span>文件位置：</span>
 				<div ref="address" :title="DiskData.name">{{getPathSource()}}/{{ DiskData.name }}</div>
 			</div>
-			<div class="cd-disk-info-item">
+			<div class="cd-disk-info-item" v-if="DiskData.type === 6">
+				<span>文件大小：</span>
+				<div>-</div>
+			</div>
+			<div class="cd-disk-info-item" v-if="DiskData.type !== 6">
 				<span>文件大小：</span>
 				<div :title="DiskData.size | filterSize">{{ DiskData.size | filterSize }}</div>
 			</div>
@@ -98,7 +102,6 @@ export default {
 			return StringUtility.formatName(data)
 		},
 		filterNameType (data) {
-			console.log(StringUtility.fileTypeToName(data));
 			return StringUtility.fileTypeToName(data)
 		},
 		filterTime (data) {
