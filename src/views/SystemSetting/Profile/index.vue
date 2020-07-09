@@ -14,7 +14,7 @@
 						</div>
 					</form>
 				</div>
-				<div>
+				<div style="margin-left: 20px">
 					<p class="cd-setting-info nick">
 						昵称：{{!edit_nick ? user.nicName : ''}}
 						<a-input type="text" v-show="edit_nick"
@@ -32,10 +32,8 @@
 						<img class="edit" v-show="!edit_phone" :src="loginIcons.edit" @click="edit_phone = true">
 					</p>
 				</div>
+				<div class="cd-setting-info modify-pass" @click="changePassword">修改密码</div>
 			</div>
-			<p class="cd-setting-info">
-				<a-button @click="changePassword">修改密码</a-button>
-			</p>
 			<p class="cd-setting-info title">登录设置</p>
 			<p class="cd-setting-info">
 				<a-checkbox class="checkbox" v-model="loginSetting.autoLogin">自动登录</a-checkbox>
@@ -257,6 +255,13 @@ p { text-align: left; }
 				cursor: pointer;
 			}
 		}
+		.modify-pass {
+			flex: 1;
+			text-align: right;
+			padding-top: 15px;
+			color: #007934;
+			cursor: pointer;
+		}
 		.nick {
 			display: flex;
 			.nick-name {
@@ -268,8 +273,8 @@ p { text-align: left; }
 			width: 70px;
 			height: 70px;
 			position: absolute;
-			left: 155px;
-			top: 65px;
+			left: 25px;
+			top: 20px;
 			overflow: unset;
 			transition: all 0.35s;
 			input {
@@ -289,7 +294,10 @@ p { text-align: left; }
 			font-size: 14px;
 		}
 		.checkbox { margin-right: 10px; }
-		.close { margin-top: 20px; }
+		.close {
+			margin-top: 20px;
+			font-weight: 500;
+		}
 	}
 }
 

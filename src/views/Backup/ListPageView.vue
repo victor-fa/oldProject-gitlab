@@ -67,27 +67,10 @@ export default Vue.extend({
         this.$message.error('网络连接错误，请检测网络')
       })
     },
-    fetchBackupDetail (path, uuid) {  // 为了跳过唯一id路径的展示
-      this.loading = true
-      NasFileAPI.fetchResourceList(path, uuid, this.page, OrderType.byNameDesc).then(response => {
-        console.log(response)
-        this.loading = false
-        if (response.data.code !== 200) return
-        this.parseResponse(response.data)
-      }).catch(error => {
-        this.loading = false
-        this.$message.error('网络连接错误，请检测网络')
-        console.log(error)
-      })
-    },
     parseResponse (data: BasicResponse) {
       this.totalSize = _.get(data.data, 'total')
       let list = _.get(data.data, 'list') as Array<ResourceItem>
       if (list.length === 0) return
-      if (this.isSourcePath(list[0])) {
-        this.fetchBackupDetail(list[0].path, list[0].uuid)
-        return
-      }
       if (_.isEmpty(list) || list.length < maxSize) this.busy = true
       list = ResourceHandler.formatResourceList(list)
       this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)

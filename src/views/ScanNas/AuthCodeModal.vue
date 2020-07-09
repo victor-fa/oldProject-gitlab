@@ -7,6 +7,7 @@
           class="input"
           placeholder="请输入授权码"
           v-model="authCode"
+          v-on:pressEnter="handleOk"
         />
         <div class="bottom">
           <a-button @click="handleCancel">取消</a-button>

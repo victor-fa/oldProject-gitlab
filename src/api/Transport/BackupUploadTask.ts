@@ -6,6 +6,7 @@ import { BasicResponse } from '../UserModel';
 import NasFileAPI from '../NasFileAPI';
 import { UploadParams } from '../NasFileModel';
 import { FileInfo } from './BaseTask';
+import ClientAPI from '@/api/ClientAPI'
 
 export default class BackupUploadTask extends UploadTask {
   icon = require('../../assets/resource/folder_icon.png')
@@ -15,9 +16,11 @@ export default class BackupUploadTask extends UploadTask {
       let fileInfo: FileInfo | null = null
       super.convertFileStats(path, stats).then(info => {
         fileInfo = info
+        console.log(JSON.parse(JSON.stringify(fileInfo)));
         if (!fileInfo.isDirectory) {
           return this.calculatorFileMD5(path)
         } else {
+          fileInfo.filter = true  // 过滤掉文件夹
           return ''
         }
       }).then(md5 => {
@@ -54,19 +57,18 @@ export default class BackupUploadTask extends UploadTask {
     const hostname = require("os").hostname()
     return {
       end,
-      path: '/' + fileInfo.destPath,
+      path: fileInfo.destPath,
       start: fileInfo.completedSize,
       size: fileInfo.totalSize,
       md5: fileInfo.md5,
       alias: `${hostname}的${process.platform === 'win32' ? 'PC' : 'Mac'}`,
-      id: fileInfo.md5
+      id: require("os").hostname() + ClientAPI.getMac()
     }
   }
   /** 过滤（备份加密用） */
   filterFilesInfo(fileInfo: FileInfo): Promise<Boolean> {
     return new Promise((resolve, reject) => {
-      const pathP = fileInfo.destPath
-      NasFileAPI.backupCheck(pathP, fileInfo.md5 as string).then(response => {
+      NasFileAPI.backupCheck(fileInfo).then(response => {
         if (response.data.code !== 200) return resolve(true)
         if (response.data.data.identical === 1) return resolve(true)
         return resolve(false)

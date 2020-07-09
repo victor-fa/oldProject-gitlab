@@ -166,9 +166,7 @@ export default Vue.extend({
         if (_.isEmpty(result.filePaths)) return
         result.filePaths.forEach(path => {
           path = StringUtility.convertR2L(path)
-          const lastDir = path.substring(path.lastIndexOf('/') + 1, path.length)  // 仅获取最后一级目录
-          const destPath = require("os").hostname() + ClientAPI.getMac() + '/' + lastDir
-          const task = new BackupUploadTask(path, destPath, '')
+          const task = new BackupUploadTask(path, '', '')
           backupUploadQueue.addTask(task)
           backupUploadQueue.once('taskFinished', () => {
             setTimeout(() => {

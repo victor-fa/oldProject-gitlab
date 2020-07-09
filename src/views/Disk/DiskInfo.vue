@@ -134,12 +134,6 @@ export default {
 				bad: 0,
 				used: 0
 			},
-			// header: {
-			// 	title: '',
-			// 	resize: false,
-			// 	mini: false,
-			// 	color: '#000'
-			// },
 			window: false
 		};
 	},
@@ -156,7 +150,6 @@ export default {
 				this.DiskData.mtime = data.myself_folder.mtime
 			}
 			console.log(JSON.parse(JSON.stringify(this.DiskData)));
-			// this.header.title = StringUtility.formatName(data.path) + ' 属性';
 			this.window.setTitle(StringUtility.formatName(data.path) + ' 属性');
 		});
 	},

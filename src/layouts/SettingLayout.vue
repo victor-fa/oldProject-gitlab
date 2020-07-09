@@ -48,7 +48,7 @@ export default Vue.extend({
   },
   mounted () {
     if (this.$route.name !== 'user-profile') this.$router.push('user-profile')
-    SettingRouters[4].disable = this.accessInfo.role === DeviceRole.user
+    SettingRouters[5].disable = this.accessInfo.role === DeviceRole.user  // 非管理员需隐藏存储模式
     const items = SettingRouters.filter(item => {
       return item.meta !== undefined
     })

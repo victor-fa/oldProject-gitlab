@@ -23,6 +23,7 @@ const settingModule = '/setting/v1/sys'
 const upgradeModule = '/v1/upgrade'
 const diskModule = '/v1/disk'
 const offlineModule = '/v1/dl'
+const hostname = require("os").hostname()
 
 type ServerResponse = Promise<AxiosResponse<BasicResponse>>
 const CancelToken = axios.CancelToken
@@ -414,11 +415,13 @@ export default {
       }
     })
   },
-  backupCheck (path: string, md5: string): ServerResponse {
+  backupCheck (data): ServerResponse {
     return nasServer.post(fileModule + '/backup/check', {}, {
       params: {
-        path,
-        md5
+        path: data.destPath,
+        md5: data.md5,
+        alias: `${hostname}的${process.platform === 'win32' ? 'PC' : 'Mac'}`,
+        id: data.md5
       },
       headers: {'Accept': '*/*'}
     })

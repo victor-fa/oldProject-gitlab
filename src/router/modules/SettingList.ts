@@ -40,16 +40,6 @@ const SettingRouters = [
     }
   },
   {
-    path: '/nas-info',
-    name: 'nas-info',
-    disable: false,
-    component: () => import('../../views/SystemSetting/NasInfo/index.vue'),
-    meta: { 
-      title: '设备信息',
-      isSelected: false 
-    }
-  },
-  {
     path: '/storage-info',
     name: 'storage-info',
     disable: false,

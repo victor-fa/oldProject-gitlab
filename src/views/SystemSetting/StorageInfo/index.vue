@@ -1,17 +1,18 @@
 <template>
 	<div class="cd-setting-main">
 		<div class="cd-setting-content">
-			<p class="cd-setting-title">磁盘信息</p>
 			<div class="content" v-for="(item, index) in disks" :key="index">
 				<template v-if="item.type !== 7">
 					<div class="left-side">
 						<img class="disk" :src="loginIcons.disk">
 					</div>
 					<div class="right-side">
-						<span>盘位{{index + 1}}<font>{{item.status | filterStatus}}</font></span>
+						<div class="average">
+							<span>盘位{{index + 1}}<font>{{item.status | filterStatus}}</font></span>
+							<span>{{item.modelName}}</span>
+						</div>
 						<div class="average">
 							<span>{{item.type | filterStorageType(index)}}</span>
-							<span>{{item.modelName}}</span>
 						</div>
 						<div class="average">
 							<span>容量 {{item.size | filterSize}}</span>
@@ -82,14 +83,6 @@ p { text-align: left; }
 		padding: 20px;
 		float: left;
 		overflow-y: scroll;
-		.cd-setting-title {
-			width: 100%;
-			font-size: 14px;
-			line-height: 35px;
-			margin-bottom: 10px;
-			font-weight: 500;
-			.cd-purple-button { margin-right: 10px; }
-		}
 		.content {
 			display: flex;
 			.left-side {

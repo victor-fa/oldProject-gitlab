@@ -81,16 +81,15 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import { categorys, taskCategorys, Category } from '@/model/categoryList'
-import { EventBus, EventType } from '@/utils/eventBus'
+import { categorys, Category } from '@/model/categoryList'
 import CustomButton from '@/components/CustomButton/index.vue'
 import SortPopoverList from '@/components/SortPopoverList/index.vue'
-import { SortWay, SortKind, SortType, sortList, uploadSortList, SortList } from '@/model/sortList'
+import { SortWay, SortKind, SortType, sortList, SortList } from '@/model/sortList'
 import { ArrangeWay, OrderType, ResourceType } from '@/api/NasFileModel'
-import { commonFuncList, ResourceFuncItem, searchItem } from './ResourceFuncList'
+import { ResourceFuncItem, searchItem } from './ResourceFuncList'
 import { CacheRoute } from '@/store/modules/Router'
 import RouterUtility from '@/utils/RouterUtility'
-import FileModalHandler, { CacheParams } from '../SelectFilePath/FileModalHandler'
+import FileModalHandler from '../SelectFilePath/FileModalHandler'
 
 export default Vue.extend({
   name: 'main-header-view',

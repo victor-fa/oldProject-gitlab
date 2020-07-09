@@ -122,22 +122,22 @@ export default {
         res = '未知类型'
         break;
       case ResourceType.video:
-        res = '视频类型'
+        res = '视频'
         break;
       case ResourceType.audio:
-        res = '音频类型'
+        res = '音频'
         break;
       case ResourceType.image:
-        res = '图片类型'
+        res = '图片'
         break;
       case ResourceType.document:
-        res = '文本类型'
+        res = '文本'
         break;
       case ResourceType.archive:
-        res = '档案类型'
+        res = '档案'
         break;
       case ResourceType.folder:
-        res = '文件夹类型'
+        res = '文件夹'
         break;
       default:
         break;

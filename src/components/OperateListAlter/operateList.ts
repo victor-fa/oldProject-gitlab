@@ -85,7 +85,6 @@ const storageContextMenu: Array<OperateGroup> = [
     icon: require('../../assets/open_accessory.png'),
     items: [
       { title: '打开', command: 'open' },
-      { title: '重命名', command: 'rename' }
     ]
   },
   {
