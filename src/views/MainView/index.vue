@@ -280,7 +280,7 @@ export default Vue.extend({
           this.handleMoveToAction()
           break;
         case 'encrypt':
-          this.handleEncryptAction()
+          this.handleEncryptFile()
           break;
         default:
           break;
@@ -375,9 +375,6 @@ export default Vue.extend({
         this.$message.error('移动失败')
       })
     },
-    handleEncryptAction () {
-      this.showEncryptModal = true
-    },
     handleEncryptPassModal (callback) {
       if (callback === 'close') {
         this.showEncryptModal = false
@@ -390,17 +387,22 @@ export default Vue.extend({
           this.$message.error(msg)
           return
         }
-        const crypto_token = _.get(response.data, 'data')
-        this.handleEncryptFile(crypto_token)
+        this.handleEncryptFile()
       }).catch(error => {
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
     },
-    handleEncryptFile (crypto_token) {
+    handleEncryptFile () {
       const srcItems = ResourceHandler.disableSelectItems(this.showArray)
       const ugreenNo = (this.user as User).ugreenNo
-      NasFileAPI.addEncryptMoveIntoTask(srcItems, `/.ugreen_nas/${ugreenNo}/.safe`, TaskMode.rename, crypto_token).then(response => {
+      NasFileAPI.addEncryptMoveIntoTask(srcItems, `/.ugreen_nas/${ugreenNo}/.safe`, TaskMode.rename).then(response => {
+        if (response.data.code === 8071) {
+          setTimeout(() => { this.showEncryptModal = true }, 2500);
+        }
+        if (response.data.code === 8072) {
+          this.$message.error('无法加密，请先激活加密空间')
+        }
         if (response.data.code !== 200) return
         this.showArray = ResourceHandler.resetDisableState(this.showArray)
         setTimeout(() => {

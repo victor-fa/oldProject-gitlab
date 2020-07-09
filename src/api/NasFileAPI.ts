@@ -236,7 +236,7 @@ export default {
       }
     })
   },
-  addEncryptMoveIntoTask(srcItems: Array<ResourceItem>, dstPath: string, mode: TaskMode, crypto_token: string): ServerResponse {
+  addEncryptMoveIntoTask(srcItems: Array<ResourceItem>, dstPath: string, mode: TaskMode): ServerResponse {
     const src = srcItems.map(item => {
       return { path: item.path, uuid: item.uuid }
     })
@@ -244,10 +244,6 @@ export default {
     return nasServer.post(taskModule + '/add', {
       type: 6,
       data: { mode, src, dst }
-    }, {
-      params: {
-        crypto_token: crypto_token
-      }
     })
   },
   addEncryptMoveOutTask(srcItems: Array<ResourceItem>, dstItem: ResourceItem, mode: TaskMode): ServerResponse {

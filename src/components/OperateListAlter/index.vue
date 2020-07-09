@@ -21,7 +21,7 @@
           {{ subItem.title }}
           <img v-show="subItem.childrens" src="../../assets/operate_icon.png">
           <ul v-show="subItem.childrens && showChildren" class="operate-children"
-            :style="{ 'left': (isChildPosLeft ? '120' : '-79') + 'px', 'border-left': (isChildPosLeft ? 'none' : '1px solid #acacb7') }">
+            :style="{ 'left': (isChildPosLeft ? '120' : '-80') + 'px', 'border-left': (isChildPosLeft ? 'none' : '1px solid #acacb7') }">
             <li
               v-for="(cell, index) in subItem.childrens"
               :key="index"

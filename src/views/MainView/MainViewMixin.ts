@@ -279,19 +279,19 @@ export default Vue.extend({
         let data:any = []
         data.push(item)
         myThis.$ipc.send('file-control', OpenType, data);
-      } else if (OpenType === 4) {  // 普通文档、zip、pdf
+      } else if (OpenType === 4) {  // 普通文档、zip、pdf、office
         let data:any = []
         data.push(item)
-        const filterCompress = ['.zip', '.ZIP', '.rar', '.RAR', '.7z', '.7Z', '.arj', '.ARJ', '.gz', '.GZ', '.iso', '.ISO', '.z', '.Z']
-        const compressRes = filterCompress.filter(item => data[0].path.indexOf(item) > -1)  // 过滤压缩
+        const filterFile = ['.zip', '.rar', '.7z', '.arj', '.gz', '.iso', '.z', '.ppt', '.pptx', '.xls', '.xlsx', '.doc', '.docx']
+        const filterRes = filterFile.filter(item => data[0].path.toLowerCase().indexOf(item) > -1)  // 过滤压缩
         const isPDF = data[0].path.indexOf('.pdf') > -1 || data[0].path.indexOf('.PDF') > -1  // 过滤PDF
-        if (compressRes.length > 0) {
-          this.$message.warning('暂不支持打开该类型文件')
+        if (filterRes.length > 0) {
+          this.$message.warning('请下载到电脑后再打开')
           return
         }
         myThis.$ipc.send('file-control', isPDF ? 5 : OpenType, data);
       } else {
-        this.$message.warning('暂不支持打开该类型文件');
+        this.$message.warning('请下载到电脑后再打开');
       }
     },
     handleJumpAction () {

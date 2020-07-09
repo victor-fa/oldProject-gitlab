@@ -93,7 +93,7 @@ export default {
 					img_show.style.opacity = 1;
 				}
 				time_p1 && clearInterval(time_p1);
-			}, 500);
+			}, 0);
 		},
 		centerImg() {
 			this.loaded = false;

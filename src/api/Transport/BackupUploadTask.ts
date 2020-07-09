@@ -61,7 +61,7 @@ export default class BackupUploadTask extends UploadTask {
       start: fileInfo.completedSize,
       size: fileInfo.totalSize,
       md5: fileInfo.md5,
-      alias: `${hostname}的${process.platform === 'win32' ? 'PC' : 'Mac'}`,
+      alias: `来自${hostname}-${process.platform === 'win32' ? 'PC' : 'Mac'}的备份`,
       id: require("os").hostname() + ClientAPI.getMac()
     }
   }
