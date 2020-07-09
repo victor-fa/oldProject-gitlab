@@ -273,9 +273,11 @@ export default class UploadTask extends BaseTask {
       return this.uploadChunckData(file, buffer, this.source)
     }).then(response => {
       if (this.status !== TaskStatus.progress) return
-      if (response.data.code !== 200) {
-        const desc = response.data.code === 4050 ? `${file.name} 已存在` : response.data.msg
-        const error = new TaskError(TaskErrorCode.serverError, desc)
+      if (response.data.code === 4050) {
+        file.completedSize = file.totalSize
+        completionHandler(file.completedSize)
+      } else if (response.data.code !== 200) {
+        const error = new TaskError(TaskErrorCode.serverError, response.data.msg)
         completionHandler(undefined, error)
       } else {
         file.completedSize += chunkLength
