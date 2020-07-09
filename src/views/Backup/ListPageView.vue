@@ -5,6 +5,8 @@
     :count="totalSize"
     :loading="loading"
     :dataSource="dataArray"
+    :showToolbars="[]"
+    :funcList="showFunList"
     :contextItemMenu="backupResourceContextMenu"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
@@ -23,6 +25,7 @@ import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
 import ResourceHandler from '../MainView/ResourceHandler'
 import NasFileAPI, { maxSize } from '@/api/NasFileAPI'
 import { backupResourceContextMenu } from '@/components/OperateListAlter/operateList'
+import { backupFunList } from '../MainView/ResourceFuncList'
 
 export default Vue.extend({
   name: 'backup',
@@ -35,13 +38,14 @@ export default Vue.extend({
   mixins: [MainViewMixin],
   data () {
     return {
-      loading: false,
-      totalSize: 0,
-      dataArray: [] as ResourceItem[],
       page: 1,
-      uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
       busy: false,
-      backupResourceContextMenu // item右键菜单选项
+      totalSize: 0,
+      loading: false,
+      dataArray: [] as ResourceItem[],
+      backupResourceContextMenu, // item右键菜单选项
+      uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
+      showFunList: _.cloneDeep(backupFunList)
     }
   },
   computed: {

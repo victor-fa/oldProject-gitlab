@@ -447,6 +447,17 @@ export default {
       }
     }
     return name
+  },
+  containOfCommand (list: OperateGroup[], command: string) {
+    for (let index = 0; index < list.length; index++) {
+      const group = list[index]
+      for (let index = 0; index < group.items.length; index++) {
+        const item = group.items[index]
+        if (item.disable === true) continue
+        if (item.command === command) return true
+      }
+    }
+    return false
   }
 }
 

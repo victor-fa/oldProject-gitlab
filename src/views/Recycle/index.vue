@@ -3,7 +3,10 @@
     :busy="busy"
     :count="totalSize"
     :loading="loading"
+    :adjust="123"
+    :showToolbars="[]"
     :dataSource="dataArray"
+    :funcList="showFuncList"
     :contextItemMenu="itemMenu"
     :contextListMenu="listMenu"
     v-on:headerCallbackActions="handleHeaderActions"
@@ -24,6 +27,7 @@ import ResourceHandler from '../MainView/ResourceHandler'
 import { recycleContextMenu, recycleListContextMenu } from '@/components/OperateListAlter/operateList'
 import RouterUtility from '@/utils/RouterUtility'
 import { BasicResponse } from '../../api/UserModel'
+import { backupFunList } from '../MainView/ResourceFuncList'
 
 export default Vue.extend({
   name: 'recycle',
@@ -40,7 +44,8 @@ export default Vue.extend({
       order: OrderType.byNameDesc, // 提供给子类使用
       dataArray: [] as ResourceItem[],
       itemMenu: recycleContextMenu,
-      listMenu: recycleListContextMenu
+      listMenu: recycleListContextMenu,
+      showFuncList: _.cloneDeep(backupFunList)
     }
   },
   mounted () {

@@ -70,9 +70,9 @@ export default {
 		bytes = parseFloat(bytes);
 		if (bytes === 0) return '-';
 		let k = 1024,
-			sizes = ['B', 'KB', 'MB', 'GB', 'TB'],
+			sizes = ['B', 'K', 'M', 'G', 'T'],
 			i = Math.floor(Math.log(bytes) / Math.log(k));
-		return (bytes / Math.pow(k, i)).toFixed(2) + sizes[i];
+		return (bytes / Math.pow(k, i)).toFixed(1) + sizes[i];
   },
   // 获取磁盘状态
   formatDiskStatus(status) {

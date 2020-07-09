@@ -61,6 +61,14 @@ export default Vue.extend({
         case 'newCustom':
           this.handleNewCustomAction()
           break;
+        case 'upload':
+        case 'uploadFile':
+        case 'uploadFolder':
+          this.showOpenDialog(action)
+          break;
+        case 'newFolder':
+          this.handleNewFolderAction()
+          break;
         default:
           break;
       }
@@ -151,7 +159,9 @@ export default Vue.extend({
           this.handleInfoAction()
           break;
         case 'upload':
-          this.handleUploadAction(args[0])
+        case 'uploadFile':
+        case 'uploadFolder':
+          this.showOpenDialog(command)
           break;
         case 'newFolder':
           this.handleNewFolderAction()
@@ -163,8 +173,7 @@ export default Vue.extend({
           this.clearClipboardAction()
           break;
         case 'paste':
-          const mode = ResourceHandler.matchTaskMode(args[0])
-          this.handlePasteAction(mode)
+          this.handlePasteAction(TaskMode.rename)
           break;
         case 'refresh':
           this.handleRefreshAction()
@@ -342,9 +351,10 @@ export default Vue.extend({
     handleUnCollectAction () {
     },
     handleClipboardAction (isClip: boolean = true) {
+      const items = ResourceHandler.getSelectItems(this.dataArray)
+      if (_.isEmpty(items)) return
       const info = isClip ? '文件已剪切到剪切板' : '文件已复制到剪切板'
       this.$message.info(info)
-      const items = ResourceHandler.getSelectItems(this.dataArray)
       this.$store.dispatch('Resource/updateClipboard', { isClip: isClip, items })
     },
     handleDeletAction () {
@@ -384,6 +394,36 @@ export default Vue.extend({
     clearClipboardAction () {
       this.$store.dispatch('Resource/updateClipboard', { isClip: false, items: [] })
       this.$message.info('剪切板已清空')
+    },
+    showOpenDialog (command: string) {
+      const { dialog, BrowserWindow } = require('electron').remote
+      const list = this.matchProperties(command)
+      const title = command === 'download' ? '下载' : '选择'
+      dialog.showOpenDialog(BrowserWindow.getFocusedWindow()!, {
+        buttonLabel: title,
+        properties: (list as any)
+      }).then(result => {
+        // filter cancel action
+        if (_.isEmpty(result.filePaths)) return
+        const paths = result.filePaths.map(item => {
+          return StringUtility.replaceString(item, '\\', '/')
+        })
+        this.handleUploadAction(paths)
+      })
+    },
+    matchProperties (command: string) {
+      switch (command) {
+        case 'download':
+          return ['createDirectory', 'openDirectory']
+        case 'upload':
+          return ['createDirectory', 'openDirectory', 'openFile', 'multiSelections']
+        case 'uploadFile':
+          return ['createDirectory', 'openFile', 'multiSelections']
+        case 'uploadFolder':
+          return ['createDirectory', 'openDirectory', 'multiSelections']
+        default:
+          return []
+      }
     },
     handleNewCustomAction () {
     },

@@ -69,6 +69,7 @@ import StringUtility from '@/utils/StringUtility'
 import { encryptContextMenu, encryptMisTokenContextMenu, encryptResourceContextMenu } from '@/components/OperateListAlter/operateList'
 import RouterUtility from '@/utils/RouterUtility'
 import SelectFilePath from '../SelectFilePath/index.vue'
+import { toolbars } from '../MainView/ResourceFuncList'
 
 export default Vue.extend({
   name: 'encrypt',
@@ -77,10 +78,6 @@ export default Vue.extend({
     SelectFilePath
   },
   mixins: [MainViewMixin],
-  computed: {
-    ...mapGetters('NasServer', ['cryptoInfo']),
-    ...mapGetters('User', ['user'])
-  },
   data () {
     return {
       loading: false,
@@ -115,6 +112,16 @@ export default Vue.extend({
       encryptResourceContextMenu, // item右键菜单选项
       showSelectModal: false, // 控制路径选择弹窗的显示与隐藏
       delayTimer: null as NodeJS.Timer | null
+    }
+  },
+  computed: {
+    ...mapGetters('NasServer', ['cryptoInfo']),
+    ...mapGetters('User', ['user']),
+    showToolbars: function () {
+      return _.cloneDeep(toolbars).map(item => {
+        item.disable = false
+        return item
+      })
     }
   },
   mounted () {

@@ -87,6 +87,9 @@ export default Vue.extend({
   .sort-item {
     padding: 0px 16px;
   }
+  .sort-item:hover {
+    background-color: #06B65010;
+  }
   .sort-title {
     display: inline-block;
     width: 36px;

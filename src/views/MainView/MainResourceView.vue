@@ -7,6 +7,7 @@
     :dataSource="dataArray"
     :contextItemMenu="itemMenu"
     :contextListMenu="listMenu"
+    :showToolbars="showToolbars"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
     v-on:itemCallbackActions="handleItemActions"
@@ -32,6 +33,7 @@ import processCenter, { EventName } from '../../utils/processCenter'
 import { TaskError, TaskStatus } from '../../api/Transport/BaseTask'
 import { uploadQueue } from '../../api/Transport/TransportHelper'
 import RouterUtility from '../../utils/RouterUtility'
+import { toolbars } from './ResourceFuncList'
 
 export default Vue.extend({
   name: 'main-resource-view',
@@ -66,6 +68,12 @@ export default Vue.extend({
     selectedPath: function () { // 标记选中的item(用于跳转到文件的功能)
       const selectedPath = this.$route.params.selectedPath as string
       return selectedPath
+    },
+    showToolbars: function () {
+      return _.cloneDeep(toolbars).map(item => {
+        item.disable = false
+        return item
+      })
     }
   },
   watch: {

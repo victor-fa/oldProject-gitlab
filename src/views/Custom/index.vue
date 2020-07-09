@@ -5,9 +5,10 @@
       :loading="loading"
       :listGrid="{ gutter: 16, xs: 1, sm: 3, md: 4, lg: 6, xl: 8, xxl: 12 }"
       :dataSource="dataArray"
-      :funcList="customFuncList"
-      :contextItemMenu="customContextMenu"
-      :contextListMenu="customListContextMenu"
+      :funcList="funList"
+      :contextItemMenu="itemMenu"
+      :contextListMenu="listMenu"
+      :showToolbars="showToolbars"
       v-on:headerCallbackActions="handleHeaderActions"
       v-on:listCallbackActions="handleListActions"
       v-on:itemCallbackActions="handleItemActions"
@@ -37,7 +38,7 @@ import MainView from '../MainView/index.vue'
 import CustomListItem from './CustomListItem.vue'
 import NewCustomModal from './NewCustomModal.vue'
 import MainViewMixin from '../MainView/MainViewMixin'
-import { customFuncList } from '../MainView/ResourceFuncList'
+import { customFuncList, customToolbars } from '../MainView/ResourceFuncList'
 import { CustomModule } from '@/api/NasFileModel'
 import NasFileAPI from '@/api/NasFileAPI'
 import { customContextMenu, customListContextMenu } from '@/components/OperateListAlter/operateList'
@@ -58,9 +59,10 @@ export default Vue.extend({
     return {
       loading: false,
       dataArray: [] as CustomModule[],
-      customFuncList,
-      customContextMenu,
-      customListContextMenu
+      funList: _.cloneDeep(customFuncList),
+      itemMenu: _.cloneDeep(customContextMenu),
+      listMenu: _.cloneDeep(customListContextMenu),
+      showToolbars: _.cloneDeep(customToolbars)
     }
   },
   computed: {

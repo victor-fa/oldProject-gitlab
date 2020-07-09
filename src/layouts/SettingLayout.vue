@@ -1,8 +1,8 @@
 <template>
-  <a-layout class="settting-layout">
+  <a-layout class="settting-layout" v-bind:class="{ 'darwin-setting-layout': isDarwin }">
     <a-layout-header class="setting-header">
       <span><img class="setting-icon" src="../assets/setting_icon.png">&nbsp;&nbsp;系统设置</span>
-      <window-menu :configure="'unable'" class="window-menu"/>
+      <window-menu v-if="!isDarwin" :configure="'unable'" class="window-menu"/>
     </a-layout-header>
     <a-layout>
       <a-layout-sider class="setting-sider">
@@ -38,14 +38,17 @@ export default Vue.extend({
   components: {
     WindowMenu
   },
-	computed: {
-		...mapGetters('NasServer', ['accessInfo'])
-	},
   data () {
     return {
       siderMenu: [] as any,
     }
   },
+	computed: {
+    ...mapGetters('NasServer', ['accessInfo']),
+    isDarwin: function () {
+      return process.platform === 'darwin'
+    }
+	},
   mounted () {
     if (this.$route.name !== 'user-profile') this.$router.push('user-profile')
     SettingRouters[5].disable = this.accessInfo.role === DeviceRole.user  // 非管理员需隐藏存储模式
@@ -120,6 +123,14 @@ export default Vue.extend({
     padding: 0px;
     background: #fff;
     height: 100%;
+  }
+}
+.darwin-setting-layout {
+  .setting-header {
+    flex-direction: row-reverse;
+    span {
+      margin-right: 20px;
+    }
   }
 }
 </style>

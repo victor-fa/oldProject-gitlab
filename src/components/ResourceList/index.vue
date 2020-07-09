@@ -14,7 +14,7 @@
       :infinite-scroll-disabled="busy"
       :infinite-scroll-distance="0"
       :infinite-scroll-immediate-check="false"
-      @contextmenu.prevent="handleListContextMenu"
+      @contextmenu.stop="handleListContextMenu($event)"
       @click.stop="handleListClick"
       @drop.prevent="handleDropEvent($event)"
       @dragover.prevent="handleDragoverEvent($event)"
@@ -28,6 +28,7 @@
         <a-list-item
           slot="renderItem"
           slot-scope="item, index"
+          @contextmenu.stop="handleListContextMenu($event)"
         >
           <slot
             name="resourceItem"
@@ -51,7 +52,6 @@ import StringUtility from '@/utils/StringUtility'
 import { ArrangeWay, ResourceType, ResourceItem } from '@/api/NasFileModel'
 import ResourceHeader from './ResourceHeader.vue'
 import { SortWay } from '@/model/sortList'
-import { OperateGroup } from '../OperateListAlter/operateList'
 
 export default Vue.extend({
   name: 'resource-list',
@@ -68,8 +68,7 @@ export default Vue.extend({
     arrangeWay: {
       default: ArrangeWay.horizontal
     },
-    adjust: Number,
-    itemMenu: Array // item右键菜单
+    adjust: Number
   },
   data () {
     return {
@@ -100,16 +99,6 @@ export default Vue.extend({
       const name = this.$route.name as string
       const supportDragViews = ['main-resource-view', 'encrypt']
       return supportDragViews.indexOf(name) !== -1
-    },
-    isSupportCopy: function () {
-      const itemMenus = this.itemMenu as OperateGroup[]
-      if (_.isEmpty(itemMenus)) return false
-      const commands = itemMenus.flatMap(group => {
-        return group.items.flatMap(item => {
-          return item.command
-        })
-      })
-      return commands.indexOf('copy') !== -1
     }
   },
   mounted () {
@@ -150,11 +139,9 @@ export default Vue.extend({
       this.sendShortcutKeyAction(event, 'paste')
     },
     handleCommandCopyEvent (event: KeyboardEvent) {
-      if (!this.isSupportCopy) return
       this.sendShortcutKeyAction(event, 'copy')
     },
     handleCommandCutEvent (event: KeyboardEvent) {
-      if (!this.isSupportCopy) return
       this.sendShortcutKeyAction(event, 'cut')
     },
     sendShortcutKeyAction (event: KeyboardEvent, command: string) {
@@ -192,7 +179,6 @@ export default Vue.extend({
     },
     handleListContextMenu (event: MouseEvent) {
       event.preventDefault()
-      event.stopPropagation()
       this.$emit('callbackAction', 'contextMenu', event)
     },
     handleListClick (event: MouseEvent) {

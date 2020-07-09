@@ -1,7 +1,5 @@
 <template>
-  <div
-    @click="handleItemClick($event)"
-  >
+  <div>
     <div
       v-if="isHorizontalArrange"
       class="horizontal-item"
@@ -10,17 +8,16 @@
         disableItem: isDisable
       }"
     >
-      <div class="icon-wrapper">
-        <img
-          :src="showIcon"
-          @error="handleErrorAction()"
-          @click.stop.exact="singleClick()"
-          @click.meta.stop="multipleClick()"
-          @click.ctrl.stop="ctrlMultipleClick()"
-          @click.shift.stop="shiftMultipleClick()"
-          @dblclick.stop="doubleClick()"
-          @contextmenu.prevent="contextMenuClick($event)"
-        />
+      <div
+        class="icon-wrapper"
+        @click.stop.exact="singleClick()"
+        @click.meta.stop="multipleClick()"
+        @click.ctrl.stop="ctrlMultipleClick()"
+        @click.shift.stop="shiftMultipleClick()"
+        @dblclick.stop="doubleClick()"
+        @contextmenu.prevent="contextMenuClick($event)"
+      >
+        <img :src="showIcon" @error="handleErrorAction()"/>
       </div>
       <div class="name-wrapper">
         <a-input
@@ -38,8 +35,6 @@
           @click.stop.exact="singleClick()"
           @click.meta.stop="multipleClick()"
           @click.shift.stop="shiftMultipleClick()"
-          @dblclick.stop="doubleClick()"
-          @contextmenu.prevent="contextMenuClick($event)"
         >
           {{ showName }}
         </p>
@@ -79,7 +74,7 @@
           <span v-else :title="showName">{{ showName }}</span>
         </a-col>
         <a-col :span="6">{{ model.showMtime }}</a-col>
-        <a-col :span="5">{{ model.showSize }}</a-col>
+        <a-col :span="5">{{ showSize }}</a-col>
       </a-row>
     </div>
   </div>
@@ -152,6 +147,10 @@ export default Vue.extend({
     isOddStyle: function () {
       const myThis = this as any
       return myThis.index % 2
+    },
+    showSize: function () {
+      const model = this.model as ResourceItem
+      return model.type === ResourceType.folder ? '-' : model.showSize
     }
   },
   mounted () {
@@ -193,11 +192,6 @@ export default Vue.extend({
       } else {
         const input = (this.$refs.inputName as Vue).$el as HTMLInputElement
         input.blur()
-      }
-    },
-    handleItemClick (event: MouseEvent) {
-      if (this.isSelected) {
-        event.stopPropagation()
       }
     },
     handleBlur (event: MouseEvent) {

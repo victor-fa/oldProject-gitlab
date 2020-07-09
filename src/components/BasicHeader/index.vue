@@ -1,6 +1,7 @@
 <template>
   <div
     class="basic-header"
+    v-bind:class="{ 'darwin-basic-header': isDarwin }"
     style="-webkit-app-region: drag"
     @dblclick.stop="handleDbClickAction"
   >
@@ -9,11 +10,12 @@
       <span>{{ version }}</span>
     </div>
     <div class="basic-right">
-      <window-menu class="window-menu"/>
-      <a-divider class="split-line" type="vertical"/>
+      <window-menu v-if="!isDarwin" class="window-menu"/>
+      <a-divider v-if="!isDarwin"  class="split-line" type="vertical"/>
       <a-popover
         trigger="click"
         v-model="visible"
+        :arrowPointAtCenter="true"
         overlayClassName="settingPopover"
       >
         <template slot="content">
@@ -106,6 +108,9 @@ export default Vue.extend({
   computed: {
     ...mapGetters('User', ['user']),
     ...mapGetters('NasServer', ['nasInfo']),
+    isDarwin: function () {
+      return process.platform === 'darwin'
+    },
     nickName: function () {
       const user = this.user as User
       const name: string = _.isEmpty(user.nicName) ? user.userName : user.nicName
@@ -277,10 +282,30 @@ export default Vue.extend({
         line-height: 17px;
         font-size: 13px;
         color: black;
-        max-width: 150px;
+        max-width: 100px;
         text-overflow: ellipsis;
         overflow: hidden;
         white-space: nowrap;
+      }
+    }
+  }
+}
+.darwin-basic-header {
+  padding-top: 12px;
+  .basic-left {
+    margin-left: 15px;
+    flex-direction: row;
+    span:first-child {
+      margin-right: 8px;
+    }
+  }
+  .basic-right {
+    flex-direction: row;
+    .profile {
+      margin-right: 16px;
+      flex-direction: row-reverse;
+      .nick-name {
+        margin-right: 11px;
       }
     }
   }
@@ -302,8 +327,11 @@ export default Vue.extend({
 </style>
 
 <style>
+.settingPopover {
+  width: 120px;
+}
 .settingPopover .ant-popover-inner-content {
-  padding: 8px 0px;
+  padding: 4px 0px;
   cursor: pointer;
 }
 .settingPopover .setting-item {
@@ -311,19 +339,16 @@ export default Vue.extend({
   font-size: 12px;
   color: #484848;
   line-height: 24px;
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .settingPopover .setting-item:hover {
-  background-color: #F3F3F3;
+  background-color: #06B65010;
 }
 .settingPopover .setting-item img {
   width: 7px;
   height: 10px;
-  margin: 7px 0 0 55px;
-  float: right;
-}
-.settingPopover .setting-item span {
-  float: right;
 }
 .operate-children {
   top: -1px;
@@ -331,7 +356,7 @@ export default Vue.extend({
   flex: 1 1 0%;
   padding: 3px 12px;
   position: absolute;
-  width: 95px;
+  width: 85px;
   background-color: #fff;
   background-clip: padding-box;
   border-radius: 2px;

@@ -58,21 +58,27 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { secure: tru
 
 function createWindow () {
 	// Create the browser window.
-  win = new BrowserWindow({ 
+	const options: Electron.BrowserWindowConstructorOptions = { 
 		width: 420,
     height: 610,
 		minWidth: 420,
     icon: './src/assets/logo.png',
-    frame: false,
+		frame: false,
+		maximizable: false,
     resizable: false,
-    backgroundColor: '#f6f8fb',
+		backgroundColor: '#f6f8fb',
     webPreferences: {
       nodeIntegration: true,
 			webSecurity: false,
 			nodeIntegrationInSubFrames: true
 		}
-	})
-
+	}
+	if (process.platform === 'darwin') {
+		options.frame = true
+		options.titleBarStyle = 'hiddenInset'
+	}
+  win = new BrowserWindow(options)
+	
 	// const { spawn } = require('child_process')
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode

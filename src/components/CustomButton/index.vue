@@ -1,28 +1,24 @@
 <template>
   <div 
-    class="custom-button" 
-    :style="backgroundStyle"
+    class="custom-button"
+    :disabled="disable"
+    :title="title"
+    @click="clickAction"
+    @mousedown="mousedownAction"
+    @mouseup="mouseupAction"
+    @mouseenter="handleMouseEnter"
+    @mouseleave="handleMouseLeave"
+    v-bind:class="{ 'highlight-style': isHighlight, 'disable-style': disable }"
   >
-    <a-button
-      ghost
-      block
-      :disabled="disable"
-      :title="title"
-      @click.native="clickAction"
-      @mousedown="mousedownAction"
-      @mouseup="mouseupAction"
-      @mouseenter="handleMouseEnter"
-      @mouseleave="handleMouseLeave"
-    >
-      <label class="button-title" v-if="isShowLabel">
-        {{ currentTitle }}
-      </label>
-      <img :src="currentImage" :style="{width: this.iconWidth}">
-    </a-button>
+    <img :src="currentImage" :style="{ width: this.iconWidth }">
+    <label class="button-title" v-if="isShowLabel">
+      {{ currentTitle }}
+    </label>
   </div>
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import Vue from 'vue'
 
 export default Vue.extend({
@@ -51,12 +47,6 @@ export default Vue.extend({
     hoverImage: {
       default: null
     },
-    backgroundImage: {
-      default: null
-    },
-    selectedBackgroundImage: {
-      default: null
-    },
     disable: {
       default: false
     },
@@ -68,7 +58,6 @@ export default Vue.extend({
     return {
       currentTitle: this.text,
       currentImage: this.image,
-      currentBackgroundImage: this.backgroundImage,
       isHover: false,
       isHighlight: false
     }
@@ -77,15 +66,8 @@ export default Vue.extend({
     if (this.disable === true) this.changeDisableStyle()
   },
   computed: {
-    backgroundStyle: function (): object {
-      return {
-        backgroundImage: require('../../assets/func_button_bg.png'),
-        backgroundRepeat: 'no-repeat',
-        backgroundSize: '100% 100%'
-      }
-    },
     isShowLabel: function (): boolean {
-      if (this.text || this.selectedTitle) {
+      if (!_.isEmpty(this.text) || !_.isEmpty(this.selectedTitle)) {
         return true
       }
       return false
@@ -93,7 +75,7 @@ export default Vue.extend({
   },
   watch: {
     isSelected: function (value: boolean) {
-      if (this.selectedImage === null && this.selectedTitle === null && this.selectedBackgroundImage === null) return
+      if (this.selectedImage === null && this.selectedTitle === null) return
       value ? this.changeSelectStyle() : this.changeNormalStyle()
     },
     isHover: function (value: boolean) {
@@ -113,27 +95,31 @@ export default Vue.extend({
       this.$emit('changeSelect', !this.isSelected)
     },
     mousedownAction () {
+      if (this.disable) return
       this.isHighlight = true
     },
     mouseupAction () {
+      if (this.disable) return
       this.isHighlight = false
+      this.isHover = false
     },
     handleMouseEnter () {
+      if (this.disable) return
       this.isHover = true
     },
     handleMouseLeave () {
+      if (this.disable) return
+      this.isHighlight = false
       this.isHover = false
     },
     changeNormalStyle () {
       this.currentTitle = this.text
       this.currentImage = this.image
-      this.currentBackgroundImage = this.backgroundImage
     },
     // 背景图片可有可无，标题和icon选中状态同默认状态
     changeSelectStyle () {
       this.selectedTitle && (this.currentTitle = this.selectedTitle)
       this.selectedImage && (this.currentImage = this.selectedImage)
-      this.selectedBackgroundImage && (this.currentBackgroundImage = this.selectedBackgroundImage)
     },
     changeHighlightStyle () {
       this.highlightImage !== null && (this.currentImage = this.highlightImage)
@@ -150,28 +136,32 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .custom-button {
-  display: inline-block;
-  line-height: 100%;
   -webkit-app-region: no-drag;
+  border-radius: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   .button-title {
-    font-size: 14px;
-    color: #000;
-    margin-right: 4px;
-  }
-  .ant-btn {
-    height: 100%;
-    padding: 0px;
-    border: none;
-    box-shadow: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    font-size: 13px;
+    color: black;
+    margin-left: 6px;
   }
 }
-</style>
-
-<style>
-.custom-button .ant-btn[disabled] {
-  cursor: default;
+.custom-button:hover {
+  cursor: pointer;
+  .button-title:hover {
+    cursor: pointer;
+  }
+}
+.highlight-style {
+  background-color: #EDEFF4;
+}
+.disable-style {
+  pointer-events: none;
+  cursor: default !important;
+  .button-title {
+    color: #00000080;
+    cursor: default !important;
+  }
 }
 </style>

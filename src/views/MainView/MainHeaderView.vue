@@ -1,77 +1,123 @@
 <template>
   <div class="main-header-view" :key="key">
-    <div class="header-left-view">
-      <custom-button
-        v-if="false"
-        :image="backIcon"
-        :disableImage="disableBackIcon"
-        :disable="disableBack"
-        class="back-icon-style"
-        iconWidth="6px"
-        @click.native="backAction"
-      />
-      <a-breadcrumb class="modal-breadcrumb" ref="breadcrumb">
-        <img slot="separator" class="separator-icon" src="../../assets/accessory_icon.png">
-        <a-breadcrumb-item
-          v-for=" (item, index) in showPaths"
-          :key="index"
-          :class="{ 'modal-breadcrumb-item': showHover(index) }"
-          @click.native.stop="handleBreadcrumbClick(index)"
-        >
-          {{ item }}
-        </a-breadcrumb-item>
-      </a-breadcrumb>
-    </div>
-    <div class="header-right-view">
-      <a-input
-        v-if="showSearch"
-        v-focus
-        ref="searchInput"
-        placeholder="搜索"
-        v-model="keyword"
-        :allowClear="true"
-        style="width: 150px"
-        @focus="handleSearchFocus"
-        @blur="handleSearchBlur"
-        @pressEnter="handleSearchAction"
-      />
-      <div
-        v-for="(item, index) in funcList"
-        :key="index"
-        class="right-item"
-      >
-        <a-popover
-          v-if="showPopover(item)"
-          trigger="click"
-          v-model="visible"
-          placement="bottom"
-        >
-          <sort-popover-list
-            slot="content"
-            :sortList="popoverList"
-            v-on:sortWayChange="sortWayChange"
-          />
+    <div v-if="showHeaderView" class="header-top-view">
+      <div class="top-left-view">
+        <div v-for="(item, index) in toolbars" :key="index">
+          <a-dropdown v-if="showUploadPopover(item)" overlayClassName="upload-dropdown-list">
+            <div>
+              <custom-button
+                class="toolbar-btn"
+                :image="item.icon"
+                :text="item.title"
+                :disableImage="item.disableIcon"
+                :disable="item.disable"
+                :iconWidth="item.iconWidth"
+                @click.native="handleToolbarClick(index)"
+              />
+            </div>
+            <a-menu slot="overlay" @click="handleMenuClick">
+              <a-menu-item key="uploadFile">上传文件</a-menu-item>
+              <a-menu-item key="uploadFolder">上传文件夹</a-menu-item>
+            </a-menu>
+          </a-dropdown>
           <custom-button
-            class="right-button"
+            v-else
+            class="toolbar-btn"
             :image="item.icon"
-            :ref="item.command"
-            :title="item.title"
+            :text="item.title"
+            :disableImage="item.disableIcon"
+            :disable="item.disable"
             :iconWidth="item.iconWidth"
-            v-show="item.isHidden !== true"
+            @click.native="handleToolbarClick(index)"
+          />
+        </div>
+      </div>
+      <div class="top-right-view">
+        <a-input
+          ref="searchInput"
+          placeholder="搜索"
+          v-model="keyword"
+          :allowClear="true"
+          @pressEnter="handleSearchAction"
+          @change="handleChangeAction"
+        >
+          <template slot="prefix">
+            <img src="../../assets/search_icon.png" class="search-indicator"/>
+          </template>
+        </a-input>
+      </div>
+    </div>
+    <div class="header-bottom-view">
+      <div class="bottom-left-view">
+        <custom-button
+          :image="backIcon"
+          :disableImage="disableBackIcon"
+          :disable="disableBack"
+          class="back-icon-style"
+          iconWidth="6px"
+          @click.native="backAction"
+        />
+        <a-breadcrumb class="modal-breadcrumb" ref="breadcrumb">
+          <img slot="separator" class="separator-icon" src="../../assets/accessory_icon.png">
+          <a-breadcrumb-item
+            v-for=" (item, index) in showPaths"
+            :key="index"
+            :class="{ 'modal-breadcrumb-item': showHover(index) }"
+            @click.native.stop="handleBreadcrumbClick(index)"
+          >
+            {{ item }}
+          </a-breadcrumb-item>
+        </a-breadcrumb>
+      </div>
+      <div class="bottom-right-view">
+        <a-input
+          v-focus
+          v-if="showSearch"
+          placeholder="搜索"
+          v-model="keyword"
+          :allowClear="true"
+          @blur="handleSearchBlur"
+          @pressEnter="handleSearchAction"
+          @change="handleChangeAction"
+        />
+        <div
+          v-for="(item, index) in funcList"
+          :key="index"
+          class="right-item"
+        >
+          <a-popover
+            v-if="showPopover(item)"
+            trigger="click"
+            v-model="visible"
+            placement="bottom"
+          >
+            <sort-popover-list
+              slot="content"
+              :sortList="popoverList"
+              v-on:sortWayChange="sortWayChange"
+            />
+            <custom-button
+              class="right-button"
+              :image="item.icon"
+              :ref="item.command"
+              :title="item.title"
+              :iconWidth="item.iconWidth"
+              v-show="item.isHidden !== true"
+              @click.native="handleItemClick(index)"
+            />
+          </a-popover>
+          <custom-button
+            v-show="showItem(item)"
+            class="right-button"
+            :key="item.command"
+            :image="item.icon"
+            :title="item.title"
+            :selectedImage="item.selectedIcon"
+            :isSelected="item.isSelected"
+            :iconWidth="item.iconWidth"
             @click.native="handleItemClick(index)"
           />
-        </a-popover>
-        <custom-button
-          v-show="showItem(item)"
-          class="right-button"
-          :key="item.command"
-          :image="item.icon"
-          :title="item.title"
-          :selectedImage="item.selectedIcon"
-          :isSelected="item.isSelected"
-          :iconWidth="item.iconWidth"
-          @click.native="handleItemClick(index)"
-        />
+        </div>
       </div>
     </div>
   </div>
@@ -111,6 +157,7 @@ export default Vue.extend({
   },
   props: {
     funcList: Array,
+    toolbars: Array,
     popoverList: Object,
     categoryType: {
       default: ResourceType.all
@@ -119,12 +166,13 @@ export default Vue.extend({
   data () {
     return {
       categorys: _.cloneDeep(categorys),
-      backIcon: require('../../assets/back_icon.png'),
-      disableBackIcon: require('../../assets/dis_back_icon.png'),
       showPaths: [] as string[],
       visible: false, // 控制排序气泡弹窗是否显示 
       showSearch: false, // 控制搜索框是否显示
-      keyword: '' // 搜索关键字
+      keyword: '', // 搜索关键字
+      backIcon: require('../../assets/back_icon.png'),
+      disableBackIcon: require('../../assets/dis_back_icon.png')
+
     }
   },
   computed: {
@@ -132,8 +180,11 @@ export default Vue.extend({
     key: function () {
       return this.$route.path
     },
+    showHeaderView: function () {
+      return !_.isEmpty(this.toolbars)
+    },
     disableBack: function () {
-      const disable = (this.showRoutes.length < 2) as boolean
+      const disable = (this.showRoutes.length <= 1) as boolean
       return disable
     }
   },
@@ -162,6 +213,11 @@ export default Vue.extend({
       this.hideSearchInput()
     },
     // private methods
+    showUploadPopover (item: ResourceFuncItem) {
+      if (item.command !== 'upload' || item.disable === true) return false
+      if (process.platform !== 'win32') return false
+      return true
+    },
     // 缩率item不能点击
     showHover (index: number) {
       if (index === this.showPaths.length - 1) return false
@@ -178,17 +234,30 @@ export default Vue.extend({
       if (item.command === 'sort') return false
       return item.isHidden !== true
     },
+    handleToolbarClick (index: number) {
+      const item = this.toolbars[index] as ResourceFuncItem
+      if (item.command === 'upload' && process.platform === 'win32') return
+      this.$emit('callbackAction', item.command)
+    },
+    handleMenuClick (sender: any) {
+      const command = sender.key as string
+      this.$emit('callbackAction', command)
+    },
+    backAction () {
+      this.hideSearchInput()
+      this.$emit('callbackAction', 'back')
+    },
     handleTabChange (index: number) {
       this.hideSearchInput()
       const item = this.categorys[index]
-      this.$emit('CallbackAction', 'tabChange', item.type)
+      this.$emit('callbackAction', 'tabChange', item.type)
       this.$emit('handleTabChange', item.type)
     },
     sortWayChange (sender: SortWay) {
       // hide popover
       this.visible = false
       const orderType = this.convertSortWay(sender)
-      this.$emit('CallbackAction', 'sortWayChange', orderType)
+      this.$emit('callbackAction', 'sortWayChange', orderType)
     },
     convertSortWay (way: SortWay) {
       switch (way.kind) {
@@ -205,10 +274,6 @@ export default Vue.extend({
           break;
       }
       return OrderType.byNameDesc
-    },
-    backAction () {
-      this.hideSearchInput()
-      this.$emit('CallbackAction', 'back')
     },
     handleBreadcrumbClick (index: number) {
       if (index === this.showPaths.length - 1) return
@@ -231,7 +296,7 @@ export default Vue.extend({
           this.arrangeAction(index)
           break;
         case 'newCustom':
-          this.$emit('CallbackAction', 'newCustom')
+          this.$emit('callbackAction', 'newCustom')
           break;
         default:
           break;
@@ -258,14 +323,6 @@ export default Vue.extend({
     searchAction () {
       this.showSearchInput()
     },
-    handleSearchFocus (event: FocusEvent) {
-      // 监听清除按钮的点击
-      const searchInput = this.$refs.searchInput as Vue
-      const clearButton = searchInput.$el.lastChild as ChildNode
-      clearButton.addEventListener('click', event => {
-        this.endSearch()
-      })
-    },
     handleSearchBlur (event: FocusEvent) {
       if (this.keyword.length === 0) { 
         this.endSearch()
@@ -275,23 +332,33 @@ export default Vue.extend({
       if (_.isEmpty(this.keyword)) {
         this.endSearch()
       } else {
-        this.$emit('CallbackAction', 'search', this.keyword)
+        this.$emit('callbackAction', 'search', this.keyword)
+      }
+    },
+    handleChangeAction (event: any) {
+      if (event instanceof Event) return
+      if (this.showHeaderView) {
+        this.$emit('callbackAction', 'endSearch')
+      } else {
+        this.$nextTick(() => {
+          (event.currentTarget as HTMLLIElement).blur()
+          this.endSearch()
+        })
       }
     },
     endSearch () {
-      if (this.showSearch === false) return
       this.hideSearchInput()
-      this.$emit('CallbackAction', 'endSearch')
+      this.$emit('callbackAction', 'endSearch')
     },
     refreshAction() {
-      this.$emit('CallbackAction', 'refresh')
+      this.$emit('callbackAction', 'refresh')
     },
     arrangeAction (index: number) {
       const item = this.funcList[index] as ResourceFuncItem
       item.isSelected = !item.isSelected
       this.funcList.splice(index, 1, item)
       const arrangeWay = item.isSelected ? ArrangeWay.vertical : ArrangeWay.horizontal
-      this.$emit('CallbackAction', 'arrangeChange', arrangeWay)
+      this.$emit('callbackAction', 'arrangeChange', arrangeWay)
     }
   }
 })
@@ -299,73 +366,117 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .main-header-view {
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: #F7F9FB;
-  border-bottom: 1px solid #BCC0CE40;
-  .header-left-view {
-    flex: 1;
+  background-color: #F8F9FC;
+  .header-top-view {
+    height: 36px;
+    border-bottom: 1px solid #E3E5ED;
     display: flex;
     align-items: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    padding: 0px 10px 0px 19px;
-    .back-icon-style {
-      height: 22px;
-      width: 30px;
-      vertical-align: middle;
-      margin-right: 3px;
-    }
-    .modal-breadcrumb {
-      width: 100%;
-      text-align: left;
-      font-size: 13px;
-      color: black;
-      line-height: 22px;
-      overflow: hidden;
-      white-space: nowrap;
-      .separator-icon {
-        width: 10px;
+    justify-content: space-between;
+    .top-left-view {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding-left: 10px;
+      .toolbar-btn {
+        padding: 4px 10px;
       }
-      .modal-breadcrumb-item:hover {
-        color: #06b650;
+    }
+    .top-right-view {
+      border-left: 1px solid #9C9FA9;
+      .search-indicator {
+        width: 15px;
+        height: 15px;
       }
     }
   }
-  .header-right-view {
+  .header-bottom-view {
+    height: 36px;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    margin-right: 20px;
-    .right-item {
-      height: 20px;
-      width: 20px;
-      margin-left: 7px;
+    justify-content: space-between;
+    background-color: #F7F9FB;
+    border-bottom: 1px solid #BCC0CE40;
+    .bottom-left-view {
+      flex: 1;
       display: flex;
-      justify-content: center;
       align-items: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0px 10px 0px 5px;
+      .back-icon-style {
+        height: 22px;
+        width: 30px;
+        vertical-align: middle;
+        margin-right: 5px;
+      }
+      .modal-breadcrumb {
+        width: 100%;
+        text-align: left;
+        font-size: 13px;
+        color: black;
+        line-height: 22px;
+        overflow: hidden;
+        white-space: nowrap;
+        .separator-icon {
+          width: 10px;
+        }
+        .modal-breadcrumb-item:hover {
+          color: #06b650;
+        }
+      }
     }
-    .right-button {
-      height: 20px;
-      width: 20px;
+    .bottom-right-view {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-right: 20px;
+      .right-item {
+        height: 20px;
+        width: 20px;
+        margin-left: 7px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .right-button {
+        padding: 4px;
+      }
     }
   }
 }
 </style>
 
 <style>
-.main-header-view .header-right-view .ant-input {
+.upload-dropdown-list {
+  margin-top: -4px;
+  margin-left: -8px;
+}
+.upload-dropdown-list .ant-dropdown-menu-item {
+  font-size: 13px;
+  color: black;
+}
+.main-header-view .header-top-view .top-right-view .ant-input-group-addon {
+  padding: 0px;
+  border: none;
+}
+.main-header-view .header-top-view .top-right-view .ant-input {
+  border: none;
+  width: 190px;
+  height: 24px;
+  font-size: 13px;
+  color: #484848;
+  margin: 0px 4px;
+  background-color: #F8F9FC;
+}
+.main-header-view .header-bottom-view .bottom-right-view .ant-input {
+  width: 150px;
+  height: 20px;
   font-size: 12px;
   color: #484848;
-  height: 20px;
   margin-right: 4px;
   padding-right: 0px;
-}
-.main-header-view .header-right-view .ant-input-suffix {
-  right: 4px;
 }
 .main-header-view .modal-breadcrumb .ant-breadcrumb-separator {
   margin: 0px;

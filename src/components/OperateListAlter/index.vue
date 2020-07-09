@@ -11,10 +11,7 @@
           v-for="(subItem, index) in item.items"
           :key="index"
           class="operate-item"
-          v-bind:class="{
-            'operate-item-disable': subItem.disable,
-            'operate-item-enable': subItem.enable
-          }"
+          v-bind:class="{ 'operate-item-disable': subItem.disable }"
           @click.stop="menuClick(subItem)"
           @mouseenter="handleMouseEnter(subItem)"
         >
@@ -27,10 +24,7 @@
               :key="index"
               @click="menuClick(cell)"
               class="operate-item"
-              v-bind:class="{
-                'operate-item-disable': subItem.disable,
-                'operate-item-enable': subItem.enable
-              }"
+              v-bind:class="{ 'operate-item-disable': subItem.disable }"
             >
               {{ cell.title }}
             </li>
@@ -102,11 +96,7 @@ export default Vue.extend({
       this.isChildPosLeft = (this.$el as HTMLElement).offsetLeft + this.listWidth + rightPadding + secondListWidth <= document.body.clientWidth
     },
     menuClick (item: OperateItem) {
-      if (item.disable || item.enable || !_.isEmpty(item.childrens)) return
-      if (this.isSpecificItem(item)) {
-        this.$emit('didSelectItem', 'unkown') // 用于隐藏右键菜单
-        return
-      }
+      if (item.disable === true || !_.isEmpty(item.childrens)) return
       this.$emit('didSelectItem', item.command)
     },
     isSpecificItem (item: OperateItem) {
@@ -114,7 +104,7 @@ export default Vue.extend({
         this.$emit('didSelectItem', 'paste', 'rename')
         return true
       } else if (dialogCommands.indexOf(item.command) !== -1) {
-        this.showOpenDialog(item.command)
+        // this.showOpenDialog(item.command)
         return true
       }
       return false
@@ -142,37 +132,6 @@ export default Vue.extend({
           return 'cover'
       }
       return 0
-    },
-    showOpenDialog (command: string) {
-      const { dialog, BrowserWindow } = require('electron').remote
-      const list = this.matchProperties(command)
-      const title = command === 'download' ? '下载' : '选择'
-      dialog.showOpenDialog(BrowserWindow.getFocusedWindow()!, {
-        buttonLabel: title,
-        properties: (list as any)
-      }).then(result => {
-        const newCommand = command === 'download' ? 'download' : 'upload'
-        // filter cancel action
-        if (_.isEmpty(result.filePaths)) return
-        const paths = result.filePaths.map(item => {
-          return StringUtility.replaceString(item, '\\', '/')
-        })
-        this.$emit('didSelectItem', newCommand, paths)
-      })
-    },
-    matchProperties (command: string) {
-      switch (command) {
-        case 'download':
-          return ['createDirectory', 'openDirectory']
-        case 'upload':
-          return ['createDirectory', 'openDirectory', 'openFile', 'multiSelections']
-        case 'uploadFile':
-          return ['createDirectory', 'openFile', 'multiSelections']
-        case 'uploadFolder':
-          return ['createDirectory', 'openDirectory', 'multiSelections']
-        default:
-          return []
-      }
     }
   }
 })

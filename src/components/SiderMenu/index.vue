@@ -147,7 +147,7 @@ export default Vue.extend({
     }
   }
   .silder-storage {
-    margin: 0px 20px 20px;
+    margin: 0px 18px 20px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -164,12 +164,18 @@ export default Vue.extend({
       line-height: 20px;
     }
     .storage-info {
-      span {
+      span:first-child {
         color: black;
-        font-size: 10px;
+        font-size: 9px;
+        width: 36px;
       }
       span:last-child {
+        color: black;
+        font-size: 9px;
         margin-left: 12px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
       }
     }
   }

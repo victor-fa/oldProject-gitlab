@@ -3,7 +3,6 @@ interface OperateItem {
   icon?: any,
   command: string,
   disable?: boolean, // 根据不同状态确定是否可用
-  enable?: boolean, // 在某些场景下完全禁用该功能
   isHidden?: boolean,
   childrens?: OperateItem[]
 }
@@ -315,7 +314,7 @@ const recycleContextMenu: OperateGroup[] = [
     items: [
       { title: '还原', command: 'recovery' },
       { title: '删除', command: 'delete' },
-      { title: '重命名', command: 'rename' },
+      { title: '重命名', command: 'rename', disable: true },
       { title: '属性', command: 'info' }
     ]
   }

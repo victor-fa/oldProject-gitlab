@@ -7,10 +7,11 @@
       >
         <main-header-view
           ref="mainHeaderView"
+          :toolbars="showToolbars"
           :popoverList="popoverList"
           :funcList="showFuncList"
           v-model="categoryType"
-          v-on:CallbackAction="handleHeaderViewAction"
+          v-on:callbackAction="handleHeaderViewAction"
         />
       </slot>
       <network-tip v-if="showNetworkTip" :loading="reconnection"/>
@@ -53,10 +54,11 @@
       ref="operateListAlter"
       :operateList="showOperateList"
       :style="alterStyle"
-      v-on:didSelectItem="handleAlterAction"
+      v-on:didSelectItem="handleContextMenuAction"
     />
     <select-file-path v-if="showSelectModal" v-on:dismiss="handleSelectModalDismiss"/>
     <encrypt-pass-model :visiable="showEncryptModal" v-on:passCallback="handleEncryptPassModal"/>
+    <new-offline-modal v-if="showOfflineModal" v-on:dismiss="handleOfflineModalDismiss"/>
   </div>
 </template>
 
@@ -78,10 +80,11 @@ import NasFileAPI, { TaskMode } from '@/api/NasFileAPI'
 import { OperateGroup } from '@/components/OperateListAlter/operateList'
 import { sortList, SortList } from '@/model/sortList'
 import SelectFilePath from '../SelectFilePath/index.vue'
+import NewOfflineModal from '../Transport/MainPage/NewOfflineModal.vue'
 import RouterUtility from '@/utils/RouterUtility'
 import EncryptPassModel from '../Encrypt/EncryptPassModel.vue'
 import { User } from '@/api/UserModel'
-import { ResourceFuncItem, commonFuncList } from './ResourceFuncList'
+import { ResourceFuncItem, commonFuncList, toolbars } from './ResourceFuncList'
 import ClientAPI from '../../api/ClientAPI'
 import { NasInfo, NasAccessInfo } from '../../api/ClientModel'
 import { EventBus, EventType } from '../../utils/eventBus'
@@ -96,13 +99,14 @@ export default Vue.extend({
     ResourceListItem,
     NetworkTip,
     SelectFilePath,
-    EncryptPassModel
+    EncryptPassModel,
+    NewOfflineModal
   },
   props: {
     count: Number, // 条目总数
     dataSource: Array, // 展示的条目数据
     adjust: { // 列表高度与窗口的高度差
-      default: 123
+      default: 159
     }, 
     loading: {
       default: false
@@ -115,13 +119,18 @@ export default Vue.extend({
         return _.cloneDeep(sortList)
       }
     },
+    showToolbars: { // 工具栏菜单数据集合
+      default: () => {
+        return toolbars
+      }
+    },
     funcList: Array, // header中的操作功能按钮集合
     listGrid: Object, // 列表视图的布局
     contextListMenu: Array, // 右键list菜单数据   
     contextItemMenu: Array // 右键item菜单数据
   },
   data () {
-    let list = _.isEmpty(this.funcList) ? _.cloneDeep(commonFuncList) : this.funcList
+    let list = _.isEmpty(this.funcList) ? _.cloneDeep(commonFuncList) : _.cloneDeep(this.funcList)
     return {
       sortList,
       showFuncList: list as ResourceFuncItem[],
@@ -133,6 +142,7 @@ export default Vue.extend({
       showOperateList: [] as OperateGroup[], // 展示的右键菜单数据
       showSelectModal: false, // 控制路径选择弹窗的显示与隐藏
       showEncryptModal: false, // 控制输入加密密码弹窗的显示与隐藏
+      showOfflineModal: false, // 控制离线任务弹窗
       showNetworkTip: false, // 控制断开连接提示条是否展示
       reconnection: false // 控制重新连接加载圈 
     }
@@ -210,6 +220,7 @@ export default Vue.extend({
     },
     // handle header view callback actions
     handleHeaderViewAction (action: string, ...args: any[]) {
+      if (!this.canHandleAction(action)) return
       this.$emit('headerCallbackActions', action, ...args)
       switch (action) {
         case 'arrangeChange':
@@ -221,14 +232,16 @@ export default Vue.extend({
         case 'refresh':
           this.handleInnerRefreshAction()
           break;
+        case 'offline':
+          this.showOfflineModal = true
+          break;
         default:
           break;
       }
     },
     // handle resource list view callback actions
     handleResourceListAction (action: string, ...args: any[]) {
-      // 这里移动弹窗没有使用window，故弹出时需要屏蔽所有快捷键
-      if (this.showSelectModal === true || this.showEncryptModal === true) return 
+      if (!this.canHandleAction(action)) return
       this.$emit('listCallbackActions', action, ...args)
       switch (action) {
         case 'contextMenu':
@@ -246,6 +259,7 @@ export default Vue.extend({
     },
     // handle resource list view item callback actions
     handleResourceItemAction (action: string, index: number, ...args: any[]) {
+      if (!this.canHandleAction(action)) return
       this.$emit('itemCallbackActions', action, index, ...args)
       switch (action) {
         case 'doubleClick':
@@ -272,7 +286,8 @@ export default Vue.extend({
       }
     },
     // handle main view context menu actions
-    handleAlterAction (command: string, ...args: any[]) {
+    handleContextMenuAction (command: string, ...args: any[]) {
+      if (!this.canHandleAction(command)) return
       this.$emit('contextMenuCallbackActions', command, ...args)
       this.showAlter = false
       switch (command) {
@@ -284,6 +299,28 @@ export default Vue.extend({
           break;
         default:
           break;
+      }
+    },
+    canHandleAction (action: string) { 
+      // 弹窗期间，禁用所有的事件响应
+      if (this.showSelectModal || this.showEncryptModal || this.showOfflineModal) return false
+      if (action === 'selectAllItems') { // 包含下载操作的item才允许多选
+        return ResourceHandler.containOfCommand(this.contextItemMenu as OperateGroup[], 'download')
+      } else if (action === 'copy' || action === 'cut') {
+        return ResourceHandler.containOfCommand(this.contextItemMenu as OperateGroup[], action)
+      } else if (action === 'paste') {
+        return ResourceHandler.containOfCommand(this.contextListMenu as OperateGroup[], action)
+      } else if (action === 'delelteItems') {
+        return ResourceHandler.containOfCommand(this.contextItemMenu as OperateGroup[], 'delete')
+      } else if (action === 'enterRenaming') {
+        return ResourceHandler.containOfCommand(this.contextItemMenu as OperateGroup[], 'rename')
+      }
+      return true
+    },
+    handleOfflineModalDismiss (isCompleted?: boolean) {
+      this.showOfflineModal = false
+      if (isCompleted === true) {
+        this.$store.dispatch('Resource/increaseTask')
       }
     },
     handleArrangeChange (arrangeWay: ArrangeWay) {

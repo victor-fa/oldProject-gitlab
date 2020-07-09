@@ -47,6 +47,10 @@ export default {
       }
     }
     const newOptions = Object.assign(defaultOptions, options)
+    if (process.platform === 'darwin') {
+      newOptions.frame = true
+      if (newOptions.titleBarStyle === undefined) newOptions.titleBarStyle = 'hiddenInset'
+    }
     let window: BrowserWindow | null
     window = new BrowserWindow(newOptions)
     newOptions.backgroundColor && (window.setBackgroundColor(newOptions.backgroundColor))
@@ -117,10 +121,13 @@ export default {
       homeWindow = this.createWindow({
         path: 'home',
         width: 800,
-        height: 600,
+        minWidth: 800,
+        height: 680,
+        minHeight: 680,
         backgroundColor: '#f6f8fb',
         title: 'nas_client',
-        resizable: true
+        resizable: true,
+        titleBarStyle: 'hidden'
       })
     }
     homeWindow.once('closed', () => {
@@ -217,8 +224,7 @@ export default {
       resizable: false,
       minimizable: false,
       title: 'meida',
-      backgroundColor: '#f6f8fb',
-      parent: homeWindow!
+      backgroundColor: '#f6f8fb'
     })
     mediaWindow.once('closed', () => {
       mediaWindow = null
@@ -283,8 +289,6 @@ export default {
       maximizable: true,
       transparent: false,
       resizable: true,
-      parent: homeWindow!,
-      modal: true,
       show: false
     })
     settingWindow.once('closed', () => {
@@ -384,7 +388,6 @@ export default {
       transparent: false,
       resizable: false,
       parent: homeWindow!,
-      modal: true,
       show: false
     })
     newVersionWindow.once('closed', () => {

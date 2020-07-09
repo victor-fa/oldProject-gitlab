@@ -1,10 +1,14 @@
 <template>
-  <div class="status-bar" style="-webkit-app-region: drag">
+  <div
+    class="status-bar"
+    style="-webkit-app-region: drag"
+    v-bind:class="{ 'darwin-status-bar': isDarwin }"
+  >
     <div class="left-bar">
       <img src="../../assets/logo.png">
       <span>绿联云</span>
     </div>
-    <div class="right-bar">
+    <div v-if="!isDarwin" class="right-bar">
      <custom-button
         :image="hideIcon"
         iconWidth="20px"
@@ -34,6 +38,11 @@ export default Vue.extend({
     return {
       hideIcon: require('../../assets/login_hide_icon.png'),
       closeIcon: require('../../assets/login_close_icon.png')
+    }
+  },
+  computed: {
+    isDarwin: function () {
+      return process.platform === 'darwin'
     }
   },
   methods: {
@@ -82,6 +91,12 @@ export default Vue.extend({
       margin-right: 8px;
       -webkit-app-region: no-drag;
     }
+  }
+}
+.darwin-status-bar {
+  flex-direction: row-reverse;
+  .left-bar {
+    flex-direction: row-reverse;
   }
 }
 </style>
