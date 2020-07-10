@@ -315,6 +315,10 @@ export default {
       parent: homeWindow!,
       modal: true
     })
+    initializeWindow.once('closed', () => {
+      initializeWindow!.removeAllListeners()
+      initializeWindow = null
+    })
     initializeWindow.once('ready-to-show', () => {
       this.activeWindow(initializeWindow!)
       // 启动后，要将系统设置界面关闭

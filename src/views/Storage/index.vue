@@ -198,10 +198,10 @@ export default Vue.extend({
     },
 		handleOperation () {
       this.makesureModal = {
-        title: this.finalMode === 0 ? this.firstMode.switchMode.title : this.secondMode.switchMode.title,
+        title: this.finalMode === 0 ? this.firstMode.initialize.title : this.secondMode.initialize.title,
         visiable: true,
         input: '',
-        message: this.finalMode === 0 ? this.firstMode.switchMode.message : this.secondMode.switchMode.message
+        message: this.finalMode === 0 ? this.firstMode.initialize.message : this.secondMode.initialize.message
       }
 		},
 		handleMakesure () {

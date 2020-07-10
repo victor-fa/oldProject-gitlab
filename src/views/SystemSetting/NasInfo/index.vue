@@ -30,23 +30,6 @@
 			<p>发布时间：{{update.info.pubtime | filterTime}}</p>
 			<p>描述：{{update.info.desc === 'null' ? '无' : update.info.desc}}</p>
 		</a-modal>
-		<a-modal
-			:visible="mode.visiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
-			okText="确定" cancelText="取消" @ok="handleInitialize(null)" @cancel="mode.visiable = false;mode.choice = 0">
-			<p>请选择存储模式</p>
-			<a-radio-group v-model="mode.choice">
-				<a-radio :value="0">{{firstMode.title}}</a-radio>
-				<a-radio :value="1">{{secondMode.title}}</a-radio>
-			</a-radio-group>
-		</a-modal>
-		<a-modal :title="makesureModal.title"
-			:visible="makesureModal.visiable" :mask="false" :closable="false" :maskClosable="false" width="400px"
-			:okText="commonInfo.okText" :cancelText="commonInfo.cancelText" @ok="handleMakesure"
-			@cancel="handleCancle">
-			<p>{{makesureModal.message}}</p>
-			<font class="modal-font">{{commonInfo.tips}}</font>
-      <a-input :placeholder="commonInfo.placeholder" v-model="makesureModal.input" :max-length="4"/>
-		</a-modal>
 	</div>
 </template>
 
@@ -62,7 +45,6 @@ import ClientAPI from '@/api/ClientAPI'
 import StringUtility from '@/utils/StringUtility'
 import processCenter, { EventName } from '@/utils/processCenter'
 import { DeviceRole } from '@/api/UserModel'
-import { firstMode, secondMode, commonInfo } from '../settingModel'
 import TransportHelper from '../../../api/Transport/TransportHelper'
 
 export default Vue.extend({
@@ -76,12 +58,6 @@ export default Vue.extend({
 		},
     filterTime (time) {
       return StringUtility.formatShowMtime(time)
-		},
-    filterStatus (status) {
-      return StringUtility.formatDiskStatus(status)
-		},
-		filterStorageType (data, index) {
-			return StorageHandler.matchStorageName(data, index)
 		},
 		filterMac (data) {
 			return StringUtility.formatMacAddress(data)
@@ -99,17 +75,6 @@ export default Vue.extend({
 				choice: 0
 			},
 			isUserAdmin: false,
-			diskMode: 0,
-			finalMode: 0,
-			firstMode,
-			secondMode,
-			commonInfo,
-			makesureModal: {
-				title: '',
-				visiable: false,
-				input: '',
-				message: ''
-			},
 			disable: false,
 			firmwareVer: '',
 			edit_device_name: false,
@@ -121,7 +86,6 @@ export default Vue.extend({
     },
 	},
 	created() {
-		this.fetchDisks()
 		this.fetchSysInfo()
 		this.isUserAdmin = this.accessInfo.role === DeviceRole.admin
 	},
@@ -259,16 +223,6 @@ export default Vue.extend({
 			TransportHelper.clearQueueCache()
 			processCenter.renderSend(EventName.bindList)
 		},
-    fetchDisks () {
-      NasFileAPI.fetchDisks().then(response => {
-        if (response.data.code !== 200) return
-				console.log(JSON.parse(JSON.stringify(response.data.data)));
-				this.diskMode = _.get(response.data.data, 'mode')
-      }).catch(error => {
-        this.$message.error('网络连接错误，请检测网络')
-        console.log(error)
-      })
-		},
 		fetchSysInfo () {
       NasFileAPI.fetchSysInfo().then(response => {
         if (response.data.code !== 200) return
@@ -278,57 +232,6 @@ export default Vue.extend({
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
-		},
-		handleInitialize (item) {
-			if (this.mode.visiable) {	// 已有弹框，选择后切换
-				this.finalMode = this.mode.choice
-				this.handleOperation('makesure')
-				return
-			}
-			if (this.diskMode === -1) { this.mode.visiable = true; return; }	// 打开弹框
-			this.finalMode = item.raidMode
-			this.handleOperation('makesure')
-		},
-		handleOperation (flag) {
-			if (flag === 'makesure') {
-				this.makesureModal = {
-					title: this.finalMode === 0 ? this.firstMode.makesure.title : this.secondMode.makesure.title,
-					visiable: true,
-					input: '',
-					message: this.finalMode === 0 ? this.firstMode.makesure.message : this.secondMode.makesure.message
-				}
-			} else if (flag === 'switchMode') {
-				this.makesureModal = {
-					title: this.finalMode === 0 ? this.firstMode.switchMode.title : this.secondMode.switchMode.title,
-					visiable: true,
-					input: '',
-					message: this.finalMode === 0 ? this.firstMode.switchMode.message : this.secondMode.switchMode.message
-				}
-			}
-		},
-		handleMakesure () {
-			if (this.makesureModal.input.length === 0) { this.$message.error('您未输入关键信息！'); return; }
-			if (this.makesureModal.input !== '确认删除数据') { this.$message.error('输入关键信息错误！'); return; }
-			this.handleCancle()
-			this.makesureModal.title === '硬盘初始化' ? this.handleSwitchMode() : this.handleOperation('switchMode')
-		},
-		handleCancle () {
-			this.makesureModal = {
-				title: this.makesureModal.title,
-				visiable: false,
-				input: '',
-				message: ''
-			}
-		},
-		handleSwitchMode () {
-			NasFileAPI.switchMode(this.finalMode, 1).then(response => {
-				if (response.data.code !== 200) return
-				this.mode = { visiable: false, choice: 0 }
-				// this.switchDevice()
-			}).catch(error => {
-				this.$message.error('网络连接错误，请检测网络')
-				console.log(error)
-			})
 		},
   }
 })
@@ -387,11 +290,6 @@ p { text-align: left; }
 			}
 		}
 	}
-}
-.modal-font {
-	color: #f00;
-	display: block;
-	margin-bottom: 15px;
 }
 </style>
 

@@ -7,7 +7,7 @@
 					<a-radio :value="0">{{firstMode.title}}</a-radio>
 					<br><br><font>{{firstMode.content[0]}}<br>{{firstMode.content[1]}}<br>{{firstMode.content[2]}}</font><br><br>
 					<a-radio :value="1">{{secondMode.title}}</a-radio>
-					<br><br><font>{{firstMode.content[0]}}<br>{{firstMode.content[1]}}</font><br><br>
+					<br><br><font>{{secondMode.content[0]}}<br>{{secondMode.content[1]}}</font><br><br>
 				</a-radio-group>
 			</p>
 		</div>
@@ -60,9 +60,9 @@ export default Vue.extend({
 		},
 		handleOperation () {
 			this.makesureModal = {
-				title: this.mode === 0 ? this.firstMode.makesure.title : this.secondMode.makesure.title,
+				title: this.mode === 0 ? this.firstMode.switchMode.title : this.secondMode.switchMode.title,
 				visiable: true,
-				message: this.mode === 0 ? this.firstMode.makesure.message : this.secondMode.makesure.message,
+				message: this.mode === 0 ? this.firstMode.switchMode.message : this.secondMode.switchMode.message,
 				checked: false
 			}
 		},
