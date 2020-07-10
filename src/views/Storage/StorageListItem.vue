@@ -6,7 +6,7 @@
     <img :src="model.showIcon"/>
     <div class="content">
       <label class="title">{{ model.showName }}</label>
-      <label class="size">{{ model.status === 1 ? model.showSize : '未初始化' }}</label>
+      <label class="size">{{ model.status === 1 && model.isInternal && isUserAdmin ? '未初始化' : model.showSize }}</label>
       <a-progress
         strokeLinecap="square"
         :percent="model.showProgress"
@@ -20,6 +20,8 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import { mapGetters } from 'vuex'
+import { DeviceRole } from '@/api/UserModel'
 import { StorageInfo, StorageType } from '@/api/NasFileModel'
 
 export default Vue.extend({
@@ -35,7 +37,18 @@ export default Vue.extend({
     isSelected: {
       default: false
     }
-  }
+  },
+	data() {
+		return {
+			isUserAdmin: false
+		};
+	},
+  computed: {
+    ...mapGetters('NasServer', ['accessInfo'])
+  },
+	beforeMount() {
+		this.isUserAdmin = this.accessInfo.role === DeviceRole.admin
+	},
 })
 </script>
 
