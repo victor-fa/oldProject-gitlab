@@ -274,7 +274,8 @@ export default {
         if (element.collected === CollectStatus.has || !isInternal) disableCollect = true
       }
       if (!disableDownload && !isInternal && element.type === ResourceType.folder) disableDownload = true
-      if ((!disableInit && !(element as any).isInternal && !((element as any).status === 0 || (element as any).status === 2)) || role === DeviceRole.user) disableInit = true
+      // 可初始化 + 未初始化 + 普通用户
+      if (!disableInit || !(element as any).isInternal || !((element as any).status === 1) || role === DeviceRole.user) disableInit = true
     }
     return {
       disable, // 是否禁用打开、属性、重命名菜单项

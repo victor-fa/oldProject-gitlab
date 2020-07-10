@@ -6,7 +6,7 @@
     <img :src="model.showIcon"/>
     <div class="content">
       <label class="title">{{ model.showName }}</label>
-      <label class="size">{{ model.showSize }}</label>
+      <label class="size">{{ model.status === 1 ? model.showSize : '未初始化' }}</label>
       <a-progress
         strokeLinecap="square"
         :percent="model.showProgress"

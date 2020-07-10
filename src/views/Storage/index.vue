@@ -26,7 +26,7 @@
         @cancel="handleCancle">
         <p>{{makesureModal.message}}</p>
         <font class="modal-font">{{commonInfo.tips}}</font>
-        <a-input :placeholder="commonInfo.placeholder" v-model="makesureModal.input" :max-length="4"/>
+        <a-input :placeholder="commonInfo.placeholder" v-model="makesureModal.input" :max-length="6"/>
       </a-modal>
       <a-modal
         :visible="mode.visiable" :mask="false" :closable="false" :maskClosable="false" width="300px"
@@ -190,10 +190,6 @@ export default Vue.extend({
 				return
       }
       this.fetchStorages()  // 刷新列表，取消所有选中
-      const index = StorageHandler.getFristSelectedIndex(this.dataArray)
-      if (index === null) return
-      const item = this.dataArray[index] as any
-			this.finalMode = item.raidMode
 			this.handleOperation()
     },
 		handleOperation () {
@@ -232,8 +228,7 @@ export default Vue.extend({
 					visiable: false,
 					choice: 0
         }
-        // 循环刷新列表
-        // this.fetchStorages()
+        this.fetchStorages()
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
