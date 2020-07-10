@@ -317,6 +317,12 @@ export default {
     })
     initializeWindow.once('ready-to-show', () => {
       this.activeWindow(initializeWindow!)
+      // 启动后，要将系统设置界面关闭
+      const wins = BrowserWindow.getAllWindows()
+      for (let index = 0; index < wins.length; index++) {
+        const win = wins[index]
+        if (win === settingWindow) win.close()
+      }
     })
   },
   presentUpdateSoftWindow () {

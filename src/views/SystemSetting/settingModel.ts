@@ -6,8 +6,10 @@ let firstMode = {
     '恢复双盘备份功能。组合之后，总容量等于2块硬盘中较小的容量。'],
   makesure: {
     title: '设置双盘备份模式',
-    message: `当前接入内置硬盘口的硬盘数据将会被格式化，
-      并将两个硬盘组合成双盘备份模式`
+    message: `当前内置硬盘将被格式化，
+      存储模式转换成双盘备份模式。
+      请提前备份原数据，
+      格式化启动后无法中止`
   },
   switchMode: {
     title: '硬盘初始化',
@@ -39,7 +41,7 @@ let secondMode = {
 
 let commonInfo = {
   tips: '操作开始后将不能中止',
-  placeholder: '请输入‘我已了解’',
+  placeholder: '请输入确认删除数据',
   okText: '确定',
   cancelText: '取消'
 }

@@ -182,7 +182,7 @@ export default Vue.extend({
 			}
       if (this.mode.visiable) {	// 已有弹框，选择后切换
 				this.finalMode = this.mode.choice
-				this.handleOperation('makesure')
+				this.handleOperation()
 				return
 			}
       if (this.diskMode === -1) {	// 打开弹框【当用户不曾选过mode时，需要让用户选择模式再进行格式化】
@@ -194,36 +194,27 @@ export default Vue.extend({
       if (index === null) return
       const item = this.dataArray[index] as any
 			this.finalMode = item.raidMode
-			this.handleOperation('makesure')
+			this.handleOperation()
     },
-		handleOperation (flag) {
-			if (flag === 'makesure') {
-				this.makesureModal = {
-					title: this.finalMode === 0 ? this.firstMode.makesure.title : this.secondMode.makesure.title,
-					visiable: true,
-					input: '',
-					message: this.finalMode === 0 ? this.firstMode.makesure.message : this.secondMode.makesure.message
-				}
-			} else if (flag === 'switchMode') {
-				this.makesureModal = {
-					title: this.finalMode === 0 ? this.firstMode.switchMode.title : this.secondMode.switchMode.title,
-					visiable: true,
-					input: '',
-					message: this.finalMode === 0 ? this.firstMode.switchMode.message : this.secondMode.switchMode.message
-				}
-			}
+		handleOperation () {
+      this.makesureModal = {
+        title: this.finalMode === 0 ? this.firstMode.switchMode.title : this.secondMode.switchMode.title,
+        visiable: true,
+        input: '',
+        message: this.finalMode === 0 ? this.firstMode.switchMode.message : this.secondMode.switchMode.message
+      }
 		},
 		handleMakesure () {
 			if (this.makesureModal.input.length === 0) {
 				this.$message.error('您未输入关键信息！')
 				return
 			}
-			if (this.makesureModal.input !== '我已了解') {
+			if (this.makesureModal.input !== '确认删除数据') {
 				this.$message.error('输入关键信息错误！')
 				return
 			}
 			this.handleCancle()
-			this.makesureModal.title === '硬盘初始化' ? this.handleSwitchMode() : this.handleOperation('switchMode')
+			this.handleSwitchMode()
 		},
 		handleCancle () {
 			this.makesureModal = {
@@ -241,7 +232,8 @@ export default Vue.extend({
 					visiable: false,
 					choice: 0
         }
-        processCenter.renderSend(EventName.initialize)  // 打开获取初始化进度窗口
+        // 循环刷新列表
+        // this.fetchStorages()
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)

@@ -71,7 +71,7 @@ export default {
     return nasServer.get(fileModule + '/disks')
   },
   switchMode (mode: number, force: number): ServerResponse {
-    return nasServer.post(diskModule + '/disks', {
+    return nasServer.post(diskModule + '/mode_switch', {
       mode,
       force
     })

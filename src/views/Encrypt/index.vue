@@ -5,7 +5,7 @@
       :loading="loading"
       :count="totalSize"
       :dataSource="dataArray"
-      :contextListMenu="alreadyLogin ? encryptContextMenu : encryptMisTokenContextMenu"
+      :contextListMenu="alreadyActive ? alreadyLogin ? encryptContextMenu : encryptMisTokenContextMenu : encryptActiveContextMenu"
       :contextItemMenu="encryptResourceContextMenu"
       v-on:headerCallbackActions="handleHeaderActions"
       v-on:listCallbackActions="handleListActions"
@@ -66,7 +66,7 @@ import { uploadQueue, downloadQueue } from '@/api/Transport/TransportHelper'
 import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
 import { User, BasicResponse } from '@/api/UserModel'
 import StringUtility from '@/utils/StringUtility'
-import { encryptContextMenu, encryptMisTokenContextMenu, encryptResourceContextMenu } from '@/components/OperateListAlter/operateList'
+import { encryptActiveContextMenu, encryptContextMenu, encryptMisTokenContextMenu, encryptResourceContextMenu } from '@/components/OperateListAlter/operateList'
 import RouterUtility from '@/utils/RouterUtility'
 import SelectFilePath from '../SelectFilePath/index.vue'
 import { toolbars } from '../MainView/ResourceFuncList'
@@ -86,6 +86,7 @@ export default Vue.extend({
       page: 1,
       busy: false,
       uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
+      alreadyActive: false,  // 是否已激活
       alreadyLogin: false,  // 是否已登录
       encryptSet: {
         isVisiable: false,
@@ -108,6 +109,7 @@ export default Vue.extend({
         alreadyKnow: false
       },
       encryptContextMenu, // list右键菜单选项
+      encryptActiveContextMenu, // 未激活时，右键菜单选项
       encryptMisTokenContextMenu, // list未登录时，右键菜单选项
       encryptResourceContextMenu, // item右键菜单选项
       showSelectModal: false, // 控制路径选择弹窗的显示与隐藏
@@ -144,8 +146,10 @@ export default Vue.extend({
         this.loading = false
         if (response.data.code !== 200) return
         if (_.get(response.data.data, 'status') === 0) {
+          this.alreadyActive = false
           this.encryptSet.isVisiable = true
         } else {
+          this.alreadyActive = true
           this.encryptSet.isVisiable = false
           this.getEncryptList()
         }
@@ -238,6 +242,7 @@ export default Vue.extend({
         }
         if (this.encryptSet.isVisiable) {
           this.$message.success('激活成功')
+          this.alreadyActive = true
           this.cancleEncryptSet()
         } else if (this.encryptLogin.isVisiable) {
           this.$message.success('登录成功')
@@ -353,6 +358,7 @@ export default Vue.extend({
         if (response.data.code !== 200) return
         this.$message.success('重置加密空间成功')
         this.cancleEncryptReset()
+        this.checkEncryptStatus()
       }).catch(error => {
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
@@ -378,6 +384,9 @@ export default Vue.extend({
       this.page = 1
       this.busy = false
       this.getEncryptList()
+    },
+    handleActiveEncryptAction () {  // 激活加密空间
+      this.encryptSet.isVisiable = true
     },
     handleLoginEncryptAction () { // 登录加密空间
       this.encryptLogin.isVisiable = true

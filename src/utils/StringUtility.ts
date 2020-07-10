@@ -68,7 +68,7 @@ export default {
   // 格式化文件大小
 	formatShowSize(bytes) {
 		bytes = parseFloat(bytes);
-		if (bytes === 0) return '-';
+		if (bytes === 0) return '0B';
 		let k = 1024,
 			sizes = ['B', 'K', 'M', 'G', 'T'],
 			i = Math.floor(Math.log(bytes) / Math.log(k));

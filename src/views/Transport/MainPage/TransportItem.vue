@@ -8,7 +8,7 @@
       <div class="item-top">
         <span class="item-name" :title="model.name">{{ model.name }}</span>
         <span v-if="showError" class="item-error">传输失败</span>
-        <div>
+        <div style="display: flex;">
           <custom-button
             v-for="(item, index) in showItems"
             :key="item.command"

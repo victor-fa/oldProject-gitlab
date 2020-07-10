@@ -84,10 +84,8 @@ export default {
 			let time_p1 = setInterval(() => {
 				let imgW = img_show.offsetWidth;
 				if (img_show.complete) {
-					if (img_show.offsetHeight > window.innerHeight || imgW > window.innerWidth) {
-						let ratio = window.innerWidth / imgW;
-						img_show.style.width = imgW * ratio + 'px';
-					}
+					let ratio = window.innerWidth / imgW;
+					img_show.style.width = imgW * ratio + 'px';
 					this.centerImg();
 					this.loaded = false;
 					img_show.style.opacity = 1;
@@ -138,7 +136,7 @@ export default {
 				img_show.style.width = img_show.offsetWidth * 0.9 + 'px';
 				img_show.style.height = img_show.offsetHeight * 0.9 + 'px';
 			} else if (a > 0 && this.ZoomSize < 3) {
-				this.ZoomSize = this.ZoomSize + 0.1;
+					this.ZoomSize = this.ZoomSize + 0.1;
 				img_show.style.width = img_show.offsetWidth * 1.1 + 'px';
 				img_show.style.height = img_show.offsetHeight * 1.1 + 'px';
 			}

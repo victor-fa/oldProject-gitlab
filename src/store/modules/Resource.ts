@@ -50,7 +50,11 @@ export default {
       state.clipboard = clipboard
     },
     UPDATE_TASK_COUNT (state: ResourceState, adjust: number) {
-      state.taskCount += adjust
+      if (adjust === -1) {
+        state.taskCount === 0 ? null : state.taskCount = state.taskCount += adjust
+      } else {
+        state.taskCount += adjust
+      }
     },
     CLEAR_TASK_COUNT (state: ResourceState) {
       state.taskCount = 0

@@ -308,7 +308,7 @@ export default Vue.extend({
 		},
 		handleMakesure () {
 			if (this.makesureModal.input.length === 0) { this.$message.error('您未输入关键信息！'); return; }
-			if (this.makesureModal.input !== '我已了解') { this.$message.error('输入关键信息错误！'); return; }
+			if (this.makesureModal.input !== '确认删除数据') { this.$message.error('输入关键信息错误！'); return; }
 			this.handleCancle()
 			this.makesureModal.title === '硬盘初始化' ? this.handleSwitchMode() : this.handleOperation('switchMode')
 		},

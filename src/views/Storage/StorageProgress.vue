@@ -6,9 +6,9 @@
     <div class="content">
       <div class="top">
         <span class="title">磁盘正在初始化，请勿拔电源，关机</span>
-        <span class="number">{{process}}%</span>
+        <span class="number">{{ process === -1 ? 100 : process }}%</span>
       </div>
-      <a-progress class="progress" :percent="process" :show-info="false" :stroke-color="'#2CD18A'" />
+      <a-progress class="progress" :percent="process === -1 ? 100 : process" :show-info="false" :stroke-color="'#2CD18A'" />
     </div>
   </div>
 </template>
@@ -23,7 +23,8 @@ export default Vue.extend({
   data () {
     return {
       process: 0,
-			window: false as any
+      window: false as any,
+      flag: false
     }
   },
 	beforeMount () {
@@ -31,6 +32,7 @@ export default Vue.extend({
     this.window = _this.$electron.remote.getCurrentWindow();
   },
   mounted () {
+    this.flag = false
     this.loopDiskProcess()
   },
   methods: {
@@ -38,7 +40,7 @@ export default Vue.extend({
       NasFileAPI.fetchDisks().then(response => {
         if (response.data.code !== 200) return
         const process = _.get(response.data.data, 'format_percent')
-				this.process = process === -1 ? 0 : process
+				this.process = process
       }).catch(error => {
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)
@@ -47,10 +49,11 @@ export default Vue.extend({
     loopDiskProcess () {
 			let timer = setInterval(() => {
         this.fetchDisks()
-        if (this.process === 100) {
+        if (this.process > 0) this.flag = true
+        if (this.process === -1 && this.flag) { // 仅当process不为-1后，并再次回到-1，才可判定为初始化成功
           timer && clearInterval(timer);
           this.$message.success('初始化成功！')
-          setTimeout(() => { this.window.close(); }, 2000);
+          setTimeout(() => { this.window.close(); }, 1000);
         }
 			}, 2000);
     }

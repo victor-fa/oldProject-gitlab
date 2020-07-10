@@ -134,7 +134,10 @@ export default Vue.extend({
 				offline_password_new: StringUtility.encryptPassword(this.offlinePass.offline_password_new)
 			}
 			NasFileAPI.modifyOfflineAccount(input).then(response => {
-				if (response.data.code !== 200) return
+				if (response.data.code !== 200) {
+					this.$message.error('离线密码错误')
+					return
+				}
 				this.offlinePass.offline_password = ''
 				this.offlinePass.offline_password_new = ''
 				this.offlinePass.offline_modify_visiable = false

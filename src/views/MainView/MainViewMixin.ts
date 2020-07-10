@@ -181,6 +181,9 @@ export default Vue.extend({
         case 'directoryInfo':
           this.handleDireactoryInfoAction()
           break;
+        case 'activeEncrypt':
+          this.handleActiveEncryptAction()
+          break;
         case 'loginEncrypt':
           this.handleLoginEncryptAction()
           break;
@@ -434,6 +437,8 @@ export default Vue.extend({
     handlePasteAction (mode: TaskMode) {
     },
     handleDireactoryInfoAction () {
+    },
+    handleActiveEncryptAction () {
     },
     handleLoginEncryptAction () {
     },

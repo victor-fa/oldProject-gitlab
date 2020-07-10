@@ -55,7 +55,8 @@ nasServer.interceptors.response.use((response: AxiosResponse) => {
 const refreshTokenCodes = [8024, 8013]
 const reconnectCodes = [8044, 8045]
 const reLoginCodes = [8052]
-const whiteListCodes = [8031, 8032, 8048, 8049, 40103, 4050, 8025, 8072, 8071]
+const formattingCodes = [4060]
+const whiteListCodes = [8031, 8032, 8048, 8049, 40103, 4050, 8025, 8072, 8071, 8063]
 const handleExceptionSence = (response: AxiosResponse) => {
   if (response.status === 200) {
     const basicData = response.data as BasicResponse
@@ -67,6 +68,8 @@ const handleExceptionSence = (response: AxiosResponse) => {
       handleReLoginSence()
     } else if (whiteListCodes.indexOf(basicData.code) !== -1) {
       // EventBus.$emit(EventType.showToast, basicData.msg)
+    } else if (formattingCodes.indexOf(basicData.code) !== -1) {
+      EventBus.$emit(EventType.showToast, '磁盘正在初始化')
     } else if (basicData.code !== 200) {
       EventBus.$emit(EventType.showToast, basicData.msg)
     }

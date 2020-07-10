@@ -15,9 +15,9 @@
 			:visible="makesureModal.visiable" :mask="false" :closable="false" :maskClosable="false" width="400px"
 			:okText="commonInfo.okText" :cancelText="commonInfo.cancelText" @ok="handleMakesure"
 			@cancel="handleCancle">
-			<p>{{makesureModal.message}}</p>
-			<font class="modal-font">{{commonInfo.tips}}</font>
-      <a-input :placeholder="commonInfo.placeholder" v-model="makesureModal.input" :max-length="4"/>
+			<p>{{ makesureModal.message }}</p>
+			<font class="modal-font">{{ commonInfo.tips }}</font>
+      <a-checkbox v-model="makesureModal.checked">确认删除数据</a-checkbox>
 		</a-modal>
 	</div>
 </template>
@@ -41,8 +41,8 @@ export default Vue.extend({
 			makesureModal: {
 				title: '',
 				visiable: false,
-				input: '',
-				message: ''
+				message: '',
+				checked: false
 			},
 			diskFormatting: 0
 		};
@@ -56,52 +56,37 @@ export default Vue.extend({
 				this.$message.error('当前有磁盘任务，不可初始化')
 				return
 			}
-			this.handleOperation('makesure')
+			this.handleOperation()
 		},
-		handleOperation (flag) {
-			if (flag === 'makesure') {
-				this.makesureModal = {
-					title: this.mode === 0 ? this.firstMode.makesure.title : this.secondMode.makesure.title,
-					visiable: true,
-					input: '',
-					message: this.mode === 0 ? this.firstMode.makesure.message : this.secondMode.makesure.message
-				}
-			} else if (flag === 'switchMode') {
-				this.makesureModal = {
-					title: this.mode === 0 ? this.firstMode.switchMode.title : this.secondMode.switchMode.title,
-					visiable: true,
-					input: '',
-					message: this.mode === 0 ? this.firstMode.switchMode.message : this.secondMode.switchMode.message
-				}
+		handleOperation () {
+			this.makesureModal = {
+				title: this.mode === 0 ? this.firstMode.makesure.title : this.secondMode.makesure.title,
+				visiable: true,
+				message: this.mode === 0 ? this.firstMode.makesure.message : this.secondMode.makesure.message,
+				checked: false
 			}
 		},
 		handleSwitchMode () {
 			NasFileAPI.switchMode(this.mode, 1).then(response => {
 				if (response.data.code !== 200) return
 				console.log(response);
-				this.switchDevice()
+				processCenter.renderSend(EventName.initialize)  // 打开获取初始化进度窗口
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
 			})
 		},
-		switchDevice () {
-			this.$store.dispatch('NasServer/clearCacheNas')
-			TransportHelper.clearQueueCache()
-			processCenter.renderSend(EventName.bindList)
-		},
 		handleMakesure () {
-			if (this.makesureModal.input.length === 0) { this.$message.error('您未输入关键信息！'); return; }
-			if (this.makesureModal.input !== '我已了解') { this.$message.error('输入关键信息错误！'); return; }
+			if (!this.makesureModal.checked) { this.$message.error('您未勾选“确认删除数据”'); return; }
 			this.handleCancle()
-			this.makesureModal.title === '硬盘初始化' ? this.handleSwitchMode() : this.handleOperation('switchMode')
+			this.handleSwitchMode()
 		},
 		handleCancle () {
 			this.makesureModal = {
 				title: this.makesureModal.title,
 				visiable: false,
-				input: '',
-				message: ``
+				message: ``,
+				checked: false
 			}
 			this.fetchDisks()
 		},

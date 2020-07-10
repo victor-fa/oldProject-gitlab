@@ -119,6 +119,15 @@ const encryptResourceContextMenu: Array<OperateGroup> = [
   }
 ]
 
+const encryptActiveContextMenu: Array<OperateGroup> = [
+  {
+    icon: require('../../assets/open_accessory.png'),
+    items: [
+      { title: '激活空间', command: 'activeEncrypt' }
+    ]
+  }
+]
+
 const encryptMisTokenContextMenu: Array<OperateGroup> = [
   {
     icon: require('../../assets/open_accessory.png'),
@@ -336,6 +345,7 @@ export {
   recentContextMenu,
   storageContextMenu,
   encryptResourceContextMenu,
+  encryptActiveContextMenu,
   encryptMisTokenContextMenu,
   encryptContextMenu,
   backupResourceContextMenu,
