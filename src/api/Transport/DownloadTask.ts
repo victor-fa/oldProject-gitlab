@@ -69,11 +69,13 @@ export default class DownloadTask extends BaseTask {
       this.source.cancel()
       this.source = undefined
     }
+    this.emit('taskSuspend', this.taskId)
   }
   resume () {
     super.resume()
     const CancelToken = axios.CancelToken
     this.source = CancelToken.source()
+    this.emit('taskResume', this.taskId)
     this.downloadFile()
   }
   reload () {

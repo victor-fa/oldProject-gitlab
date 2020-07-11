@@ -5,7 +5,9 @@
       :loading="loading"
       :count="totalSize"
       :dataSource="dataArray"
-      :contextListMenu="alreadyActive ? alreadyLogin ? encryptContextMenu : encryptMisTokenContextMenu : encryptActiveContextMenu"
+      :funcList="showFuncList"
+      :showToolbars="showToolbars"
+      :contextListMenu="showListMenu"
       :contextItemMenu="encryptResourceContextMenu"
       v-on:headerCallbackActions="handleHeaderActions"
       v-on:listCallbackActions="handleListActions"
@@ -28,14 +30,14 @@
       :visible="encryptLogin.isVisiable" :mask="false" :closable="false" :maskClosable="false"
       okText="确定" cancelText="取消" @ok="login" @cancel="cancleEncryptLogin">
       <p class="modal-title">输入加密密码</p>
-      <a-input type="password" placeholder="请输入加密空间密码" v-model="encryptLogin.securityPassword" v-on:pressEnter="login()"/>
+      <a-input v-focus type="password" placeholder="请输入加密空间密码" v-model="encryptLogin.securityPassword" v-on:pressEnter="login()"/>
     </a-modal>
     <a-modal
       width="360px" style="top: 120px;"
       :visible="encryptModify.isVisiable" :mask="false" :closable="false" :maskClosable="false"
       okText="确定" cancelText="取消" @ok="handleEncryptModify" @cancel="cancleEncryptModify">
       <p class="modal-title">修改密码</p>
-      <p><a-input type="password" placeholder="请输入旧密码" v-model="encryptModify.oldPassword" /></p>
+      <p><a-input v-focus type="password" placeholder="请输入旧密码" v-model="encryptModify.oldPassword" /></p>
       <p><a-input type="password" placeholder="请输入新密码" v-model="encryptModify.newPassword" /></p>
       <a-input type="password" placeholder="请再次输入新密码" v-model="encryptModify.repeatPassword" />
     </a-modal>
@@ -63,16 +65,24 @@ import EncryptUploadTask from '@/api/Transport/EncryptUploadTask'
 import EncryptDownloadTask from '@/api/Transport/EncryptDownloadTask'
 import { TaskError, TaskStatus } from '@/api/Transport/BaseTask'
 import { uploadQueue, downloadQueue } from '@/api/Transport/TransportHelper'
-import { ResourceItem, OrderType, UploadTimeSort } from '@/api/NasFileModel'
+import { ResourceItem, OrderType, UploadTimeSort, ResourceType } from '@/api/NasFileModel'
 import { User, BasicResponse } from '@/api/UserModel'
 import StringUtility from '@/utils/StringUtility'
 import { encryptActiveContextMenu, encryptContextMenu, encryptMisTokenContextMenu, encryptResourceContextMenu } from '@/components/OperateListAlter/operateList'
 import RouterUtility from '@/utils/RouterUtility'
 import SelectFilePath from '../SelectFilePath/index.vue'
-import { toolbars } from '../MainView/ResourceFuncList'
+import { toolbars, commonFuncList } from '../MainView/ResourceFuncList'
+import { EventBus, EventType } from '../../utils/eventBus'
 
 export default Vue.extend({
   name: 'encrypt',
+  directives: {
+    focus: {
+      inserted: function (el) {
+        el.focus()
+      }
+    }
+  },
   components: {
     MainView,
     SelectFilePath
@@ -81,13 +91,12 @@ export default Vue.extend({
   data () {
     return {
       loading: false,
-      dataArray: [] as any,
+      dataArray: [] as ResourceItem[],
       totalSize: 0,
       page: 1,
       busy: false,
-      uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
-      alreadyActive: false,  // 是否已激活
       alreadyLogin: false,  // 是否已登录
+      order: OrderType.byNameDesc, // 上传列表的排序方式
       encryptSet: {
         isVisiable: false,
         alreadyKnow: false,
@@ -108,31 +117,52 @@ export default Vue.extend({
         isVisiable: false,
         alreadyKnow: false
       },
-      encryptContextMenu, // list右键菜单选项
-      encryptActiveContextMenu, // 未激活时，右键菜单选项
-      encryptMisTokenContextMenu, // list未登录时，右键菜单选项
+      showListMenu: _.cloneDeep(encryptActiveContextMenu), // list右键菜单选项
       encryptResourceContextMenu, // item右键菜单选项
       showSelectModal: false, // 控制路径选择弹窗的显示与隐藏
       delayTimer: null as NodeJS.Timer | null
     }
   },
   computed: {
-    ...mapGetters('NasServer', ['cryptoInfo']),
+    ...mapGetters('NasServer', ['cryptoInfo', 'isLogined']),
     ...mapGetters('User', ['user']),
-    showToolbars: function () {
-      return _.cloneDeep(toolbars).map(item => {
-        item.disable = false
+    showFuncList: function () {
+      return _.cloneDeep(commonFuncList).map(item => {
+        item.disable = !(this.isLogined as boolean)
         return item
       })
+    },
+    showToolbars: function () {
+      return _.cloneDeep(toolbars).map(item => {
+        item.disable = !(this.isLogined as boolean)
+        return item
+      })
+    },
+    path: function () {
+      const user = this.user as User
+      return `/.ugreen_nas/${user.ugreenNo}/.safe`
+    },
+    uuid: function () {
+      return undefined
     }
   },
   mounted () {
-    this.checkEncryptStatus()
+    if (this.isLogined === true) {
+      this.getEncryptList()
+    } else {
+      this.checkEncryptStatus()
+    }
+    EventBus.$on(EventType.reloginEncrypt, this.handleReloginAction)
   },
   destroyed () {
-    if (this.alreadyLogin === true) { // 已登录情况下才需要登录
-      this.logout()
+    if (this.isLogined === true) {
+      const encryptNames = ['encrypt-resource-view', 'encrypt']
+      const name = this.$route.name
+      if (_.isString(name) && encryptNames.indexOf(name) === -1) {
+        this.logout()
+      }
     }
+    EventBus.$off(EventType.reloginEncrypt, this.handleReloginAction)
     uploadQueue.off('taskStatusChange', this.handleTaskStatusChange)
     if (this.delayTimer !== null) {
       clearTimeout(this.delayTimer)
@@ -140,21 +170,22 @@ export default Vue.extend({
     }
   },
   methods: {
+    handleReloginAction (msg: string) {
+      this.$store.dispatch('NasServer/updateLoginStatus', false)
+      this.encryptLogin.isVisiable = true
+    },
     checkEncryptStatus() {
-      this.loading = true
       NasFileAPI.getEncryptStatus().then(response => {
-        this.loading = false
+        console.log(response)
         if (response.data.code !== 200) return
-        if (_.get(response.data.data, 'status') === 0) {
-          this.alreadyActive = false
+        const status = _.get(response.data.data, 'status') as number
+        if (status === 0) {
           this.encryptSet.isVisiable = true
         } else {
-          this.alreadyActive = true
-          this.encryptSet.isVisiable = false
-          this.getEncryptList()
+          this.encryptLogin.isVisiable = true
+          this.showListMenu = _.cloneDeep(encryptMisTokenContextMenu)
         }
       }).catch(error => {
-        this.loading = false
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
@@ -242,7 +273,6 @@ export default Vue.extend({
         }
         if (this.encryptSet.isVisiable) {
           this.$message.success('激活成功')
-          this.alreadyActive = true
           this.cancleEncryptSet()
         } else if (this.encryptLogin.isVisiable) {
           this.$message.success('登录成功')
@@ -254,6 +284,8 @@ export default Vue.extend({
         const crypto_token = _.get(response.data, 'data')
         crypto_token.security_password = security_password
         this.$store.dispatch('NasServer/updateCryptoInfo', crypto_token)
+        this.$store.dispatch('NasServer/updateLoginStatus', true)
+        this.showListMenu = _.cloneDeep(encryptContextMenu)
         this.getEncryptList()
       }).catch(error => {
         this.loading = false
@@ -295,22 +327,15 @@ export default Vue.extend({
     },
     getEncryptList() {
       this.loading = true
-      NasFileAPI.getEncryptList(`/.ugreen_nas/${(this.user as User).ugreenNo}/.safe`).then(response => {
+      NasFileAPI.getEncryptList(this.path, undefined, this.page, this.order).then(response => {
+        console.log(response)
         this.loading = false
-        if (response.data.code !== 200) {
-          if (response.data.code === 4004) {  // 针对Resource Not Found
-            this.dataArray = []
-            return
-          }
-          this.encryptLogin.isVisiable = true // 弹出登录窗口
-          return
-        }
-        this.parseResponse(response.data)
-        this.alreadyLogin = true
+        if (response.data.code !== 200) return
+         this.parseResponse(response.data)
       }).catch(error => {
         this.loading = false
         console.log(error)
-        this.encryptLogin.isVisiable = true
+        this.$message.error('网络错误，请检查网络')
       })
     },
     parseResponse (data: BasicResponse) {
@@ -322,9 +347,9 @@ export default Vue.extend({
     },
     logout () {
       NasFileAPI.logoutEncrypt().then(response => {
+        console.log(response)
+        this.$store.dispatch('NasServer/updateLoginStatus', false)
         this.loading = false
-        if (response.data.code !== 200) return
-        console.log(response);
       }).catch(error => {
         this.loading = false
         this.$message.error('网络连接错误，请检测网络')
@@ -376,11 +401,7 @@ export default Vue.extend({
       })
     },
     handleSortWayChangeAction (order: OrderType) {
-      if (order === OrderType.ByUploadDesc) {
-        this.uploadOrder = UploadTimeSort.descend
-      } else if (order === OrderType.ByUploadAsc) {
-        this.uploadOrder = UploadTimeSort.ascend
-      }
+      this.order = order
       this.page = 1
       this.busy = false
       this.getEncryptList()
@@ -426,7 +447,9 @@ export default Vue.extend({
         this.loading = false
         if (response.data.code !== 200) return
         this.$store.dispatch('Resource/increaseTask')
-        setTimeout(() => this.getEncryptList(), 2000);
+        this.dataArray = this.dataArray.filter(item => {
+          return items.indexOf(item) === -1
+        })
       }).catch(error => {
         console.log(error)
         this.loading = false
@@ -443,7 +466,7 @@ export default Vue.extend({
     },
     handleUploadAction (filePaths: string[]) {
       filePaths.forEach(path => {
-        const task = new EncryptUploadTask(path, path, '')
+        const task = new EncryptUploadTask(path, this.path, '')
         task.matchTaskIcon()
         uploadQueue.addTask(task)
         uploadQueue.on('taskStatusChange', this.handleTaskStatusChange)
@@ -501,6 +524,48 @@ export default Vue.extend({
         console.log(error)
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         this.$message.error('重命名失败')
+      })
+    },
+    handlePasteAction (mode: TaskMode) {
+      this.loading = true
+      const srcItems = ResourceHandler.getSelectItems(this.dataArray)
+      const ugreenNo = (this.user as User).ugreenNo
+      NasFileAPI.addEncryptMoveIntoTask(srcItems, this.path, TaskMode.rename).then(response => {
+        console.log(response)
+        this.loading = false
+        if (response.data.code !== 200) return
+        this.handleRefreshAction()
+      }).catch(error => {
+        console.log(error)
+        this.loading = false
+        this.$message.error('移动失败')
+      })
+    },
+    handleNewFolderAction () {
+      const newName = ResourceHandler.calculateNewFolderName(this.dataArray)
+      const newItem = {
+        type: ResourceType.folder,
+        isSelected: true,
+        name: newName,
+        renaming: true
+      } as ResourceItem 
+      this.dataArray = [newItem].concat(this.dataArray)
+    },
+    handleNewFolderRequestAction (index: number, newName: string) {
+      if (!ResourceHandler.checkFileName(newName)) {
+        this.$message.error('名称包含非法字符')
+        return
+      }
+      this.loading = true
+      const directory = `${this.path}/${newName}`
+      NasFileAPI.newFolderEncrypt(directory, this.uuid).then(response => {
+        this.loading = false
+        if (response.data.code !== 200) return
+        this.handleRefreshAction()
+      }).catch(error => {
+        console.log(error)
+        this.$message.error('新建失败')
+        this.loading = false
       })
     }
   }

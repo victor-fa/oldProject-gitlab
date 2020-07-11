@@ -282,6 +282,12 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     task.addListener('fileFinished', (index: number, fileInfo: FileInfo) => {
       this.handleFileFinished(index, fileInfo)
     })
+    task.addListener('taskSuspend', (index: number) => {
+      this.handleTaskSuspend(index)
+    })
+    task.addListener('taskResume', (index: number) => {
+      this.handleTaskResume(index)
+    })
     task.addListener('taskFinished', (index: number) => {
       this.handleTaskFinished(index)
     })
@@ -291,31 +297,37 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   }
   // protected methods
   // handle upload task callback
-  protected handleTaskProcess (index: number) {
-    this.emit('taskStatusChange', index)
+  protected handleTaskProcess (taskId: number) {
+    this.emit('taskStatusChange', taskId)
   }
-  protected handleFileBegin (index: number, fileInfo: FileInfo) {
-    const task = this.searchTask(index)
-    if (task === undefined) return
-    this.emit('taskStatusChange', task.taskId)
+  protected handleFileBegin (taskId: number, fileInfo: FileInfo) {
+    this.emit('taskStatusChange', taskId)
   }
-  protected handleFileFinished (index: number, fileInfo: FileInfo) {
+  protected handleFileFinished (taskId: number, fileInfo: FileInfo) {
     console.log(fileInfo)
-    const task = this.searchTask(index)
+    const task = this.searchTask(taskId)
     if (task === undefined) return
     this.reloadTaskInDB(task)
   }
-  protected handleTaskFinished (index: number) {
-    const task = this.searchTask(index)
+  protected handleTaskSuspend (taskId: number) {
+    const task = this.searchTask(taskId)
+    if (task === undefined) return
+    this.reloadTaskInDB(task)
+  }
+  protected handleTaskResume (taskId: number) {
+    this.emit('taskStatusChange', taskId)
+  }
+  protected handleTaskFinished (taskId: number) {
+    const task = this.searchTask(taskId)
     if (task === undefined) return
     this.reloadTaskInDB(task)
     this.checkUploadQueue()
     this.emit('taskStatusChange', task.taskId)
     task.removeAllListeners()
   }
-  protected handleTaskError (index: number, error: TaskError) {
+  protected handleTaskError (taskId: number, error: TaskError) {
     console.log(error)
-    const task = this.searchTask(index)
+    const task = this.searchTask(taskId)
     if (task === undefined) return
     this.reloadTaskInDB(task)
     this.emit('taskStatusChange', task.taskId)

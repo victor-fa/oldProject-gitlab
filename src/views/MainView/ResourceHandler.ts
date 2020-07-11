@@ -392,7 +392,7 @@ export default {
     if (imageTypes.indexOf(mine) !== -1) return require('../../assets/resource/image_icon.png')
     const audioTypes = ['wav', 'aif', 'au', 'mp3', 'ram', 'wma', 'mmf', 'amr', 'aac', 'flac', 'midi']
     if (audioTypes.indexOf(mine) !== -1) return require('../../assets/resource/audio_icon.png')
-    const videoTypes = ['avi', 'mov', 'qt', 'asf', 'rm', 'mp4', 'flv', 'mpeg']
+    const videoTypes = ['avi', 'mov', 'qt', 'asf', 'rm', 'mp4', 'flv', 'mpeg', 'rmvb']
     if (videoTypes.indexOf(mine) !== -1) return require('../../assets/resource/video_icon.png')
     const textTypes = ['txt', 'md', 'xml', 'json', 'rtf']
     if (textTypes.indexOf(mine) !== -1) return require('../../assets/resource/txt_icon.png')

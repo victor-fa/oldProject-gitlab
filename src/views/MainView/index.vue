@@ -124,16 +124,19 @@ export default Vue.extend({
         return toolbars
       }
     },
-    funcList: Array, // header中的操作功能按钮集合
+    funcList: {
+      default: () => {
+        return commonFuncList
+      }
+    }, // header中的操作功能按钮集合
     listGrid: Object, // 列表视图的布局
     contextListMenu: Array, // 右键list菜单数据   
     contextItemMenu: Array // 右键item菜单数据
   },
   data () {
-    let list = _.isEmpty(this.funcList) ? _.cloneDeep(commonFuncList) : _.cloneDeep(this.funcList)
     return {
       sortList,
-      showFuncList: list as ResourceFuncItem[],
+      showFuncList: _.cloneDeep(this.funcList) as ResourceFuncItem[],
       categoryType: ResourceType.all, // 当前数据分类 
       showArray: this.dataSource as ResourceItem[], // 当前页展示的数据
       alterPosition: { left: '0px', top: '0px' }, // 右键菜单样式
@@ -171,6 +174,9 @@ export default Vue.extend({
   watch: {
     dataSource: function (newValue: Array<ResourceItem>) {
       this.showArray = ResourceHandler.classifyArray(newValue, this.categoryType)
+    },
+    funcList: function (newValue: ResourceFuncItem[]) {
+      this.showFuncList = newValue
     }
   },
   mounted () {
@@ -459,7 +465,6 @@ export default Vue.extend({
     handleOnlineAction () {
       console.log('online')
       this.showNetworkTip = true
-      if (this.reconnection) true
       this.reconnection = true
       this.handleReconnectionLogic(1)
     },

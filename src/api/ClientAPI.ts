@@ -15,6 +15,7 @@ const selfCheck = '/v1/selfcheck'
 let client: dgram.Socket | null = null
 const CancelToken = axios.CancelToken
 let cancel: Canceler | null = null
+let timer: NodeJS.Timer | null = null
 
 export default {
   setBaseUrl (url: string) {
@@ -26,7 +27,6 @@ export default {
   // refresh_token过期时调用
   login (user: User, secretKey: string, tunnelIP?: string): Promise<AxiosResponse<BasicResponse>> {
     const userBasic = convertNasUser(user)
-    console.log(userBasic)
     const sign = encryptSign(userBasic, secretKey)
     if (sign === null) return Promise.reject(Error('rsa encrypt error'))
     return nasServer.post((tunnelIP ? `http://${tunnelIP}${userModulePath}` : userModulePath) + '/login', {
@@ -80,27 +80,30 @@ export default {
   },
   // scan nas on LAN with UDP
   scanNas (success: (data: NasInfo) => void, failure: (error: string) => void) {
-    const timer = setTimeout(() => {
+    this.clearTimer()
+    timer = setTimeout(() => {
       this.closeBoardcast()
       failure('boardcast time out')
     }, 10000)
     this.boardcastInLan('', '', data => {
-      clearTimeout(timer)
+      this.clearTimer()
       success(data)
     }, error => {
-      clearTimeout(timer)
+      this.clearTimer()
+      this.closeBoardcast()
       failure(error)
     })
   },
   // search nas on the LAN
   searchNas (sn: string, mac: string): Promise<NasInfo> {
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
+      this.closeConnection()
+      timer = setTimeout(() => {
         this.closeConnection()
         reject(Error('search time out'))
-      }, 10000)
+      }, 20000)
       this.boardcastInLan(sn, mac, data => {
-        clearTimeout(timer)
+        this.clearTimer()
         this.closeConnection()
         resolve(data)
       }, error => {
@@ -108,7 +111,7 @@ export default {
         this.closeBoardcast()
       })
       TunnelAPI.initP2PTunnel(sn, mac).then(data => {
-        clearTimeout(timer)
+        this.clearTimer()
         this.closeBoardcast()
         resolve(data)
       }).catch(error => {
@@ -123,13 +126,13 @@ export default {
   reconnectionToNas (sn: string, mac: string): Promise<NasInfo> {
     return new Promise((resolve, reject) => {
       this.closeConnection()
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         this.closeConnection()
         reject(Error('reconnection time out'))
-      }, 10000)
+      }, 20000)
       this.boardcastInLan(sn, mac, data => {
         this.closeConnection()
-        clearTimeout(timer)
+        this.clearTimer()
         resolve(data)
       }, error => {
         console.log(error)
@@ -137,7 +140,7 @@ export default {
       })
       TunnelAPI.reConnection(sn, mac).then(nas => {
         this.closeConnection()
-        clearTimeout(timer)
+        this.clearTimer()
         resolve(nas)
       }).catch(error => {
         console.log(error)
@@ -189,7 +192,14 @@ export default {
       client = null
     }
   },
+  clearTimer () {
+    if (timer !== null) {
+      clearTimeout(timer)
+      timer = null
+    }
+  },
   closeConnection () {
+    this.clearTimer()
     this.closeBoardcast()
     TunnelAPI.deleteConnect()
   },
@@ -254,7 +264,6 @@ const encryptSign = (nasUser: any, secretKey: string) => {
       key: secretKey,
       padding: crypto.constants.RSA_PKCS1_PADDING
     }, Buffer.from(queryUser)).toString('base64')
-    console.log(ciphertext)
     return ciphertext
   }
   return null

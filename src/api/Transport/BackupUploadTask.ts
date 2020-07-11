@@ -11,26 +11,8 @@ import ClientAPI from '@/api/ClientAPI'
 export default class BackupUploadTask extends UploadTask {
   icon = require('../../assets/resource/folder_icon.png')
 
-  convertFileStats (path: string, stats: fs.Stats): Promise<FileInfo> {
-    return new Promise(resolve => {
-      let fileInfo: FileInfo | null = null
-      super.convertFileStats(path, stats).then(info => {
-        fileInfo = info
-        console.log(JSON.parse(JSON.stringify(fileInfo)));
-        if (!fileInfo.isDirectory) {
-          return this.calculatorFileMD5(path)
-        } else {
-          fileInfo.filter = true  // 过滤掉文件夹
-          return ''
-        }
-      }).then(md5 => {
-        fileInfo!.md5 = md5
-        resolve(fileInfo!)
-      })
-    })
-  }
   // 计算文件的md5（不计算文件夹）
-  calculatorFileMD5 (path: string): Promise<string> {
+  calculateFileMD5 (path: string): Promise<string> {
     return new Promise(async (resolve, reject) => {
       const stream = fs.createReadStream(path)
       const fsHash = crypto.createHash('md5')

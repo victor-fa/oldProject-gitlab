@@ -6,48 +6,46 @@ import { AxiosResponse, CancelTokenSource } from 'axios';
 import { BasicResponse } from '../UserModel';
 import NasFileAPI from '../NasFileAPI';
 import { UploadParams } from '../NasFileModel';
-import { CRYPTO_INFO } from '@/common/constants'
-import { CryptoInfo } from '../ClientModel';
 import { FileInfo } from './BaseTask';
-import store from '@/store'
-import { User } from '@/api/UserModel'
+import store from '@/store';
+import { CryptoInfo } from '../ClientModel';
 
 export default class EncryptUploadTask extends UploadTask {
   constructor (srcPath: string, destPath: string, uuid: string) {
     super(srcPath, destPath, uuid)
     this.type = 'encryptUpload'
   }
-
-  convertFileStats (path: string, stats: fs.Stats): Promise<FileInfo> {
-    return new Promise(resolve => {
-      let fileInfo: FileInfo | null = null
-      super.convertFileStats(path, stats).then(info => {
-        fileInfo = info
-        if (!fileInfo.isDirectory) {
-          return this.calculatorFileMD5(path)
-        } else {
-          return ''
-        }
-      }).then(md5 => {
-        fileInfo!.md5 = md5
-        resolve(fileInfo!)
-      })
-    })
-  }
-  calculatorFileMD5 (path: string): Promise<string> {
+  
+  calculateFileMD5 (path: string): Promise<string> {
     return new Promise(async (resolve, reject) => {
       const stream = fs.createReadStream(path)
       const fsHash = crypto.createHash('md5')
-      await stream.on('data', data => {
+      stream.on('data', data => {
         fsHash.update(data)
       })
-      await stream.once('end', () => {
+      stream.once('end', () => {
         const md5 = fsHash.digest('hex')
         resolve(md5)
       })
-      await stream.once('error', error => {
+      stream.once('error', error => {
         reject(error)
       })
+    })
+  }
+  createFolder (fileInfo: FileInfo) {
+    this.name = fileInfo.relativePath
+    if (this.fileInfos.length > 1) this.emit('fileBegin', this.taskId, fileInfo)
+    this.completedBytes += fileInfo.totalSize
+    const uuid = _.isEmpty(this.uuid) ? undefined : this.uuid
+    NasFileAPI.newFolderEncrypt(fileInfo.destPath, uuid).then(response => {
+      console.log(response)
+      if (response.data.code !== 200) return
+      fileInfo.completed = true
+      if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
+      this.uploadFile()
+    }).catch(_ => {
+      fileInfo.completed = true
+      this.uploadFile()
     })
   }
   uploadChunckData (file: FileInfo, buffer: Buffer, source?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {
@@ -55,20 +53,15 @@ export default class EncryptUploadTask extends UploadTask {
     return NasFileAPI.uploadEncrypt(params, buffer, source)
   }
   encryptUploadParams (fileInfo: FileInfo, chunkLength: number): UploadParams {
-    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
-    const user = _.get(store.getters, 'User/user') as User
-    let token
-    if (cryptoJson !== null) {
-      token = JSON.parse(cryptoJson) as CryptoInfo
-    }
+    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
     const end = chunkLength === 0 ? chunkLength : fileInfo.completedSize + chunkLength - 1
     return {
       end,
-      path: `/.ugreen_nas/${user.ugreenNo}/.safe/${fileInfo.name}`,
+      path: fileInfo.destPath,
       start: fileInfo.completedSize,
       size: fileInfo.totalSize,
       md5: fileInfo.md5,
-      crypto_token: token.crypto_token
+      crypto_token: crypto.crypto_token
     }
   }
 }

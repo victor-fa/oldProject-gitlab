@@ -8,7 +8,7 @@
       <div class="item-top">
         <span class="item-name" :title="model.name">{{ model.name }}</span>
         <span v-if="showError" class="item-error">传输失败</span>
-        <div style="display: flex;">
+        <div class="item-buttons">
           <custom-button
             v-for="(item, index) in showItems"
             :key="item.command"
@@ -29,7 +29,7 @@
           :showInfo="false"
           :strokeColor="'#06B650'"
           :strokeWidth="6"
-          :title="model.progressPercent + '%'"
+          :title="progressTitle"
         />
         <span class="speed">{{ model.speed }}</span>
         <span class="progress-value">{{ model.progress }}</span>
@@ -83,6 +83,10 @@ export default Vue.extend({
       const model = this.model as TransportModel
       const result: boolean = model.status === TaskStatus.error
       return result
+    },
+    progressTitle: function () {
+      const model = this.model as TransportModel
+      return model.progressPercent.toFixed(2) + '%'
     }
   },
   methods: {
@@ -139,10 +143,14 @@ export default Vue.extend({
         flex: 1;
         text-align: left;
       }
-      .operate-item {
-        width: 19px;
-        height: 19px;
-        margin-left: 20px;
+      .item-buttons {
+        display: flex;
+        align-items: center;
+        .operate-item {
+          width: 19px;
+          height: 19px;
+          margin-left: 20px;
+        }
       }
     }
     .item-bottom {

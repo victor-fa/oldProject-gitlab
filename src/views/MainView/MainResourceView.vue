@@ -96,7 +96,11 @@ export default Vue.extend({
   methods: {
     updateView () {
       this.dataArray = [] // 新的界面，需要清空缓存的数据
-      if (this.checkQuery()) this.fetchResourceList()
+      if (this.checkQuery()) {
+        this.page = 1
+        this.busy = false
+        this.fetchResourceList()
+      }
       const mainView = this.$refs.mainView as any
       mainView !== undefined && mainView.resetHeaderView()
     },

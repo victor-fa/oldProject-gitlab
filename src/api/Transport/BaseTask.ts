@@ -7,6 +7,8 @@ import StringUtility from '@/utils/StringUtility'
  * progress (taskId) 上传进度事件
  * fileBegin (taskId, fileInfo) 单个文件开始上传
  * fileFinished (taskId, fileInfo) 单个文件传输完成事件
+ * taskSuspend (taskId) 任务挂起事件
+ * taskResume (taskId) 任务继续事件
  * taskFinished (taskId) 任务完成事件
  * error (taskId, error) 任务出错事件
  */
@@ -73,7 +75,7 @@ interface FileInfo {
   totalSize: number,
   completedSize: number,
   md5?: string,
-  isDirectory?: boolean,
+  isDirectory: boolean,
   completed?: boolean,
   filter?: boolean
 }

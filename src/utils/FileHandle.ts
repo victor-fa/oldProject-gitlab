@@ -163,6 +163,20 @@ export default {
         }
       })
     })
+  },
+  /**深遍历目录 */
+  deepTraverseDirectory (directory: string): FileStruct[] {
+    let files: FileStruct[] = [{ absolutePath: directory }]
+    fs.readdirSync(directory).forEach(filename => {
+      const path = StringUtility.convertR2L(directory + '/' + filename)
+      const stats = fs.statSync(path)
+      if (stats.isDirectory()) {
+        files = files.concat(this.deepTraverseDirectory(path))
+      } else {
+        files.push({ stats: stats, absolutePath: path })
+      }
+    })
+    return files
   }
 }
 
@@ -175,7 +189,13 @@ enum FileHandleError {
   renameError
 }
 
+interface FileStruct {
+  absolutePath: string,
+  stats?: fs.Stats
+}
+
 export {
   FileHandleError,
-  downloadingSuffix
+  downloadingSuffix,
+  FileStruct
 }

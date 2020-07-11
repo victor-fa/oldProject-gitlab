@@ -7,7 +7,7 @@ const HomeRouters = [
     component: () => import('../../views/Recent/index.vue'),
     name: 'recent',
     meta: {
-      title: '最近使用',
+      title: '最近上传',
       icon: require('../../assets/recent_icon.png'),
       selectedIcon: require('../../assets/recent_icon_selected.png'),
       isSelected: true

@@ -143,9 +143,21 @@ const encryptContextMenu: Array<OperateGroup> = [
     icon: require('../../assets/open_accessory.png'),
     items: [
       { title: '上传', command: 'upload' },
-      { title: '刷新', command: 'refresh' },
+      { title: '新建文件夹', command: 'newFolder' }
+    ]
+  },
+  {
+    items: [
       { title: '修改密码', command: 'modifyPass' },
       { title: '重置空间', command: 'reset' }
+    ]
+  },
+  {
+    icon: require('../../assets/delet_accessory.png'),
+    items: [
+      { title: '清空剪切板', command: 'clearClipboard' },
+      { title: '粘贴', command: 'paste' },
+      { title: '刷新', command: 'refresh' }
     ]
   }
 ]

@@ -12,7 +12,6 @@ import path from 'path'
 import ResourceHandler from '@/views/MainView/ResourceHandler'
 
 const CancelToken = axios.CancelToken
-let tmpFileInfos: FileInfo[] = []
 
 export default class UploadTask extends BaseTask {
   private directory: string // 上传文件的目录
@@ -61,10 +60,12 @@ export default class UploadTask extends BaseTask {
       this.source.cancel()
       this.source = undefined
     }
+    this.emit('taskSuspend', this.taskId)
   }
   resume () {
     super.resume()
     this.source = CancelToken.source()
+    this.emit('taskResume', this.taskId)
     this.uploadFile()
   }
   reload () {
@@ -87,61 +88,41 @@ export default class UploadTask extends BaseTask {
       return this.generateUploadFileInfos(stats)
     }).then(fileInfos => {
       this.fileInfos = _.cloneDeep(fileInfos)
-      tmpFileInfos = []
     }).catch(_ => {
       this.handlerTaskError(TaskErrorCode.readStatError)
     })
   }
   // 获取需要上传的文件对象
   private generateUploadFileInfos (stats: fs.Stats): Promise<FileInfo[]> {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       if (stats.isFile()) {
-        this.convertFileStats(this.srcPath, stats).then(fileInfo => {
-          resolve([fileInfo])
-        }).catch(error => {
-          reject(error)
-        })
+        const fileInfo = this.convertFileStats(this.srcPath, stats)
+        resolve([fileInfo])
       } else if (stats.isDirectory()) {
-        this.deepTraverseDirectory(this.srcPath).then(fileInfos => {
-          resolve(fileInfos)
-        }).catch(error => {
-          reject(error)
+        const fileInfos = FileHandle.deepTraverseDirectory(this.srcPath).map(file => {
+          return this.convertFileStats(file.absolutePath, file.stats)
         })
+        resolve(fileInfos)
       }
     })
   }
-  // 深遍历目录文件
-  protected async deepTraverseDirectory (directory: string): Promise<FileInfo[]> {
-    return new Promise(async (resolve, reject) => {
-      const stats = fs.statSync(directory)
-      await this.convertFileStats(directory, stats).then(fileInfo => {
-        tmpFileInfos.push(fileInfo)
-      })
-      const files = fs.readdirSync(directory)
-      if (_.isEmpty(files)) {
-        resolve(tmpFileInfos)
-      } else {
-        files.forEach(async filename => {
-          const path = StringUtility.convertR2L(directory + '/' + filename)
-          const stats = fs.statSync(path)
-          if (stats.isDirectory()) {
-            await this.deepTraverseDirectory(path).then(fileInfos => {
-              resolve(tmpFileInfos.concat(fileInfos))
-            })
-          } else {
-            await this.convertFileStats(path, stats).then(fileInfo => {
-              tmpFileInfos.push(fileInfo)
-              resolve(tmpFileInfos)
-            }).catch(error => {
-              reject(error)
-            })
-          }
-        })
-      }
-    })
+  // 转换stats 
+  private convertFileStats (path: string, stats?: fs.Stats): FileInfo {
+    const name = StringUtility.formatName(path)
+    const relativePath = path.substring(this.directory.length, path.length)
+    const size = stats === undefined ? 0 : stats.size
+    return {
+      name,
+      relativePath,
+      srcPath: path,
+      destPath: `${this.destPath}${relativePath}`,
+      totalSize: size,
+      completedSize: 0,
+      isDirectory: stats === undefined
+    }
   }
   // 开启计算速度定时器
-  beginSpeedTimer () {
+  private beginSpeedTimer () {
     this.speedTimer = setInterval(() => {
       if (this.previousSize >= this.completedBytes) return
       const speed = this.completedBytes - this.previousSize // 单位B/s
@@ -150,7 +131,7 @@ export default class UploadTask extends BaseTask {
     }, 2000)
   }
   // 清除定时器
-  clearSpeedTimer () {
+  private clearSpeedTimer () {
     if (this.speedTimer !== undefined) {
       clearInterval(this.speedTimer)
     }
@@ -200,7 +181,7 @@ export default class UploadTask extends BaseTask {
     }    
   }
   // 创建文件夹
-  private createFolder (fileInfo: FileInfo) {
+  protected createFolder (fileInfo: FileInfo) {
     this.name = fileInfo.relativePath
     if (this.fileInfos.length > 1) this.emit('fileBegin', this.taskId, fileInfo)
     this.completedBytes += fileInfo.totalSize
@@ -219,25 +200,31 @@ export default class UploadTask extends BaseTask {
   private startUpload (fileInfo: FileInfo) {
     this.name = fileInfo.relativePath
     if (this.fileInfos.length > 1) this.emit('fileBegin', this.taskId, fileInfo)
-    FileHandle.openReadFileHandle(fileInfo.srcPath).then(fd => { // open file handle success
+    this.calculateFileMD5(fileInfo.srcPath).then(_ => { // 1. calculate file md5
+      return FileHandle.openReadFileHandle(fileInfo.srcPath)
+    }).then(fd => { // 2. open file handle success
       this.fileHandle = fd
       return this.uploadSingleFile(fd, fileInfo)
-    }).then(fd => { // upload file data success
+    }).then(fd => { // 3. upload file data success
       return FileHandle.closeFileHandle(fd)
-    }).then(() => { // close file handle success
+    }).then(() => { // 4. close file handle success
       this.fileHandle = -1
       if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.uploadFile()
-    }).catch(error => { // handler error
+    }).catch(error => { // 5. handler error
       if (this.fileHandle !== -1) FileHandle.closeFileHandle(this.fileHandle)
-      if (error instanceof TaskError) {
-        this.handlerTaskError(error.code, error.desc)
-      } else if (error === FileHandleError.openError) {
-        this.handlerTaskError(TaskErrorCode.openHandleError)
-      } else {
-        this.handlerTaskError(TaskErrorCode.closeHandleError)
-      }
+      this.parseUploadError(error)
     })
+  }
+  // 解析上传错误
+  private parseUploadError (error: any) {
+    if (error instanceof TaskError) {
+      this.handlerTaskError(error.code, error.desc)
+    } else if (error === FileHandleError.openError) {
+      this.handlerTaskError(TaskErrorCode.openHandleError)
+    } else if (error === FileHandleError.closeError) {
+      this.handlerTaskError(TaskErrorCode.closeHandleError)
+    }
   }
   // 获取待上传的文件对象
   private getNextFileInfo () {
@@ -305,22 +292,9 @@ export default class UploadTask extends BaseTask {
     }
   }
   // protected methods
-  /**转换stats */
-  protected convertFileStats (path: string, stats: fs.Stats): Promise<FileInfo> {
-    return new Promise(resolve => {
-      const name = StringUtility.formatName(path)
-      const relativePath = path.substring(this.directory.length, path.length)
-      const fileInfo: FileInfo = {
-        name,
-        relativePath,
-        srcPath: path,
-        destPath: `${this.destPath}${relativePath}`,
-        totalSize: stats.size,
-        completedSize: 0,
-        isDirectory: stats.isDirectory()
-      }
-      resolve(fileInfo)
-    })
+  // 计算文件的MD5值
+  protected calculateFileMD5 (path: string): Promise<string> {
+    return Promise.resolve('') // 普通上传不需要MD5值
   }
   // 过滤（备份加密用）
   protected filterFilesInfo (fileInfo: FileInfo): Promise<Boolean> {

@@ -47,21 +47,13 @@ export default {
     return host + fileModule + '/http_download?' + jsonToParamsForPdf(input)
   },
   encryptDownload (option) {
-    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
-    if (cryptoJson === null) {
-      return Promise.reject(Error('not find crypto_info'))
-    }
-    const token = JSON.parse(cryptoJson) as CryptoInfo
-    const input = { uuid: option.uuid, path: option.path, crypto_token: token.crypto_token }
+    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
+    const input = { uuid: option.uuid, path: option.path, crypto_token: crypto.crypto_token }
     return host + cryptoModule + '/download?' + jsonToParams(input)
   },
   httpEncryptDownload (option) {
-    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
-    if (cryptoJson === null) {
-      return Promise.reject(Error('not find crypto_info'))
-    }
-    const token = JSON.parse(cryptoJson) as CryptoInfo
-    const input = { uuid: option.uuid, path: option.path, crypto_token: token.crypto_token }
+    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
+    const input = { uuid: option.uuid, path: option.path, crypto_token: crypto.crypto_token }
     return host + cryptoModule + '/http_download?' + jsonToParams(input)
   },
   fetchStorages (): ServerResponse {
@@ -95,17 +87,13 @@ export default {
     })
   },
   renameEncryptResource (oldPath: string, newPath: string, uuid: string, route: string): ServerResponse {
-    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
-    if (cryptoJson === null) {
-      return Promise.reject(Error('not find crypto_info'))
-    }
-    const token = JSON.parse(cryptoJson) as CryptoInfo
+    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
     return nasServer.post(fileModule + '/rename', {
       uuid: uuid,
       old_path: oldPath,
       new_path: newPath
     }, {
-      params: { crypto_token: token.crypto_token }
+      params: { crypto_token: crypto.crypto_token }
     })
   },
   fetchMediaInfo (path: string, uuid: string): ServerResponse {
@@ -219,11 +207,7 @@ export default {
     })
   },
   addEncryptRemoveTask(srcItems: Array<ResourceItem>): ServerResponse {
-    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
-    if (cryptoJson === null) {
-      return Promise.reject(Error('not find crypto_info'))
-    }
-    const token = JSON.parse(cryptoJson) as CryptoInfo
+    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
     const files = srcItems.map(item => {
       return { path: item.path, uuid: item.uuid }
     })
@@ -231,12 +215,11 @@ export default {
       type: 5,
       data: { mode: 1, files }
     }, {
-      params: {
-        crypto_token: token.crypto_token
-      }
+      params: { crypto_token: crypto.crypto_token }
     })
   },
   addEncryptMoveIntoTask(srcItems: Array<ResourceItem>, dstPath: string, mode: TaskMode): ServerResponse {
+    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
     const src = srcItems.map(item => {
       return { path: item.path, uuid: item.uuid }
     })
@@ -244,14 +227,12 @@ export default {
     return nasServer.post(taskModule + '/add', {
       type: 6,
       data: { mode, src, dst }
+    }, {
+      params: { crypto_token: crypto.crypto_token }
     })
   },
   addEncryptMoveOutTask(srcItems: Array<ResourceItem>, dstItem: ResourceItem, mode: TaskMode): ServerResponse {
-    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
-    if (cryptoJson === null) {
-      return Promise.reject(Error('not find crypto_info'))
-    }
-    const token = JSON.parse(cryptoJson) as CryptoInfo
+    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
     const src = srcItems.map(item => {
       return { path: item.path, uuid: item.uuid }
     })
@@ -260,9 +241,7 @@ export default {
       type: 7,
       data: { mode, src, dst }
     }, {
-      params: {
-        crypto_token: token.crypto_token
-      }
+      params: { crypto_token: crypto.crypto_token }
     })
   },
   fetchRemoteTaskList (): ServerResponse {
@@ -300,6 +279,12 @@ export default {
       cancelToken: source === undefined ? undefined : source.token
     })
   },
+  newFolderEncrypt (path: string, uuid?: string): ServerResponse {
+    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
+    let params: any = { path }
+    if (uuid !== undefined) params = { path, uuid }
+    return nasServer.post(cryptoModule + '/folder', params, { params: { crypto_token: crypto.crypto_token } })
+  },
   uploadEncrypt (params: UploadParams, data: Buffer, source?: CancelTokenSource): ServerResponse {
     return nasServer.post(cryptoModule + '/upload', data, { 
       params,
@@ -316,13 +301,9 @@ export default {
     })
   },
   encryptDownloadData (params: DownloadParams, source?: CancelTokenSource): Promise<AxiosResponse<ArrayBuffer>> {
-    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
-    if (cryptoJson === null) {
-      return Promise.reject(Error('not find crypto_info'))
-    }
-    const token = JSON.parse(cryptoJson) as CryptoInfo
+    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
     return nasServer.get(cryptoModule + '/download', {
-      params: { path: params.path, uuid: params.uuid, crypto_token: token.crypto_token },
+      params: { path: params.path, uuid: params.uuid, crypto_token: crypto.crypto_token },
       headers: { 'Range': `bytes=${params.start}-${params.end}` },
       responseType: 'arraybuffer',
       cancelToken: source === undefined ? undefined : source.token
@@ -366,49 +347,29 @@ export default {
       security_password
     })
   },
-  getEncryptList (path?): ServerResponse {
-    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
-    if (cryptoJson === null) {
-      return Promise.reject(Error('not find crypto_info'))
-    }
-    const token = JSON.parse(cryptoJson) as CryptoInfo
-    return nasServer.get(cryptoModule + '/list', {
-      params: {
-        path,
-        crypto_token: token.crypto_token
-      }
-    })
+  getEncryptList (path: string, uuid: string = '', page: number, order: OrderType = OrderType.byNameDesc, size: number = maxSize): ServerResponse {
+    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
+    const params = _.isEmpty(uuid)
+      ? { path, page, size, order, crypto_token: crypto.crypto_token }
+      : { path, uuid, size, order, crypto_token: crypto.crypto_token }
+    return nasServer.get(cryptoModule + '/list', { params: params })
   },
   modifyEncrypt (data): ServerResponse {
-    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
-    if (cryptoJson === null) {
-      return Promise.reject(Error('not find crypto_info'))
-    }
-    const token = JSON.parse(cryptoJson) as CryptoInfo
+    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
     return nasServer.post(userModule + '/security/password', {
       security_user_password: data.security_user_password,
       security_user_password_new: data.security_user_password_new
     }, {
-      params: {
-        crypto_token: token.crypto_token
-      }
+      params: { crypto_token: crypto.crypto_token }
     })
   },
   resetEncrypt (): ServerResponse {
     return nasServer.post(userModule + '/security/reset')
   },
   logoutEncrypt (): ServerResponse {
-    const cryptoJson = localStorage.getItem(CRYPTO_INFO)
-    if (cryptoJson === null) {
-      return Promise.reject(Error('not find crypto_info'))
-    }
-    const token = JSON.parse(cryptoJson) as CryptoInfo
-    return nasServer.post(userModule + '/security/logout', {
-      security_password: token.security_password
-    }, {
-      params: {
-        crypto_token: token.crypto_token
-      }
+    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
+    return nasServer.post(userModule + '/security/logout', null, {
+      params: { crypto_token: crypto.crypto_token }
     })
   },
   backupCheck (data): ServerResponse {
@@ -577,7 +538,7 @@ enum TaskMode {
   rename = 2,
   cover = 3
 }
-const maxSize = 100
+const maxSize = 360
 
 export {
   TaskMode,

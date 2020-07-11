@@ -218,10 +218,7 @@ export default Vue.extend({
     },
 		fetchUpdateInfo () {
 			NasFileAPI.fetchRomInfo().then(response => {
-				if (response.data.code !== 200) {
-					this.$message.error('网络连接错误，请检测网络')
-					return
-        }
+				if (response.data.code !== 200) return
         const info = _.get(response.data, 'data')
 				if (!info) return
         const _this = this as any

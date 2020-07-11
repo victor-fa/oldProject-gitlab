@@ -1,7 +1,7 @@
 import _ from 'lodash'
-import axios, { AxiosError, AxiosResponse } from 'axios'
+import axios, { AxiosError, AxiosResponse, AxiosRequestConfig } from 'axios'
 import store from '@/store'
-import { NasAccessInfo } from './ClientModel'
+import { NasAccessInfo, CryptoInfo } from './ClientModel'
 import { EventBus, EventType } from '@/utils/eventBus'
 import { BasicResponse } from './UserModel'
 import ClientAPI from './ClientAPI'
@@ -24,9 +24,7 @@ const getRefreshToken = () => {
   if (_.isEmpty(token)) return null
   return token
 }
-
-nasServer.interceptors.request.use((config) => {
-  // Do something before request is sent
+const setApiToken = (config: AxiosRequestConfig) => {
   const apiToken = getApiToken()
   if (apiToken === null) return config
   if (_.isEmpty(config.params)) {
@@ -35,6 +33,11 @@ nasServer.interceptors.request.use((config) => {
     config.params.api_token = apiToken
   }
   return config
+}
+
+nasServer.interceptors.request.use((config) => {
+  // Do something before request is sent
+  return setApiToken(config)
 }, (error) => {
   // Do something with request error
   return Promise.reject(error)
@@ -54,9 +57,10 @@ nasServer.interceptors.response.use((response: AxiosResponse) => {
 
 const refreshTokenCodes = [8024, 8013]
 const reconnectCodes = [8044, 8045]
-const reLoginCodes = [8052]
+const reloginCodes = [8052]
 const formattingCodes = [4060]
-const whiteListCodes = [8031, 8032, 8048, 8049, 40103, 4050, 8025, 8072, 8071, 8063]
+const reloginEncryptCodes = [8048, 8049]
+const whiteListCodes = [8031, 8032, 8025, 8072, 8071, 8063]
 const handleExceptionSence = (response: AxiosResponse) => {
   if (response.status === 200) {
     const basicData = response.data as BasicResponse
@@ -64,8 +68,10 @@ const handleExceptionSence = (response: AxiosResponse) => {
       return handleTokenExpiredSence(response)
     } else if (reconnectCodes.indexOf(basicData.code) !== -1) {
       handleReconnectSence(basicData)
-    } else if (reLoginCodes.indexOf(basicData.code) !== -1) {
+    } else if (reloginCodes.indexOf(basicData.code) !== -1) {
       handleReLoginSence()
+    } else if (reloginEncryptCodes.indexOf(basicData.code) !== -1) {
+      handleReloginEnceypt(basicData.code)
     } else if (whiteListCodes.indexOf(basicData.code) !== -1) {
       // EventBus.$emit(EventType.showToast, basicData.msg)
     } else if (formattingCodes.indexOf(basicData.code) !== -1) {
@@ -131,6 +137,10 @@ const handleReLoginSence = () => {
     }
   })
 }
+const handleReloginEnceypt = (code: number) => {
+  const msg = code === 8048 ? '加密token无效' : '加密token过期'
+  EventBus.$emit(EventType.reloginEncrypt, msg)
+}
 const showKickedDialog = () => {
   return new Promise((resolve) => {
     const { dialog } = require('electron').remote
@@ -147,6 +157,7 @@ const showKickedDialog = () => {
 }
 
 const handleErrorResponse = (error: AxiosError) => {
+  if (_.isEmpty(error.config)) return
   if (error.config.url === '/v1/selfcheck/heartbeat') return
   ClientAPI.heartbeat().catch(error => {
     EventBus.$emit(EventType.disconnect)

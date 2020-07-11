@@ -42,7 +42,7 @@
           @change="handleChangeAction"
         >
           <template slot="prefix">
-            <img src="../../assets/search_icon.png" class="search-indicator"/>
+            <img src="../../assets/search_disable.png" class="search-indicator"/>
           </template>
         </a-input>
       </div>
@@ -101,6 +101,8 @@
               :image="item.icon"
               :ref="item.command"
               :title="item.title"
+              :disable="item.disable"
+              :disableImage="item.disableIcon"
               :iconWidth="item.iconWidth"
               v-show="item.isHidden !== true"
               @click.native="handleItemClick(index)"
@@ -114,6 +116,8 @@
             :title="item.title"
             :selectedImage="item.selectedIcon"
             :isSelected="item.isSelected"
+            :disable="item.disable"
+            :disableImage="item.disableIcon"
             :iconWidth="item.iconWidth"
             @click.native="handleItemClick(index)"
           />

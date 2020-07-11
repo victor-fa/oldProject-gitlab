@@ -74,7 +74,11 @@ export default Vue.extend({
   methods: {
     updateView () {
       this.dataArray = []
-      if (this.type !== undefined) this.fetchMediaList()
+      if (this.type !== undefined) {
+        this.page = 1
+        this.busy = false
+        this.fetchMediaList()
+      }
     },
     fetchMediaList () {
       this.loading = true

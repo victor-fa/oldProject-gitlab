@@ -10,10 +10,10 @@ interface ResourceFuncItem {
   isSelected?: boolean
 }
 
-const searchItem: ResourceFuncItem = { icon: require('../../assets/search_icon.png'), command: 'search', iconWidth: '20px', title: '搜索' }
-const refreshItem: ResourceFuncItem = { icon: require('../../assets/refresh_icon.png'), command: 'refresh', iconWidth: '16px', title: '刷新' }
-const sortItem: ResourceFuncItem = { icon: require('../../assets/sort_icon.png'), command: 'sort', iconWidth: '16px', title: '排序' }
-const arrangeItem: ResourceFuncItem = { icon: require('../../assets/arrange_icon.png'), command: 'arrange', iconWidth: '16px', selectedIcon: require('../../assets/block_icon.png'), title: '排列' }
+const searchItem: ResourceFuncItem = { icon: require('../../assets/search_icon.png'), command: 'search', iconWidth: '16px', title: '搜索', disableIcon: require('../../assets/search_disable.png') }
+const refreshItem: ResourceFuncItem = { icon: require('../../assets/refresh_icon.png'), command: 'refresh', iconWidth: '16px', title: '刷新', disableIcon: require('../../assets/refresh_disable.png') }
+const sortItem: ResourceFuncItem = { icon: require('../../assets/sort_icon.png'), command: 'sort', iconWidth: '16px', title: '排序', disableIcon: require('../../assets/sort_disable.png') }
+const arrangeItem: ResourceFuncItem = { icon: require('../../assets/arrange_icon.png'), command: 'arrange', iconWidth: '16px', selectedIcon: require('../../assets/block_icon.png'), title: '排列', disableIcon: require('../../assets/block_disable.png') }
 
 const commonFuncList = [refreshItem, sortItem, arrangeItem]
 const backupFunList = [searchItem, refreshItem, sortItem, arrangeItem]
