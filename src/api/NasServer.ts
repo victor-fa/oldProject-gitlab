@@ -76,7 +76,7 @@ const handleExceptionSence = (response: AxiosResponse) => {
       // EventBus.$emit(EventType.showToast, basicData.msg)
     } else if (formattingCodes.indexOf(basicData.code) !== -1) {
       EventBus.$emit(EventType.showToast, '磁盘正在初始化')
-    } else if (basicData.code !== 200) {
+    } else if (basicData.code !== 200 && !_.isEmpty(basicData.msg)) {
       EventBus.$emit(EventType.showToast, basicData.msg)
     }
     // not intercept correct response
