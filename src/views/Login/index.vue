@@ -57,7 +57,7 @@ import { LoginResponse, Account, DeviceInfo, User } from '@/api/UserModel'
 import { NasAccessInfo } from '@/api/ClientModel'
 import processCenter, { EventName, MainEventName } from '@/utils/processCenter'
 import { message } from 'ant-design-vue'
-import { ACCESS_TOKEN } from '@/common/constants'
+import { ACCESS_TOKEN, REMEMBER_PWD } from '@/common/constants'
 import StringUtility from '@/utils/StringUtility'
 
 export default Vue.extend({
@@ -96,10 +96,14 @@ export default Vue.extend({
   mounted () {
     this.dropdownItems = _.cloneDeep(this.cacheAccounts)
     this.clearCache()
+    const value = localStorage.getItem(REMEMBER_PWD)
+    this.rememberPassword = !(value === 'false')
   },
   methods: {
     checkboxChange() {
       this.rememberPassword = !this.rememberPassword
+      const value = this.rememberPassword ? 'true' : 'false'
+      localStorage.setItem(REMEMBER_PWD, value)
     },
     handleRegisterAction() {
       this.$router.push('register')

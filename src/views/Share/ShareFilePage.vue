@@ -49,9 +49,11 @@ export default Vue.extend({
     itemMenu: function () {
       const isSelf = this.ugreenNo === (this.user as User).ugreenNo.toString()
       let itemMenu = _.cloneDeep(shareContextMenu)
+      if (isSelf) return itemMenu
+      const disableCommands = ['delete', 'rename', 'unshare', 'jump']
       itemMenu = itemMenu.map(group => {
         const items = group.items.map(item => {
-          if (item.command === 'unshare') item.disable = !this.isSelf
+          item.disable = disableCommands.indexOf(item.command) !== -1
           return item
         })
         group.items = items

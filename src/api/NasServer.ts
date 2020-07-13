@@ -60,7 +60,7 @@ const reconnectCodes = [8044, 8045]
 const reloginCodes = [8052]
 const formattingCodes = [4060]
 const reloginEncryptCodes = [8048, 8049]
-const whiteListCodes = [8031, 8032, 8025, 8072, 8071, 8063]
+const whiteListCodes = [8031, 8032, 8025, 8072, 8071, 8063, 4050]
 const handleExceptionSence = (response: AxiosResponse) => {
   if (response.status === 200) {
     const basicData = response.data as BasicResponse

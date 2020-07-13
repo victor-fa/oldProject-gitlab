@@ -87,7 +87,7 @@ export default Vue.extend({
     this.updateView()
   },
   destroyed () {
-    uploadQueue.off('taskStatusChange', this.handleTaskStatusChange)
+    uploadQueue.removeListener('taskStatusChange', this.handleTaskStatusChange)
     if (this.delayTimer !== null) {
       clearTimeout(this.delayTimer)
       this.delayTimer = null
@@ -155,7 +155,7 @@ export default Vue.extend({
         const task = new UploadTask(path, this.path, this.uuid)
         task.matchTaskIcon()
         uploadQueue.addTask(task)
-        uploadQueue.on('taskStatusChange', this.handleTaskStatusChange)
+        uploadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)
         this.$store.dispatch('Resource/increaseTask')
       })
     },

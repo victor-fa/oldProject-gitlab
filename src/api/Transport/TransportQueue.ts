@@ -1,7 +1,7 @@
 // 传输队列，管理上传下载队列
 import _ from 'lodash'
 import { EventEmitter } from 'events'
-import BaseTask, { TaskStatus, FileInfo, TaskError } from './BaseTask'
+import BaseTask, { TaskStatus, FileInfo, TaskError, TaskErrorCode } from './BaseTask'
 import UploadTask from './UploadTask'
 import BackupUploadTask from './BackupUploadTask'
 import EncryptUploadTask from './EncryptUploadTask'
@@ -330,7 +330,9 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     const task = this.searchTask(taskId)
     if (task === undefined) return
     this.reloadTaskInDB(task)
-    this.emit('taskStatusChange', task.taskId)
+    if (error.code !== TaskErrorCode.serverError) {
+      this.emit('taskStatusChange', task.taskId)
+    }
     task.removeAllListeners()
   }
 }

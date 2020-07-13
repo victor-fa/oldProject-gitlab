@@ -39,7 +39,6 @@ export default class EncryptUploadTask extends UploadTask {
     const uuid = _.isEmpty(this.uuid) ? undefined : this.uuid
     NasFileAPI.newFolderEncrypt(fileInfo.destPath, uuid).then(response => {
       console.log(response)
-      if (response.data.code !== 200) return
       fileInfo.completed = true
       if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.uploadFile()

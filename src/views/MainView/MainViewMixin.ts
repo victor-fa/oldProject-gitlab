@@ -90,6 +90,7 @@ export default Vue.extend({
           break 
         case 'copy':
           this.handleClipboardAction(false)
+          console.log('copy')
           break
         case 'cut':
           this.handleClipboardAction()
@@ -145,6 +146,7 @@ export default Vue.extend({
           break;
         case 'copy': 
           this.handleClipboardAction(false)
+          console.log('copy')
           break;
         case 'cut':
           this.handleClipboardAction()

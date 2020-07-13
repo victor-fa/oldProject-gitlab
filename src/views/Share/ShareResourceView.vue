@@ -2,7 +2,7 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import MainResourceView from '../MainView/MainResourceView.vue'
-import { shareResourceContextMenu } from '@/components/OperateListAlter/operateList'
+import { shareContextMenu } from '@/components/OperateListAlter/operateList'
 import { ResourceItem } from '@/api/NasFileModel'
 import RouterUtility from '@/utils/RouterUtility'
 import ResourceHandler from '../MainView/ResourceHandler'
@@ -14,7 +14,6 @@ export default Vue.extend({
   data () {
     return {
       dataArray: [] as ResourceItem[],
-      itemMenu: _.cloneDeep(shareResourceContextMenu),
       listMenu: []
     }
   },
@@ -22,6 +21,27 @@ export default Vue.extend({
     isSelf: function () {
       const isSelf = this.$route.params.isSelf as string
       return isSelf
+    },
+    itemMenu: function () {
+      const isSelf = (this.isSelf === 'true') as boolean
+      if (isSelf) {
+        return _.cloneDeep(shareContextMenu).map(group => {
+          const items = group.items.map(item => {
+            item.disable = item.command === 'unshare'
+            return item
+          })
+          group.items = items
+          return group
+        })
+      }
+      const disableCommands = ['delete', 'rename', 'unshare', 'jump', 'unshare']
+      return _.cloneDeep(shareContextMenu).map(group => {
+        const items = group.items.map(item => {
+          item.disable = disableCommands.indexOf(item.command) !== -1
+          return item
+        })
+        group.items = items
+      })
     }
   },
   methods: {

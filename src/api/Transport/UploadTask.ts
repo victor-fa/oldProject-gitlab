@@ -187,7 +187,6 @@ export default class UploadTask extends BaseTask {
     this.completedBytes += fileInfo.totalSize
     NasFileAPI.newFolder(fileInfo.destPath, this.uuid).then(response => {
       console.log(response)
-      if (response.data.code !== 200) return
       fileInfo.completed = true
       if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.uploadFile()
@@ -281,15 +280,17 @@ export default class UploadTask extends BaseTask {
     })
   }
   // 生成上传参数
-  private generateUploadParams (fileInfo: FileInfo, chunkLength: number): UploadParams {
+  private generateUploadParams (fileInfo: FileInfo, chunkLength: number) {
     const end = chunkLength === 0 ? chunkLength : fileInfo.completedSize + chunkLength - 1
-    return {
+    const params: UploadParams = {
       end,
       uuid: this.uuid,
       path: fileInfo.destPath,
       start: fileInfo.completedSize,
-      size: fileInfo.totalSize
+      size: fileInfo.totalSize 
     }
+    if (fileInfo.isDirectory) params.dir = `${this.destPath}/${fileInfo.name}`
+    return params
   }
   // protected methods
   // 计算文件的MD5值

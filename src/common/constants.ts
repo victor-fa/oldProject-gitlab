@@ -15,6 +15,7 @@ const TRANS_DOWNLOAD = 'trans_download'
 const TRANS_UPLOAD = 'trans_upload'
 const TRANS_BACKUP = 'trans_backup'
 const NAS_DEVICES = 'nas_devices'
+const REMEMBER_PWD = 'remember_pwd'
 
 export {
   ACCESS_TOKEN,
@@ -30,5 +31,6 @@ export {
   TRANS_DOWNLOAD,
   TRANS_UPLOAD,
   TRANS_BACKUP,
-  NAS_DEVICES
+  NAS_DEVICES,
+  REMEMBER_PWD
 }

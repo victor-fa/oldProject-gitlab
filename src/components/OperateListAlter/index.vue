@@ -58,11 +58,9 @@ export default Vue.extend({
     operateList: function (newVlaue: Array<OperateGroup>) {
       this.showChildren = false // 重置children
       this.showItems = newVlaue.filter(group => {
-        let items: Array<OperateItem> = []
-        for (let index = 0; index < group.items.length; index++) {
-          const element = group.items[index]
-          if (!element.isHidden) items.push(element)
-        }
+        const items = group.items.filter(item => {
+          return item.isHidden !== true
+        })
         if (items.length === 0) return false
         group.items = items
         return true

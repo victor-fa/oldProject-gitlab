@@ -163,7 +163,7 @@ export default Vue.extend({
       }
     }
     EventBus.$off(EventType.reloginEncrypt, this.handleReloginAction)
-    uploadQueue.off('taskStatusChange', this.handleTaskStatusChange)
+    uploadQueue.removeListener('taskStatusChange', this.handleTaskStatusChange)
     if (this.delayTimer !== null) {
       clearTimeout(this.delayTimer)
       this.delayTimer = null
@@ -469,7 +469,7 @@ export default Vue.extend({
         const task = new EncryptUploadTask(path, this.path, '')
         task.matchTaskIcon()
         uploadQueue.addTask(task)
-        uploadQueue.on('taskStatusChange', this.handleTaskStatusChange)
+        uploadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)
         this.$store.dispatch('Resource/increaseTask')
       })
     },

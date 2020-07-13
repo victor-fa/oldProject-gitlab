@@ -96,7 +96,7 @@ export default Vue.extend({
         this.$message.error('解绑失败')
       })
     },
-    // 扫描登录
+    // 扫描自动登录
     handleAutoLogin () {
       let device = this.deviceList[0]
       const cacheNas = this.nasInfo as NasInfo

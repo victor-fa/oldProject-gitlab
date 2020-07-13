@@ -218,6 +218,7 @@ export default Vue.extend({
     },
 		fetchUpdateInfo () {
 			NasFileAPI.fetchRomInfo().then(response => {
+        console.log(response)
 				if (response.data.code !== 200) return
         const info = _.get(response.data, 'data')
 				if (!info) return
