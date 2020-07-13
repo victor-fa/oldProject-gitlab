@@ -60,10 +60,12 @@ const reconnectCodes = [8044, 8045]
 const reloginCodes = [8052]
 const formattingCodes = [4060]
 const reloginEncryptCodes = [8048, 8049]
-const whiteListCodes = [8031, 8032, 8025, 8072, 8071, 8063, 4050]
+const whiteListCodes = [8031, 8032, 8025, 8072, 8071, 8063]
+const whiteListPaths = ['/v1/file/backup/upload', '/v1/file/upload', ' /v1/crypto/upload', '/download', '/v1/crypto/download']
 const handleExceptionSence = (response: AxiosResponse) => {
   if (response.status === 200) {
     const basicData = response.data as BasicResponse
+    const url = response.config.url === undefined ? '' : response.config.url
     if (refreshTokenCodes.indexOf(basicData.code) !== -1) {
       return handleTokenExpiredSence(response)
     } else if (reconnectCodes.indexOf(basicData.code) !== -1) {
@@ -74,10 +76,12 @@ const handleExceptionSence = (response: AxiosResponse) => {
       handleReloginEnceypt(basicData.code)
     } else if (whiteListCodes.indexOf(basicData.code) !== -1) {
       // EventBus.$emit(EventType.showToast, basicData.msg)
+    } else if (whiteListPaths.indexOf(url)) {
+      // filter path
     } else if (formattingCodes.indexOf(basicData.code) !== -1) {
       EventBus.$emit(EventType.showToast, '磁盘正在初始化')
     } else if (basicData.code !== 200 && !_.isEmpty(basicData.msg)) {
-      EventBus.$emit(EventType.showToast, basicData.msg)
+      EventBus.$emit(EventType.showToast, basicData.msg) 
     }
     // not intercept correct response
   } else {
@@ -119,7 +123,7 @@ const hasLoginWindow = () => {
 const handleReconnectSence = (data: BasicResponse) => {
   const isLoginWindow = hasLoginWindow()
   if (isLoginWindow) {
-    if (router.currentRoute.name !== 'login') {
+    if (router.currentRoute.name !== 'connecting') {
       router.replace('connecting')
     }
     EventBus.$emit(EventType.showToast, data.msg)
@@ -128,8 +132,9 @@ const handleReconnectSence = (data: BasicResponse) => {
   }
 }
 const handleReLoginSence = () => {
+  const isLoginWindow = hasLoginWindow()
+  if (isLoginWindow && router.currentRoute.name === 'login') return
   showKickedDialog().then(() => {
-    const isLoginWindow = hasLoginWindow()
     if (isLoginWindow) {
       router.replace('login')
     } else {

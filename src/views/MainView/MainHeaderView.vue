@@ -400,6 +400,7 @@ export default Vue.extend({
     align-items: center;
     justify-content: space-between;
     background-color: #F7F9FB;
+    border-top: 1px solid white;
     border-bottom: 1px solid #BCC0CE40;
     .bottom-left-view {
       flex: 1;

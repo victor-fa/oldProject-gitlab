@@ -45,9 +45,9 @@
       class="vertical-item"
       draggable="true"
       v-bind:class="{
-        verticalSelectedItem: isSelected,
-        oddVerticalItem: isOddStyle,
-        disableItem: model.disable 
+        'vertical-selecteditem': isSelected,
+        'odd-vertical-vtem': isOddStyle,
+        'disable-item': model.disable 
       }"
       @click.stop.exact="singleClick()"
       @click.meta.stop="multipleClick()"
@@ -371,13 +371,16 @@ export default Vue.extend({
     }
   }
 }
-.verticalSelectedItem {
+.vertical-item:hover {
+  background-color: #DEF1EA80;
+}
+.vertical-selected-item, .vertical-selected-item:hover {
   background-color: #DEF1EA !important;
 }
-.oddVerticalItem {
+.odd-vertical-item {
   background-color: #FCFBFE;
 }
-.disableItem {
+.disable-item {
   cursor: not-allowed;
 }
 </style>

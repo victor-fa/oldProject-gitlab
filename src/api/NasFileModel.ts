@@ -127,7 +127,8 @@ interface PartitionInfo {
   showIcon: any,
   isInternal: boolean,
   isSelected?: boolean,
-  custom: string
+  custom: string,
+  status: number
 }
 
 interface StorageInfo {

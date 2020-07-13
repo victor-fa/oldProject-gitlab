@@ -1,12 +1,15 @@
 <template>
   <div
     class="storage-item"
-    v-bind:class="{ 'storage-item-selected': isSelected }"
+    v-bind:class="{
+      'storage-item-selected': isSelected,
+      'storage-item-init': isInit
+    }"
   >
     <img :src="model.showIcon"/>
     <div class="content">
       <label class="title">{{ model.showName }}</label>
-      <label class="size">{{ model.status === 1 && model.isInternal && isUserAdmin ? '未初始化' : model.showSize }}</label>
+      <label class="size">{{ isInit ? '未初始化' : model.showSize }}</label>
       <a-progress
         strokeLinecap="square"
         :percent="model.showProgress"
@@ -22,7 +25,7 @@
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import { DeviceRole } from '@/api/UserModel'
-import { StorageInfo, StorageType } from '@/api/NasFileModel'
+import { PartitionInfo, StorageType } from '@/api/NasFileModel'
 
 export default Vue.extend({
   name: 'storage-list-item',
@@ -38,17 +41,16 @@ export default Vue.extend({
       default: false
     }
   },
-	data() {
-		return {
-			isUserAdmin: false
-		};
-	},
   computed: {
-    ...mapGetters('NasServer', ['accessInfo'])
-  },
-	beforeMount() {
-		this.isUserAdmin = this.accessInfo.role === DeviceRole.admin
-	},
+    ...mapGetters('NasServer', ['accessInfo']),
+    isInit: function () {
+      const model = this.model as PartitionInfo
+      const isAdmin = this.accessInfo.role === DeviceRole.admin
+      const isInit = model.status === 1
+      if (model.isInternal && isAdmin && isInit) return true
+      return false
+    }
+  }
 })
 </script>
 
@@ -90,6 +92,11 @@ export default Vue.extend({
 .storage-item-selected {
   border-radius: 6px;
   background-color: #def1ea;
+}
+.storage-item-init {
+  border-radius: 6px;
+  background-color: #F1F2F7;
+  pointer-events: none;
 }
 </style>
 

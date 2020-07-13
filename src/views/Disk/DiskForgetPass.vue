@@ -97,6 +97,7 @@ export default Vue.extend({
         this.codeVisiable = false
         this.loading = false
         this.$message.success('重置成功，请牢记密码')
+        this.$store.dispatch('User/updateAccount', { account: input.userName, password: input.password })
         setTimeout(() => {
           this.closeAndClear()
         }, 1000);
@@ -190,8 +191,6 @@ export default Vue.extend({
     }
     .password-from {
       padding-top: 18px;
-      .send-msg {
-      }
     }
     .password-checkbox {
       height: 22px;

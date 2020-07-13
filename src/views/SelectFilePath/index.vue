@@ -325,6 +325,7 @@ const moveModalIcons = {
       justify-content: space-between;
       align-items: center;
       .indicator {
+        display: flex;
         margin-left: 14px;
         .btn-item {
           width: 21px;

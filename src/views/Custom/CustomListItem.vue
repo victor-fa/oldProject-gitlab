@@ -33,6 +33,7 @@ export default Vue.extend({
   height: 107px;
   background-color: #f6f8fb;
   border-radius: 5px;
+  margin-bottom: 8px;
   img {
     margin: 5px;
     width: 122px;

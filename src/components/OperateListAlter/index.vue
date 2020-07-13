@@ -77,7 +77,7 @@ export default Vue.extend({
         for (let i = 0; i < element.items.length; i++) {
           const el = element.items[i];
           if (el.isHidden) continue
-          itemCount += 16
+          itemCount += 20
         }
       }
       return marginCount + borderCount + itemCount
@@ -162,7 +162,7 @@ const dialogCommands = ['download', 'upload', 'uploadFile', 'uploadFolder']
         padding: 0px 12px;
         color: #484848;
         font-size: 11px;
-        line-height: 16px;
+        line-height: 20px;
       }
       .operate-item:hover {
         background-color: #DEF1EA;

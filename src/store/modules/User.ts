@@ -98,6 +98,16 @@ export default {
         }
       }
     },
+    UPDATE_ACCOUNT (state: UserState, info: Account) {
+      const newAccounts = state.cacheAccounts.map(item => {
+        if (item.account === info.account) {
+          item.password = info.password
+        }
+        return item
+      })
+      state.cacheAccounts = newAccounts
+      localStorage.setItem(ACCOUNT, newAccounts.toString())
+    },
     UPDATE_NAS_DEVICES (state: UserState, devices: DeviceInfo[]) {
       state.nasDevices = devices
       const json = JSON.stringify(devices)
@@ -126,6 +136,9 @@ export default {
     },
     async removeAccount (context: ActionContext<UserState, UserState>, account: string) {
       context.commit('REMOVE_ACCOUNT', account)
+    },
+    async updateAccount (context: ActionContext<UserState, UserState>, account: Account) {
+      context.commit('UPDATE_ACCOUNT', account)
     },
     async updateNasDevices (context: ActionContext<UserState, UserState>, devices: DeviceInfo[]) {
       context.commit('UPDATE_NAS_DEVICES', devices)

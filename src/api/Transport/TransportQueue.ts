@@ -75,29 +75,33 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   }
   /**删除进行中的任务 */
   async deleteDoingTasks () {
+    const ids: number[] = []
     for (let index = 0; index < this.queue.length; index++) {
       const task = this.queue[index]
       if (task.status !== TaskStatus.finished) {
-        task.cancel()
+        await task.cancel()
         await this.deleteTaskInDB(task)
+        ids.push(task.taskId)
       }
     }
     this.queue = this.queue.filter(task => {
-      return task.status === TaskStatus.finished
+      return ids.indexOf(task.taskId) === -1
     })
     this.emit('taskQueueChange')
   }
   /**删除已完成的任务 */
   async deleteDoneTasks () {
+    const ids: number[] = []
     for (let index = 0; index < this.queue.length; index++) {
       const task = this.queue[index]
       if (task.status === TaskStatus.finished) {
-        task.cancel()
+        await task.cancel()
         await this.deleteTaskInDB(task)
+        ids.push(task.taskId)
       }
     }
     this.queue = this.queue.filter(task => {
-      return task.status !== TaskStatus.finished
+      return ids.indexOf(task.taskId) === -1
     })
     this.emit('taskQueueChange')
   }
@@ -330,9 +334,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     const task = this.searchTask(taskId)
     if (task === undefined) return
     this.reloadTaskInDB(task)
-    if (error.code !== TaskErrorCode.serverError) {
-      this.emit('taskStatusChange', task.taskId)
-    }
+    this.emit('taskStatusChange', task.taskId)
     task.removeAllListeners()
   }
 }
