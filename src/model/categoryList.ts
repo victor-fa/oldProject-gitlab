@@ -51,13 +51,13 @@ let categorys: Category[] = [
 // 任务管理
 let taskCategorys: Category[] = [
   {
-    type: TaskCategoryType.download,
-    title: '下载列表',
+    type: TaskCategoryType.upload,
+    title: '上传列表',
     isSelected: true
   },
   {
-    type: TaskCategoryType.upload,
-    title: '上传列表',
+    type: TaskCategoryType.download,
+    title: '下载列表',
     isSelected: false
   },
   {

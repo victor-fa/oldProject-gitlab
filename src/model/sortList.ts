@@ -51,8 +51,7 @@ const uploadSortList: SortList = {
     { kind: SortKind.upload, title: '时间', isSelected: true }
   ],
   types: [
-    { type: SortType.descending, title: '降序', isSelected: true },
-    { type: SortType.ascending, title: '升序', isSelected: false }
+    { type: SortType.descending, title: '降序', isSelected: true }
   ]
 }
 
