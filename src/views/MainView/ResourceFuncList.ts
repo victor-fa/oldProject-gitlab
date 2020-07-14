@@ -15,6 +15,7 @@ const refreshItem: ResourceFuncItem = { icon: require('../../assets/refresh_icon
 const sortItem: ResourceFuncItem = { icon: require('../../assets/sort_icon.png'), command: 'sort', iconWidth: '16px', title: '排序', disableIcon: require('../../assets/sort_disable.png') }
 const arrangeItem: ResourceFuncItem = { icon: require('../../assets/arrange_icon.png'), command: 'arrange', iconWidth: '16px', selectedIcon: require('../../assets/block_icon.png'), title: '排列', disableIcon: require('../../assets/block_disable.png') }
 
+const recentFuncList = [refreshItem, arrangeItem]
 const commonFuncList = [refreshItem, sortItem, arrangeItem]
 const backupFunList = [searchItem, refreshItem, sortItem, arrangeItem]
 const customFuncList = [refreshItem]
@@ -35,5 +36,6 @@ export {
   backupFunList,
   storageFuncList,
   toolbars,
-  customToolbars
+  customToolbars,
+  recentFuncList
 }

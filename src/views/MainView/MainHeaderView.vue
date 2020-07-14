@@ -340,7 +340,7 @@ export default Vue.extend({
       }
     },
     handleChangeAction (event: any) {
-      if (event instanceof Event) return
+      if (!_.isEmpty(event.inputType)) return
       if (this.showHeaderView) {
         this.$emit('callbackAction', 'endSearch')
       } else {

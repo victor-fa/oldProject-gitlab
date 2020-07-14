@@ -32,13 +32,16 @@ export default Vue.extend({
     busy: {
       default: false
     },
-    adjust: {
-      default: 157
-    }
+    adjust: Number
   },
   data () {
     return {
       scrollHeight: document.body.clientHeight - this.adjust
+    }
+  },
+  watch: {
+    adjust: function (newValue: number) {
+      this.scrollHeight = document.body.clientHeight - this.adjust
     }
   },
   mounted () {

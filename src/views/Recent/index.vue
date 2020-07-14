@@ -3,8 +3,8 @@
     :busy="busy"
     :count="totalSize"
     :loading="loading"
+    :funcList="funcList"
     :dataSource="dataArray"
-    :popoverList="uploadSortList"
     :contextItemMenu="itemMenu"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
@@ -25,6 +25,7 @@ import ResourceHandler from '../MainView/ResourceHandler'
 import MainViewMixin from '../MainView/MainViewMixin'
 import { recentContextMenu } from '@/components/OperateListAlter/operateList'
 import RouterUtility from '@/utils/RouterUtility'
+import { recentFuncList } from '../MainView/ResourceFuncList'
 
 export default Vue.extend({
   name: 'recent',
@@ -41,7 +42,8 @@ export default Vue.extend({
       uploadSortList,
       dataArray: [] as ResourceItem[],
       uploadOrder: UploadTimeSort.descend, // 上传列表的排序方式
-      itemMenu: _.cloneDeep(recentContextMenu) // item右键菜单
+      itemMenu: _.cloneDeep(recentContextMenu), // item右键菜单
+      funcList: _.cloneDeep(recentFuncList)
     }
   },
   mounted () {

@@ -1,10 +1,7 @@
 <template>
   <div class="main-view">
     <div class="layout-header-view">
-      <slot 
-        name="header"
-        :popoverList="popoverList"
-      >
+      <slot name="header" :popoverList="popoverList">
         <main-header-view
           ref="mainHeaderView"
           :toolbars="showToolbars"
@@ -17,32 +14,34 @@
       <network-tip v-if="showNetworkTip" :loading="reconnection"/>
     </div>
     <div class="layout-content-view">
-      <a-spin :spinning="loading">
-        <resource-list
-          :busy="busy"
-          :adjust="showAdjust"
-          :customGrid="listGrid"
-          :dataSource="showArray"
-          :arrangeWay="arrangeWay"
-          :itemMenu="contextItemMenu"
-          v-on:callbackAction="handleResourceListAction"
-        >
-          <template v-slot:resourceItem="{ item, index, arrangeWay }">
-            <slot name="resourceItem" :item="item" :index="index" :arrangeWay="arrangeWay">
-              <resource-list-item
-                :model="item"
-                :index="index"
-                :isSelected="item.isSelected"
-                :isDisable="item.disable"
-                :isRenaming="item.renaming"
-                :showName="item.name"
-                :arrangeWay="arrangeWay"
-                v-on:callbackAction="handleResourceItemAction"
-              />
-            </slot>
-          </template>
-        </resource-list>
-      </a-spin>
+      <slot name="content" :dataSource="showArray">
+        <a-spin :spinning="loading">
+          <resource-list
+            :busy="busy"
+            :adjust="showAdjust"
+            :customGrid="listGrid"
+            :dataSource="showArray"
+            :arrangeWay="arrangeWay"
+            :itemMenu="contextItemMenu"
+            v-on:callbackAction="handleResourceListAction"
+          >
+            <template v-slot:resourceItem="{ item, index, arrangeWay }">
+              <slot name="resourceItem" :item="item" :index="index" :arrangeWay="arrangeWay">
+                <resource-list-item
+                  :model="item"
+                  :index="index"
+                  :isSelected="item.isSelected"
+                  :isDisable="item.disable"
+                  :isRenaming="item.renaming"
+                  :showName="item.name"
+                  :arrangeWay="arrangeWay"
+                  v-on:callbackAction="handleResourceItemAction"
+                />
+              </slot>
+            </template>
+          </resource-list>
+        </a-spin>
+      </slot>
     </div>
     <div class="layout-footer-view">
       <slot name="footer" :itemCount="itemCount">
@@ -106,7 +105,7 @@ export default Vue.extend({
     count: Number, // 条目总数
     dataSource: Array, // 展示的条目数据
     adjust: { // 列表高度与窗口的高度差
-      default: 159
+      default: 157
     }, 
     loading: {
       default: false
@@ -311,7 +310,7 @@ export default Vue.extend({
       // 弹窗期间，禁用所有的事件响应
       if (this.showSelectModal || this.showEncryptModal || this.showOfflineModal) return false
       if (action === 'selectAllItems') { // 包含下载操作的item才允许多选
-        return ResourceHandler.containOfCommand(this.contextItemMenu as OperateGroup[], 'download')
+        return ResourceHandler.containOfCommand(this.contextItemMenu as OperateGroup[], 'delete')
       } else if (action === 'copy' || action === 'cut') {
         return ResourceHandler.containOfCommand(this.contextItemMenu as OperateGroup[], action)
       } else if (action === 'paste') {
@@ -463,7 +462,6 @@ export default Vue.extend({
       this.showAlter = false
     },
     handleOnlineAction () {
-      console.log('online')
       this.showNetworkTip = true
       this.reconnection = true
       this.handleReconnectionLogic(1)

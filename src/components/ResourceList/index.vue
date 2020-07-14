@@ -80,6 +80,9 @@ export default Vue.extend({
     arrangeWay: function (newValue: ArrangeWay) {
       const adjust = newValue === ArrangeWay.horizontal ? 28 : -28
       this.scrollHeight += adjust
+    },
+    adjust: function (newValue: number) {
+      this.scrollHeight = document.body.clientHeight - newValue
     }
   },
   computed: {
