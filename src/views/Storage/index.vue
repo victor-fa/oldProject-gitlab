@@ -5,7 +5,7 @@
     :loading="loading"
     :dataSource="dataArray"
     :funcList="showFuncList"
-    :contextItemMenu="contentMenu"
+    :contextItemMenu="itemMenu"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
     v-on:itemCallbackActions="handleItemActions"
@@ -78,7 +78,7 @@ export default Vue.extend({
 			firstMode,
 			secondMode,
 			commonInfo,
-      contentMenu: _.clone(storageContextMenu), // item右键菜单选项
+      itemMenu: _.clone(storageContextMenu), // item右键菜单选项
       showFuncList: _.clone(storageFuncList), // header中的操作功能集合
 			makesureModal: {
 				title: '',
@@ -123,6 +123,10 @@ export default Vue.extend({
     // 打开选中的item
     openSelectedItem (index: number) {
       const item = this.dataArray[index]
+      if (item.isNotInit) {
+        this.$message.error('硬盘还未初始化')
+        return
+      }
       if (item.partitions.length > 1) {
         this.pushPartitionListPage(item)
       } else {
@@ -141,8 +145,21 @@ export default Vue.extend({
       RouterUtility.push(name, 'main-resource-view', { path, uuid })
     },
     contextMenuClick (event: MouseEvent, index: number) {
+      const storage = this.dataArray[index]
       const mainView: any = this.$refs.mainView
-      mainView.handleItemContextMenu(index, event)
+      const list = this.filterItemMenu(storage)
+      mainView.showContextMenu(list, event)
+    },
+    filterItemMenu (storage: StorageInfo) {
+      if (!storage.isNotInit) return this.itemMenu
+      return this.itemMenu.map(group => {
+        const items = group.items.map(item => {
+          item.disable = item.command !== 'initialize'
+          return item
+        })
+        group.items = items
+        return group
+      })
     },
     handleContextMenuActions (command: string, ...args: any[]) {
       console.log(command)

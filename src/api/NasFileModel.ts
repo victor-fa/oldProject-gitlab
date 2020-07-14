@@ -127,8 +127,7 @@ interface PartitionInfo {
   showIcon: any,
   isInternal: boolean,
   isSelected?: boolean,
-  custom: string,
-  status: number
+  custom: string
 }
 
 interface StorageInfo {
@@ -150,7 +149,9 @@ interface StorageInfo {
   showIcon: any,
   isInternal: boolean,
   isSelected?: boolean,
-  custom: string
+  custom: string,
+  status: number,
+  isNotInit: boolean
 }
 
 // 文件上传历史排序规则

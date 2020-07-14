@@ -2,7 +2,8 @@ import _ from 'lodash'
 import { StorageType, StorageInfo, PartitionInfo } from '@/api/NasFileModel'
 import StringUtility from '@/utils/StringUtility'
 import store from '@/store'
-import { User } from '@/api/UserModel'
+import { User, DeviceRole } from '@/api/UserModel'
+import { NasAccessInfo } from '@/api/ClientModel'
 
 export default {
   matchStorageIcon (type: StorageType) {
@@ -65,6 +66,7 @@ export default {
       item.showSizeSimple = StringUtility.formatShowSize(item.size)
       item.showProgress = (item.used / item.size) * 100
       item.isInternal = internalTypes.indexOf(item.type) !== -1
+      item.isNotInit = this.checkInitStatus(item)
       const path = item.isInternal === true ? `/.ugreen_nas/${ugreenNo}` : '/'
       item.partitions.forEach((partition, index) => {
         partition.showName = `分区${index + 1}`
@@ -86,5 +88,12 @@ export default {
       item.isSelected = item.showName === name
       return item
     })
+  },
+  checkInitStatus (storage: StorageInfo) {
+    const role = (_.get(store.getters, 'NasServer/accessInfo') as NasAccessInfo).role
+    const isAdmin = role === DeviceRole.admin
+    const isInit = storage.status === 1
+    if (storage.isInternal && isAdmin && isInit) return true
+    return false
   }
 }
