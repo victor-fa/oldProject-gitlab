@@ -447,10 +447,11 @@ export default Vue.extend({
         }
         if (response.data.code !== 200) return
         this.showArray = ResourceHandler.resetDisableState(this.showArray)
+        this.$message.info('文件已加密')
         setTimeout(() => {
-          this.$message.info('文件已加密')
           this.$emit('headerCallbackActions', 'refresh')
-        }, 2000);
+          this.$store.dispatch('Resource/decreaseTask')
+        }, 5000);
         this.showEncryptModal = false
       }).catch(error => {
         console.log(error)

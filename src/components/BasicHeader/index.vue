@@ -351,8 +351,8 @@ export default Vue.extend({
   height: 10px;
 }
 .operate-children {
-  top: -1px;
-  left: -96px;
+  top: 9px;
+  left: -86px;
   flex: 1 1 0%;
   padding: 3px 12px;
   position: absolute;

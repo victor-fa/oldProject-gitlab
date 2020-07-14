@@ -17,7 +17,8 @@ export default {
 	data() {
 		return {
 			NowPlay: {
-				path: ''
+				path: '',
+				name: ''
 			},
 			src: null,
 			header: {
@@ -33,19 +34,22 @@ export default {
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
 					this.NowPlay.path = item.path;
-					if (item.path.indexOf('.safe') !== -1) {
+					if (item.encrypt) {
+						this.NowPlay.name = item.data.name
 						this.src = this.$path.join(__static, 'plugins/pdfjs/web/viewer.html?file=') + encodeURIComponent(NasFileAPI.httpEncryptDownload({
-							uuid: item.uuid,
-							path: item.path
+							uuid: item.data.uuid,
+							path: item.data.path,
+							crypto_token: item.encrypt
 						}))
 					} else {
+						this.NowPlay.name = item.name
 						this.src = this.$path.join(__static, 'plugins/pdfjs/web/viewer.html?file=') + encodeURIComponent(NasFileAPI.httpDownload({
 							uuid: item.uuid,
 							path: item.path
 						}))
 					}
 					console.log(this.src);
-					this.header.title = StringUtility.formatName(item.path) + '-PDF阅读器';
+					this.header.title = this.NowPlay.name + '-PDF阅读器';
 				});
 			});
 		});

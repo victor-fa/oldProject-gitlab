@@ -2,7 +2,7 @@
 	<div class="cd-main FileContent">
 		<WindowsHeader :data="header" style="border-bottom: 2px solid #6ce26c;" />
 		<div class="cd-file-show-container">
-			<iframe :src="LoadUrl"></iframe>
+			<iframe :src="NowLoad.path"></iframe>
 		</div>
 	</div>
 </template>
@@ -19,9 +19,10 @@ export default {
 		return {
 			NowLoad: {
 				path: '',
-				content: ''
+				content: '',
+				name: ''
 			},
-			LoadUrl: '',
+			name: '',
 			header: {
 				title: '',
 				color: '#000'
@@ -35,26 +36,23 @@ export default {
 			if (nasJson !== null) {
 				token = JSON.parse(nasJson).api_token
 			}
-			let cryptoToken = ''
-			const cryptoJson = localStorage.getItem(CRYPTO_INFO)
-			if (cryptoJson !== null) {
-				cryptoToken = JSON.parse(cryptoJson).crypto_token
-			}
 			//接收打开文本文件的数据
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
 					this.NowLoad = item;
-					this.header.title = StringUtility.formatName(item.path) + ' 文件查看';
-					if (item.path.indexOf('.safe') !== -1) {
-						this.LoadUrl =
+					if (item.encrypt) {
+						this.NowLoad.name = item.data.name
+						this.NowLoad.path =
 							this.$path.join(__static, 'plugins/syntaxhighlighter/index.html?url=') + 
-							`${NasFileAPI.getServerUrl()}/v1/crypto/http_download?uuid=${item.uuid}&path=${item.path}&crypto_token=${cryptoToken}`;
+							`${NasFileAPI.getServerUrl()}/v1/crypto/http_download?uuid=${item.data.uuid}&path=${item.data.path}&crypto_token=${item.encrypt}`;
 					} else {
-						this.LoadUrl =
+						this.NowLoad.name = item.name
+						this.NowLoad.path =
 							this.$path.join(__static, 'plugins/syntaxhighlighter/index.html?url=') + 
 							`${NasFileAPI.getServerUrl()}/v1/file/http_download?uuid=${item.uuid}&path=${item.path}&api_token=${token}`;
 					}
-					console.log(this.LoadUrl);
+					this.header.title = this.NowLoad.name + ' 文件查看';
+					console.log(this.NowLoad.path);
 				});
 			});
 		});

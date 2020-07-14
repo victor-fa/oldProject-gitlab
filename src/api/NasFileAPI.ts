@@ -47,13 +47,11 @@ export default {
     return host + fileModule + '/http_download?' + jsonToParamsForPdf(input)
   },
   encryptDownload (option) {
-    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
-    const input = { uuid: option.uuid, path: option.path, crypto_token: crypto.crypto_token }
+    const input = { uuid: option.uuid, path: option.path, crypto_token: option.crypto_token }
     return host + cryptoModule + '/download?' + jsonToParams(input)
   },
   httpEncryptDownload (option) {
-    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
-    const input = { uuid: option.uuid, path: option.path, crypto_token: crypto.crypto_token }
+    const input = { uuid: option.uuid, path: option.path, crypto_token: option.crypto_token }
     return host + cryptoModule + '/http_download?' + jsonToParams(input)
   },
   fetchStorages (): ServerResponse {

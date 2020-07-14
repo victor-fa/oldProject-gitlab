@@ -26,7 +26,8 @@ export default {
 			NowShow: {
 				path: '',
 				count: 0,
-				URL: ''
+				URL: '',
+				name: ''
 			},
 			angle: 0,
 			ZoomSize: 1,
@@ -102,19 +103,22 @@ export default {
 		ShowPicture(item, index) {
 			this.NowShow = item;
 			this.NowShow.count = index;
-			if (item.path.indexOf('.safe') !== -1) {
+			if (item.encrypt) {
+				this.NowShow.name = item.data.name
 				this.NowShow.URL = NasFileAPI.encryptDownload({
-					uuid: item.uuid,
-					path: item.path
+					uuid: item.data.uuid,
+					path: item.data.path,
+					crypto_token: item.encrypt
 				});
 			} else {
+				this.NowShow.name = item.name
 				this.NowShow.URL = NasFileAPI.download({
 					uuid: item.uuid,
 					path: item.path
 				});
 			}
 			console.log(this.NowShow.URL);
-			this.header.title = StringUtility.formatName(item.path) + '-图片查看';
+			this.header.title = this.NowShow.name + '-图片查看';
 		},
 		orginz() {
 			let img_show = this.$refs.imageShow;

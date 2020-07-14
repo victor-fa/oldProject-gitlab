@@ -9,7 +9,7 @@
 	>
 		<WindowsHeader :data="header" />
 		<div class="cd-music-player-container">
-			<div class="cd-music-player-title">{{ NowPlay.path | filterName }}</div>
+			<div class="cd-music-player-title">{{ NowPlay.name }}</div>
 			<ul>
 				<li class="cd-music-player-H-btn" />
 				<li class="sf-icon-step-backward cd-music-player-S-btn" @click="PlayerCommend('prev')" />
@@ -72,17 +72,13 @@ export default {
 			deep: true
 		}
 	},
-	filters: {
-		filterName(data) {
-			return StringUtility.formatName(data)
-		}
-	},
 	data() {
 		return {
 			PlayList: [],
 			NowPlay: {
 				path: '准备播放',
-				count: 0
+				count: 0,
+				name: ''
 			},
 			TimeText: '00:00/00:00',
 			ProcessWidth: 0,
@@ -152,12 +148,15 @@ export default {
 		playCallBack(item, index) {
 			this.NowPlay = item;
 			this.NowPlay.count = index;
-			if (item.path.indexOf('.safe') !== -1) {
+			if (item.encrypt) {
+				this.NowPlay.name = item.data.name
 				this.NowPlay.PlayUrl = NasFileAPI.httpEncryptDownload({
-					uuid: item.uuid,
-					path: item.path
+					uuid: item.data.uuid,
+					path: item.data.path,
+					crypto_token: item.encrypt
 				});
 			} else {
+				this.NowPlay.name = item.name
 				this.NowPlay.PlayUrl = NasFileAPI.download({
 					uuid: item.uuid,
 					path: item.path
@@ -209,7 +208,7 @@ export default {
 						this.PlayButtonState = 'sf-icon-play';
 						this.$ipc.send('player-control', 'audio', 'play');
 					}
-					this.header.title = StringUtility.formatName(this.NowPlay.path);
+					this.header.title = this.NowPlay.name;
 					if (this.VisualState) {
 						this.Visual();
 					}

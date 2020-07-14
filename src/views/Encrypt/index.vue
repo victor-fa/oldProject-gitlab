@@ -425,18 +425,25 @@ export default Vue.extend({
       const filterArr = [1, 2, 3]; // 0: Unknown 1: Video, 2: Audio, 3:Image, 4:Document, 5:Archive, 6:Folder
       if (filterArr.indexOf(OpenType) > -1) {
         let data:any = []
-        data.push(item)
+        data.push({
+          data: item,
+          encrypt: this.cryptoInfo.crypto_token
+        })
         myThis.$ipc.send('file-control', OpenType, data);
       } else if (OpenType === 4) {
         let data:any = []
-        data.push(item)
+        data.push({
+          data: item,
+          encrypt: this.cryptoInfo.crypto_token
+        })
         const filterFile = ['.zip', '.rar', '.7z', '.arj', '.gz', '.iso', '.z', '.ppt', '.pptx', '.xls', '.xlsx', '.doc', '.docx']
-        const filterRes = filterFile.filter(item => data[0].path.toLowerCase().indexOf(item) > -1)
+        const filterRes = filterFile.filter(item => data[0].data.path.toLowerCase().indexOf(item) > -1)
+        const isPDF = data[0].data.path.indexOf('.pdf') > -1 || data[0].data.path.indexOf('.PDF') > -1  // 过滤PDF
         if (filterRes.length > 0) {
           this.$message.warning('请下载到电脑后再打开')
           return
         }
-        myThis.$ipc.send('file-control', OpenType, data);
+        myThis.$ipc.send('file-control', isPDF ? 5 : OpenType, data);
       } else {
         this.$message.warning('请下载到电脑后再打开');
       }
@@ -497,7 +504,10 @@ export default Vue.extend({
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
         this.$message.info('任务添加成功')
         this.$store.dispatch('Resource/increaseTask')
-        this.$emit('headerCallbackActions', 'refresh')
+        setTimeout(() => {
+          this.getEncryptList()
+          this.$store.dispatch('Resource/decreaseTask')
+        }, 6000);
       }).catch(error => {
         console.log(error)
         this.dataArray = ResourceHandler.resetDisableState(this.dataArray)
