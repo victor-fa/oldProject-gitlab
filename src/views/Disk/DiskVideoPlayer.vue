@@ -35,7 +35,7 @@
 					</div>
 					<div class="cd-video-temp-bar" :style="{ width: CacheWidth }"></div>
 				</div>
-				<div class="cd-video-player-time">{{ TimeText }}</div>
+				<div class="cd-video-player-time">{{ videoStatus ? TimeText : '————' }}</div>
 				<div
 					:class="'sf-icon-volume-up ' + (VolumnState ? 'cd-video-player-volumn-active' : '')"
 					@mousedown.stop="VolumnState ? (VolumnState = false) : (VolumnState = true)"
@@ -102,7 +102,8 @@ export default {
 			header: {
 				title: '',
 				color: '#000'
-			}
+			},
+			videoStatus: true	// 默认播放状态
 		};
 	},
 	created() {
@@ -194,7 +195,7 @@ export default {
 						this.animation = 'animated zoomIn';
 						this.$ipc.send('player-control', 'video', 'play');
 					}
-					this.header.title = StringUtility.formatName(this.NowPlay.path) + '-视频查看';
+					this.header.title = this.videoStatus ? StringUtility.formatName(this.NowPlay.path) + '-视频查看' : '不支持视频格式';
 					this.$refs.VideoPlayer.focus();
 					break;
 			}
@@ -283,7 +284,10 @@ export default {
 			}
 		},
 		VideoError(e) {
-			// this.$message.error(e);
+			if (this.NowPlay.PlayUrl) {	// 获取连接后且播放报错，判断为播放失败
+				this.videoStatus = false
+				this.header.title = '不支持视频格式';
+			}
 		}
 	}
 };

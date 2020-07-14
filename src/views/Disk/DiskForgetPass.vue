@@ -3,7 +3,7 @@
 		<WindowsHeader :data="header" />
     <div class="forget-content">
       <ul class="content-wrapper">
-        <li class="tip">重置密码</li>
+        <li class="tip">忘记（修改）密码</li>
         <li class="account-form">
           <basic-form :icon="loginIcons.account" :maxLength=11 placeholder="请输入手机号" v-model="account"/>
         </li>

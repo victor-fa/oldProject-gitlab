@@ -318,6 +318,7 @@ export default {
     initializeWindow.once('closed', () => {
       initializeWindow!.removeAllListeners()
       initializeWindow = null
+      this.refreshHomeWindow()
     })
     initializeWindow.once('ready-to-show', () => {
       this.activeWindow(initializeWindow!)
