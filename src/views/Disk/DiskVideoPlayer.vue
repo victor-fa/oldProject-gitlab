@@ -86,7 +86,8 @@ export default {
 			NowPlay: {
 				path: '准备播放',
 				count: 0,
-				PlayUrl: ''
+				PlayUrl: '',
+				name: ''
 			},
 			TimeText: '00:00/00:00',
 			ProcessWidth: 0,
@@ -108,7 +109,6 @@ export default {
 	},
 	created() {
 		this.$ipc.on('win-data', (event, data) => {
-			console.log(data);
 			//接收打开视频文件的数据
 			this.$nextTick(() => {
 				data.forEach((item, index) => {
@@ -136,12 +136,15 @@ export default {
 		playCallBack(item, index) {
 			this.NowPlay = item;
 			this.NowPlay.count = index;
-			if (item.path.indexOf('.safe') !== -1) {
+			if (item.encrypt) {
+				this.NowPlay.name = item.data.name
 				this.NowPlay.PlayUrl = NasFileAPI.encryptDownload({
-					uuid: item.uuid,
-					path: item.path
+					uuid: item.data.uuid,
+					path: item.data.path,
+					crypto_token: item.encrypt
 				});
 			} else {
+				this.NowPlay.name = item.name
 				this.NowPlay.PlayUrl = NasFileAPI.download({
 					uuid: item.uuid,
 					path: item.path
@@ -195,7 +198,7 @@ export default {
 						this.animation = 'animated zoomIn';
 						this.$ipc.send('player-control', 'video', 'play');
 					}
-					this.header.title = this.videoStatus ? StringUtility.formatName(this.NowPlay.path) + '-视频查看' : '不支持视频格式';
+					this.header.title = this.videoStatus ? this.NowPlay.name + '-视频查看' : '不支持视频格式';
 					this.$refs.VideoPlayer.focus();
 					break;
 			}

@@ -1,7 +1,7 @@
 <template>
 	<ul class="sf-music-player-list">
 		<li v-for="(item, index) in PlayList" :key="index" :class="item.play" @click="ClickPlay(item, index)">
-			{{ 9 > index ? '0' : '' }}{{ index + 1 }} {{ item.path | filterName }}
+			{{ 9 > index ? '0' : '' }}{{ index + 1 }} {{ item.name }}
 		</li>
 	</ul>
 </template>
@@ -13,11 +13,6 @@ export default {
 	props: {
 		PlayList: {
 			type: Array
-		}
-	},
-	filters: {
-		filterName(data) {
-			return StringUtility.formatName(data)
 		}
 	},
 	methods: {
