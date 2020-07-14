@@ -45,7 +45,7 @@
       class="vertical-item"
       draggable="true"
       v-bind:class="{
-        'vertical-selecteditem': isSelected,
+        'vertical-selected-item': isSelected,
         'odd-vertical-vtem': isOddStyle,
         'disable-item': model.disable 
       }"
@@ -345,6 +345,7 @@ export default Vue.extend({
   color: #484848;
   font-size: 12px;
   text-align: left;
+  margin-bottom: 1px;
   background-color: white;
   .vertical-first-col {
     display: flex;

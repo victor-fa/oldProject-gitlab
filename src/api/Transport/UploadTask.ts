@@ -259,7 +259,7 @@ export default class UploadTask extends BaseTask {
       return this.uploadChunckData(file, buffer, this.source)
     }).then(response => {
       if (this.status !== TaskStatus.progress) return
-      if (response.data.code === 4050 && file.isDirectory) {
+      if (response.data.code === 4050 && this.fileInfos.length > 1) { // 目录上传需要过滤文件已存错误
         file.completedSize = file.totalSize
         completionHandler(file.completedSize)
       } else if (response.data.code !== 200) {
@@ -278,9 +278,6 @@ export default class UploadTask extends BaseTask {
         completionHandler(undefined, new TaskError(TaskErrorCode.networkError))
       }
     })
-  }
-  private handleFileExistError (file: FileInfo) {
-
   }
   // 生成上传参数
   private generateUploadParams (fileInfo: FileInfo, chunkLength: number) {
