@@ -240,7 +240,6 @@ let DiskSystem = {
 		});
     ForgetPassWindow.on('blur', () => {
 			ForgetPassWindow.focus()
-      // shell.beep()
     })
 	},
 	RomUpdateWindow: msg => {

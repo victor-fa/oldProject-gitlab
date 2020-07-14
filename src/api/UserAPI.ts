@@ -164,6 +164,12 @@ export default {
       code: data.code
     })
   },
+  updatePass (data) {
+    return nasCloud.post(userModulePath + '/updatePwd', {
+      pwd: data.pwd,
+      newPwd: data.newPwd
+    })
+  },
   emailCode (email) {
     const accessToken = getAccessToken()
     if (accessToken === null) return Promise.reject(customError('not find access_token'))

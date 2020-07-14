@@ -101,7 +101,7 @@ export default Vue.extend({
         const storages = _.get(response.data.data, 'storages')
         this.diskMode = _.get(response.data.data, 'mode')
         this.diskFormatting = _.get(response.data.data, 'formatting')
-        this.dataArray = StorageHandler.formatStorages(storages)
+        this.dataArray = StorageHandler.formatStorages(storages, this.diskMode)
         this.$store.dispatch('Resource/updateStorages', this.dataArray)
       }).catch(error => {
         this.loading = false

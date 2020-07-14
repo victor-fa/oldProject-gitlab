@@ -134,7 +134,8 @@ export default Vue.extend({
         console.log(response)
         if (response.data.code !== 200) return
         const list = _.get(response.data.data, 'storages')
-        this.storages = StorageHandler.formatStorages(list)
+        const mode = _.get(response.data.data, 'mode')
+        this.storages = StorageHandler.formatStorages(list, mode)
         this.showStorages = StorageHandler.formatShowStorages(this.storages, this.selectedItem)
       }).catch(error => {
         this.loading = false

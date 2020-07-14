@@ -199,7 +199,7 @@ export default Vue.extend({
     },
 		changePassword() {
 			const _this = this as any
-			_this.$ipc.send('system', 'forget-pass');
+			_this.$ipc.send('system', 'forget-pass', 'login');
 		},
   }
 })

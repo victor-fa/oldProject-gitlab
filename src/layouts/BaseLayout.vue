@@ -209,7 +209,8 @@ export default Vue.extend({
         console.log(response)
         if (response.data.code !== 200) return
         const storages = _.get(response.data.data, 'storages')
-        const list = StorageHandler.formatStorages(storages)
+        const mode = _.get(response.data.data, 'mode')
+        const list = StorageHandler.formatStorages(storages, mode)
         this.$store.dispatch('Resource/updateStorages', list)
       }).catch(error => {
         this.$message.error('网络连接错误，请检测网络')

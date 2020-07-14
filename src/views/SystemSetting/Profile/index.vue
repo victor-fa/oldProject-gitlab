@@ -70,9 +70,7 @@ export default Vue.extend({
   name: 'profil',
 	computed: {
 		...mapGetters('User', ['user']),
-    ...mapGetters('Setting', ['autoPowerOn']),
-		...mapGetters('Setting', ['closeInfo']),
-		...mapGetters('Setting', ['autoLogin']),
+    ...mapGetters('Setting', ['autoPowerOn', 'closeInfo', 'autoLogin']),
 	},
 	data() {
 		return {
@@ -138,7 +136,7 @@ export default Vue.extend({
 		},
 		changePassword() {
 			const _this = this as any
-			_this.$ipc.send('system', 'forget-pass');
+			_this.$ipc.send('system', 'forget-pass', 'setting');
 		},
 		handleSave () {
 			const input = { nicName: this.user.nicName ? this.user.nicName : '' }

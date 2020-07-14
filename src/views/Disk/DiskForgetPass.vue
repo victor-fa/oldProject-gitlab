@@ -3,9 +3,12 @@
 		<WindowsHeader :data="header" />
     <div class="forget-content">
       <ul class="content-wrapper">
-        <li class="tip">忘记（修改）密码</li>
-        <li class="account-form">
+        <li class="tip">{{ isFromLogin ? '重置' : '修改' }}密码</li>
+        <li class="account-form" v-if="isFromLogin">
           <basic-form :icon="loginIcons.account" :maxLength=11 placeholder="请输入手机号" v-model="account"/>
+        </li>
+        <li class="account-form" v-if="!isFromLogin">
+          <basic-form :icon="loginIcons.password" :maxLength=11 placeholder="请输入原密码" v-model="originalPass" isSecure="ture"/>
         </li>
         <li class="password-from">
           <basic-form :icon="loginIcons.password" :maxLength=16 placeholder="请输入新密码" v-model="password" isSecure="ture"/>
@@ -17,7 +20,7 @@
           <basic-form :icon="loginIcons.password" :suffix="codeTips" :maxLength=6 placeholder="请输入短信验证码" v-model="code" v-on:pressEnter="resetAction"/>
         </li>
         <li class="login-button">
-          <a-button block @click="resetAction" :loading="loading">{{submitText}}</a-button>
+          <a-button block @click="isFromLogin ? resetAction() : updateAction()" :loading="loading">{{submitText}}</a-button>
         </li>
       </ul>
     </div>
@@ -42,12 +45,16 @@ export default Vue.extend({
     BasicForm,
     WindowsHeader
   },
+	computed: {
+		...mapGetters('User', ['user'])
+	},
   data () {
     let items: Account[] = []
     const _this = this as any
     return {
       loginIcons,
       account: '',
+      originalPass: '',
       password: '',
       rePassword: '',
       code: '',
@@ -56,7 +63,7 @@ export default Vue.extend({
       timer: null as NodeJS.Timer | null,
       loading: false,
       codeVisiable: false,
-      submitText: '重置',
+      submitText: '',
 			header: {
 				color: '#666',
 				title: '',
@@ -66,7 +73,8 @@ export default Vue.extend({
           _this.closeAndClear()
 					return true;
 				}
-			}
+      },
+      isFromLogin: true
     }
   },
 	watch: {
@@ -79,6 +87,14 @@ export default Vue.extend({
 			}
 		}
   },
+	created () {
+    const _this = this as any
+		_this.$ipc.on('win-data', (event, data) => {
+      const flag = data === 'login'
+      this.isFromLogin = flag
+      this.submitText = flag ? '重置' : '修改'
+		});
+	},
   methods: {
     resetAction () {
       if (!this.checkInputFrom()) return
@@ -91,13 +107,45 @@ export default Vue.extend({
       UserAPI.changePass(input).then(response => {
 				if (response.data.code !== 200) return
 				this.account = '';
+				this.originalPass = '';
 				this.password = '';
 				this.rePassword = '';
 				this.code = '';
         this.codeVisiable = false
         this.loading = false
-        this.$message.success('重置成功，请牢记密码')
+        this.$message.success(`${this.isFromLogin ? '重置' : '修改'}成功，请牢记密码`)
         this.$store.dispatch('User/updateAccount', { account: input.userName, password: input.password })
+        setTimeout(() => {
+          this.closeAndClear()
+        }, 1000);
+      }).catch(error => {
+        this.loading = false
+        console.log(error)
+        this.$message.error('网络连接错误,请检测网络')
+      })
+    },
+    updateAction () {
+      if (!this.checkInputFrom()) return
+      this.loading = true
+			const input = {
+        userName: this.user.phoneNo,
+				pwd: StringUtility.encryptPassword(this.originalPass),
+				newPwd: StringUtility.encryptPassword(this.password)
+			}
+      UserAPI.updatePass(input).then(response => {
+				if (response.data.code !== 200) {
+          this.$message.error(response.data.msg)
+          return
+        }
+				this.account = '';
+				this.originalPass = '';
+				this.password = '';
+				this.rePassword = '';
+				this.code = '';
+        this.codeVisiable = false
+        this.loading = false
+        this.$message.success(`${this.isFromLogin ? '重置' : '修改'}成功，请牢记密码`)
+        this.$store.dispatch('User/updateAccount', { account: input.userName, password: input.newPwd })
         setTimeout(() => {
           this.closeAndClear()
         }, 1000);
@@ -109,18 +157,29 @@ export default Vue.extend({
     },
     checkInputFrom () {
       if (this.account.length === 0) {
-        this.$message.warning('请输入帐号', 1.5)
-        return false
-      } else if (this.password.length === 0) {
+        if (this.isFromLogin) {
+          this.$message.warning('请输入帐号', 1.5)
+          return false
+        } else {
+          if (this.originalPass.length === 0) {
+            this.$message.warning('请输入原密码', 1.5)
+            return false
+          }
+        }
+      }
+      if (this.password.length === 0) {
         this.$message.warning('请输入密码', 1.5)
         return false
-      } else if (this.rePassword.length === 0) {
+      }
+      if (this.rePassword.length === 0) {
         this.$message.warning('请重新输入密码', 1.5)
         return false
-      } else if (this.password !== this.rePassword) {
+      }
+      if (this.password !== this.rePassword) {
 				this.$message.warning('密码不一致，请检查');
 				return;
-			} else if (this.code === '' || this.submitText === '发送验证码') {  // 两种情况下都要发送验证码
+      }
+      if (this.isFromLogin && (this.code === '' || this.submitText === '发送验证码')) {  // 两种情况下都要发送验证码
 				UserAPI.smsCode(this.account, 2).then(response => {
 					this.loading = false;
 					if (response.data.code !== 200) return
@@ -133,7 +192,8 @@ export default Vue.extend({
 					this.$message.error('网络连接错误,请检测网络')
 				})
 				return
-			} else if (this.code.length === 0) {
+      }
+      if (this.isFromLogin && this.code.length === 0) {
         this.$message.warning('请输入验证码', 1.5)
         return false
       }
@@ -143,7 +203,7 @@ export default Vue.extend({
       this.timer = setInterval(() => {
         this.codeCount--
         this.codeTips = this.codeCount === 0 ? '' : `${this.codeCount}s`  // 倒计时到0s时不展示
-        this.submitText = this.codeCount === 0 ? '发送验证码' : '重置'  // 倒计时到0s时用于发送验证码
+        this.submitText = this.codeCount === 0 ? '发送验证码' : (this.isFromLogin ? '重置' : '修改')  // 倒计时到0s时用于发送验证码
       }, 1000)
     },
     cacheUserInfo (response: LoginResponse) {

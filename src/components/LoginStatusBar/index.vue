@@ -85,6 +85,7 @@ export default Vue.extend({
   }
   .right-bar {
     padding: 0px 5px;
+    display: flex;
     .status-item {
       width: 20px;
       height: 20px;
