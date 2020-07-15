@@ -1,26 +1,64 @@
 <template>
 	<div class="cd-setting-main">
 		<div class="cd-setting-content">
-			<p class="cd-setting-title">设备信息</p>
-			<p class="cd-setting-info">
-				设备名：{{!edit_device_name ? nasInfo.name : ''}}
-				<a-input type="text" v-show="edit_device_name"
-					v-model="nasInfo.name" placeholder="请输入昵称" clearable
-					:max-length="15" ref="input_device_name" style="width: 200px;"
-					@blur.native.capture="handleSetDeviceName()"/>
-				<img class="edit" v-show="!edit_device_name && isUserAdmin" :src="loginIcons.edit" @click="edit_device_name = true">
-			</p>
-			<p class="cd-setting-info">序列号：{{nasInfo.sn}}</p>
-			<p class="cd-setting-info">固件版本：{{firmwareVer}}</p>
-			<p class="cd-setting-info">IP地址：{{nasInfo.ip}}</p>
-			<p class="cd-setting-info">MAC地址：{{nasInfo.mac | filterMac}}</p>
-			<p class="cd-setting-title">
-				<a-button class="cd-purple-button" @click="handleDangerousOperation('shutdown')" v-show="isUserAdmin">关机</a-button>
-				<a-button class="cd-purple-button" @click="handleDangerousOperation('reboot')" v-show="isUserAdmin">重启</a-button>
-				<a-button class="cd-purple-button" @click="handleDangerousOperation('factory')" v-show="isUserAdmin">恢复出厂设置</a-button>
-				<a-button class="cd-purple-button" @click="handleDangerousOperation('update')" v-show="isUserAdmin" :disabled="disable">固件升级</a-button>
-				<a-button class="cd-purple-button" @click="handleDangerousOperation('delete')">删除设备</a-button>
-			</p>
+			<a-row class="row">
+				<a-col :span="4" class="title">设备名称：</a-col>
+				<a-col :span="8" class="content" v-show="!edit_device_name">{{ nasInfo.name }}</a-col>
+				<a-col :span="8" class="content" v-show="edit_device_name">
+					<a-input type="text" v-model="nasInfo.name" placeholder="请输入昵称" clearable :max-length="15" ref="input_device_name" style="width: 200px;" @blur.native.capture="handleSetDeviceName()"/>
+				</a-col>
+				<a-col :span="4" v-show="!edit_device_name && isUserAdmin">
+					<img class="edit" :src="loginIcons.edit" @click="edit_device_name = true">
+				</a-col>
+			</a-row>
+			<a-row class="row">
+				<a-col :span="4" class="title">处理器：</a-col>
+				<a-col :span="8" class="content">{{cpu}}</a-col>
+				<a-col :span="4" class="title">设备型号：</a-col>
+				<a-col :span="8" class="content">{{model}}</a-col>
+			</a-row>
+			<a-row class="row">
+				<a-col :span="4" class="title">序列号：</a-col>
+				<a-col :span="8" class="content">{{nasInfo.sn}}</a-col>
+				<a-col :span="4" class="title">运行内存：</a-col>
+				<a-col :span="8" class="content">{{memory | filterSize}}</a-col>
+			</a-row>
+			<a-row class="row">
+				<a-col :span="4" class="title">固件版本：</a-col>
+				<a-col :span="8" class="content">{{firmwareVer}}</a-col>
+				<a-col :span="4" class="title">IP地址：</a-col>
+				<a-col :span="8" class="content">{{nasInfo.ip}}</a-col>
+			</a-row>
+			<a-row class="row">
+				<a-col :span="4" class="title">系统版本：</a-col>
+				<a-col :span="8" class="content">{{sys_version}}</a-col>
+				<a-col :span="4" class="title">MAC地址：</a-col>
+				<a-col :span="8" class="content">{{nasInfo.mac | filterMac}}</a-col>
+			</a-row>
+			<div class="bottom">
+				<a-row>
+					<a-col :span="4" class="button" v-show="isUserAdmin">
+						<img :src="loginIcons.shutdown" @click="handleDangerousOperation('shutdown')">
+						<p>关机</p>
+					</a-col>
+					<a-col :span="4" class="button" v-show="isUserAdmin">
+						<img :src="loginIcons.reboot" @click="handleDangerousOperation('reboot')">
+						<p>重启</p>
+					</a-col>
+					<a-col :span="4" class="button" v-show="isUserAdmin">
+						<img :src="loginIcons.factory" @click="handleDangerousOperation('factory')">
+						<p>恢复出厂设置</p>
+					</a-col>
+					<a-col :span="4" class="button" v-show="isUserAdmin">
+						<img :src="loginIcons.update" @click="handleDangerousOperation('update')">
+						<p>固件升级</p>
+					</a-col>
+					<a-col :span="4" class="button">
+						<img :src="loginIcons.delete" @click="handleDangerousOperation('delete')">
+						<p>删除设备</p>
+					</a-col>
+				</a-row>
+			</div>
 		</div>
 		<a-modal title="检测到有新版本固件更新"
 			:visible="update.visiable" :mask="false" :closable="false" :maskClosable="false" width="450px"
@@ -76,7 +114,11 @@ export default Vue.extend({
 			},
 			isUserAdmin: false,
 			disable: false,
-			firmwareVer: '',
+			firmwareVer: '',	// 固件版本
+			cpu: '',	// 处理器
+			memory: '',	// 运行内存
+			model: '',	// 设备型号
+			sys_version: '',	// 系统版本
 			edit_device_name: false,
 		};
   },
@@ -114,6 +156,10 @@ export default Vue.extend({
 			} else if (flag === 'factory') {
 				message = `该操作将设备恢复至初始状态，但不会清除您硬盘的任何数据。\n恢复出厂时间可能较长，请您耐心等待！`
 			} else if (flag === 'update') {
+				if (this.disable === true) {
+					this.$message.error('请勿重复点击')
+					return
+				}
 				this.disable = true
 				this.fetchUpdateInfo()
 				return
@@ -227,6 +273,10 @@ export default Vue.extend({
       NasFileAPI.fetchSysInfo().then(response => {
         if (response.data.code !== 200) return
 				this.firmwareVer = _.get(response.data.data, 'firmware_ver')
+				this.cpu = _.get(response.data.data, 'cpu')
+				this.memory = _.get(response.data.data, 'memory')
+				this.model = _.get(response.data.data, 'model')
+				this.sys_version = this.firmwareVer.split('-')[1]
 				console.log(this.firmwareVer);
       }).catch(error => {
         this.$message.error('网络连接错误，请检测网络')
@@ -250,43 +300,42 @@ p { text-align: left; }
 		padding: 20px;
 		float: left;
 		overflow-y: scroll;
-		.cd-setting-title {
-			width: 100%;
-			font-size: 14px;
-			line-height: 35px;
+		.row {
+			text-align: left;
 			margin-bottom: 10px;
-			font-weight: 500;
-			.cd-purple-button { margin-right: 10px; }
-		}
-		.cd-setting-info {
-			width: 100%;
-			font-size: 12px;
-			padding-left: 5px;
 			line-height: 30px;
-			color: #000;
-			span {
-				background: #06B650;
-				color: #fff;
-				border-radius: 5px;
-				padding: 3px 5px;
-				font-size: 12px;
-				margin-left: 10px;
+			.title {
+				text-align-last: justify;
+				font-weight: 500;
 			}
-			button {
-				background: none;
-				font-size: 14px;
-				margin-right: 10px;
-			}
-			.disk {
-				width: 70px;
-				height: 70px;
-				margin: 15px 0 0 -3px;
+			.content {
+				font-weight: 100;
 			}
 			.edit {
 				width: 20px;
 				height: 20px;
 				margin: 3px 0 0 10px;
 				cursor: pointer;
+			}
+		}
+		.bottom {
+			position: absolute;
+			bottom: 30px;
+			width: 91%;
+			.button {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				img {
+					width: 45px;
+					cursor: pointer;
+				}
+				p {
+					text-align: center;
+					font-weight: bold;
+					margin-top: 12px;
+				}
 			}
 		}
 	}

@@ -50,7 +50,10 @@ export default class BackupUploadTask extends UploadTask {
   /** 过滤（备份加密用） */
   filterFilesInfo(fileInfo: FileInfo): Promise<Boolean> {
     return new Promise((resolve, reject) => {
-      NasFileAPI.backupCheck(fileInfo).then(response => {
+      this.calculateFileMD5(fileInfo.srcPath).then(res => {
+        fileInfo.md5 = res
+        return NasFileAPI.backupCheck(fileInfo)
+      }).then(response => {
         if (response.data.code !== 200) return resolve(true)
         if (response.data.data.identical === 1) return resolve(true)
         return resolve(false)

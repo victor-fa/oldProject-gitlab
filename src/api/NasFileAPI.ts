@@ -370,7 +370,7 @@ export default {
     })
   },
   backupCheck (data): ServerResponse {
-    return nasServer.post(fileModule + '/backup/check', {}, {
+    return nasServer.post(fileModule + '/backup/check', null, {
       params: {
         path: data.destPath,
         md5: data.md5,
