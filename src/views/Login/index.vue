@@ -5,9 +5,9 @@
       <li class="account-form">
         <basic-form
           :icon="loginIcons.account"
-          :maxLength=20
+          :maxLength=11
           :selectItems="dropdownItems"
-          placeholder="用户名/手机号/邮箱"
+          placeholder="输入您的手机号"
           v-model="account"
           v-on:change="accountChangeAction"
           v-on:select="accountSelectAction"
@@ -83,7 +83,6 @@ export default Vue.extend({
   watch: {
     account: function (newValue: string) {
       if (_.isEmpty(newValue)) this.password = ''
-      this.ciphertext = ''
     },
     password: function (newValue) {
       this.ciphertext = ''

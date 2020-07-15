@@ -34,7 +34,7 @@ export default Vue.extend({
     }
   },
   created () {
-    if (this.$route.name !== 'download') this.$router.push('download')
+    if (this.$route.name !== 'upload') this.$router.push('upload')
     // clear current task count
     this.$store.dispatch('Resource/clearTaskCount')
   },
