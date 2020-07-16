@@ -173,7 +173,8 @@ export default Vue.extend({
 					click: function () { _this.showDeliverModal(item) }
 				}));
 			} else {
-				menu.append(new MenuItem({label: '非管理员无法操作'}));
+				// 管理员下：右键自己时不展示任何信息；普通用户下：右键任何用户都展示以下信息
+				!this.isUserAdmin ? menu.append(new MenuItem({label: '非管理员无法操作'})) : null;
 			}
       menu.popup(remote.getCurrentWindow())
     },

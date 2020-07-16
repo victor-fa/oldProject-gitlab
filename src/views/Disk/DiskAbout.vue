@@ -19,8 +19,8 @@
 				<p class="release">当前版本号：{{ version }}</p>
 				<div class="button">
 					<a-button class="update" @click="doUpdate"><span>检查更新</span></a-button>
-					<a-button class="privacy" @click="$electron.shell.openExternal(nasCloudIP + '/sys/file/resource/pc/secretAgreement.htm')">隐私协议</a-button>
-					<a-button class="user" @click="$electron.shell.openExternal(nasCloudIP + '/sys/file/resource/pc/serviceAgreement.htm')">用户协议</a-button>
+					<a-button class="privacy" @click="jumpExternal('yinsi')">隐私协议</a-button>
+					<a-button class="user" @click="jumpExternal('yonghu')">用户协议</a-button>
 				</div>
 			</div>
 		</div>
@@ -71,8 +71,20 @@ export default {
 		}
 	},
 	methods: {
-		doUpdate() {
+		doUpdate () {
 			processCenter.renderSend(EventName.update)  // 打开更新窗口
+		},
+		jumpExternal (flag) {
+			switch (flag) {
+				case 'yinsi':
+					this.$electron.shell.openExternal(`${nasCloudIP}/sys/file/resource/${process.platform === 'win32' ? 'pc' : 'mac'}/secretAgreement.htm`)
+					break;
+				case 'yonghu':
+					this.$electron.shell.openExternal(`${nasCloudIP}/sys/file/resource/${process.platform === 'win32' ? 'pc' : 'mac'}/serviceAgreement.htm`)
+					break;
+				default:
+					break;
+			}
 		}
 	}
 };

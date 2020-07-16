@@ -3,12 +3,10 @@
 		<div class="cd-setting-content" >
 			<p class="cd-setting-title">存储模式</p>
 			<p class="cd-setting-title">
-				<a-radio-group v-model="mode" @change="handleSave()">
-					<a-radio :value="0">{{firstMode.title}}</a-radio>
-					<br><br><font>{{firstMode.content[0]}}<br>{{firstMode.content[1]}}<br>{{firstMode.content[2]}}</font><br><br>
-					<a-radio :value="1">{{secondMode.title}}</a-radio>
-					<br><br><font>{{secondMode.content[0]}}<br>{{secondMode.content[1]}}</font><br><br>
-				</a-radio-group>
+				<a-checkbox :checked="isBackup" @change="handleSave()">{{firstMode.title}}</a-checkbox>
+				<br><font>{{firstMode.content[0]}}<br>{{firstMode.content[1]}}<br>{{firstMode.content[2]}}</font><br><br>
+				<a-checkbox :checked="isCommon" @change="handleSave()">{{secondMode.title}}</a-checkbox>
+				<br><font>{{secondMode.content[0]}}<br>{{secondMode.content[1]}}</font><br><br>
 			</p>
 		</div>
 		<a-modal :title="makesureModal.title"
@@ -47,6 +45,16 @@ export default Vue.extend({
 			diskFormatting: 0
 		};
   },
+	computed: {
+    isBackup: function () {
+			const _this = this as any
+			return _this.mode === 0;
+		},
+		isCommon: function () {
+			const _this = this as any
+			return _this.mode === 1;
+		}
+	},
 	created() {
 		this.fetchDisks()
 	},

@@ -71,6 +71,7 @@ import WindowMenu from '../WindowMenu/index.vue'
 import UserAPI from '@/api/UserAPI'
 import ClientAPI from '@/api/ClientAPI'
 import TransportHelper from '@/api/Transport/TransportHelper'
+import { nasCloudIP } from '@/api/CloudServer'
 
 export default Vue.extend({
   name: 'basic-header',
@@ -162,8 +163,17 @@ export default Vue.extend({
         case SettingType.quit:
           window.close()
           break
-        case SettingType.help:
-          console.log('help');
+        case SettingType.setup:
+          _this.$electron.shell.openExternal(`${nasCloudIP}/sys/file/resource/${process.platform === 'win32' ? 'pc' : 'mac'}/install.html`)
+          break
+        case SettingType.introduction:
+          _this.$electron.shell.openExternal(`${nasCloudIP}/sys/file/resource/${process.platform === 'win32' ? 'pc' : 'mac'}/products.htm`)
+          break
+        case SettingType.questions:
+          this.$message.info('查看“常见问题”功能待上线')
+          break
+        case SettingType.download:
+          this.$message.info('查看“软件下载”功能待上线')
           break
         default:
           break

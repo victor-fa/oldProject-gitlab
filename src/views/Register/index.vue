@@ -107,7 +107,7 @@ export default Vue.extend({
     handleProtcolAction () {
       this.hasRead = true
       const { shell } = require('electron')
-      shell.openExternal(nasCloudIP + '/sys/file/resource/pc/serviceAgreement.htm')
+      shell.openExternal(`${nasCloudIP}/sys/file/resource/${process.platform === 'win32' ? 'pc' : 'mac'}/serviceAgreement.htm`)
     },
     handleRegisterAction () {
       const result = this.checkInput()
@@ -164,12 +164,18 @@ export default Vue.extend({
       this.loading = true
       UserAPI.register(this.phone, this.password, this.authCode).then(response => {
         console.log(response)
-        this.loading = false
         if (response.data.code !== 200) return
-        const user = response.data.data as LoginResponse
-        this.$store.dispatch('User/updateUser', user.user)
-        this.$store.dispatch('User/updateAccessToken', user.accessToken)
-        this.$router.push('bind-device-list')
+        UserAPI.login(this.phone, this.password).then(response => {
+          this.loading = false
+          if (response.data.code !== 200) return
+          const loginResponse = response.data.data as LoginResponse
+          this.$store.dispatch('User/updateUser', loginResponse.user)
+          this.$store.dispatch('User/updateAccessToken', loginResponse.accessToken)
+          this.$router.push('bind-device-list')
+        }).catch((error: any) => {
+          console.log(error)
+          this.loading = false
+        })
       }).catch(error => {
         console.log(error)
         this.loading = false

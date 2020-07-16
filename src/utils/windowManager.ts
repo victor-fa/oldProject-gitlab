@@ -306,7 +306,7 @@ export default {
     }
     initializeWindow = this.createWindow({
       path: 'system-initialize',
-      fullscreen: true,
+      show: false,
       icon: './src/assets/logo.png',
       title: '磁盘正在初始化',
       maximizable: false,
@@ -315,6 +315,8 @@ export default {
       parent: homeWindow!,
       modal: true
     })
+    initializeWindow.maximize() // 最大化
+    initializeWindow.show() // 聚焦
     initializeWindow.once('closed', () => {
       initializeWindow!.removeAllListeners()
       initializeWindow = null
@@ -334,13 +336,15 @@ export default {
     }
     updateWindow = this.createWindow({
       path: 'system-update',
-      fullscreen: true,
+      show: false,
       icon: './src/assets/logo.png',
       maximizable: false,
       transparent: true,
       resizable: false,
       parent: homeWindow!
     })
+    updateWindow.maximize() // 最大化
+    updateWindow.show() // 聚焦
     updateWindow.once('closed', () => {
       updateWindow!.removeAllListeners()
       updateWindow = null

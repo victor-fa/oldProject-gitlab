@@ -207,15 +207,7 @@ export default {
   async reConnection (sn: string, mac: string) {
     status = TunnelStatus.continue
     const nas = this.generateNasInfo(sn, mac)
-    return this.checkTunnelProcess().then(() => {
-      return this.addConnectFun(sn)
-    }).then((addConnectRes: any) => {
-      if (addConnectRes.result === '0') {
-        return this.getPeerinfoFun(nas)
-      } else {
-        return Promise.reject(Error('tunnel error'))
-      }
-    })
+    return this.getPeerinfoFun(nas)
   },
   // 单独暴露出去给ClientAPI使用
   async initP2PTunnel (sn: string, mac: string) {
