@@ -7,6 +7,7 @@ import StringUtility from '@/utils/StringUtility'
  * progress (taskId) 上传进度事件
  * fileBegin (taskId, fileInfo) 单个文件开始上传
  * fileFinished (taskId, fileInfo) 单个文件传输完成事件
+ * taskBegin (taskId) 任务开始
  * taskSuspend (taskId) 任务挂起事件
  * taskResume (taskId) 任务继续事件
  * taskFinished (taskId) 任务完成事件

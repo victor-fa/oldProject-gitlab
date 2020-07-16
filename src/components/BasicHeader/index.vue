@@ -187,7 +187,7 @@ export default Vue.extend({
           // 清除缓存的用户相关信息
           this.$store.dispatch('User/clearCacheUserInfo')
           this.$store.dispatch('NasServer/clearCacheNas')
-          TransportHelper.clearQueueCache()
+          TransportHelper.suspendAllTask()
           processCenter.renderSend(EventName.login)
         }).catch(error => {
           console.log(error)
@@ -198,7 +198,7 @@ export default Vue.extend({
     switchDevice () {
       this.showTipDialog().then(() => {
         this.$store.dispatch('NasServer/clearCacheNas')
-        TransportHelper.clearQueueCache()
+        TransportHelper.suspendAllTask()
         processCenter.renderSend(EventName.bindList)
       })
     },

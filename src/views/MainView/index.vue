@@ -456,11 +456,13 @@ export default Vue.extend({
       this.showAlter = false
     },
     handleOnlineAction () {
+      console.log('online')
       this.showNetworkTip = true
       this.reconnection = true
       this.handleReconnectionLogic(1)
     },
     handleOfflineAction () {
+      console.log('offline')
       this.showNetworkTip = true
       this.reconnection = false
     },

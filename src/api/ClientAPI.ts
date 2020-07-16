@@ -127,16 +127,14 @@ export default {
     return new Promise((resolve, reject) => {
       this.closeConnection()
       timer = setTimeout(() => {
-        this.closeConnection()
         reject(Error('reconnection time out'))
-      }, 20000)
+      }, 10000)
       this.boardcastInLan(sn, mac, data => {
         this.closeConnection()
         this.clearTimer()
         resolve(data)
       }, error => {
         console.log(error)
-        this.closeBoardcast()
       })
       TunnelAPI.reConnection(sn, mac).then(nas => {
         this.closeConnection()
@@ -144,7 +142,6 @@ export default {
         resolve(nas)
       }).catch(error => {
         console.log(error)
-        this.closeConnection()
       })
     })
   },
@@ -162,7 +159,6 @@ export default {
       client!.setBroadcast(true)
       client!.setTTL(128)
       hosts.forEach(host => {
-        console.log(host)
         client!.send(msg, 0, msg.length, port, host, function(err) {
           if (_.isEmpty(err)) return
           console.log(err)
@@ -183,6 +179,26 @@ export default {
       } else {
         failure(data.msg)
       }
+    })
+  },
+  reboardcastInLan (sn: string, mac: string, success: (data: NasInfo) => void, failure: (error: string) => void) {
+    if (client === null) {
+      this.boardcastInLan(sn, mac, success, failure)
+      return 
+    }
+    const hosts = calculateBoardcastAddress()
+    if (hosts === null) {
+      failure('not found IP address')
+      return
+    }
+    const msg = generateBoardcastPacket(sn, mac)
+    const port = 60000
+    hosts.forEach(host => {
+      client!.send(msg, 0, msg.length, port, host, function(err) {
+        if (_.isEmpty(err)) return
+        console.log(err)
+        failure('boardcast packet message failed')
+      })
     })
   },
   closeBoardcast () {

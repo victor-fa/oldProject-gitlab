@@ -37,6 +37,8 @@ export default class UploadTask extends BaseTask {
     this.uploadFile()
     // 4. 开启速度定时器
     this.beginSpeedTimer()
+    // 5. 发送事件
+    this.emit('taskBegin', this.taskId)
   }
   async cancel () {
     super.cancel()

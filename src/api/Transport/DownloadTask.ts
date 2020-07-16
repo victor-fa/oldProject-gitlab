@@ -41,6 +41,8 @@ export default class DownloadTask extends BaseTask {
     this.downloadFile()
     // 4. 开启速度定时器
     this.beginSpeedTimer()
+    // 5. 发送事件
+    this.emit('taskBegin', this.taskId)
   }
   async cancel () {
     super.cancel()

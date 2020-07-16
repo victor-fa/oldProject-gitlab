@@ -19,6 +19,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   db?: IDBDatabase
   private queue: T[]
   private tableName: string
+  private count = 0
   constructor (tableName: string) {
     super()
     this.tableName = tableName
@@ -67,6 +68,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   }
   /**继续任务 */
   async resumeTask (task: T) {
+    console.log(task)
     task.resume()
     this.queue = this.updateQueue(task)
     this.emit('taskStatusChange', task.taskId)
@@ -192,11 +194,15 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   // 将DB中存储的对象转换成task
   private convertObj2Task (obj: any) {
     const task = this.createTask(obj)
+    let status = obj.status as TaskStatus
+    if (status === TaskStatus.progress || status === TaskStatus.pending) {
+      status = TaskStatus.suspend
+    }
     task.taskId = obj.index
     task.countOfBytes = obj.countOfBytes
     task.completedBytes = obj.completedBytes
     task.fileInfos = obj.fileInfos
-    task.status = obj.status
+    task.status = status
     task.icon = obj.icon
     task.type = obj.type
     return task as T
@@ -304,25 +310,33 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
       this.handleTaskError(index, error)
     })
   }
+  private cacheTaskId (taskId: number) {
+    const task = this.searchTask(taskId)
+    if (task === undefined) return
+    this.reloadTaskInDB(task)
+  }
   // protected methods
   // handle upload task callback
   protected handleTaskProcess (taskId: number) {
     this.emit('taskStatusChange', taskId)
+    if (this.count++ < 50) {
+      this.cacheTaskId(taskId)
+      this.count = 0
+    }
   }
   protected handleFileBegin (taskId: number, fileInfo: FileInfo) {
     this.emit('taskStatusChange', taskId)
   }
   protected handleFileFinished (taskId: number, fileInfo: FileInfo) {
     console.log(fileInfo)
-    const task = this.searchTask(taskId)
-    if (task === undefined) return
-    this.reloadTaskInDB(task)
+    this.cacheTaskId(taskId)
+  }
+  protected handleTaskBegin (taskId: number) {
+    this.cacheTaskId(taskId)
   }
   protected handleTaskSuspend (taskId: number) {
     this.checkUploadQueue()
-    const task = this.searchTask(taskId)
-    if (task === undefined) return
-    this.reloadTaskInDB(task)
+    this.cacheTaskId(taskId)
   }
   protected handleTaskResume (taskId: number) {
     this.emit('taskStatusChange', taskId)
