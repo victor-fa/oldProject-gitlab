@@ -307,6 +307,8 @@ export default {
     initializeWindow = this.createWindow({
       path: 'system-initialize',
       show: false,
+      width: 480,
+      height: 350,
       icon: './src/assets/logo.png',
       title: '磁盘正在初始化',
       maximizable: false,
@@ -315,8 +317,6 @@ export default {
       parent: homeWindow!,
       modal: true
     })
-    initializeWindow.maximize() // 最大化
-    initializeWindow.show() // 聚焦
     initializeWindow.once('closed', () => {
       initializeWindow!.removeAllListeners()
       initializeWindow = null
@@ -325,8 +325,6 @@ export default {
     initializeWindow.once('ready-to-show', () => {
       settingWindow!.close()
       this.activeWindow(initializeWindow!)
-      // 启动后，要将系统设置界面关闭
-      settingWindow!.close()
     })
   },
   presentUpdateSoftWindow () {

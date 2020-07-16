@@ -3,9 +3,9 @@
 		<div class="cd-setting-content" >
 			<p class="cd-setting-title">存储模式</p>
 			<p class="cd-setting-title">
-				<a-checkbox :checked="isBackup" @change="handleSave()">{{firstMode.title}}</a-checkbox>
+				<a-checkbox :checked="isBackup" @change="handleSave(0)">{{firstMode.title}}</a-checkbox>
 				<br><font>{{firstMode.content[0]}}<br>{{firstMode.content[1]}}<br>{{firstMode.content[2]}}</font><br><br>
-				<a-checkbox :checked="isCommon" @change="handleSave()">{{secondMode.title}}</a-checkbox>
+				<a-checkbox :checked="isCommon" @change="handleSave(1)">{{secondMode.title}}</a-checkbox>
 				<br><font>{{secondMode.content[0]}}<br>{{secondMode.content[1]}}</font><br><br>
 			</p>
 		</div>
@@ -60,6 +60,7 @@ export default Vue.extend({
 	},
   methods: {
 		handleSave (data) {
+			this.mode = data
 			if (this.diskFormatting !== 0) {	// 有磁盘任务，不可初始化
 				this.$message.error('当前有磁盘任务，不可初始化')
 				return

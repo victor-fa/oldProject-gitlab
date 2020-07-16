@@ -63,8 +63,7 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .storage-progress {
-  width: 32vw;
-  margin: 20% 34%;
+  width: 100%;
   box-shadow: 0 0 10px #88888857;
   .setting-header {
     height: 35px;
