@@ -269,7 +269,8 @@ export default class UploadTask extends BaseTask {
         file.completedSize = file.totalSize
         completionHandler(file.completedSize)
       } else if (response.data.code !== 200) {
-        const error = new TaskError(TaskErrorCode.serverError, response.data.msg)
+        const msg = response.data.code === 4050 ? `${file.name}已存在` : response.data.msg
+        const error = new TaskError(TaskErrorCode.serverError, msg)
         completionHandler(undefined, error)
       } else {
         file.completedSize += chunkLength

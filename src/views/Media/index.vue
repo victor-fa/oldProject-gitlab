@@ -84,7 +84,7 @@ export default Vue.extend({
       this.loading = true
       let utime = 0
       const lastItem = _.last(this.dataArray)
-      if (lastItem !== undefined) utime = lastItem.utime
+      if (lastItem !== undefined) utime = lastItem.mtime
       NasFileAPI.fetchTlist(this.page, utime, this.type!, this.order).then(response => {
         console.log(response)
         this.loading = false

@@ -33,6 +33,7 @@ nasCloud.interceptors.response.use((response: AxiosResponse) => {
 
 const refreshTokenCodes = [401, 9902]
 const reLoginCodes = [9903, 9904, 9906]
+const whiteListCodes = [8003]
 const handleInterceptResponse =  (response: AxiosResponse<BasicResponse>) => {
   if (response.status === 200) {
     const basicData = response.data as BasicResponse
@@ -40,6 +41,8 @@ const handleInterceptResponse =  (response: AxiosResponse<BasicResponse>) => {
       return handleTokenExpiredSence(response)
     } else if (reLoginCodes.indexOf(basicData.code) !== -1) {
       handleReloginSence(basicData)
+    } else if (whiteListCodes.indexOf(basicData.code) !== -1) {
+      // custom handle
     } else if (basicData.code !== 200) {
       EventBus.$emit(EventType.showToast, basicData.msg)
     }

@@ -3,28 +3,37 @@
     <span class="title">注册</span>
     <basic-form
       :icon="icons.phone"
-      :maxLength=11
+      :maxLength="11"
       placeholder="请输入手机号"
       v-model="phone"
       class="input-item"
+      :error="phoneError"
+      @blur="handleAccountBlur"
+      @change="handleAccountChange"
       @pressEnter="handleEnterAction"
     />
     <basic-form
       :icon="icons.password"
       :isSecure="true"
-      :maxLength=16
+      :maxLength="16"
       placeholder="设置登录密码"
       v-model="password"
       class="input-item"
+      :error="passwordError"
+      @blur="handlePhoneBlur"
+      @change="handlePhoneChange"
       @pressEnter="handleEnterAction"
     />
     <basic-form
       :icon="icons.password"
       :isSecure="true"
-      :maxLength=16
+      :maxLength="16"
       placeholder="再次确认密码"
       v-model="confirmPwd"
       class="input-item"
+      :error="confirmError"
+      @blur="handleConfirmBlur"
+      @change="handleConfirmChange"
       @pressEnter="handleEnterAction"
     />
     <div class="auth-code-item">
@@ -59,7 +68,7 @@ import StringUtility from '@/utils/StringUtility'
 import UserAPI from '@/api/UserAPI'
 import { nasCloudIP } from '@/api/CloudServer'
 import { SmsType, LoginResponse } from '@/api/UserModel'
-
+import { message } from 'ant-design-vue'
 
 export default Vue.extend({
   name: 'register',
@@ -73,8 +82,11 @@ export default Vue.extend({
       password: '',
       confirmPwd: '',
       authCode: '',
+      phoneError: '',
+      passwordError: '',
+      confirmError: '',
       loading: false,
-      authDisabled: false,
+      authDisabled: true,
       buttonTitle: '获取验证码',
       hasRead: false
     }
@@ -84,12 +96,50 @@ export default Vue.extend({
       if (this.checkInput() !== undefined) return
       this.registerRequest()
     },
-    handleCodeAction () {
-      const result = this.checkPhoneNumber()
-      if (result !== undefined) {
-        this.$message.error(result)
-        return
+    handleAccountChange () {
+      this.phoneError = ''
+      this.authDisabled = true
+    },
+    handleAccountBlur () {
+      if (_.isEmpty(this.phone)) return
+      const result = StringUtility.vaildatorPhone(this.phone)
+      if (!result) {
+        this.phoneError = '手机号格式错误'
+        this.authDisabled = true
+      } else {
+        UserAPI.checkPhoneNumber(this.phone).then(response => {
+          console.log(response)
+          if (response.data.code === 8003) {
+            this.phoneError = '该手机号已经注册'
+            this.authDisabled = true
+          } else if (response.data.code === 200) {
+            this.phoneError = ''
+            this.authDisabled = false
+          }
+        }).catch(error => {
+          console.log(error)
+          this.$message.error('网络连接错误，请检测网络')
+        })
       }
+    },
+    handlePhoneBlur () {
+      if (_.isEmpty(this.password)) return
+      const result = StringUtility.vaildatorPasswordRule(this.password)
+      if (!result) this.passwordError = '密码不符合规范(6-16位包含大小写字母数字)'
+    },
+    handleConfirmBlur () {
+      if (_.isEmpty(this.confirmPwd)) return
+      const result = this.password === this.confirmPwd
+      if (!result) this.confirmError = '两次密码不一致'
+    },
+    handlePhoneChange () {
+      this.passwordError = ''
+    },
+    handleConfirmChange () {
+      this.confirmError = ''
+    },
+    handleCodeAction () {
+      if (!StringUtility.vaildatorPhone(this.phone)) return
       this.authDisabled = true
       UserAPI.smsCode(this.phone, SmsType.register).then(response => {
         console.log(response)
@@ -120,34 +170,14 @@ export default Vue.extend({
     handleBackAction () {
       this.$router.replace('login')
     },
-    checkPhoneNumber () {
-      if (_.isEmpty(this.phone)) {
-        return '请输入手机号'
-      }
-      if (!StringUtility.vaildatorPhone(this.phone)) {
-        return '请输入正确的手机号'
-      }
-    },
-    checkInput (): string | undefined {
-      const phoneResult = this.checkPhoneNumber()
-      if (phoneResult !== undefined) {
-        return phoneResult
-      }
-      if (_.isEmpty(this.password)) {
-        return '请输入登录密码'
-      }
-      if (_.isEmpty(this.confirmPwd)) {
-        return '请再次输入密码'
-      }
-      if (this.password !== this.confirmPwd) {
-        return '两次密码不一致'
-      }
-      if (_.isEmpty(this.authCode)) {
-        return '请输入验证码'
-      }
-      if (!this.hasRead) {
-        return '请勾选用户协议'
-      }
+    checkInput () {
+      if (!StringUtility.vaildatorPhone(this.phone)) return '请输入正确的手机号'
+      if (_.isEmpty(this.phone)) return '请输入手机号'
+      if (_.isEmpty(this.password)) return '请输入登录密码'
+      if (_.isEmpty(this.confirmPwd)) return '请再次输入密码'
+      if (this.password !== this.confirmPwd) return '两次密码不一致'
+      if (_.isEmpty(this.authCode)) return '请输入验证码'
+      if (!this.hasRead) return '请勾选用户协议'
     },
     beginCountDown (count: number) {
       if (count <= 0) {
@@ -208,7 +238,6 @@ const icons = {
   }
   .input-item, .auth-code-item {
     padding-top: 15px;
-    height: 54px;
     align-self: stretch;
   }
   .auth-code-item {

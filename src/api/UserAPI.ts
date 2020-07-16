@@ -6,7 +6,7 @@ import store from '@/store'
 import { nasCloud } from './CloudServer'
 import crypto from 'crypto'
 
-const userModulePath = '/api/user/v1'
+const userModule = '/api/user/v1'
 const deviceModule = '/api/device/v1'
 const CancelToken = axios.CancelToken
 let cancel: Canceler | null = null
@@ -39,16 +39,16 @@ const customError = (error: string): AxiosResponse<BasicResponse> => {
 
 export default {
   ping (): CloudResponse {
-    return nasCloud.get(userModulePath + '/msg')
+    return nasCloud.get(userModule + '/msg')
   },
   smsCode (phone: string, smsType: SmsType): CloudResponse {
-    return nasCloud.post(userModulePath + '/sendSms', {
+    return nasCloud.post(userModule + '/sendSms', {
       phone,
       smsType
     })
   },
   smsShortCode (phone: string, smsType: SmsType, sn: string, mac: string): CloudResponse {
-    return nasCloud.post(userModulePath + '/send/short/sms', {
+    return nasCloud.post(userModule + '/send/short/sms', {
       phone,
       smsType,
       sn,
@@ -56,7 +56,7 @@ export default {
     })
   },
   register (phoneNo: string, password: string, code: string): CloudResponse {
-    return nasCloud.post(userModulePath + '/reg/phone', {
+    return nasCloud.post(userModule + '/reg/phone', {
       phoneNo,
       password,
       code
@@ -64,7 +64,7 @@ export default {
   },
   login (userName: string, password: string): CloudResponse {
     const platform = deviceMgr.getPlatform()
-    return nasCloud.post(userModulePath + '/login', {
+    return nasCloud.post(userModule + '/login', {
       userName,
       password,
       platform
@@ -73,7 +73,7 @@ export default {
   fetchBindDevices (): CloudResponse {
     const accessToken = getAccessToken()
     if (accessToken === null) return Promise.reject(customError('not find access_token'))
-    return nasCloud.get(userModulePath + '/bind/device', {
+    return nasCloud.get(userModule + '/bind/device', {
       headers: { 'Authorization': accessToken },
       cancelToken: new CancelToken(function executor(c) {
         cancel = c
@@ -98,7 +98,7 @@ export default {
     if (cancel !== null) cancel()
   },
   loginBySmscode (phoneNo: string, vcode: string) {
-    return nasCloud.post(userModulePath + '/login/byCode', {
+    return nasCloud.post(userModule + '/login/byCode', {
       phoneNo,
       vcode
     })
@@ -106,12 +106,12 @@ export default {
   logout (): CloudResponse {
     const accessToken = getAccessToken()
     if (accessToken === null) return Promise.reject(customError('not find access_token'))
-    return nasCloud.post(userModulePath + '/logout', {}, {
+    return nasCloud.post(userModule + '/logout', {}, {
       headers: { 'Authorization': accessToken }
     })
   },
   refreshToken (refreshToken: string): CloudResponse {
-    return nasCloud.get(userModulePath + '/token/refresh', {
+    return nasCloud.get(userModule + '/token/refresh', {
       params: {
         refreshToken
       }
@@ -122,7 +122,7 @@ export default {
     if (user === null)  return Promise.reject(customError('not find user_info'))
     const accessToken = getAccessToken()
     if (accessToken === null) return Promise.reject(customError('not find access_token'))
-    return nasCloud.post(userModulePath + '/feedback/feedbacks', {
+    return nasCloud.post(userModule + '/feedback/feedbacks', {
       ugreenNo: user.ugreenNo,
       title,
       linkUrl,
@@ -136,7 +136,7 @@ export default {
   updateInfo (data) {
     const accessToken = getAccessToken()
     if (accessToken === null) return Promise.reject(customError('not find access_token'))
-    return nasCloud.put(userModulePath + '/update/info', {
+    return nasCloud.put(userModule + '/update/info', {
       sex: data.sex,
       nicName: data.nicName,
       userSay: data.userSay,
@@ -153,19 +153,19 @@ export default {
     if (accessToken === null) return Promise.reject(customError('not find access_token'))
     const fd = new FormData()
     fd.append('image', file)
-    return nasCloud.post(userModulePath + '/head/upload', fd, {
+    return nasCloud.post(userModule + '/head/upload', fd, {
       headers: { 'Authorization': accessToken }
     })
   },
   changePass (data) {
-    return nasCloud.post(userModulePath + '/resetPwd', {
+    return nasCloud.post(userModule + '/resetPwd', {
       userName: data.userName,
       password: data.password,
       code: data.code
     })
   },
   updatePass (data) {
-    return nasCloud.post(userModulePath + '/updatePwd', {
+    return nasCloud.post(userModule + '/updatePwd', {
       pwd: data.pwd,
       newPwd: data.newPwd
     })
@@ -173,7 +173,7 @@ export default {
   emailCode (email) {
     const accessToken = getAccessToken()
     if (accessToken === null) return Promise.reject(customError('not find access_token'))
-    return nasCloud.get(userModulePath + '/send/email/vcode', {
+    return nasCloud.get(userModule + '/send/email/vcode', {
       params: {
         email,
         emailType: 'bindEmail'
@@ -184,7 +184,7 @@ export default {
   changeEmail (data) {
     const accessToken = getAccessToken()
     if (accessToken === null) return Promise.reject(customError('not find access_token'))
-    return nasCloud.put(userModulePath + '/update/info', {
+    return nasCloud.put(userModule + '/update/info', {
       email: data.email,
       code: data.code
     }, {
@@ -192,16 +192,19 @@ export default {
     })
   },
   fetchQrCode (): CloudResponse {
-    return nasCloud.get(userModulePath + '/generate/qrcode', {
+    return nasCloud.get(userModule + '/generate/qrcode', {
       params: {
         deviceType: 'pc'
       }
     })
   },
   fetchQrCodeLogin (qrCode: string): CloudResponse {
-    return nasCloud.post(userModulePath + '/basic/qrCode/login', { qrCode })
+    return nasCloud.post(userModule + '/basic/qrCode/login', { qrCode })
   },
   fetchSoftVerUpdateInfo (appNo: string, versionNo: number): CloudResponse {
     return nasCloud.post(deviceModule + '/softVer/latest', { appNo, versionNo })
-  }
+  },
+  checkPhoneNumber (phone: string): CloudResponse {
+    return nasCloud.post(userModule + '/check/info', { phoneNo: phone })
+  } 
 }

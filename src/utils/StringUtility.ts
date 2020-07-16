@@ -158,8 +158,32 @@ export default {
     } 
     return `${(speed / gByte).toFixed(1)}G/s`
   },
-  // 校验手机号
+  /** 校验手机号 */
   vaildatorPhone (phone: string) {
     return /^1[3456789]\d{9}$/.test(phone)
+  },
+  /**检验密码规则
+   * 6-16位，大小写英文+数字/特殊字符
+   */
+  vaildatorPasswordRule (password: string) {
+    if (password.length < 6 && password.length > 16) return false
+    let hasLowChar = false, hasUpperChar = false, hasNumber = false, hasSpecialChar = false, hasIllegalChar = false
+    for (let index = 0; index < password.length; index++) {
+      const charCode = password.charCodeAt(index)
+      if (charCode >= 65 && charCode <= 90) { // 包含大写字母
+        hasUpperChar = true
+      } else if (charCode >= 97 && charCode <= 122) { // 包含小写字母
+        hasLowChar = true
+      } else if (charCode >= 48 && charCode <= 57) { // 包含数字
+        hasNumber = true
+      } else if (charCode <= 127) { // 包含特殊字符
+        hasSpecialChar = true
+      } else {
+        hasIllegalChar = true
+      }
+    }
+    if (hasIllegalChar) return false
+    const result = Number(hasLowChar) + Number(hasUpperChar) + Number(hasNumber) + Number(hasSpecialChar)
+    return result >= 3
   }
 }

@@ -6,12 +6,12 @@
         <basic-form
           :icon="loginIcons.account"
           :maxLength=11
-          :selectItems="dropdownItems"
+          :selectItems="showDropItems"
           placeholder="输入您的手机号"
           v-model="account"
-          v-on:change="accountChangeAction"
           v-on:select="accountSelectAction"
           v-on:delete="accountDeleteAction"
+          v-on:change="handleAccountChange"
         />
       </li>
       <li class="password-from">
@@ -66,7 +66,6 @@ export default Vue.extend({
     BasicForm
   },
   data () {
-    let items: Account[] = []
     return {
       loginIcons,
       account: '',
@@ -76,8 +75,8 @@ export default Vue.extend({
       forgetPass: {
         visiable: false
       },
-      dropdownItems: items,
-      loading: false
+      loading: false,
+      showDropItems: [] as Account[]
     }
   },
   watch: {
@@ -93,10 +92,10 @@ export default Vue.extend({
     ...mapGetters('NasServer', ['nasInfo'])
   },
   mounted () {
-    this.dropdownItems = _.cloneDeep(this.cacheAccounts)
     this.clearCache()
     const value = localStorage.getItem(REMEMBER_PWD)
     this.rememberPassword = !(value === 'false')
+    this.showDropItems = this.cacheAccounts
   },
   methods: {
     checkboxChange() {
@@ -168,38 +167,36 @@ export default Vue.extend({
       const account: Account = { account: this.account, password: this.ciphertext }
       this.$store.dispatch('User/addAccount', account)
     },
-    accountChangeAction (value: string) {
-      this.dropdownItems = this.cacheAccounts.filter((element: Account) => {
-        const account = element.account.toLowerCase()
-        const keyword = value.toLowerCase()
-        if (account === keyword) {
-          return false
-        }
-        return account.indexOf(keyword) >= 0
-      })
-    },
     accountSelectAction (item: Account) {
       this.account = item.account
       this.password = item.password
-      this.dropdownItems = []
       this.$nextTick(() => {
         this.ciphertext = item.password
       })
     },
-    accountDeleteAction (item: Account) {
-      for (let index = 0; index < this.dropdownItems.length; index++) {
-        const element = this.dropdownItems[index]
-        if (element.account === item.account) {
-          this.dropdownItems.splice(index, 1)
-          break
-        }
+    accountDeleteAction (aItem: Account) {
+      this.showDropItems = this.showDropItems.filter(item => {
+        return item.account !== aItem.account
+      })
+      this.$store.dispatch('User/removeAccount', aItem.account)
+    },
+    handleAccountChange (value: string) {
+      if (_.isEmpty(value)) {
+        this.showDropItems = this.cacheAccounts
+      } else {
+        const items = this.cacheAccounts as Account[]
+        this.showDropItems = items.filter((element: Account) => {
+          const account = element.account.toLowerCase()
+          const key = value.toLowerCase()
+          if (key === account) return false
+          return account.indexOf(key) !== -1
+        })
       }
-      this.$store.dispatch('User/removeAccount', item.account)
     },
 		changePassword() {
 			const _this = this as any
 			_this.$ipc.send('system', 'forget-pass', 'login');
-		},
+    }
   }
 })
 </script>

@@ -319,6 +319,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     this.reloadTaskInDB(task)
   }
   protected handleTaskSuspend (taskId: number) {
+    this.checkUploadQueue()
     const task = this.searchTask(taskId)
     if (task === undefined) return
     this.reloadTaskInDB(task)
@@ -327,15 +328,16 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     this.emit('taskStatusChange', taskId)
   }
   protected handleTaskFinished (taskId: number) {
+    this.checkUploadQueue()
     const task = this.searchTask(taskId)
     if (task === undefined) return
     this.reloadTaskInDB(task)
-    this.checkUploadQueue()
     this.emit('taskStatusChange', task.taskId)
     task.removeAllListeners()
   }
   protected handleTaskError (taskId: number, error: TaskError) {
     console.log(error)
+    this.checkUploadQueue()
     const task = this.searchTask(taskId)
     if (task === undefined) return
     this.reloadTaskInDB(task)

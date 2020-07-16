@@ -69,6 +69,7 @@ export default Vue.extend({
     if (this.$route.path !== '/recent') this.$router.push('recent')
   },
   destroyed () {
+    TransportHelper.suspendAllTask()
     EventBus.$off(EventName.jump, this.jumpSpecifiedPath)
   },
   methods: {

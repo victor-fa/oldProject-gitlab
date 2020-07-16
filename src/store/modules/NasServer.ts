@@ -41,7 +41,12 @@ export default {
       return {}
     },
     cryptoInfo: (state: NasServerState) => {
-      return state.cryptoInfo
+      if (!_.isEmpty(state.cryptoInfo)) return state.cryptoInfo
+      const cryptoJson = localStorage.getItem(CRYPTO_INFO)
+      if (cryptoJson !== null) {
+        return JSON.parse(cryptoJson)
+      }
+      return {}
     },
     isLogined: (state: NasServerState) => {
       return state.isLogined
@@ -58,7 +63,7 @@ export default {
     },
     UPDATE_CRYPTO_INFO (state: NasServerState, cryptoInfo: CryptoInfo) {
       state.cryptoInfo = cryptoInfo
-      // localStorage.setItem(CRYPTO_INFO, JSON.stringify(cryptoInfo))
+      localStorage.setItem(CRYPTO_INFO, JSON.stringify(cryptoInfo))
     },
     UPDATE_LOGIN_STATUS (state: NasServerState, isLogined: boolean) {
       state.isLogined = isLogined

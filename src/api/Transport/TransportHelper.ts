@@ -43,6 +43,11 @@ export default class TransportHelper {
       dataBase = undefined
     }
   }
+  /**挂起所有任务 */
+  static suspendAllTask () {
+    downloadQueue.suspendAllTasks()
+    uploadQueue.suspendAllTasks()
+  }
   // 初始全部化队列
   private static initAllQueue () {
     this.removeQueueListeners(uploadQueue)
