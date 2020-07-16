@@ -323,6 +323,8 @@ export default {
     initializeWindow.once('ready-to-show', () => {
       settingWindow!.close()
       this.activeWindow(initializeWindow!)
+      // 启动后，要将系统设置界面关闭
+      settingWindow!.close()
     })
   },
   presentUpdateSoftWindow () {

@@ -80,7 +80,6 @@ import { OperateGroup } from '@/components/OperateListAlter/operateList'
 import { sortList, SortList } from '@/model/sortList'
 import SelectFilePath from '../SelectFilePath/index.vue'
 import NewOfflineModal from '../Transport/MainPage/NewOfflineModal.vue'
-import RouterUtility from '@/utils/RouterUtility'
 import EncryptPassModel from '../Encrypt/EncryptPassModel.vue'
 import { User } from '@/api/UserModel'
 import { ResourceFuncItem, commonFuncList, toolbars } from './ResourceFuncList'
@@ -231,9 +230,6 @@ export default Vue.extend({
         case 'arrangeChange':
           this.handleArrangeChange(args[0])
           break;
-        case 'back':
-          this.handleBackAction()
-          break;
         case 'refresh':
           this.handleInnerRefreshAction()
           break;
@@ -298,12 +294,12 @@ export default Vue.extend({
       switch (command) {
         case 'moveto':
           this.handleMoveToAction()
-          break;
+          break
         case 'encrypt':
           this.handleEncryptFile()
-          break;
+          break
         default:
-          break;
+          break
       }
     },
     canHandleAction (action: string) { 
@@ -331,9 +327,6 @@ export default Vue.extend({
     handleArrangeChange (arrangeWay: ArrangeWay) {
       this.arrangeWay = arrangeWay
       localStorage.setItem('arrangeWay', arrangeWay.toString())
-    },
-    handleBackAction () {
-      RouterUtility.pop()
     },
     handleInnerRefreshAction() {
       this.showAlter = false

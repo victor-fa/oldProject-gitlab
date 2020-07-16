@@ -69,6 +69,12 @@ export default Vue.extend({
         case 'newFolder':
           this.handleNewFolderAction()
           break;
+        case 'back':
+          this.handleBackAction()
+          break
+        case 'pop':
+          this.handlePopAction(args[0])
+          break
         default:
           break;
       }
@@ -246,7 +252,7 @@ export default Vue.extend({
       this.dataArray.splice(index, 1, item)
     },
     handleRenameRequestAction (index: number, newName: string) {
-      if (!ResourceHandler.checkFileName(newName.substring(0, newName.indexOf('.')))) {
+      if (!ResourceHandler.checkFileName(newName)) {
         this.$message.error('名称包含非法字符')
         return
       }
@@ -415,6 +421,12 @@ export default Vue.extend({
         })
         this.handleUploadAction(paths)
       })
+    },
+    handleBackAction () {
+      RouterUtility.pop()
+    },
+    handlePopAction (index: number) {
+      RouterUtility.pop(index)
     },
     matchProperties (command: string) {
       switch (command) {

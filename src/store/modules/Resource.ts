@@ -1,5 +1,5 @@
 import { ActionContext } from 'vuex'
-import { StorageInfo, ResourceItem } from '@/api/NasFileModel'
+import { StorageInfo, ResourceItem, EncryptInfo } from '@/api/NasFileModel'
 
 interface ClipboardModel {
   isClip: boolean, // true 剪切，false 拷贝
@@ -14,7 +14,8 @@ interface ResourceState {
   storages: Array<StorageInfo>,
   showItemCount: number,
   clipboard: ClipboardModel,
-  taskCount: number // 传输中的任务数
+  taskCount: number, // 传输中的任务数
+  encryptInfos: EncryptInfo[]
 }
 
 export default {
@@ -23,7 +24,8 @@ export default {
     storages: [],
     showItemCount: 0,
     clipboard: [], // TODO: 目前没有对剪切板进行缓存
-    taskCount: 0
+    taskCount: 0,
+    encryptInfos: []
   },
   getters: {
     storages: (state: ResourceState) => {
@@ -37,7 +39,10 @@ export default {
     },
     taskCount: (state: ResourceState) => {
       return state.taskCount
-    } 
+    },
+    encryptInfos: (state: ResourceState) => {
+      return state.encryptInfos
+    }
   },
   mutations: {
     UPDATE_STORAGES (state: ResourceState, storages: Array<StorageInfo>) {
@@ -58,6 +63,9 @@ export default {
     },
     CLEAR_TASK_COUNT (state: ResourceState) {
       state.taskCount = 0
+    },
+    UPDATE_ENCRYPT_INFOS (state: ResourceState, infos: EncryptInfo[]) {
+      state.encryptInfos = infos
     }
   },
   actions: {
@@ -78,6 +86,9 @@ export default {
     },
     clearTaskCount (context: ActionContext<ResourceState, ResourceState>) {
       context.commit('CLEAR_TASK_COUNT')
+    },
+    updateEncryptInfos (context: ActionContext<ResourceState, ResourceState>, infos: EncryptInfo[]) {
+      context.commit('UPDATE_ENCRYPT_INFOS', infos)
     }
   }
 }

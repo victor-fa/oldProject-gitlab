@@ -428,9 +428,10 @@ export default {
   },
   /**检测文件名合法性 */
   checkFileName (newName: string) {
+    const filename = path.parse(newName).name
     const illegalCharset = ['\\', '/', ':', '*', '"', '>', '<', '|', '', '?', '.']
-    for (let index = 0; index < newName.length; index++) {
-      const char = newName.charAt(index)
+    for (let index = 0; index < filename.length; index++) {
+      const char = filename.charAt(index)
       if (illegalCharset.indexOf(char) !== -1) {
         return false
       }

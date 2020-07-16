@@ -83,7 +83,7 @@ export default {
       new_path: newPath
     })
   },
-  renameEncryptResource (oldPath: string, newPath: string, uuid: string, route: string): ServerResponse {
+  renameEncryptResource (oldPath: string, newPath: string, uuid: string): ServerResponse {
     const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
     return nasServer.post(fileModule + '/rename', {
       uuid: uuid,
@@ -351,11 +351,11 @@ export default {
       : { path, uuid, size, order, crypto_token: crypto.crypto_token }
     return nasServer.get(cryptoModule + '/list', { params: params })
   },
-  modifyEncrypt (data): ServerResponse {
+  modifyEncrypt (oldPwd: string, newPwd: string): ServerResponse {
     const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
     return nasServer.post(userModule + '/security/password', {
-      security_user_password: data.security_user_password,
-      security_user_password_new: data.security_user_password_new
+      security_user_password: oldPwd,
+      security_user_password_new: newPwd
     }, {
       params: { crypto_token: crypto.crypto_token }
     })
@@ -366,6 +366,16 @@ export default {
   logoutEncrypt (): ServerResponse {
     const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
     return nasServer.post(userModule + '/security/logout', null, {
+      params: { crypto_token: crypto.crypto_token }
+    })
+  },
+  syncEncryptPassword (pwd1: string, pwd2: string, newPwd: string): ServerResponse {
+    const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
+    return nasServer.post(userModule + '/security/password_sync', {
+      security_user_password1: pwd1,
+      security_user_password2: pwd2,
+      security_user_password_new: newPwd
+    }, {
       params: { crypto_token: crypto.crypto_token }
     })
   },

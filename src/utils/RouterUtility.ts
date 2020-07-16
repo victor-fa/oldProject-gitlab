@@ -28,6 +28,7 @@ export default {
     store.dispatch('Router/switchshowRoutes', type).then(() => {
       this.jumpLastRoute()
     })
+    this.releaseEncryptRouters()
   },
   updateRoutes (routers: CacheRoute[]) {
     store.dispatch('Router/updateshowRoutes', routers).then(() => {
@@ -42,5 +43,8 @@ export default {
       query: lastPath.query,
       params: lastPath.params
     })
+  },
+  releaseEncryptRouters () {
+    store.dispatch('Router/releaseEncryptRouters')
   }
 }

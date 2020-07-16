@@ -18,6 +18,7 @@ enum RouteClass {
 interface CacheRoute {
   name: string,
   path: string,
+  hide?: boolean, // 隐藏菜单，不在导航栏中显示
   query?: Dictionary<string>,
   params?: Dictionary<string>,
   type?: RouteClass // 内部只读参数，用于区分一级菜单分类，栈顶缓存才拥有此参数
@@ -96,6 +97,10 @@ export default {
       paths.splice(start + 1, length)
       paths[start].name = '...'
       state.showRoutes = paths
+    },
+    RELEASE_ENCRYPT_ROUTERS (state: RouterState) {
+      const routers = state.pathMap[RouteClass.encrypt] as CacheRoute[]
+      state.pathMap[RouteClass.encrypt] = routers.slice(0, 1)
     }
   },
   actions: {
@@ -119,6 +124,9 @@ export default {
     },
     replacePaths (context: ActionContext<RouterState, RouterState>, length: number) {
       context.commit('REPLACE_PATHS', length)
+    },
+    releaseEncryptRouters (context: ActionContext<RouterState, RouterState>) {
+      context.commit('RELEASE_ENCRYPT_ROUTERS')
     }
   }
 }

@@ -170,34 +170,34 @@ export default Vue.extend({
   data () {
     return {
       categorys: _.cloneDeep(categorys),
-      showPaths: [] as string[],
       visible: false, // 控制排序气泡弹窗是否显示 
       showSearch: false, // 控制搜索框是否显示
       keyword: '', // 搜索关键字
       backIcon: require('../../assets/back_icon.png'),
-      disableBackIcon: require('../../assets/dis_back_icon.png')
-
+      disableBackIcon: require('../../assets/dis_back_icon.png'),
+      showPaths: [] as string[]
     }
   },
   computed: {
     ...mapGetters('Router', ['showRoutes']),
     key: function () {
-      return this.$route.path
+      const path: string = this.$route.path
+      return path
     },
     showHeaderView: function () {
-      return !_.isEmpty(this.toolbars)
+      const result = !_.isEmpty(this.toolbars) as boolean
+      return result
     },
     disableBack: function () {
-      const disable = (this.showRoutes.length <= 1) as boolean
+      const paths = this.showPaths as string[]
+      const disable = (paths.length <= 1) as boolean
       return disable
     }
   },
   watch: {
     showRoutes: function (newValue: CacheRoute[]) {
-      this.showPaths = newValue.map(item => {
-        return item.name
-      })
-      if (this.showPaths.length <= 1) return
+      this.showPaths = this.fetchShowPaths(newValue)
+      if (newValue.length <= 1) return
       const breadcrumb = this.$refs.breadcrumb as Vue
       FileModalHandler.calculateShowPaths(breadcrumb).then(index => {
         if (index === undefined) return
@@ -206,9 +206,7 @@ export default Vue.extend({
     }
   },
   mounted () {
-    this.showPaths = (this.showRoutes as CacheRoute[]).map(item => {
-      return item.name
-    })
+    this.showPaths = this.fetchShowPaths(this.showRoutes)
   },
   methods: {
     // public methods
@@ -217,6 +215,13 @@ export default Vue.extend({
       this.hideSearchInput()
     },
     // private methods
+    fetchShowPaths (routers: CacheRoute[]) {
+      return routers.filter(item => {
+        return item.hide !== true
+      }).map(item => {
+        return item.name
+      })
+    },
     showUploadPopover (item: ResourceFuncItem) {
       if (item.command !== 'upload' || item.disable === true) return false
       if (process.platform !== 'win32') return false
@@ -229,7 +234,7 @@ export default Vue.extend({
     },
     showPopover (item: ResourceFuncItem) {
       const list = this.popoverList as SortList
-      if (_.isEmpty(list.kinds) || _.isEmpty(list.types)) {
+      if (_.isEmpty(list) || _.isEmpty(list.kinds) || _.isEmpty(list.types)) {
         return false
       }
       return item.command === 'sort'
@@ -250,6 +255,12 @@ export default Vue.extend({
     backAction () {
       this.hideSearchInput()
       this.$emit('callbackAction', 'back')
+    },
+    handleBreadcrumbClick (index: number) {
+      this.hideSearchInput()
+      if (index === this.showPaths.length - 1) return
+      if (this.showPaths[index] === '...') return
+      this.$emit('callbackAction', 'pop', index)
     },
     handleTabChange (index: number) {
       this.hideSearchInput()
@@ -278,11 +289,6 @@ export default Vue.extend({
           break;
       }
       return OrderType.byNameDesc
-    },
-    handleBreadcrumbClick (index: number) {
-      if (index === this.showPaths.length - 1) return
-      if (this.showPaths[index] === '...') return
-      RouterUtility.pop(index)
     },
     handleItemClick (index: number) {
       const item = this.funcList[index] as ResourceFuncItem

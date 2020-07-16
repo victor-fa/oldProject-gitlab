@@ -287,6 +287,12 @@ interface OfflineTask {
   file_type: ResourceType
 }
 
+interface EncryptInfo {
+  diskpos: string,
+  devname: string,
+  sn: string
+}
+
 export {
   ResourceItem,
   ResourceStatus,
@@ -313,5 +319,6 @@ export {
   RemoteType,
   OfflineTask,
   OfflineTaskStatus,
-  OfflineTaskType
+  OfflineTaskType,
+  EncryptInfo
 }

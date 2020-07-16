@@ -29,7 +29,7 @@ import { HomeRouters, FuncListItem } from '../router/modules/HomeList'
 import { CacheRoute, RouteClass } from '../store/modules/Router'
 import RouterUtility from '../utils/RouterUtility'
 import { EventBus } from '../utils/eventBus'
-import { ResourceItem } from '../api/NasFileModel'
+import { ResourceItem, StorageInfo } from '../api/NasFileModel'
 import { User, DeviceRole } from '../api/UserModel'
 import StringUtility from '../utils/StringUtility'
 import NasFileAPI from '../api/NasFileAPI'
@@ -84,7 +84,8 @@ export default Vue.extend({
         const route: CacheRoute = {
           name: item.meta!.title,
           type: item.name as RouteClass,
-          path: item.name
+          path: item.name,
+          hide: item.name === RouteClass.encrypt
         }
         pathsMap[item.name] = [route] 
       })

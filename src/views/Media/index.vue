@@ -24,7 +24,7 @@ import { ResourceItem, OrderType, ResourceType } from '../../api/NasFileModel'
 import NasFileAPI, { maxSize } from '../../api/NasFileAPI'
 import { BasicResponse } from '../../api/UserModel'
 import ResourceHandler from '../MainView/ResourceHandler'
-import { resourceContextMenu } from '../../components/OperateListAlter/operateList'
+import { recentContextMenu } from '../../components/OperateListAlter/operateList'
 import { backupFunList } from '../MainView/ResourceFuncList'
 
 export default Vue.extend({
@@ -41,7 +41,7 @@ export default Vue.extend({
       loading: false,
       dataArray: [] as ResourceItem[],
       order: OrderType.byNameDesc, // 当前选择的排序规则
-      itemMenu: _.cloneDeep(resourceContextMenu), // item的右键菜单
+      itemMenu: _.cloneDeep(recentContextMenu), // item的右键菜单
       showFuncList: _.cloneDeep(backupFunList)
     }
   },

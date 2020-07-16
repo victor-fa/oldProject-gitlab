@@ -1,5 +1,6 @@
 import { TransportRouters } from './TransportList'
 import { BackupRouters } from './BackupList'
+import { encryptRouters } from './EncryptList'
 
 const HomeRouters = [
   {
@@ -116,7 +117,10 @@ const HomeRouters = [
       icon: require('../../assets/encrypt_icon.png'),
       selectedIcon: require('../../assets/encrypt_icon_selected.png'),
       isSelected: false
-    }
+    },
+    children: [
+      ...encryptRouters
+    ]
   },
   {
     path: '/transport',
@@ -157,11 +161,6 @@ const HomeRouters = [
     path: '/collect-resource-view',
     name: 'collect-resource-view',
     component: () => import('../../views/Collect/CollectResourceView.vue')
-  },
-  {
-    path: '/encrypt-resource-view',
-    name: 'encrypt-resource-view',
-    component: () => import('../../views/Encrypt/EncryptResourceView.vue')
   },
   {
     path: '/share-resource-view',

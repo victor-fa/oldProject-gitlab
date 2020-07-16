@@ -79,12 +79,13 @@ export default Vue.extend({
   watch: {
     $route: {
       handler: function () {
-        this.updateView()
+        this.checkQuery() && this.updateView()
       }
     }
   },
   created () {
     this.updateView()
+    uploadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)
   },
   destroyed () {
     uploadQueue.removeListener('taskStatusChange', this.handleTaskStatusChange)
@@ -96,18 +97,13 @@ export default Vue.extend({
   methods: {
     updateView () {
       this.dataArray = [] // 新的界面，需要清空缓存的数据
-      if (this.checkQuery()) {
-        this.page = 1
-        this.busy = false
-        this.fetchResourceList()
-      }
+      this.handleRefreshAction()
       const mainView = this.$refs.mainView as any
       mainView !== undefined && mainView.resetHeaderView()
     },
     checkQuery () {
-      if (_.isEmpty(this.path) || _.isEmpty(this.uuid)) {
-        return false
-      }
+      if (this.$route.name !== 'main-resource-view') return false
+      if (_.isEmpty(this.path) || _.isEmpty(this.uuid)) return false
       return true
     },
     fetchResourceList () {
@@ -155,7 +151,6 @@ export default Vue.extend({
         const task = new UploadTask(path, this.path, this.uuid)
         task.matchTaskIcon()
         uploadQueue.addTask(task)
-        uploadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)
         this.$store.dispatch('Resource/increaseTask')
       })
     },
