@@ -61,7 +61,7 @@ const reloginCodes = [8052]
 const formattingCodes = [4060]
 const reloginEncryptCodes = [8048, 8049]
 const whiteListCodes = [8031, 8032, 8025, 8072, 8071, 8063]
-const whiteListPaths = ['/v1/file/backup/upload', '/v1/file/upload', ' /v1/crypto/upload', '/download', '/v1/crypto/download', '/v1/user/security/logout']
+const whiteListPaths = ['/v1/file/backup/upload', '/v1/file/upload', ' /v1/crypto/upload', '/download', '/v1/crypto/download', '/v1/user/security/logout', '/v1/file/add', '/v1/crypto/folder']
 const handleExceptionSence = (response: AxiosResponse) => {
   if (response.status === 200) {
     const basicData = response.data as BasicResponse

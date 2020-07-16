@@ -146,7 +146,7 @@ export default class UploadTask extends BaseTask {
     })
   }
   // 处理上传错误回调
-  private handlerTaskError (code: TaskErrorCode, desc?: string) {
+  protected handlerTaskError (code: TaskErrorCode, desc?: string) {
     this.speed = ''
     const error = new TaskError(code, desc)
     this.status = TaskStatus.error
@@ -187,6 +187,10 @@ export default class UploadTask extends BaseTask {
     this.completedBytes += fileInfo.totalSize
     NasFileAPI.newFolder(fileInfo.destPath, this.uuid).then(response => {
       console.log(response)
+      if (response.data.code !== 200) {
+        this.handlerTaskError(TaskErrorCode.serverError, response.data.msg)
+        return
+      }
       fileInfo.completed = true
       if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.uploadFile()
@@ -223,6 +227,8 @@ export default class UploadTask extends BaseTask {
       this.handlerTaskError(TaskErrorCode.openHandleError)
     } else if (error === FileHandleError.closeError) {
       this.handlerTaskError(TaskErrorCode.closeHandleError)
+    } else {
+      this.handlerTaskError(TaskErrorCode.unkown)
     }
   }
   // 获取待上传的文件对象

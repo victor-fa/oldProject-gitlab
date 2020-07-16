@@ -185,33 +185,38 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
       completedBytes: task.completedBytes,
       fileInfos: task.fileInfos,
       status: task.status,
-      icon: task.icon
+      icon: task.icon,
+      type: task.type
     }
   }
   // 将DB中存储的对象转换成task
   private convertObj2Task (obj: any) {
-    const task = this.createTask(obj.srcPath, obj.destPath, obj.uuid)
+    const task = this.createTask(obj)
     task.taskId = obj.index
     task.countOfBytes = obj.countOfBytes
     task.completedBytes = obj.completedBytes
     task.fileInfos = obj.fileInfos
     task.status = obj.status
     task.icon = obj.icon
+    task.type = obj.type
     return task as T
   }
-  private createTask (srcPath: string, destPath: string, uuid: string) {
-    if (this.tableName === 'UploadQueue') {
-      return new UploadTask(srcPath, destPath, uuid)
-    } else if (this.tableName === 'BackupQueue') {
-      return new BackupUploadTask(srcPath, destPath, uuid)
-    } else if (this.tableName === 'EncryptQueue') {
-      return new EncryptUploadTask(srcPath, destPath, uuid)
-    } else if (this.tableName === 'DownloadQueue') {
-      return new DownloadTask(srcPath, destPath, uuid)
-    } else if (this.tableName === 'EncryptDownloadQueue') {
-      return new EncryptDownloadTask(srcPath, destPath, uuid)
+  private createTask (obj: any) {
+    const type = obj.type, srcPath = obj.srcPath, destPath = obj.destPath, uuid = obj.uuid
+    switch (type) {
+      case 'upload':
+        return new UploadTask(srcPath, destPath, uuid)
+      case 'encryptUpload':
+        return new EncryptUploadTask(srcPath, destPath, uuid)
+      case 'backupUpload':
+        return new BackupUploadTask(srcPath, destPath, uuid)
+      case 'download':
+        return new DownloadTask(srcPath, destPath, uuid)
+      case 'encryptDownload':
+        return new EncryptDownloadTask(srcPath, destPath, uuid)
+      default:
+        return new BaseTask(srcPath, destPath, uuid)
     }
-    return new BaseTask(srcPath, destPath, uuid)
   }
   // 检测队列并开始新的上传任务
   private checkUploadQueue () {

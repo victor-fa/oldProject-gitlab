@@ -10,7 +10,10 @@ import ClientAPI from '@/api/ClientAPI'
 
 export default class BackupUploadTask extends UploadTask {
   icon = require('../../assets/resource/folder_icon.png')
-
+  constructor (srcPath: string, destPath: string, uuid: string) {
+    super(srcPath, destPath, uuid)
+    this.type = 'backupUpload'
+  }
   // 计算文件的md5（不计算文件夹）
   calculateFileMD5 (path: string): Promise<string> {
     return new Promise(async (resolve, reject) => {

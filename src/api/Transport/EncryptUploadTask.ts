@@ -6,7 +6,7 @@ import { AxiosResponse, CancelTokenSource } from 'axios';
 import { BasicResponse } from '../UserModel';
 import NasFileAPI from '../NasFileAPI';
 import { UploadParams } from '../NasFileModel';
-import { FileInfo } from './BaseTask';
+import { FileInfo, TaskErrorCode } from './BaseTask';
 import store from '@/store';
 import { CryptoInfo } from '../ClientModel';
 
@@ -39,6 +39,10 @@ export default class EncryptUploadTask extends UploadTask {
     const uuid = _.isEmpty(this.uuid) ? undefined : this.uuid
     NasFileAPI.newFolderEncrypt(fileInfo.destPath, uuid).then(response => {
       console.log(response)
+      if (response.data.code !== 200) {
+        this.handlerTaskError(TaskErrorCode.serverError, response.data.msg)
+        return
+      }
       fileInfo.completed = true
       if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.uploadFile()

@@ -282,7 +282,8 @@ export default Vue.extend({
     },
     handleUploadAction (filePaths: string[]) {
       filePaths.forEach(path => {
-        const task = new EncryptUploadTask(path, this.path, '')
+        const uuid = this.uuid === undefined ? '' : this.uuid
+        const task = new EncryptUploadTask(path, this.path, uuid)
         task.matchTaskIcon()
         uploadQueue.addTask(task)
         uploadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)

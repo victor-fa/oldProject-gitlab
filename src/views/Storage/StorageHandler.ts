@@ -54,7 +54,6 @@ export default {
     return item
   },
   formatStorages (storages: StorageInfo[], mode: number) {
-    console.log(mode);
     const internalTypes = [StorageType.internal, StorageType.internal_SSD, StorageType.internal_HDD]
     const user = _.get(store.getters, 'User/user') as User
     const ugreenNo = user.ugreenNo
