@@ -176,7 +176,6 @@ export default Vue.extend({
           backupUploadQueue.once('error', (taskId: number, error: TaskError) => {
             this.$message.error(error.desc)
           })
-          this.$store.dispatch('Resource/increaseTask')
         })
       })
     },

@@ -14,26 +14,30 @@
 			<a-row class="row">
 				<a-col :span="4" class="title">处理器：</a-col>
 				<a-col :span="8" class="content">{{cpu}}</a-col>
-				<a-col :span="4" class="title">设备型号：</a-col>
-				<a-col :span="8" class="content">{{model}}</a-col>
-			</a-row>
-			<a-row class="row">
-				<a-col :span="4" class="title">序列号：</a-col>
-				<a-col :span="8" class="content">{{nasInfo.sn}}</a-col>
 				<a-col :span="4" class="title">运行内存：</a-col>
 				<a-col :span="8" class="content">{{memory | filterSize}}</a-col>
 			</a-row>
 			<a-row class="row">
-				<a-col :span="4" class="title">固件版本：</a-col>
-				<a-col :span="8" class="content">{{firmwareVer}}</a-col>
-				<a-col :span="4" class="title">IP地址：</a-col>
-				<a-col :span="8" class="content">{{nasInfo.ip}}</a-col>
+				<a-col :span="4" class="title">设备型号：</a-col>
+				<a-col :span="8" class="content">{{model}}</a-col>
+				<a-col :span="4" class="title">序列号：</a-col>
+				<a-col :span="8" class="content">{{nasInfo.sn}}</a-col>
 			</a-row>
 			<a-row class="row">
-				<a-col :span="4" class="title">系统版本：</a-col>
-				<a-col :span="8" class="content">{{sys_version}}</a-col>
+				<a-col :span="4" class="title">IP地址：</a-col>
+				<a-col :span="8" class="content">{{nasInfo.ip}}</a-col>
 				<a-col :span="4" class="title">MAC地址：</a-col>
 				<a-col :span="8" class="content">{{nasInfo.mac | filterMac}}</a-col>
+			</a-row>
+			<a-row class="row">
+				<a-col :span="4" class="title">服务版本：</a-col>
+				<a-col :span="8" class="content">{{nas_server_ver}}</a-col>
+				<a-col :span="4" class="title">系统版本：</a-col>
+				<a-col :span="8" class="content">{{ sys_version}}</a-col>
+			</a-row>
+			<a-row class="row" v-show="showInfo">
+				<a-col :span="4" class="title">版本信息：</a-col>
+				<a-col :span="8" class="content">{{firmwareVer}}</a-col>
 			</a-row>
 			<div class="bottom">
 				<a-row>
@@ -114,7 +118,9 @@ export default Vue.extend({
 			},
 			isUserAdmin: false,
 			disable: false,
+			showInfo: false,
 			firmwareVer: '',	// 固件版本
+			nas_server_ver: '',	// 服务版本
 			cpu: '',	// 处理器
 			memory: '',	// 运行内存
 			model: '',	// 设备型号
@@ -271,13 +277,15 @@ export default Vue.extend({
 		},
 		fetchSysInfo () {
       NasFileAPI.fetchSysInfo().then(response => {
-        if (response.data.code !== 200) return
-				this.firmwareVer = _.get(response.data.data, 'firmware_ver')
+				if (response.data.code !== 200) return
+				const versionInfo = _.get(response.data.data, 'firmware_ver')
+				this.showInfo = versionInfo.indexOf('-') > -1
+				this.firmwareVer = this.showInfo ? versionInfo.split('-')[0] : ''
+				this.sys_version = this.showInfo ? versionInfo.split('-')[1] : versionInfo
 				this.cpu = _.get(response.data.data, 'cpu')
 				this.memory = _.get(response.data.data, 'memory')
 				this.model = _.get(response.data.data, 'model')
-				this.sys_version = this.firmwareVer.split('-')[1]
-				console.log(this.firmwareVer);
+				this.nas_server_ver = _.get(response.data.data, 'nas_server_ver')
       }).catch(error => {
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)
