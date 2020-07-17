@@ -17,6 +17,7 @@
             :highlightImage="item.hoverIcon"
             :iconWidth="item.iconWidth"
             :disable="item.disable"
+            :disableImage="item.disableIcon"
             class="operate-item"
             @click.native="handleOperationAction(index)"
           />

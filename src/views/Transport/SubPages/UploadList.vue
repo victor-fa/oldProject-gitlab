@@ -144,13 +144,13 @@ export default Vue.extend({
           uploadQueue.reloadTask(task)
           break
         case 'jump':
-          EventBus.$emit(EventName.jump, { path: task.fullPath(), uuid: task.uuid })
+          this.handleOpenAction(task, true)
           break
         case 'open':
           this.handleOpenAction(task, false)
           break
         case 'openInFinder':
-          this.handleOpenAction(task, true)
+          EventBus.$emit(EventName.jump, { path: task.fullPath(), uuid: task.uuid })
           break
         default:
           break

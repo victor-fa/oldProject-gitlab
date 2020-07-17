@@ -1,6 +1,6 @@
 import _ from 'lodash'
-import { RemoteTask, RemoteTaskStatus, ResourceType, OfflineTask, OfflineTaskStatus } from '@/api/NasFileModel';
-import { TransportModel, TransportStatus, runningOperateItems, continueItem, completedOperateItems, refreshItem } from './MainPage/TransportModel';
+import { RemoteTask, RemoteTaskStatus, OfflineTask, OfflineTaskStatus } from '@/api/NasFileModel';
+import { TransportModel, TransportStatus, runningOperateItems, continueItem, completedOperateItems, refreshItem, TransportOpItem } from './MainPage/TransportModel';
 import BaseTask, { TaskStatus } from '@/api/Transport/BaseTask';
 import StringUtility from '@/utils/StringUtility';
 import ResourceHandler from '../MainView/ResourceHandler'
@@ -122,6 +122,7 @@ export default {
     const progress = this.formatProgress(task.completedBytes, task.countOfBytes)
     const progressPercent = this.caculatePercent(task.completedBytes, task.countOfBytes)
     const items = this.generateItemsForStatus(task.status)
+    const newItems = this.setControlItemsDisable(items, task.type)
     const model: TransportModel = {
       id: task.taskId,
       status: task.status,
@@ -132,15 +133,31 @@ export default {
       progress,
       progressPercent,
       name: task.name,
-      controlItems: items,
+      controlItems: newItems,
       path: task.srcPath,
       uuid: task.uuid,
       type: task.type
     }
     return model
   },
+  setControlItemsDisable (items: TransportOpItem[], type: string) {
+    if (type === 'encryptUpload') {
+      return items.map(item => {
+        if (item.command === 'openInFinder') item.disable = true
+        return item
+      })
+    } else if (type === 'encryptDownload') {
+      return items.map(item => {
+        if (item.command === 'jump') {
+          item.disable = true
+        }
+        return item
+      })
+    }
+    return items
+  },
   generateItemsForStatus (status: TaskStatus) {
-    const doingItems = _.cloneDeep(runningOperateItems)
+    const doingItems = _.clone(runningOperateItems)
     switch (status) {
       case TaskStatus.pending:
         return doingItems.map((item, index) => {

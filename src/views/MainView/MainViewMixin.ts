@@ -136,7 +136,7 @@ export default Vue.extend({
           this.handleJumpAction()
           break;
         case 'download':
-          this.handleDownloadAction(args[0])
+          this.showOpenDialog(command)
           break;
         case 'share':
           this.handleShareAction()
@@ -323,6 +323,7 @@ export default Vue.extend({
       const destPath = directory[0]
       const items = ResourceHandler.getSelectItems(this.dataArray)
       items.forEach(item => {
+        console.log(item)
         const task = new DownloadTask(item.path, destPath, item.uuid)
         task.setResourceItem(item)
         downloadQueue.addTask(task)
@@ -409,7 +410,8 @@ export default Vue.extend({
     showOpenDialog (command: string) {
       const { dialog, BrowserWindow } = require('electron').remote
       const list = this.matchProperties(command)
-      const title = command === 'download' ? '下载' : '选择'
+      const isDownload = command === 'download'
+      const title = isDownload ? '下载' : '选择'
       dialog.showOpenDialog(BrowserWindow.getFocusedWindow()!, {
         buttonLabel: title,
         properties: (list as any)
@@ -419,7 +421,7 @@ export default Vue.extend({
         const paths = result.filePaths.map(item => {
           return StringUtility.replaceString(item, '\\', '/')
         })
-        this.handleUploadAction(paths)
+        isDownload ? this.handleDownloadAction(paths) : this.handleUploadAction(paths)
       })
     },
     handleBackAction () {

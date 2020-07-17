@@ -330,6 +330,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     this.checkUploadQueue()
     const task = this.searchTask(taskId)
     if (task === undefined) return
+    console.log(task)
     this.reloadTaskInDB(task)
     this.emit('taskStatusChange', task.taskId)
     task.removeAllListeners()

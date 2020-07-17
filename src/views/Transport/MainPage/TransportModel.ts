@@ -5,62 +5,69 @@ interface TransportOpItem {
   hoverIcon: any,
   command: string,
   iconWidth: string,
-  disable?: boolean
+  disable?: boolean,
+  disableIcon: any
 }
 const pauseItem: TransportOpItem = {
   icon: require('../../../assets/pause_icon.png'),
   hoverIcon: require('../../../assets/pause_selected_icon.png'),
+  disableIcon: require('../../../assets/pause_disable_icon.png'),
   command: 'pause',
   iconWidth: '15px'
 }
 const continueItem: TransportOpItem = {
   icon: require('../../../assets/start_icon.png'),
   hoverIcon: require('../../../assets/start_selected_icon.png'),
+  disableIcon: require('../../../assets/start_selected_icon.png'),
   command: 'continue',
   iconWidth: '15px'
 }
 const refreshItem: TransportOpItem = {
   icon: require('../../../assets/refresh_sicon.png'),
   hoverIcon: require('../../../assets/refresh_sicon_selected.png'),
+  disableIcon: require('../../../assets/refresh_disable.png'),
   command: 'refresh',
   iconWidth: '15px'
 }
 const cancelItem: TransportOpItem = {
   icon: require('../../../assets/cancel_sicon.png'),
   hoverIcon: require('../../../assets/cancel_sicon_selected.png'),
+  disableIcon: require('../../../assets/cancel_disable_icon.png'),
   command: 'cancel',
   iconWidth: '15px'
 }
 const jumpItem: TransportOpItem = {
   icon: require('../../../assets/file_icon.png'),
   hoverIcon: require('../../../assets/file_icon_selected.png'),
+  disableIcon: require('../../../assets/file_disable_icon.png'),
   command: 'jump',
   iconWidth: '15px'
 }
-const runningOperateItems: TransportOpItem[] = [ pauseItem, cancelItem, jumpItem ]
-const pauseOperateItems: TransportOpItem[] = [ continueItem, cancelItem, jumpItem ]
 const deleteItem: TransportOpItem = {
   icon: require('../../../assets/delete_icon.png'),
   hoverIcon: require('../../../assets/delete_icon_selected.png'),
+  disableIcon: require('../../../assets/delete_disable_icon.png'),
   command: 'delete',
   iconWidth: '15px'
 }
-const completedOperateItems: TransportOpItem[] = [
-  {
-    icon: require('../../../assets/open_icon.png'),
-    hoverIcon: require('../../../assets/open_icon_selected.png'),
-    command: 'open',
-    iconWidth: '15px'
-  },
-  {
-    icon: require('../../../assets/file_icon.png'),
-    hoverIcon: require('../../../assets/file_icon_selected.png'),
-    command: 'openInFinder',
-    iconWidth: '15px'
-  },
-  deleteItem
-]
-const remoteCompletedOperateItems: TransportOpItem[] = [ deleteItem ]
+const openItem: TransportOpItem = {
+  icon: require('../../../assets/open_icon.png'),
+  hoverIcon: require('../../../assets/open_icon_selected.png'),
+  disableIcon: require('../../../assets/open_disable_icon.png'),
+  command: 'open',
+  iconWidth: '15px'
+}
+const openInFinderItem: TransportOpItem = {
+  icon: require('../../../assets/file_icon.png'),
+  hoverIcon: require('../../../assets/file_icon_selected.png'),
+  disableIcon: require('../../../assets/file_disable_icon.png'),
+  command: 'openInFinder',
+  iconWidth: '15px'
+}
+const completedOperateItems: TransportOpItem[] = [openItem, openInFinderItem, deleteItem]
+const runningOperateItems: TransportOpItem[] = [pauseItem, cancelItem, jumpItem]
+const pauseOperateItems: TransportOpItem[] = [continueItem, cancelItem, jumpItem]
+const remoteCompletedOperateItems: TransportOpItem[] = [deleteItem]
 
 interface BatchItem {
   title: string,

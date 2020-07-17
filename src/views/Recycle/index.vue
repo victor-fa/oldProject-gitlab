@@ -27,7 +27,7 @@ import ResourceHandler from '../MainView/ResourceHandler'
 import { recycleContextMenu, recycleListContextMenu } from '@/components/OperateListAlter/operateList'
 import RouterUtility from '@/utils/RouterUtility'
 import { BasicResponse } from '../../api/UserModel'
-import { backupFunList } from '../MainView/ResourceFuncList'
+import { recycleFuncList } from '../MainView/ResourceFuncList'
 
 export default Vue.extend({
   name: 'recycle',
@@ -45,7 +45,7 @@ export default Vue.extend({
       dataArray: [] as ResourceItem[],
       itemMenu: recycleContextMenu,
       listMenu: recycleListContextMenu,
-      showFuncList: _.cloneDeep(backupFunList)
+      showFuncList: _.cloneDeep(recycleFuncList)
     }
   },
   mounted () {
