@@ -110,12 +110,13 @@ export default Vue.extend({
       this.isFocus = false
       setTimeout(() => {
         this.showDropdown = false
-      }, 100)
+      }, 200)
     },
     handlePressEnter () {
       this.$emit('pressEnter')
     },
     handleSelect (item: any) {
+      this.showDropdown = false
       this.$emit('select', item)
     },
     handleDelete (item: any) {

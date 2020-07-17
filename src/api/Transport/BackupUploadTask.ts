@@ -65,4 +65,17 @@ export default class BackupUploadTask extends UploadTask {
       })
     })
   }
+  // 获取需要上传的文件对象
+  generateUploadFileInfos (stats: fs.Stats): Promise<FileInfo[]> {
+    return new Promise((resolve, reject) => {
+      super.generateUploadFileInfos(stats).then((fileInfo) => {
+        const result = fileInfo.filter((item) => {
+          return !item.isDirectory
+        })
+        resolve(result)
+      }).catch(error => {
+        reject(error)
+      })
+    })
+  }
 }

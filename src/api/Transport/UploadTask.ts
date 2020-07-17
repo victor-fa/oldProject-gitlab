@@ -95,7 +95,7 @@ export default class UploadTask extends BaseTask {
     })
   }
   // 获取需要上传的文件对象
-  private generateUploadFileInfos (stats: fs.Stats): Promise<FileInfo[]> {
+  protected generateUploadFileInfos (stats: fs.Stats): Promise<FileInfo[]> {
     return new Promise(resolve => {
       if (stats.isFile()) {
         const fileInfo = this.convertFileStats(this.srcPath, stats)
