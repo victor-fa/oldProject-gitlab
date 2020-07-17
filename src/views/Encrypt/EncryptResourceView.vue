@@ -118,7 +118,7 @@ export default Vue.extend({
     },
     checkQuery () {
       if (this.$route.name !== 'encrypt-resource-view') return false
-      if (_.isEmpty(this.path) || _.isEmpty(this.uuid)) return false
+      if (_.isEmpty(this.path)) return false
       return true
     },
     handleReloginAction (msg: string) {
