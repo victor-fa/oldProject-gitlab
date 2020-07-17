@@ -17,8 +17,6 @@ export default class UploadTask extends BaseTask {
   private directory: string // 上传文件的目录
   private source? = CancelToken.source() // 下载取消请求标识
   private fileHandle = -1 // 标记当前正在操作的文件句柄
-  private previousSize = 0
-  private speedTimer?: NodeJS.Timeout
 
   constructor(srcPath: string, destPath: string, uuid: string) {
     super(srcPath, destPath, uuid)
@@ -35,9 +33,7 @@ export default class UploadTask extends BaseTask {
     this.calculatorUploadFileSize()
     // 3. 开始递归上传文件
     this.uploadFile()
-    // 4. 开启速度定时器
-    this.beginSpeedTimer()
-    // 5. 发送事件
+    // 4. 发送事件
     this.emit('taskBegin', this.taskId)
   }
   async cancel () {
@@ -111,31 +107,16 @@ export default class UploadTask extends BaseTask {
   // 转换stats 
   private convertFileStats (path: string, stats?: fs.Stats): FileInfo {
     const name = StringUtility.formatName(path)
-    const relativePath = path.substring(this.directory.length, path.length)
+    const relativePath = path.substring(this.directory.length + 1, path.length)
     const size = stats === undefined ? 0 : stats.size
     return {
       name,
       relativePath,
       srcPath: path,
-      destPath: `${this.destPath}${relativePath}`,
+      destPath: `${this.destPath}/${relativePath}`,
       totalSize: size,
       completedSize: 0,
       isDirectory: stats === undefined
-    }
-  }
-  // 开启计算速度定时器
-  private beginSpeedTimer () {
-    this.speedTimer = setInterval(() => {
-      if (this.previousSize >= this.completedBytes) return
-      const speed = this.completedBytes - this.previousSize // 单位B/s
-      this.speed = StringUtility.formatSpeed(speed)
-      this.previousSize = this.completedBytes
-    }, 2000)
-  }
-  // 清除定时器
-  private clearSpeedTimer () {
-    if (this.speedTimer !== undefined) {
-      clearInterval(this.speedTimer)
     }
   }
   // 计算待上传文件的总大小
@@ -198,9 +179,9 @@ export default class UploadTask extends BaseTask {
       fileInfo.completed = true
       if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
       this.uploadFile()
-    }).catch(_ => {
-      fileInfo.completed = true
-      this.uploadFile()
+    }).catch(error => {
+      console.log(error)
+      this.handlerTaskError(TaskErrorCode.serverError)
     })
   }
   // 开始上传文件数据

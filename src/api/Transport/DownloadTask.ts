@@ -15,8 +15,6 @@ export default class DownloadTask extends BaseTask {
   private fileHandle = -1 // 文件句柄
   private resourceItem?: ResourceItem
   private fileCount = 0
-  private previousSize = 0
-  private speedTimer?: NodeJS.Timeout
 
   constructor(srcPath: string, destPath: string, uuid: string) {
     super(srcPath, destPath, uuid)
@@ -39,9 +37,7 @@ export default class DownloadTask extends BaseTask {
     this.calculateDownloadSize()
     // 3. 开始递归下载
     this.downloadFile()
-    // 4. 开启速度定时器
-    this.beginSpeedTimer()
-    // 5. 发送事件
+    // 4. 发送事件
     this.emit('taskBegin', this.taskId)
   }
   async cancel () {
@@ -138,8 +134,8 @@ export default class DownloadTask extends BaseTask {
     let relativePath = name
     if (this.resourceItem!.type === ResourceType.folder) {
       const directory = path.dirname(this.resourceItem!.path)
-      relativePath = item.path.substring(directory.length, item.path.length)
-      destPath = `${this.destPath}${relativePath}`
+      relativePath = item.path.substring(directory.length + 1, item.path.length)
+      destPath = `${this.destPath}/${relativePath}`
     }
     const fileInfo: FileInfo = {
       name,
@@ -161,21 +157,6 @@ export default class DownloadTask extends BaseTask {
       this.completedBytes += item.completedSize
     })
   }
-  // 开启计算速度定时器
-  beginSpeedTimer () {
-    this.speedTimer = setInterval(() => {
-      if (this.previousSize >= this.completedBytes) return
-      const speed = this.completedBytes - this.previousSize // 单位B/s
-      this.speed = StringUtility.formatSpeed(speed)
-      this.previousSize = this.completedBytes
-    }, 2000)
-  }
-  // 清除定时器
-  clearSpeedTimer () {
-    if (this.speedTimer !== undefined) {
-      clearInterval(this.speedTimer)
-    }
-  }
   // 递归下载文件
   private downloadFile () {
     if (this.status !== TaskStatus.progress) return
@@ -195,8 +176,10 @@ export default class DownloadTask extends BaseTask {
   }
   // 创建目录
   private createDirectory (fileInfo: FileInfo) {
-    this.name = fileInfo.relativePath
-    if (this.fileInfos.length > 1) this.emit('fileBegin', this.taskId, fileInfo)
+    if (this.fileInfos.length > 1) {
+      this.name = fileInfo.relativePath
+      this.emit('fileBegin', this.taskId, fileInfo)
+    }
     this.completedBytes += fileInfo.totalSize
     FileHandle.newDirectory(fileInfo.destPath).then(() => {
       fileInfo.completed = true
@@ -209,8 +192,10 @@ export default class DownloadTask extends BaseTask {
   }
   // 开始文件下载
   private startDownloadFile (fileInfo: FileInfo) {
-    this.name = fileInfo.relativePath
-    if (this.fileInfos.length > 1) this.emit('fileBegin', this.taskId, fileInfo)
+    if (this.fileInfos.length > 1) {
+      this.name = fileInfo.relativePath
+      this.emit('fileBegin', this.taskId, fileInfo)
+    }
     FileHandle.openWriteFileHandle(fileInfo.destPath).then(obj => { // open file handle
       this.fileHandle = obj.fd
       fileInfo.destPath = obj.path 

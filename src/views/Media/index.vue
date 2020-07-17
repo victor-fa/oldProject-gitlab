@@ -82,9 +82,7 @@ export default Vue.extend({
     },
     fetchMediaList () {
       this.loading = true
-      let utime = 0
-      const lastItem = _.last(this.dataArray)
-      if (lastItem !== undefined) utime = lastItem.mtime
+      const utime = this.getLastMtime()
       NasFileAPI.fetchTlist(this.page, utime, this.type!, this.order).then(response => {
         console.log(response)
         this.loading = false
@@ -95,6 +93,12 @@ export default Vue.extend({
         this.$message.error('网络连接错误，请检测网络')
         console.log(error)
       })
+    },
+    getLastMtime () {
+      if (this.page < 2) return 0
+      const lastItem = _.last(this.dataArray)
+      if (lastItem === undefined) return 0
+      return lastItem.mtime
     },
     parseResponse (data: BasicResponse) {
       this.totalSize = _.get(data.data, 'total')

@@ -18,6 +18,8 @@ export default class BaseTask extends EventEmitter {
   readonly destPath: string
   readonly uuid: string
   readonly maxChunkSize = 1 * 1024 * 1024 // 单次读取的最大字节数
+  private speedTimer?: NodeJS.Timeout
+  private previousSize = 0
   type = '' // 任务类型，用于区分不同任务
   name: string // 文件名
   /**任务索引 */
@@ -48,16 +50,20 @@ export default class BaseTask extends EventEmitter {
   // public methods
   async start () {
     this.status = TaskStatus.progress
+    this.beginSpeedTimer()
   }
   async cancel () {
     this.status = TaskStatus.error
     this.removeAllListeners()
+    this.clearSpeedTimer()
   }
   suspend () {
     this.status = TaskStatus.suspend
+    this.clearSpeedTimer()
   }
   resume () {
     this.status = TaskStatus.progress
+    this.beginSpeedTimer()
   }
   reload () {
     this.status = TaskStatus.pending
@@ -66,6 +72,22 @@ export default class BaseTask extends EventEmitter {
   }
   fullPath () {
     return `${this.destPath}/${this.name}`
+  }
+  // 开启计算速度定时器
+  beginSpeedTimer () {
+    this.speedTimer = setInterval(() => {
+      if (this.previousSize >= this.completedBytes) return
+      const speed = this.completedBytes - this.previousSize // 单位B/s
+      this.speed = StringUtility.formatSpeed(speed)
+      this.previousSize = this.completedBytes
+    }, 1000)
+  }
+  // 清除定时器
+  clearSpeedTimer () {
+    if (this.speedTimer !== undefined) {
+      clearInterval(this.speedTimer)
+      this.speedTimer = undefined
+    }
   }
 }
 

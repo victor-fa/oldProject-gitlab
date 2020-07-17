@@ -41,14 +41,14 @@ export default class EncryptUploadTask extends UploadTask {
       console.log(response)
       if (response.data.code !== 200) {
         this.handlerTaskError(TaskErrorCode.serverError, response.data.msg)
-        return
+      } else {
+        fileInfo.completed = true
+        if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
+        this.uploadFile()
       }
-      fileInfo.completed = true
-      if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
-      this.uploadFile()
-    }).catch(_ => {
-      fileInfo.completed = true
-      this.uploadFile()
+    }).catch(error => {
+      console.log(error)
+      this.handlerTaskError(TaskErrorCode.serverError)
     })
   }
   uploadChunckData (file: FileInfo, buffer: Buffer, source?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {
