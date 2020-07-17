@@ -406,25 +406,10 @@ export default {
     if (compressTypes.indexOf(mine) !== -1) return require('../../assets/resource/compress_icon.png')
     return require('../../assets/resource/unkonw_icon.png')
   },
-  matchLocalPathIcon (path: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-      if (!fs.existsSync(path)) {
-        reject(new Error('path is not exist'))
-        return
-      }
-      fs.stat(path, (error, stats) => {
-        if (error !== null) {
-          reject(error)
-        } else {
-          if (stats.isDirectory()) {
-            resolve(require('../../assets/resource/folder_icon.png'))
-          } else {
-            const icon = this.matchMineTypeIcon(path)
-            resolve(icon)
-          }
-        }
-      })
-    })
+  matchLocalPathIcon (path: string): any {
+    const stats = fs.statSync(path)
+    if (stats.isDirectory()) return require('../../assets/resource/folder_icon.png')
+    return this.matchMineTypeIcon(path)
   },
   /**检测文件名合法性 */
   checkFileName (newName: string) {

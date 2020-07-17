@@ -42,7 +42,7 @@
           :class="{ 'modal-breadcrumb-item': showHover(index) }"
           @click.native.stop="handleBreadcrumbClick(index)"
         >
-          {{ path }}
+          {{ path.path }}
         </a-breadcrumb-item>
       </a-breadcrumb>
       <div class="modal-content">
@@ -97,7 +97,7 @@ import StorageHandler from '../Storage/StorageHandler'
 import { NasAccessInfo } from '@/api/ClientModel'
 import { nasServer } from '@/api/NasServer'
 import CustomHandler from '../Custom/CustomHandler'
-import FileModalHandler, { CacheParams, CacheType, SelectListType } from './FileModalHandler'
+import FileModalHandler, { CacheParams, CacheType, SelectListType, ShowPath } from './FileModalHandler'
 import { BasicResponse, User } from '@/api/UserModel'
 import ResourceHandler from '../MainView/ResourceHandler'
 import StringUtility from '@/utils/StringUtility'
@@ -127,7 +127,7 @@ export default Vue.extend({
       showListType: this.listType as SelectListType,
       selectedItem: undefined as StorageInfo | PartitionInfo | CustomModule | ResourceItem | undefined,
       cacheArray: [{ name: '全部文件', type: CacheType.disk }] as CacheParams[],
-      showPaths: ['全部文件'],
+      showPaths: [{ path: '全部文件', index: 0 }] as ShowPath[],
       moveModalIcons
     }
   },
@@ -198,8 +198,9 @@ export default Vue.extend({
     },
     handleBreadcrumbClick (index: number) {
       if (index === this.showPaths.length - 1) return
-      if (this.showPaths[index] === '...') return
-      this.cacheArray = this.cacheArray.slice(0, index + 1)
+      const item = this.showPaths[index]
+      if (item.path === '...') return
+      this.cacheArray = this.cacheArray.slice(0, item.index + 1)
     },
     handleNewFolderAction () {
       const fileList = this.$refs.fileList as any
@@ -254,8 +255,8 @@ export default Vue.extend({
     },
     // 根据cacheArray更新展示的路径
     updateShowPaths (cacheArray: CacheParams[]) {
-      this.showPaths = cacheArray.map(item => {
-        return item.name
+      this.showPaths = cacheArray.map((item, index) => {
+        return { path: item.name, index }
       })
       if (this.showPaths.length <= 1) return
       const breadcrumb = this.$refs.breadcrumb as Vue
@@ -267,8 +268,8 @@ export default Vue.extend({
     // 判断当前path是否可以点击
     showHover (index: number) {
       if (index === this.showPaths.length - 1) return false
-      const path = this.showPaths[index]
-      return path !== '...'
+      const item = this.showPaths[index]
+      return item.path !== '...'
     },
     updateLastCache (item: StorageInfo | PartitionInfo | CustomModule | ResourceItem) {
       const cacheArray = _.clone(this.cacheArray)

@@ -72,12 +72,12 @@ export default class UploadTask extends BaseTask {
   }
   matchTaskIcon () {
     if (!_.isEmpty(this.icon)) return
-    ResourceHandler.matchLocalPathIcon(this.srcPath).then(icon => {
-      this.icon = icon
-    }).catch(error => {
-      console.log(error)
+    const icon = ResourceHandler.matchLocalPathIcon(this.srcPath)
+    if (_.isEmpty(icon)) {
       this.icon = require('../../assets/resource/unkonw_icon.png')
-    })
+    } else {
+      this.icon = icon
+    }
   }
   // pricvate methods
   // 解析文件源路径

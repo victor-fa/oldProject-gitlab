@@ -21,10 +21,16 @@ interface CacheParams {
   selectedItem?: undefined | StorageInfo | PartitionInfo | CustomModule | ResourceItem
 }
 
+interface ShowPath {
+  path: string,
+  index: number
+}
+
 export {
   CacheParams,
   CacheType,
-  SelectListType
+  SelectListType,
+  ShowPath
 }
 
 export default {
@@ -51,12 +57,12 @@ export default {
     })
   },
   // 替换数组中的元素
-  replaceElement (items: Array<any>, start: number, length: number, ele: string) {
-    let paths = items.map(item => {
-      return item.name
+  replaceElement (items: Array<any>, start: number, length: number, ele: string): ShowPath[] {
+    let paths = items.map((item, index) => {
+      return { path: item.name, index }
     })
     paths.splice(start, length)
-    paths.splice(1, 0, ele)
+    paths.splice(1, 0, { path: ele, index: -1 })
     return paths
   },
   /**重置item的选中状态 */

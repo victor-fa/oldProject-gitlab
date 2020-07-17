@@ -65,7 +65,7 @@
             :class="{ 'modal-breadcrumb-item': showHover(index) }"
             @click.native.stop="handleBreadcrumbClick(index)"
           >
-            {{ item }}
+            {{ item.path }}
           </a-breadcrumb-item>
         </a-breadcrumb>
       </div>
@@ -139,7 +139,7 @@ import { ArrangeWay, OrderType, ResourceType } from '@/api/NasFileModel'
 import { ResourceFuncItem, searchItem } from './ResourceFuncList'
 import { CacheRoute } from '@/store/modules/Router'
 import RouterUtility from '@/utils/RouterUtility'
-import FileModalHandler from '../SelectFilePath/FileModalHandler'
+import FileModalHandler, { ShowPath } from '../SelectFilePath/FileModalHandler'
 
 export default Vue.extend({
   name: 'main-header-view',
@@ -175,7 +175,7 @@ export default Vue.extend({
       keyword: '', // 搜索关键字
       backIcon: require('../../assets/back_icon.png'),
       disableBackIcon: require('../../assets/dis_back_icon.png'),
-      showPaths: [] as string[]
+      showPaths: [] as ShowPath[]
     }
   },
   computed: {
@@ -189,7 +189,7 @@ export default Vue.extend({
       return result
     },
     disableBack: function () {
-      const paths = this.showPaths as string[]
+      const paths = this.showPaths as ShowPath[]
       const disable = (paths.length <= 1) as boolean
       return disable
     }
@@ -215,11 +215,11 @@ export default Vue.extend({
       this.hideSearchInput()
     },
     // private methods
-    fetchShowPaths (routers: CacheRoute[]) {
+    fetchShowPaths (routers: CacheRoute[]): ShowPath[] {
       return routers.filter(item => {
         return item.hide !== true
-      }).map(item => {
-        return item.name
+      }).map((item, index) => {
+        return { path: item.name, index }
       })
     },
     showUploadPopover (item: ResourceFuncItem) {
@@ -230,7 +230,7 @@ export default Vue.extend({
     // 缩率item不能点击
     showHover (index: number) {
       if (index === this.showPaths.length - 1) return false
-      return this.showPaths[index] !== '...'
+      return this.showPaths[index].path !== '...'
     },
     showPopover (item: ResourceFuncItem) {
       const list = this.popoverList as SortList
@@ -259,8 +259,9 @@ export default Vue.extend({
     handleBreadcrumbClick (index: number) {
       this.hideSearchInput()
       if (index === this.showPaths.length - 1) return
-      if (this.showPaths[index] === '...') return
-      this.$emit('callbackAction', 'pop', index)
+      const item = this.showPaths[index]
+      if (item.path === '...') return
+      this.$emit('callbackAction', 'pop', item.index)
     },
     handleTabChange (index: number) {
       this.hideSearchInput()

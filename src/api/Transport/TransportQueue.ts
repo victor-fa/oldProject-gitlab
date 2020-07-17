@@ -35,10 +35,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   addTask (task: T) {
     task.taskId = this.generateTaskId()
     this.queue.push(task)
-    if (this.db !== undefined) {
-      const obj = this.convertTask2Obj(task)
-      this.db.transaction([this.tableName], 'readwrite').objectStore(this.tableName).add(obj)
-    }
+    this.reloadTaskInDB(task)
     this.emit('taskQueueChange')
     this.checkUploadQueue()
   }
@@ -237,7 +234,6 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
         if (task.status === TaskStatus.pending) {
           task.start()
           this.observerTask(task)
-          this.reloadTaskInDB(task)
           return
         }
       }
