@@ -184,8 +184,10 @@ export default class UploadTask extends BaseTask {
   }
   // 创建文件夹
   protected createFolder (fileInfo: FileInfo) {
-    this.name = fileInfo.relativePath
-    if (this.fileInfos.length > 1) this.emit('fileBegin', this.taskId, fileInfo)
+    if (this.fileInfos.length > 1) {
+      this.name = fileInfo.relativePath
+      this.emit('fileBegin', this.taskId, fileInfo)
+    }
     this.completedBytes += fileInfo.totalSize
     NasFileAPI.newFolder(fileInfo.destPath, this.uuid).then(response => {
       console.log(response)
@@ -203,8 +205,10 @@ export default class UploadTask extends BaseTask {
   }
   // 开始上传文件数据
   private startUpload (fileInfo: FileInfo) {
-    this.name = fileInfo.relativePath
-    if (this.fileInfos.length > 1) this.emit('fileBegin', this.taskId, fileInfo)
+    if (this.fileInfos.length > 1)  {
+      this.name = fileInfo.relativePath
+      this.emit('fileBegin', this.taskId, fileInfo)
+    }
     this.calculateFileMD5(fileInfo.srcPath).then(_ => { // 1. calculate file md5
       return FileHandle.openReadFileHandle(fileInfo.srcPath)
     }).then(fd => { // 2. open file handle success

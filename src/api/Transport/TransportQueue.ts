@@ -44,6 +44,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   }
   /**删除任务 */
   async deleteTask (task: T) {
+    task.removeAllListeners()
     await task.cancel()
     this.queue = this.removeTask(task.taskId)
     this.emit('taskQueueChange')
@@ -68,7 +69,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   }
   /**继续任务 */
   async resumeTask (task: T) {
-    console.log(task)
+    if (task.eventNames.length === 0) this.observerTask(task)
     task.resume()
     this.queue = this.updateQueue(task)
     this.emit('taskStatusChange', task.taskId)
@@ -81,6 +82,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     for (let index = 0; index < this.queue.length; index++) {
       const task = this.queue[index]
       if (task.status !== TaskStatus.finished) {
+        task.removeAllListeners()
         await task.cancel()
         await this.deleteTaskInDB(task)
         ids.push(task.taskId)
@@ -97,6 +99,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     for (let index = 0; index < this.queue.length; index++) {
       const task = this.queue[index]
       if (task.status === TaskStatus.finished) {
+        task.removeAllListeners()
         await task.cancel()
         await this.deleteTaskInDB(task)
         ids.push(task.taskId)
@@ -137,6 +140,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   /**清空任务队列 */
   clearAllTask () {
     this.queue.forEach(task => {
+      task.removeAllListeners()
       task.cancel()
     })
     this.queue = []
@@ -233,6 +237,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
         if (task.status === TaskStatus.pending) {
           task.start()
           this.observerTask(task)
+          this.reloadTaskInDB(task)
           return
         }
       }
@@ -297,12 +302,6 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     task.addListener('fileFinished', (index: number, fileInfo: FileInfo) => {
       this.handleFileFinished(index, fileInfo)
     })
-    task.addListener('taskSuspend', (index: number) => {
-      this.handleTaskSuspend(index)
-    })
-    task.addListener('taskResume', (index: number) => {
-      this.handleTaskResume(index)
-    })
     task.addListener('taskFinished', (index: number) => {
       this.handleTaskFinished(index)
     })
@@ -319,7 +318,7 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   // handle upload task callback
   protected handleTaskProcess (taskId: number) {
     this.emit('taskStatusChange', taskId)
-    if (this.count++ < 50) {
+    if (this.count++ < 20) {
       this.cacheTaskId(taskId)
       this.count = 0
     }
@@ -330,16 +329,6 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   protected handleFileFinished (taskId: number, fileInfo: FileInfo) {
     console.log(fileInfo)
     this.cacheTaskId(taskId)
-  }
-  protected handleTaskBegin (taskId: number) {
-    this.cacheTaskId(taskId)
-  }
-  protected handleTaskSuspend (taskId: number) {
-    this.checkUploadQueue()
-    this.cacheTaskId(taskId)
-  }
-  protected handleTaskResume (taskId: number) {
-    this.emit('taskStatusChange', taskId)
   }
   protected handleTaskFinished (taskId: number) {
     this.checkUploadQueue()

@@ -43,6 +43,7 @@ export default class BaseTask extends EventEmitter {
     this.name = StringUtility.formatName(srcPath)
     this.destPath = destPath
     this.uuid = uuid
+    this.setMaxListeners(8)
   }
   // public methods
   async start () {
