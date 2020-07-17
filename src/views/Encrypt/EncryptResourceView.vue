@@ -286,7 +286,6 @@ export default Vue.extend({
         const task = new EncryptUploadTask(path, this.path, uuid)
         task.matchTaskIcon()
         uploadQueue.addTask(task)
-        uploadQueue.addListener('taskStatusChange', this.handleTaskStatusChange)
         this.$store.dispatch('Resource/increaseTask')
       })
     },
