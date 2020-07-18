@@ -237,6 +237,14 @@ export default Vue.extend({
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.resource-list::-webkit-scrollbar-thumb {
+  border-radius: 6px;
+  box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
+  background-color: #9C9FA960;
+}
+.resource-list::-webkit-scrollbar-track {
+  background: #F7F9FB;
+}
 </style>
 
 <style>

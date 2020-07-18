@@ -157,7 +157,7 @@ export default {
     return items
   },
   generateItemsForStatus (status: TaskStatus) {
-    const doingItems = _.clone(runningOperateItems)
+    const doingItems = _.cloneDeep(runningOperateItems)
     switch (status) {
       case TaskStatus.pending:
         return doingItems.map((item, index) => {
@@ -168,13 +168,13 @@ export default {
         return doingItems
       case TaskStatus.suspend:
         return doingItems.map((item, index) => {
-          return index === 0 ? _.clone(continueItem) : item
+          return index === 0 ? _.cloneDeep(continueItem) : item
         })
       case TaskStatus.finished:
         return _.cloneDeep(completedOperateItems)
       case TaskStatus.error:
         return doingItems.map((item, index) => {
-          return index === 0 ? _.clone(refreshItem) : item
+          return index === 0 ? _.cloneDeep(refreshItem) : item
         })
     }
   },

@@ -158,6 +158,9 @@ export default Vue.extend({
         if (result === 1) return
         this.handleClearRequest()
       })
+    },
+    handleOpenFolderAction (item: ResourceItem) {
+      // recycle not allow open directory
     }
   }
 })

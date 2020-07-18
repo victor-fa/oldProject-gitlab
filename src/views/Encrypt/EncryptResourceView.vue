@@ -122,7 +122,8 @@ export default Vue.extend({
       return true
     },
     handleReloginAction (msg: string) {
-      this.$router.replace('login-view')
+      this.$message.error(msg)
+      this.$router.replace('encrypt-login')
     },
     getEncryptList() {
       this.loading = true

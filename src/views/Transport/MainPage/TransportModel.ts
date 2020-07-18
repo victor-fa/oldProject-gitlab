@@ -9,60 +9,60 @@ interface TransportOpItem {
   disableIcon: any
 }
 const pauseItem: TransportOpItem = {
-  icon: require('../../../assets/pause_icon.png'),
-  hoverIcon: require('../../../assets/pause_selected_icon.png'),
+  icon: require('../../../assets/pause_normal_icon.png'),
+  hoverIcon: require('../../../assets/pause_hover_icon.png'),
   disableIcon: require('../../../assets/pause_disable_icon.png'),
   command: 'pause',
-  iconWidth: '15px'
+  iconWidth: '12px'
 }
 const continueItem: TransportOpItem = {
-  icon: require('../../../assets/start_icon.png'),
-  hoverIcon: require('../../../assets/start_selected_icon.png'),
-  disableIcon: require('../../../assets/start_selected_icon.png'),
+  icon: require('../../../assets/begin_normal_icon.png'),
+  hoverIcon: require('../../../assets/begin_hover_icon.png'),
+  disableIcon: require('../../../assets/begin_normal_icon.png'),
   command: 'continue',
-  iconWidth: '15px'
+  iconWidth: '12px'
 }
 const refreshItem: TransportOpItem = {
-  icon: require('../../../assets/refresh_sicon.png'),
-  hoverIcon: require('../../../assets/refresh_sicon_selected.png'),
-  disableIcon: require('../../../assets/refresh_disable.png'),
+  icon: require('../../../assets/refresh_normal_icon.png'),
+  hoverIcon: require('../../../assets/refresh_hover_icon.png'),
+  disableIcon: require('../../../assets/refresh_disable_icon.png'),
   command: 'refresh',
-  iconWidth: '15px'
+  iconWidth: '12px'
 }
 const cancelItem: TransportOpItem = {
-  icon: require('../../../assets/cancel_sicon.png'),
-  hoverIcon: require('../../../assets/cancel_sicon_selected.png'),
+  icon: require('../../../assets/cancel_normal_icon.png'),
+  hoverIcon: require('../../../assets/cancel_hover_icon.png'),
   disableIcon: require('../../../assets/cancel_disable_icon.png'),
   command: 'cancel',
-  iconWidth: '15px'
+  iconWidth: '12px'
 }
 const jumpItem: TransportOpItem = {
-  icon: require('../../../assets/file_icon.png'),
-  hoverIcon: require('../../../assets/file_icon_selected.png'),
+  icon: require('../../../assets/file_normal_icon.png'),
+  hoverIcon: require('../../../assets/file_hover_icon.png'),
   disableIcon: require('../../../assets/file_disable_icon.png'),
   command: 'jump',
-  iconWidth: '15px'
+  iconWidth: '12px'
 }
 const deleteItem: TransportOpItem = {
-  icon: require('../../../assets/delete_icon.png'),
-  hoverIcon: require('../../../assets/delete_icon_selected.png'),
+  icon: require('../../../assets/delete_normal_icon.png'),
+  hoverIcon: require('../../../assets/delete_hover_icon.png'),
   disableIcon: require('../../../assets/delete_disable_icon.png'),
   command: 'delete',
-  iconWidth: '15px'
+  iconWidth: '12px'
 }
 const openItem: TransportOpItem = {
-  icon: require('../../../assets/open_icon.png'),
-  hoverIcon: require('../../../assets/open_icon_selected.png'),
+  icon: require('../../../assets/open_normal_icon.png'),
+  hoverIcon: require('../../../assets//open_hover_icon.png'),
   disableIcon: require('../../../assets/open_disable_icon.png'),
   command: 'open',
-  iconWidth: '15px'
+  iconWidth: '12px'
 }
 const openInFinderItem: TransportOpItem = {
-  icon: require('../../../assets/file_icon.png'),
-  hoverIcon: require('../../../assets/file_icon_selected.png'),
+  icon: require('../../../assets/file_normal_icon.png'),
+  hoverIcon: require('../../../assets/file_hover_icon.png'),
   disableIcon: require('../../../assets/file_disable_icon.png'),
   command: 'openInFinder',
-  iconWidth: '15px'
+  iconWidth: '12px'
 }
 const completedOperateItems: TransportOpItem[] = [openItem, openInFinderItem, deleteItem]
 const runningOperateItems: TransportOpItem[] = [pauseItem, cancelItem, jumpItem]
