@@ -417,8 +417,7 @@ export default Vue.extend({
       }
       NasFileAPI.loginEncrypt(StringUtility.encryptPassword(callback)).then(response => {
         if (response.data.code !== 200) {
-          let msg = ''
-          msg = response.data.code === 8031 ? '密码错误，请重试' : '您未激活加密空间'
+          const msg = response.data.code === 8031 ? '密码错误，请重试' : '您未激活加密空间'
           this.$message.error(msg)
           return
         }

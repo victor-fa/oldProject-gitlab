@@ -98,6 +98,7 @@ export default Vue.extend({
         this.loading = false
         console.log(response)
         if (response.data.code !== 200) return
+        if (_.get(response.data.data, 'formatting')) { this.$message.error('磁盘正在初始化'); return; }
         const storages = _.get(response.data.data, 'storages')
         this.diskMode = _.get(response.data.data, 'mode')
         this.diskFormatting = _.get(response.data.data, 'formatting')
@@ -239,7 +240,7 @@ export default Vue.extend({
       this.fetchStorages()  // 刷新列表，取消所有选中
 		},
 		handleSwitchMode () {
-			NasFileAPI.switchMode(this.finalMode, 1).then(response => {
+			NasFileAPI.switchMode(this.finalMode, 0).then(response => {
 				if (response.data.code !== 200) return
 				this.mode = {
 					visiable: false,

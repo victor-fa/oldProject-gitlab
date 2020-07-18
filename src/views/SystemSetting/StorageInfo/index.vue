@@ -8,7 +8,7 @@
 					</div>
 					<div class="right-side">
 						<div class="average">
-							<span>盘位{{index + 1}}<font>{{item.status | filterStatus}}</font></span>
+							<span>盘位{{index + 1}}<font style="margin-left: 10px">{{item.status | filterStatus}}</font></span>
 							<span>{{item.modelName}}</span>
 						</div>
 						<div class="average">

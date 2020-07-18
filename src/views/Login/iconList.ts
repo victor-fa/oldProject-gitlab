@@ -9,7 +9,12 @@ let loginIcons = {
   reboot: require('../../assets/reboot_nas_icon.png'),
   factory: require('../../assets/factory_nas_icon.png'),
   update: require('../../assets/update_nas_icon.png'),
-  delete: require('../../assets/delete_nas_icon.png')
+  delete: require('../../assets/delete_nas_icon.png'),
+  shutdown_dis: require('../../assets/shutdown_nas_disable_icon.png'),
+  reboot_dis: require('../../assets/reboot_nas_disable_icon.png'),
+  factory_dis: require('../../assets/factory_nas_disable_icon.png'),
+  update_dis: require('../../assets/update_nas_disable_icon.png'),
+  delete_dis: require('../../assets/delete_nas_disable_icon.png')
 }
 
 export {

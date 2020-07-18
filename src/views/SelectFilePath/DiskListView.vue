@@ -133,6 +133,7 @@ export default Vue.extend({
         this.loading = false
         console.log(response)
         if (response.data.code !== 200) return
+        if (_.get(response.data.data, 'formatting')) { this.$message.error('磁盘正在初始化'); return; }
         const list = _.get(response.data.data, 'storages')
         const mode = _.get(response.data.data, 'mode')
         this.storages = StorageHandler.formatStorages(list, mode)

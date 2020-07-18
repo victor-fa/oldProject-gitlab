@@ -54,7 +54,10 @@ export default Vue.extend({
       NasFileAPI.loginEncrypt(pwd).then(response => {
         console.log(response)
         this.loading = false
-        if (response.data.code !== 200) return
+        if (response.data.code !== 200) {
+          this.$message.error(response.data.code === 8031 ? '密码错误，请重试' : '您未激活加密空间')
+          return
+        }
         const crypto_token = _.get(response.data, 'data')
         this.$store.dispatch('NasServer/updateCryptoInfo', crypto_token).then(_ => {
           RouterUtility.push('加密空间', 'encrypt-resource-view')

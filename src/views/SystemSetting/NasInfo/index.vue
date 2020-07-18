@@ -41,21 +41,21 @@
 			</a-row>
 			<div class="bottom">
 				<a-row>
-					<a-col :span="4" class="button" v-show="isUserAdmin">
-						<img :src="loginIcons.shutdown" @click="handleDangerousOperation('shutdown')">
-						<p>关机</p>
+					<a-col :span="4" class="button">
+						<img :src="isUserAdmin ? loginIcons.shutdown : loginIcons.shutdown_dis" @click="handleDangerousOperation('shutdown')">
+						<p :style="{ color: isUserAdmin ? '#000000' : '#D8D8D8' }">关机</p>
 					</a-col>
-					<a-col :span="4" class="button" v-show="isUserAdmin">
-						<img :src="loginIcons.reboot" @click="handleDangerousOperation('reboot')">
-						<p>重启</p>
+					<a-col :span="4" class="button">
+						<img :src="isUserAdmin ? loginIcons.reboot : loginIcons.reboot_dis" @click="handleDangerousOperation('reboot')">
+						<p :style="{ color: isUserAdmin ? '#000000' : '#D8D8D8' }">重启</p>
 					</a-col>
-					<a-col :span="4" class="button" v-show="isUserAdmin">
-						<img :src="loginIcons.factory" @click="handleDangerousOperation('factory')">
-						<p>恢复出厂设置</p>
+					<a-col :span="4" class="button">
+						<img :src="isUserAdmin ? loginIcons.factory : loginIcons.factory_dis" @click="handleDangerousOperation('factory')">
+						<p :style="{ color: isUserAdmin ? '#000000' : '#D8D8D8' }">恢复出厂设置</p>
 					</a-col>
-					<a-col :span="4" class="button" v-show="isUserAdmin">
-						<img :src="loginIcons.update" @click="handleDangerousOperation('update')">
-						<p>固件升级</p>
+					<a-col :span="4" class="button">
+						<img :src="isUserAdmin ? loginIcons.update : loginIcons.update_dis" @click="handleDangerousOperation('update')">
+						<p :style="{ color: isUserAdmin ? '#000000' : '#D8D8D8' }">固件升级</p>
 					</a-col>
 					<a-col :span="4" class="button">
 						<img :src="loginIcons.delete" @click="handleDangerousOperation('delete')">
@@ -156,16 +156,17 @@ export default Vue.extend({
 			let rightBut = ''
 			const { dialog } = require('electron').remote
 			if (flag === 'shutdown') {
+				if (!this.isUserAdmin) { this.$message.error('非管理员无法操作'); return; }
 				message = `该操作将中断所有正在进行中的任务！`
 			} else if (flag === 'reboot') {
+				if (!this.isUserAdmin) { this.$message.error('非管理员无法操作'); return; }
 				message = `该操作将中断所有正在进行中的任务！`
 			} else if (flag === 'factory') {
+				if (!this.isUserAdmin) { this.$message.error('非管理员无法操作'); return; }
 				message = `该操作将设备恢复至初始状态，但不会清除您硬盘的任何数据。\n恢复出厂时间可能较长，请您耐心等待！`
 			} else if (flag === 'update') {
-				if (this.disable === true) {
-					this.$message.error('请勿重复点击')
-					return
-				}
+				if (!this.isUserAdmin) { this.$message.error('非管理员无法操作'); return; }
+				if (this.disable === true) { this.$message.error('请勿重复点击'); return; }
 				this.disable = true
 				this.fetchUpdateInfo()
 				return
@@ -335,14 +336,18 @@ p { text-align: left; }
 				flex-direction: column;
 				justify-content: center;
 				align-items: center;
+				padding-top: 15px;
 				img {
 					width: 45px;
-					cursor: pointer;
 				}
 				p {
 					text-align: center;
 					font-weight: bold;
 					margin-top: 12px;
+				}
+				&:hover {
+					background: #06b6501a;
+					cursor: pointer;
 				}
 			}
 		}

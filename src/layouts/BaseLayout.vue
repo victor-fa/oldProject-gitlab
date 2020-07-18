@@ -210,6 +210,7 @@ export default Vue.extend({
       NasFileAPI.fetchStorages().then(response => {
         console.log(response)
         if (response.data.code !== 200) return
+        if (_.get(response.data.data, 'formatting')) { this.$message.error('磁盘正在初始化'); return; }
         const storages = _.get(response.data.data, 'storages')
         const mode = _.get(response.data.data, 'mode')
         const list = StorageHandler.formatStorages(storages, mode)
