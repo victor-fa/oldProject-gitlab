@@ -124,7 +124,7 @@ export default Vue.extend({
     // 打开选中的item
     openSelectedItem (index: number) {
       const item = this.dataArray[index]
-      if (item.isNotInit) {
+      if (item.isNotInit || item.partitions.length === 0) {
         this.$message.error('硬盘还未初始化')
         return
       }
@@ -145,8 +145,12 @@ export default Vue.extend({
     pushResourceLitsPage (path: string, uuid: string, name: string) {
       RouterUtility.push(name, 'main-resource-view', { path, uuid })
     },
-    contextMenuClick (event: MouseEvent, index: number) {
-      const storage = this.dataArray[index]
+    contextMenuClick (event: MouseEvent, aIndex: number) {
+      this.dataArray = this.dataArray.map((item, index) => {
+        item.isSelected = index === aIndex
+        return item
+      })
+      const storage = this.dataArray[aIndex]
       const mainView: any = this.$refs.mainView
       const list = this.filterItemMenu(storage)
       mainView.showContextMenu(list, event)

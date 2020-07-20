@@ -10,12 +10,15 @@
     >
       <div
         class="icon-wrapper"
+        :draggable="canDrag"
         @click.stop.exact="singleClick()"
         @click.meta.stop="multipleClick()"
         @click.ctrl.stop="ctrlMultipleClick()"
         @click.shift.stop="shiftMultipleClick()"
         @dblclick.stop="doubleClick()"
         @contextmenu.prevent="contextMenuClick($event)"
+        @dragstart.stop="handleDragStart"
+        @dragend.stop="handleDragEnd"
       >
         <img :src="showIcon" @error="handleErrorAction()"/>
       </div>
@@ -43,7 +46,6 @@
     <div
       v-else
       class="vertical-item"
-      draggable="true"
       v-bind:class="{
         'vertical-selected-item': isSelected,
         'odd-vertical-vtem': isOddStyle,
@@ -60,7 +62,12 @@
         justify="space-around"
         align="middle"
       >
-        <a-col :span="13" class="vertical-first-col">
+        <a-col
+          :span="13" 
+          class="vertical-first-col" 
+          :draggable="canDrag"
+          @dragstart.stop="handleDragStart"
+        >
           <img :src="showIcon">
           <a-input
             v-focus
@@ -151,6 +158,14 @@ export default Vue.extend({
     showSize: function () {
       const model = this.model as ResourceItem
       return model.type === ResourceType.folder ? '-' : model.showSize
+    },
+    canDrag: function () {
+      const model = this.model as ResourceItem
+      if (this.isRenaming || this.isDisable) return false
+      if (model.type === ResourceType.folder) return false
+      if (_.isEmpty(model.path)) return false
+      if (path.extname(model.path).length <= 1) return false
+      return true
     }
   },
   mounted () {
@@ -266,13 +281,11 @@ export default Vue.extend({
       if (this.model.disable) return
       this.$emit('callbackAction', 'contextMenu', this.index, event)
     },
-    handleDragstartEvent (event: DragEvent) {
-      event.preventDefault()
-      event.stopPropagation()
-      if (event.dataTransfer === null) return
-      event.dataTransfer.dropEffect = 'copy'
-      const url = 'https://image.baidu.com/search/down?tn=download&word=download&ie=utf8&fr=detail&url=https%3A%2F%2Ftimgsa.baidu.com%2Ftimg%3Fimage%26quality%3D80%26size%3Db9999_10000%26sec%3D1590816668066%26di%3Dc7b005c0666f9668a1c5ab445889e1d6%26imgtype%3D0%26src%3Dhttp%253A%252F%252Fa3.att.hudong.com%252F14%252F75%252F01300000164186121366756803686.jpg&thumburl=https%3A%2F%2Fss3.bdstatic.com%2F70cFv8Sh_Q1YnxGkpoWK1HF6hhy%2Fit%2Fu%3D2534506313%2C1688529724%26fm%3D26%26gp%3D0.jpg'
-      processCenter.renderSend(EventName.drag, url)
+    handleDragStart (event: DragEvent) {
+      this.$emit('callbackAction', 'dragStart', this.index, event)
+    },
+    handleDragEnd (event: DragEvent) {
+      this.$emit('callbackAction', 'dragEnd', this.index, event)
     }
   }
 })

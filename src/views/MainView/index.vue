@@ -22,6 +22,7 @@
             :customGrid="listGrid"
             :dataSource="showArray"
             :arrangeWay="arrangeWay"
+            :canDrop="canDropListView"
             :itemMenu="contextItemMenu"
             v-on:callbackAction="handleResourceListAction"
           >
@@ -121,6 +122,9 @@ export default Vue.extend({
       default: () => {
         return toolbars
       }
+    },
+    canDropListView: { // list view是否支持拖拽
+      default: false
     },
     funcList: {
       default: () => {

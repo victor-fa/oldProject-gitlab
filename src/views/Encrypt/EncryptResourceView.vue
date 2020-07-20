@@ -6,6 +6,7 @@
       :count="totalSize"
       :dataSource="dataArray"
       :funcList="showFuncList"
+      :canDropListView="canDrop"
       :showToolbars="showToolbars"
       :contextListMenu="showListMenu"
       :contextItemMenu="showItemMenu"
@@ -42,6 +43,10 @@ import { TaskStatus } from '../../api/Transport/BaseTask'
 import EncryptUploadTask from '../../api/Transport/EncryptUploadTask'
 import StringUtility from '../../utils/StringUtility'
 import { EventBus, EventType } from '../../utils/eventBus'
+import path from 'path'
+import { fileMines } from '@/model/fileMines'
+import { NasAccessInfo, CryptoInfo } from '../../api/ClientModel'
+import { nasServer } from '../../api/NasServer'
 
 export default Vue.extend({
   name: 'encrypt-resource-view',
@@ -58,6 +63,7 @@ export default Vue.extend({
       busy: false,
       totalSize: 0,
       loading: false,
+      canDrop: true,
       showSelectModal: false,
       showModifyModal: false,
       showResetModal: false,
@@ -70,7 +76,7 @@ export default Vue.extend({
     }
   },
   computed: {
-    ...mapGetters('NasServer', ['cryptoInfo', 'isLogined']),
+    ...mapGetters('NasServer', ['cryptoInfo', 'isLogined', 'accessInfo']),
     ...mapGetters('User', ['user']),
     showToolbars: function () {
       return toolbars.map(item => {
@@ -354,6 +360,23 @@ export default Vue.extend({
         this.$message.error('新建失败')
         this.loading = false
       })
+    },
+    handleDragStartAction (index: number, event: DragEvent) {
+      if (event.dataTransfer === null) return
+      this.canDrop = false
+      const model = this.dataArray[index]
+      const suffix = path.extname(model.path)
+      const mineType = fileMines.get(suffix)
+      const token = (this.accessInfo as NasAccessInfo).api_token
+      const crypto = this.cryptoInfo as CryptoInfo
+      const url = `${nasServer.defaults.baseURL}/v1/crypto/download?uuid=${model.uuid}&path=${encodeURIComponent(model.path)}&api_token=${token}&crypto_token=${crypto.crypto_token}`
+      console.log(url)
+      const metaData = [mineType, model.name, url].join(':')
+      event.dataTransfer.setData('DownloadUrl', metaData)
+      event.dataTransfer.effectAllowed = 'copy'
+    },
+    handleDragEndAction (index: number, event: DragEvent) {
+      this.canDrop = true
     }
   }
 })

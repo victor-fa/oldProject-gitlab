@@ -68,7 +68,8 @@ export default Vue.extend({
     arrangeWay: {
       default: ArrangeWay.horizontal
     },
-    adjust: Number
+    adjust: Number,
+    canDrop: Boolean
   },
   data () {
     return {
@@ -97,11 +98,6 @@ export default Vue.extend({
     isShowHeader: function () {
       if (this.arrangeWay === ArrangeWay.vertical) return true
       return false
-    },
-    isSupportDrag: function () {
-      const name = this.$route.name as string
-      const supportDragViews = ['main-resource-view', 'encrypt']
-      return supportDragViews.indexOf(name) !== -1
     }
   },
   mounted () {
@@ -138,7 +134,7 @@ export default Vue.extend({
       this.sendShortcutKeyAction(event, 'selectAllItems')
     },
     handleCommandVEvent (event: KeyboardEvent) {
-      if (!this.isSupportDrag) return
+      if (this.canDrop !== true) return
       this.sendShortcutKeyAction(event, 'paste')
     },
     handleCommandCopyEvent (event: KeyboardEvent) {
@@ -188,21 +184,21 @@ export default Vue.extend({
       this.$emit('callbackAction', 'click')
     },
     handleDragEnterEvent (event: DragEvent) {
-      if (!this.isSupportDrag) return
+      if (this.canDrop !== true) return
       this.dragState = true
     },
     handleDragLeaveEvent (event: DragEvent) {
-      if (!this.isSupportDrag) return
+      if (this.canDrop !== true) return
       this.dragState = false
     },
     handleDragoverEvent (event: DragEvent) {
-      if (!this.isSupportDrag) return // 检测是否支持拖拽上传
+      if (this.canDrop !== true) return
       if (event.dataTransfer === null) return
       if (!this.dragState) this.dragState = true
       event.dataTransfer.dropEffect = 'copy'
     },
     handleDropEvent (event: DragEvent) {
-      if (!this.isSupportDrag) return
+      if (this.canDrop !== true) return
       this.dragState = false
       if (event.dataTransfer === null) return
       const files = event.dataTransfer.files

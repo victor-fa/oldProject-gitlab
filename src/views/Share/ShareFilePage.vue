@@ -30,10 +30,9 @@ export default Vue.extend({
   },
   mixins: [MainViewMixin],
   data () {
-    let items: Array<ResourceItem> = []
     return {
       loading: false,
-      dataArray: items
+      dataArray: [] as ResourceItem[]
     }
   },
   computed: {

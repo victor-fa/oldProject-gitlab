@@ -23,8 +23,7 @@ export default Vue.extend({
     }
   },
   computed: {
-    ...mapGetters('Resource', ['clipboard']),
-    ...mapGetters('Resource', ['itemCount'])
+    ...mapGetters('Resource', ['clipboard', 'itemCount'])
   },
   methods: {
     // 更新当前展示的数据源
@@ -125,6 +124,12 @@ export default Vue.extend({
         case 'newFolderRequest':
           this.handleNewFolderRequestAction(index, args[0])
           break;
+        case 'dragStart':
+          this.handleDragStartAction(index, args[0])
+          break;
+        case 'dragEnd':
+          this.handleDragEndAction(index, args[0])
+          break
         default:
           break;
       }
@@ -279,6 +284,10 @@ export default Vue.extend({
       this.dataArray = this.dataArray.splice(index, 1)
     },
     handleNewFolderRequestAction (index: number, newName: string) {
+    },
+    handleDragStartAction (index: number, event: DragEvent) {
+    },
+    handleDragEndAction (index: number, event: DragEvent) {
     },
     handleOpenAction () {
       const items = ResourceHandler.disableSelectItems(this.dataArray)

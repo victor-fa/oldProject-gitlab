@@ -5,6 +5,7 @@
     :count="totalSize"
     :loading="loading"
     :dataSource="dataArray"
+    :canDropListView="canDrop"
     :contextItemMenu="itemMenu"
     :contextListMenu="listMenu"
     :showToolbars="showToolbars"
@@ -34,6 +35,10 @@ import { TaskError, TaskStatus } from '../../api/Transport/BaseTask'
 import { uploadQueue } from '../../api/Transport/TransportHelper'
 import RouterUtility from '../../utils/RouterUtility'
 import { toolbars } from './ResourceFuncList'
+import path from 'path'
+import { fileMines } from '@/model/fileMines'
+import { nasServer } from '@/api/NasServer'
+import { NasAccessInfo } from '@/api/ClientModel'
 
 export default Vue.extend({
   name: 'main-resource-view',
@@ -47,6 +52,7 @@ export default Vue.extend({
       busy: false,
       loading: false,
       totalSize: 0,
+      canDrop: true, // list view是否支持拖拽
       dataArray: [] as ResourceItem[],
       order: OrderType.byNameDesc, // 当前选择的排序规则
       itemMenu: _.cloneDeep(resourceContextMenu), // item的右键菜单
@@ -57,6 +63,7 @@ export default Vue.extend({
   computed: {
     ...mapGetters('User', ['user']),
     ...mapGetters('Resource', ['clipboard']),
+    ...mapGetters('NasServer', ['accessInfo']),
     path: function () {
       const path = this.$route.query.path as string
       return path
@@ -263,6 +270,21 @@ export default Vue.extend({
           this.$message.error('网络连接错误，请检测网络')
         })
       }
+    },
+    handleDragStartAction (index: number, event: DragEvent) {
+      if (event.dataTransfer === null) return
+      this.canDrop = false
+      const model = this.dataArray[index]
+      const suffix = path.extname(model.path)
+      const mineType = fileMines.get(suffix)
+      const token = (this.accessInfo as NasAccessInfo).api_token
+      const url = `${nasServer.defaults.baseURL}/v1/file/download?uuid=${model.uuid}&path=${encodeURIComponent(model.path)}&api_token=${token}`
+      const metaData = [mineType, model.name, url].join(':')
+      event.dataTransfer.setData('DownloadUrl', metaData)
+      event.dataTransfer.effectAllowed = 'copy'
+    },
+    handleDragEndAction (index: number, event: DragEvent) {
+      this.canDrop = true
     }
   }
 })
