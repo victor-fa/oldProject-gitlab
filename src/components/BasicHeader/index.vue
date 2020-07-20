@@ -364,12 +364,17 @@ export default Vue.extend({
   top: 9px;
   left: -86px;
   flex: 1 1 0%;
-  padding: 3px 12px;
   position: absolute;
   width: 85px;
   background-color: #fff;
   background-clip: padding-box;
   border-radius: 2px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+.operate-item {
+  padding: 0 12px;
+}
+.operate-item:hover {
+  background-color: #06B65010;
 }
 </style>

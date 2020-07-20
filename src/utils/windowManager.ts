@@ -1,5 +1,5 @@
 import processCenter, { MainEventName } from '@/utils/processCenter'
-import { BrowserWindow, Menu, Tray, app } from 'electron'
+import { BrowserWindow, Menu, Tray, app, dialog } from 'electron'
 import windowControl from './windowControl'
 import path from 'path'
 
@@ -209,7 +209,34 @@ export default {
           homeWindow.isVisible() ? homeWindow.hide() : homeWindow.show();
         }
       });
-		}
+    }
+    // 处理崩溃
+    homeWindow.webContents.on('crashed', () => {
+      recordCrash().then(() => {
+        setTimeout(() => {
+          reloadWindow(homeWindow)
+        }, 1000);
+      }).catch((e) => {
+        console.log('err', e);
+      });
+    })
+    function recordCrash() { 
+      return new Promise(resolve => { 
+        // 崩溃日志请求成功.... 
+        resolve();
+      })
+    }
+    function reloadWindow(mainWin) {
+      if (mainWin.isDestroyed()) {
+        app.relaunch();
+        app.exit(0);
+      } else {
+        BrowserWindow.getAllWindows().forEach((w) => {
+          if (w.id !== mainWin.id) w.destroy();
+        });
+        mainWin.reload();
+      }
+    }
     return homeWindow
   },
   presentMediaWindow (data: any) { // mediawindow 他应该是homewindow的子窗口
@@ -236,14 +263,10 @@ export default {
     return mediaWindow
   },
   refreshHomeWindow () {
-    if (homeWindow !== null) {
-      this.refreshWindow(homeWindow)
-    }
+    this.refreshWindow(homeWindow!)
   },
   refreshSettingWindow () {
-    if (settingWindow !== null) {
-      this.refreshWindow(settingWindow)
-    }
+    this.refreshWindow(settingWindow!)
   },
   presentMoveModal () {
     if (moveWindow !== null) {

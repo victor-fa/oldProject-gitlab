@@ -84,9 +84,15 @@ export default {
 			document.getElementsByClassName('cd-image-container')[0].focus();
 			let time_p1 = setInterval(() => {
 				let imgW = img_show.offsetWidth;
+				let imgH = img_show.offsetHeight;
 				if (img_show.complete) {
-					let ratio = window.innerWidth / imgW;
-					img_show.style.width = imgW * ratio + 'px';
+					if (imgW >= imgH) {
+						let ratio = window.innerWidth / imgW;
+						img_show.style.width = imgW * ratio + 'px';
+					} else {
+						let ratio = window.innerHeight / imgH;
+						img_show.style.height = imgH * ratio + 'px';
+					}
 					this.centerImg();
 					this.loaded = false;
 					img_show.style.opacity = 1;
