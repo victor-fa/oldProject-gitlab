@@ -179,6 +179,7 @@ let DiskSystem = {
 		if (MainWindow) {
 			return windowControl.active(MainWindow, data);
 		}
+		// 仅允许一个程序同时运行
 		const gotTheLock = app.requestSingleInstanceLock()
 		if (!gotTheLock) {
 			app.quit()

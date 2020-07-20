@@ -118,9 +118,6 @@ export default {
   fileTypeToName (type: number) {
     let res = ''
     switch (type) {
-      case ResourceType.all:
-        res = '未知类型'
-        break;
       case ResourceType.video:
         res = '视频'
         break;

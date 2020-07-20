@@ -9,7 +9,7 @@
 		<div v-if="DiskData.path">
 			<div class="cd-disk-info-item">
 				<span>文件类型：</span>
-				<div :title="DiskData.type | filterNameType">{{ DiskData.type | filterNameType }}</div>
+				<div :title="DiskData.type | filterNameType(DiskData.name)">{{ DiskData.type | filterNameType(DiskData.name) }} 文件</div>
 			</div>
 			<div class="cd-disk-info-item">
 				<span>文件位置：</span>
@@ -22,10 +22,6 @@
 			<div class="cd-disk-info-item" v-if="DiskData.type !== 6">
 				<span>文件大小：</span>
 				<div :title="DiskData.size | filterSize">{{ DiskData.size | filterSize }}</div>
-			</div>
-			<div class="cd-disk-info-item">
-				<span>创建时间：</span>
-				<div :title="DiskData.ctime | filterTime">{{ DiskData.ctime | filterTime }}</div>
 			</div>
 			<div class="cd-disk-info-item">
 				<span>修改时间：</span>
@@ -43,6 +39,10 @@
 			<div class="cd-disk-info-item">
 				<span>文件收藏：</span>
 				<div>{{ DiskData.collected === 0 ? '未收藏' : '已收藏' }}</div>
+			</div>
+			<div class="cd-disk-info-item">
+				<span></span>
+				<div></div>
 			</div>
 		</div>
 		<div v-else>
@@ -101,7 +101,10 @@ export default {
 		filterName (data) {
 			return StringUtility.formatName(data)
 		},
-		filterNameType (data) {
+		filterNameType (data, name) {
+			if (data === 0) {
+				return StringUtility.formatSuffix(name).toUpperCase()
+			}
 			return StringUtility.fileTypeToName(data)
 		},
 		filterTime (data) {
