@@ -14,13 +14,14 @@ const searchItem: ResourceFuncItem = { icon: require('../../assets/search_icon.p
 const refreshItem: ResourceFuncItem = { icon: require('../../assets/refresh_icon.png'), command: 'refresh', iconWidth: '16px', title: '刷新', disableIcon: require('../../assets/refresh_disable.png') }
 const sortItem: ResourceFuncItem = { icon: require('../../assets/sort_icon.png'), command: 'sort', iconWidth: '16px', title: '排序', disableIcon: require('../../assets/sort_disable.png') }
 const arrangeItem: ResourceFuncItem = { icon: require('../../assets/arrange_icon.png'), command: 'arrange', iconWidth: '16px', selectedIcon: require('../../assets/block_icon.png'), title: '排列', disableIcon: require('../../assets/block_disable.png') }
+const clearTrashItem: ResourceFuncItem = { icon: require('../../assets/delete_normal_icon.png'), command: 'clearTrash', iconWidth: '16px', title: '清空回收站', disableIcon: require('../../assets/delete_disable_icon.png') }
 
 const recentFuncList = [refreshItem, arrangeItem]
 const commonFuncList = [refreshItem, sortItem, arrangeItem]
 const backupFunList = [searchItem, refreshItem, sortItem, arrangeItem]
 const customFuncList = [refreshItem]
 const storageFuncList = [refreshItem]
-const recycleFuncList = [refreshItem, searchItem, arrangeItem]
+const recycleFuncList = [clearTrashItem, refreshItem, searchItem, arrangeItem]
 
 const newFolderItem: ResourceFuncItem = { icon: require('../../assets/new_folder_icon.png'), command: 'newFolder', iconWidth: '16px', title: '新建文件夹', disableIcon: require('../../assets/new_folder_disable.png'), disable: true }
 const newAlbum: ResourceFuncItem = { icon: require('../../assets/new_folder_icon.png'), command: 'newCustom', iconWidth: '16px', title: '新建相册', disableIcon: require('../../assets/new_folder_disable.png') }

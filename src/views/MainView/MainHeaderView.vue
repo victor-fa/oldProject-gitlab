@@ -309,6 +309,9 @@ export default Vue.extend({
         case 'newCustom':
           this.$emit('callbackAction', 'newCustom')
           break;
+        case 'clearTrash':
+          this.clearTrashAction()
+          break;
         default:
           break;
       }
@@ -363,6 +366,9 @@ export default Vue.extend({
     },
     refreshAction() {
       this.$emit('callbackAction', 'refresh')
+    },
+    clearTrashAction () {
+      this.$emit('callbackAction', 'clearTrash')
     },
     arrangeAction (index: number) {
       const item = this.funcList[index] as ResourceFuncItem

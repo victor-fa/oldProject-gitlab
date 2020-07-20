@@ -75,6 +75,9 @@ export default Vue.extend({
         case 'pop':
           this.handlePopAction(args[0])
           break
+        case 'clearTrash':
+          this.handleClearTrashAction()
+          break
         default:
           break;
       }

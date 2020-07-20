@@ -179,6 +179,18 @@ let DiskSystem = {
 		if (MainWindow) {
 			return windowControl.active(MainWindow, data);
 		}
+		const gotTheLock = app.requestSingleInstanceLock()
+		if (!gotTheLock) {
+			app.quit()
+		} else {
+			app.on('second-instance', (event, commandLine, workingDirectory) => {
+				// 当运行第二个实例时,将会聚焦到myWindow这个窗口
+				if (MainWindow) {
+					if (MainWindow.isMinimized()) MainWindow.restore()
+					MainWindow.focus()
+				}
+			})
+		}
 	},
 	AboutWindow: data => {
 		if (AboutWindow) {
@@ -480,7 +492,7 @@ if (isDevelopment) {
       if (data === 'graceful-exit') {
         app.quit()
       }
-    })
+		})
   } else {
     process.on('SIGTERM', () => {
       app.quit()

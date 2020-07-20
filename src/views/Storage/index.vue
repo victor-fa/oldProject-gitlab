@@ -169,9 +169,6 @@ export default Vue.extend({
         case 'open': 
           this.handleOpenAction()
           break;
-        case 'rename':
-          // TODO: 磁盘重命名
-          break;
         case 'initialize':
           this.handleInitialize()
           break;
@@ -194,8 +191,10 @@ export default Vue.extend({
       _this.$ipc.send('file-control', 0, this.dataArray[index]);
     },
     handleInitialize () {
-      if (this.diskFormatting !== 0) {	// 当前有磁盘任务
-				this.$message.error('当前有磁盘任务，无法初始化')
+      const index = StorageHandler.getFristSelectedIndex(this.dataArray)
+      if (index === null) return
+      if (!this.dataArray[index].isNotInit) {
+				this.$message.error('当前磁盘不可初始化')
 				return
 			}
       if (this.mode.visiable) {	// 已有弹框，选择后切换
