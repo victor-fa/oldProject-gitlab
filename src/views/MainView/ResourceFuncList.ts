@@ -21,7 +21,7 @@ const commonFuncList = [refreshItem, sortItem, arrangeItem]
 const backupFunList = [searchItem, refreshItem, sortItem, arrangeItem]
 const customFuncList = [refreshItem]
 const storageFuncList = [refreshItem]
-const recycleFuncList = [refreshItem, clearTrashItem, searchItem, arrangeItem]
+const recycleFuncList = [clearTrashItem, refreshItem, searchItem, arrangeItem]
 
 const newFolderItem: ResourceFuncItem = { icon: require('../../assets/new_folder_icon.png'), command: 'newFolder', iconWidth: '16px', title: '新建文件夹', disableIcon: require('../../assets/new_folder_disable.png'), disable: true }
 const newAlbum: ResourceFuncItem = { icon: require('../../assets/new_folder_icon.png'), command: 'newCustom', iconWidth: '16px', title: '新建相册', disableIcon: require('../../assets/new_folder_disable.png') }

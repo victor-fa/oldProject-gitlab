@@ -1,6 +1,6 @@
 <template>
   <div class="main-header-view" :key="key">
-    <div v-if="showHeaderView" class="header-top-view">
+    <div v-if="showToolbar" class="header-top-view">
       <div class="top-left-view">
         <div v-for="(item, index) in toolbars" :key="index">
           <a-dropdown v-if="showUploadPopover(item)" overlayClassName="upload-dropdown-list">
@@ -47,7 +47,7 @@
         </a-input>
       </div>
     </div>
-    <div class="header-bottom-view">
+    <div class="header-bottom-view" v-bind:class="{ 'bottom-view-separator': showToolbar }">
       <div class="bottom-left-view">
         <custom-button
           :image="backIcon"
@@ -184,7 +184,7 @@ export default Vue.extend({
       const path: string = this.$route.path
       return path
     },
-    showHeaderView: function () {
+    showToolbar: function () {
       const result = !_.isEmpty(this.toolbars) as boolean
       return result
     },
@@ -351,7 +351,7 @@ export default Vue.extend({
     },
     handleChangeAction (event: any) {
       if (!_.isEmpty(event.inputType)) return
-      if (this.showHeaderView) {
+      if (this.showToolbar) {
         this.$emit('callbackAction', 'endSearch')
       } else {
         this.$nextTick(() => {
@@ -413,7 +413,6 @@ export default Vue.extend({
     align-items: center;
     justify-content: space-between;
     background-color: #F7F9FB;
-    border-top: 1px solid white;
     border-bottom: 1px solid #BCC0CE40;
     .bottom-left-view {
       flex: 1;
@@ -462,6 +461,9 @@ export default Vue.extend({
         padding: 4px;
       }
     }
+  }
+  .bottom-view-separator {
+    border-top: 1px solid white;
   }
 }
 </style>
