@@ -11,6 +11,10 @@ import StringUtility from '@/utils/StringUtility'
 import DownloadTask from '@/api/Transport/DownloadTask'
 import { downloadQueue } from '@/api/Transport/TransportHelper'
 import RouterUtility from '@/utils/RouterUtility'
+import path from 'path'
+import { fileMines } from '@/model/fileMines'
+import { nasServer } from '@/api/NasServer'
+import { NasAccessInfo } from '@/api/ClientModel'
 
 let tmpArray: ResourceItem[] | null = null
 
@@ -23,7 +27,8 @@ export default Vue.extend({
     }
   },
   computed: {
-    ...mapGetters('Resource', ['clipboard', 'itemCount'])
+    ...mapGetters('Resource', ['clipboard', 'itemCount']),
+    ...mapGetters('NasServer', ['accessInfo'])
   },
   methods: {
     // 更新当前展示的数据源
@@ -286,6 +291,15 @@ export default Vue.extend({
     handleNewFolderRequestAction (index: number, newName: string) {
     },
     handleDragStartAction (index: number, event: DragEvent) {
+      if (event.dataTransfer === null) return
+      const model = this.dataArray[index]
+      const suffix = path.extname(model.path)
+      const mineType = fileMines.get(suffix)
+      const token = (this.accessInfo as NasAccessInfo).api_token
+      const url = `${nasServer.defaults.baseURL}/v1/file/download?uuid=${model.uuid}&path=${encodeURIComponent(model.path)}&api_token=${token}`
+      const metaData = [mineType, model.name, url].join(':')
+      event.dataTransfer.setData('DownloadUrl', metaData)
+      event.dataTransfer.effectAllowed = 'copy'
     },
     handleDragEndAction (index: number, event: DragEvent) {
     },
