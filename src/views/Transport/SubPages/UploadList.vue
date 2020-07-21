@@ -59,6 +59,7 @@ export default Vue.extend({
         if (model.status !== TaskStatus.suspend && model.status !== TaskStatus.error) canResumeAll = false
         return model.category === category
       })
+      if (category === TransportStatus.done) this.showArray = this.showArray.reverse()
       this.categorys = this.categorys.map(item => {
         if (item.status === category) {
           item.count = this.showArray.length

@@ -2,6 +2,7 @@
   <main-view
     :loading="loading"
     :dataSource="dataArray"
+    :funcList="showFuncList"
     v-on:headerCallbackActions="handleHeaderActions"
     v-on:listCallbackActions="handleListActions"
     v-on:itemCallbackActions="handleItemActions"
@@ -20,6 +21,7 @@ import NasFileAPI from '@/api/NasFileAPI'
 import { BasicResponse, User } from '@/api/UserModel'
 import ResourceHandler from '../MainView/ResourceHandler'
 import RouterUtility from '@/utils/RouterUtility'
+import { shareFuncList } from '../MainView/ResourceFuncList'
 
 export default Vue.extend({
   name: 'share',
@@ -31,7 +33,8 @@ export default Vue.extend({
     return {
       loading: false,
       dataArray: [] as ResourceItem[],
-      ugreenNo: '' // 当前选中的用户编号
+      ugreenNo: '', // 当前选中的用户编号
+      showFuncList: _.clone(shareFuncList)
     }
   },
   computed: {

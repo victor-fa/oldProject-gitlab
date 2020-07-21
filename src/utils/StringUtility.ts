@@ -53,14 +53,14 @@ export default {
   // 格式化文件修改时间
   formatShowMtime (value: number) {
     if (String(value).length < 11) value = value * 1000 // 区分秒、毫秒
-    var date = new Date(value);
-    var Y = date.getFullYear() + '-';
-    var M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
-    var D = date.getDate() + ' ';
-    var h = date.getHours() + ':';
-    var m = date.getMinutes() + ':';
-    var s = date.getSeconds();
-    return Y + M + D + h + m + s;
+    const date = new Date(value)
+    const year = date.getFullYear().toString()
+    const month = date.getMonth() < 10 ? `0${date.getMonth()}` : date.getMonth().toString()
+    const day = date.getDay() < 10 ? `0${date.getDay()}` : date.getDay.toString()
+    const hour = date.getHours() < 10 ? `0${date.getHours()}` : date.getHours()
+    const minute = date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes()
+    const second = date.getSeconds() < 10 ? `0${date.getSeconds()}` : date.getSeconds()
+    return `${year}-${month}-${day}-${hour}-${minute}-${second}`
   },
   formatMacAddress (value) {
     return value.replace(/:/g, '')
@@ -68,11 +68,12 @@ export default {
   // 格式化文件大小
 	formatShowSize(bytes) {
 		bytes = parseFloat(bytes);
-    if (bytes === 0) return '0B';
+    if (bytes === 0) return '0B'
     const k = process.platform === 'darwin' ? 1000 : 1024
-		let sizes = ['B', 'K', 'M', 'G', 'T'],
-			i = Math.floor(Math.log(bytes) / Math.log(k));
-		return (bytes / Math.pow(k, i)).toFixed(1) + sizes[i];
+		const sizes = ['B', 'K', 'M', 'G', 'T']
+    const unit = Math.floor(Math.log(bytes) / Math.log(k))
+    const fixed = unit < 3 ? 0 : 2
+		return (bytes / Math.pow(k, unit)).toFixed(fixed) + sizes[unit]
   },
   // 获取磁盘状态
   formatDiskStatus(status) {
@@ -147,13 +148,13 @@ export default {
     const mByte = kByte * 1024
     const gByte = mByte * 1024
     if (speed < kByte) {
-      return `${(speed).toFixed(1)}B/s`
+      return `${(speed).toFixed(0)}B/s`
     } else if (speed < mByte) {
-      return `${(speed / kByte).toFixed(1)}K/s`
+      return `${(speed / kByte).toFixed(0)}K/s`
     } else if (speed < gByte) {
-      return `${(speed / mByte).toFixed(1)}M/s`
+      return `${(speed / mByte).toFixed(0)}M/s`
     } 
-    return `${(speed / gByte).toFixed(1)}G/s`
+    return `${(speed / gByte).toFixed(2)}G/s`
   },
   /** 校验手机号 */
   vaildatorPhone (phone: string) {

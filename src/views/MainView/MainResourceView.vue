@@ -223,10 +223,8 @@ export default Vue.extend({
       this.handleRefreshAction()
     },
     handleSortWayChangeAction (order: OrderType) {
-      this.page = 1
-      this.busy = false
       this.order = order
-      this.fetchResourceList()
+      this.handleRefreshAction()
     },
     handleSearchAction (keyword: string) {
       this.loading = true

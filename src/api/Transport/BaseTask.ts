@@ -50,6 +50,7 @@ export default class BaseTask extends EventEmitter {
   // public methods
   async start () {
     this.status = TaskStatus.progress
+    this.previousSize = this.completedBytes
     this.beginSpeedTimer()
   }
   async cancel () {
@@ -80,7 +81,7 @@ export default class BaseTask extends EventEmitter {
       const speed = this.completedBytes - this.previousSize // 单位B/s
       this.speed = StringUtility.formatSpeed(speed)
       this.previousSize = this.completedBytes
-    }, 1000)
+    }, 1500)
   }
   // 清除定时器
   clearSpeedTimer () {

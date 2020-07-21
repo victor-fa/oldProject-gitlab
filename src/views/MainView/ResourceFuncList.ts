@@ -21,6 +21,7 @@ const commonFuncList = [refreshItem, sortItem, arrangeItem]
 const backupFunList = [searchItem, refreshItem, sortItem, arrangeItem]
 const customFuncList = [refreshItem]
 const storageFuncList = [refreshItem]
+const shareFuncList = [refreshItem]
 const recycleFuncList = [clearTrashItem, refreshItem, searchItem, arrangeItem]
 
 const newFolderItem: ResourceFuncItem = { icon: require('../../assets/new_folder_icon.png'), command: 'newFolder', iconWidth: '16px', title: '新建文件夹', disableIcon: require('../../assets/new_folder_disable.png'), disable: true }
@@ -40,5 +41,6 @@ export {
   toolbars,
   customToolbars,
   recentFuncList,
-  recycleFuncList
+  recycleFuncList,
+  shareFuncList
 }
