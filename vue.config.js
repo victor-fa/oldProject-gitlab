@@ -14,8 +14,8 @@ module.exports = {
   pluginOptions: {
     electronBuilder: {
       builderOptions: {
-        "appId": "com.ugreen.nas",
-        "productName": "uGreen-Nas", // 项目名，也是生成的安装文件名，即aDemo.exe
+        "appId": "com.ugreen.nas.client",
+        "productName": "绿联云", // 项目名，也是生成的安装文件名，即aDemo.exe
         "copyright": "Copyright © 2020", // 版权信息
         "directories": {
           "output": "./dist_electron"//输出文件路径

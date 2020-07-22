@@ -58,8 +58,7 @@ export default Vue.extend({
       this.showArray = this.dataArray.filter(model => {
         if (model.status !== TaskStatus.suspend && model.status !== TaskStatus.error) canResumeAll = false
         return model.category === category
-      })
-      if (category === TransportStatus.done) this.showArray = this.showArray.reverse()
+      }).reverse()
       this.categorys = this.categorys.map(item => {
         if (item.status === category) {
           item.count = this.showArray.length
@@ -91,11 +90,16 @@ export default Vue.extend({
       this.fetchUploadTasks()
     },
     reloadListItem<T extends BaseTask> (task: T) {
-      const index = TransportHandler.searchModel(this.dataArray, task.taskId)
+      if (task.status === TaskStatus.progress) {
+        
+      } else {
+        
+      }
+      const index = TransportHandler.searchModel(this.showArray, task.taskId)
       if (index === undefined) return
       const newItem = TransportHandler.convertTask(task)
-      this.dataArray.splice(index, 1, newItem)
-      this.updateView()
+      this.showArray.splice(index, 1, newItem)
+      if (task.status !== TaskStatus.progress) this.updateView()
       if (task.error !== undefined && task.status === TaskStatus.error) {
         this.$message.error(task.error.desc)
       }

@@ -60,8 +60,7 @@ export default Vue.extend({
       this.showArray = this.dataArray.filter(model => {
         if (model.status !== TaskStatus.suspend && model.status !== TaskStatus.error) canResumeAll = false
         return model.category === category
-      })
-      if (category === TransportStatus.done) this.showArray = this.showArray.reverse()
+      }).reverse()
       // header view
       this.categorys = this.categorys.map(item => {
         if (item.status === category) {

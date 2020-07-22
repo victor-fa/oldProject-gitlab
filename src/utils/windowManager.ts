@@ -120,7 +120,7 @@ export default {
     } else {
       homeWindow = this.createWindow({
         path: 'home',
-        width: 800,
+        width: 1000,
         minWidth: 800,
         height: 680,
         minHeight: 680,
