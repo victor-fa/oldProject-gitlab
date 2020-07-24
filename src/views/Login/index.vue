@@ -52,7 +52,6 @@ import { mapGetters } from 'vuex'
 import { loginIcons } from './iconList'
 import BasicForm from '@/components/BasicForm/index.vue'
 import UserAPI from '@/api/UserAPI'
-import ClientAPI from '@/api/ClientAPI'
 import { LoginResponse, Account, DeviceInfo, User } from '@/api/UserModel'
 import { NasAccessInfo } from '@/api/ClientModel'
 import processCenter, { EventName, MainEventName } from '@/utils/processCenter'
@@ -123,6 +122,7 @@ export default Vue.extend({
       if (_.isEmpty(this.ciphertext)) this.ciphertext = StringUtility.encryptPassword(this.password)
       this.loading = true
       UserAPI.login(this.account, this.ciphertext).then(response => {
+        console.log(response)
         this.loading = false
         if (response.data.code !== 200) return
         const loginResponse = response.data.data as LoginResponse

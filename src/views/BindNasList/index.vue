@@ -24,7 +24,7 @@ import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import NasDeviceList from '../ScanNas/NasDeviceList.vue'
 import UserAPI from '@/api/UserAPI'
-import { DeviceInfo, BasicResponse } from '@/api/UserModel'
+import { DeviceInfo, BasicResponse, DeviceStatus } from '@/api/UserModel'
 import StringUtility from '@/utils/StringUtility'
 import ClientAPI from '@/api/ClientAPI'
 import { nasServer } from '@/api/NasServer';
@@ -98,12 +98,11 @@ export default Vue.extend({
     },
     // 扫描自动登录
     handleAutoLogin () {
-      let device = this.deviceList[0]
-      const cacheNas = this.nasInfo as NasInfo
-      this.deviceList.forEach(item => {
-        if (item.sn === cacheNas.sn) device = item
+      const onlineDevices = this.deviceList.filter(item => {
+        return item.status === DeviceStatus.online
       })
-      this.searchNas(device)
+      if (_.isEmpty(onlineDevices)) return
+      this.searchNas(onlineDevices[0])
     },
     searchNas (device: DeviceInfo) {
       this.loading = true
