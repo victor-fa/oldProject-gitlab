@@ -7,6 +7,7 @@ import NasFileAPI from '../NasFileAPI';
 import { UploadParams } from '../NasFileModel';
 import { FileInfo } from './BaseTask';
 import ClientAPI from '@/api/ClientAPI'
+import StringUtility from '@/utils/StringUtility';
 
 export default class BackupUploadTask extends UploadTask {
   icon = require('../../assets/resource/folder_icon.png')
@@ -40,6 +41,7 @@ export default class BackupUploadTask extends UploadTask {
   backupUploadParams (fileInfo: FileInfo, chunkLength: number): UploadParams {
     const end = chunkLength === 0 ? chunkLength : fileInfo.completedSize + chunkLength - 1
     const hostname = require("os").hostname()
+    const mac = StringUtility.replaceString(ClientAPI.getMac(), ":", '')
     return {
       end,
       path: fileInfo.destPath,
@@ -47,7 +49,7 @@ export default class BackupUploadTask extends UploadTask {
       size: fileInfo.totalSize,
       md5: fileInfo.md5,
       alias: `来自${hostname}-${process.platform === 'win32' ? 'PC' : 'Mac'}的备份`,
-      id: require("os").hostname() + ClientAPI.getMac()
+      id: hostname + mac
     }
   }
   /** 过滤（备份加密用） */
