@@ -12,7 +12,7 @@
 						<span>{{item.atime | filterTime}}</span>
 					</div>
 					<span class="describe" :style="{color: item.is_connecting === 0 ? '#9C9FA9' : '#007934'}">
-						{{item.status === 0 ? '已禁用' : item.is_connecting === 0 ? '不在线' : '在线'}}
+						{{item.status === 0 ? '已禁用' : item.is_connecting === 0 ? '离线' : '在线'}}
 					</span>
 				</div>
 			</div>
