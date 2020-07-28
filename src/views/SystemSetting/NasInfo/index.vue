@@ -224,7 +224,7 @@ export default Vue.extend({
 		handleFactory () {
 			NasFileAPI.factory().then(response => {
 				if (response.data.code !== 200) return
-        processCenter.renderSend(EventName.initialize)  // 打开获取初始化进度窗口
+				this.switchDevice()
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
@@ -272,9 +272,9 @@ export default Vue.extend({
 			})
 		},
 		switchDevice () {
-			this.$store.dispatch('NasServer/clearCacheNas')
-			TransportHelper.clearQueueCache()
-			processCenter.renderSend(EventName.bindList)
+			// this.$store.dispatch('NasServer/clearCacheNas')
+			// TransportHelper.clearQueueCache()
+			// processCenter.renderSend(EventName.bindList)
 		},
 		fetchSysInfo () {
       NasFileAPI.fetchSysInfo().then(response => {
