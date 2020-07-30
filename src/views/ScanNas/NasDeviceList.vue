@@ -25,7 +25,7 @@
             >
               {{ item.status | formatStatus }}
             </span>
-            <span>model: {{ item.model }}</span>
+            <span>model: {{ item.modelName }}</span>
             <span v-if="showIpLabel(item)">ip: {{ item.ip }}</span>
             <span>sn: {{ item.sn }}</span>
             <span>mac: {{ item.mac }}</span>

@@ -40,7 +40,7 @@ export default Vue.extend({
 	},
   filters: {
     filterSize (bytes) {
-      return StringUtility.formatShowSize(bytes)
+      return StringUtility.formatShowSize(bytes, true)
 		},
     filterTime (time) {
       return StringUtility.formatShowMtime(time)

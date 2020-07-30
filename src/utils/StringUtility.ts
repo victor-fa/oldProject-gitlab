@@ -66,11 +66,11 @@ export default {
     return value.replace(/:/g, '')
   },
   // 格式化文件大小
-	formatShowSize(bytes) {
+	formatShowSize(bytes, originKB?) {
 		bytes = parseFloat(bytes);
     if (bytes === 0) return '0B'
     const k = process.platform === 'darwin' ? 1000 : 1024
-		const sizes = ['B', 'K', 'M', 'G', 'T']
+		const sizes = originKB ? ['K', 'M', 'G', 'T'] : ['B', 'K', 'M', 'G', 'T']
     const unit = Math.floor(Math.log(bytes) / Math.log(k))
     const fixed = unit < 3 ? 0 : 2
 		return (bytes / Math.pow(k, unit)).toFixed(fixed) + sizes[unit]
