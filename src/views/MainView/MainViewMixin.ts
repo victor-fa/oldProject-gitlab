@@ -327,7 +327,7 @@ export default Vue.extend({
         if (data[0].path.toLowerCase().indexOf('.heic') > -1) { // 针对heic文件格式进行本地文件打开
           this.$message.warning('请下载到电脑后再打开')
         } else {
-          myThis.$ipc.send('file-control', OpenType, data);
+          myThis.$ipc.send('file-control', OpenType, (OpenType === 3 ? this.dataArray : data));
         }
       } else if (OpenType === 4) {  // 普通文档、zip、pdf、office
         let data:any = []

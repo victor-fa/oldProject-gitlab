@@ -2,7 +2,7 @@
 	<div
 		class="cd-drag-head"
 		:style="{
-			'margin-top': data.resize && ButtonState === 'sf-icon-window-maximize' ? '2px' : '0',
+			'margin-top': data.resize && ButtonState === 'sf-icon-window-maximize' ? '1px' : '0',
 			color: data.color ? data.color : '#333',
 			background: data.background ? data.background : ''
 		}"

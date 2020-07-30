@@ -1,11 +1,17 @@
 <template>
 	<div class="cd-image-container" @mousewheel="MouseZoom" tabindex="-1" @keydown.left="Prev" @keydown.right="Next">
 		<WindowsHeader :data="header" />
+		<p class="ImageShowTips">
+			<span class="cd-image-zoom" :style="{ opacity: ZoomWin }">{{ ZoomPercent }}</span
+			>{{ NowShow.count + 1 }}/{{ PhotoList.length }}
+		</p>
 		<img :class="'cd-image-show ' + (!Control ? 'cd-image-animated' : '')" :src="NowShow.URL" ref="imageShow" @load="onload" @mousedown="Drag" alt="" />
 		<ul class="cd-image-control">
 			<li class="sf-icon-search-plus" @click="Zoom(1)" />
 			<li class="sf-icon-search-minus" @click="Zoom(-1)" />
-			<li @click="orginz">1:1</li>
+			<li class="sf-icon-angle-left" @click="Prev" />
+			<li @click="onload">1:1</li>
+			<li class="sf-icon-angle-right" @click="Next" />
 			<li class="sf-icon-undo" @click="roate(-90)" />
 			<li class="sf-icon-redo" @click="roate(90)" />
 		</ul>
@@ -34,6 +40,7 @@ export default {
 			ZoomPercent: '0%',
 			ZoomWin: 0,
 			PhotoList: [],
+			PhotoListStr: '',
 			header: {
 				title: '',
 				background: 'rgba(103, 103, 103, 0.5)',
@@ -42,8 +49,8 @@ export default {
 		};
 	},
 	watch: {
-		PhotoList: {
-			handler() {
+		PhotoListStr: {
+			handler(newValue, oldValue) {
 				this.PhotoList.forEach((item, index) => {
 					if (item.now) {
 						item.now = 'PlayThis';
@@ -62,15 +69,19 @@ export default {
 	},
 	created() {
 		this.$ipc.on('win-data', (event, data) => {
-			console.log(data);
+			const filterData = data.filter(item => { return item.type === 3 && item.path.toLowerCase().indexOf('.heic') === -1 })
 			//接收打开图片文件的数据
 			this.$nextTick(() => {
-				data.forEach((item, index) => {
-					item.count = index;
-					item.now = 'PlayThis';
-					this.ShowPicture(item, index);
+				console.log(JSON.parse(JSON.stringify(filterData)));
+				filterData.forEach((item, index) => {
+					if (item.isSelected === true) {
+						item.now = 'PlayThis';
+						item.count = index;
+						this.ShowPicture(item, index);
+					}
 				});
-				this.PhotoList = data;
+				this.PhotoList = filterData;
+				this.PhotoListStr = JSON.stringify(this.PhotoList)
 			});
 		});
 	},
@@ -215,6 +226,7 @@ export default {
 					item.now = false;
 				});
 				this.PhotoList[NowCount + 1].now = 'PlayThis';
+				this.PhotoListStr = JSON.stringify(this.PhotoList)
 			}
 		},
 		Prev() {
@@ -227,6 +239,7 @@ export default {
 					item.now = false;
 				});
 				this.PhotoList[NowCount - 1].now = 'PlayThis';
+				this.PhotoListStr = JSON.stringify(this.PhotoList)
 			}
 		}
 	}
@@ -259,6 +272,29 @@ export default {
 	-ms-user-select: none;
 	-khtml-user-select: none;
 	user-select: none;
+	.ImageShowTips {
+		width: 100%;
+		text-align: right;
+		padding-right: 10px;
+		line-height: 30px;
+		font-size: 14px;
+		color: #fff;
+		position: absolute;
+		z-index: 2;
+		text-shadow: 0 0 5px rgb(0, 0, 0);
+		.cd-image-zoom {
+			height: 30px;
+			color: #fff;
+			text-align: center;
+			font-size: 14px;
+			line-height: 30px;
+			opacity: 1;
+			-webkit-transition: all 0.35s;
+			-moz-transition: all 0.35s;
+			-o-transition: all 0.35s;
+			margin-right: 10px;
+		}
+	}
 	.cd-image-show {
 		position: absolute;
 		top: 0;
@@ -289,7 +325,7 @@ export default {
 		margin: 0 auto;
 		bottom: 30px;
 		height: 42px;
-		left: calc(50% - 106px);
+		left: calc(~"50% - 145px");
 		border-radius: 3px;
 		-webkit-border-radius: 3px;
 		-moz-border-radius: 3px;
@@ -309,6 +345,9 @@ export default {
 				background: rgba(125, 125, 125, 0.5);
 				color: #fff;
 			}
+		}
+		.sf-icon-angle-left, .sf-icon-angle-right {
+			font-size: 22px;
 		}
 	}
 }
