@@ -7,8 +7,8 @@ import crypto from 'crypto'
 import NasFileAPI from '../NasFileAPI'
 import { UploadParams } from '../NasFileModel'
 import StringUtility from '../../utils/StringUtility'
-import FileHandle, { FileHandleError } from '@/utils/FileHandle'
 import ResourceHandler from '@/views/MainView/ResourceHandler'
+import FileHandle, { FileHandleError } from '@/utils/FileHandle'
 import BaseTask, { FileInfo, TaskStatus, TaskErrorCode, TaskError, FileChunk } from './BaseTask'
 
 const CancelToken = axios.CancelToken
@@ -18,6 +18,7 @@ export default class UploadTask extends BaseTask {
   protected buffer?: Buffer // 上传缓存区 
   private directory: string // 上传文件的目录
   protected source? = CancelToken.source() // 下载取消请求标识
+  private retryCount = 6 // 分片最大重试次数
 
   constructor(srcPath: string, destPath: string, uuid: string) {
     super(srcPath, destPath, uuid)
@@ -152,7 +153,8 @@ export default class UploadTask extends BaseTask {
     for (let index = 0; index < count; index++) {
       const position = this.maxChunkSize * index
       const length = index !== count - 1 ? this.maxChunkSize : totalSize - position
-      chunks.push({ position, length })
+      const errorCount = 0
+      chunks.push({ position, length, errorCount })
     }
     return chunks
   }
@@ -283,6 +285,7 @@ export default class UploadTask extends BaseTask {
   private resetFileChunks (file: FileInfo) {
     file.chunks = file.chunks!.map(item => {
       item.isUploading = false
+      item.errorCount = 0
       return item
     })
   }
@@ -309,7 +312,11 @@ export default class UploadTask extends BaseTask {
     }).then(response => {
       if (this.status !== TaskStatus.progress) return
       if (response.data.code !== 200) {
-        this.handlerTaskError(TaskErrorCode.serverError, response.data.msg)
+        if (++chunk.errorCount <= this.retryCount) {
+          this.recursionFileChunk(fd, file)
+        } else {
+          this.handlerTaskError(TaskErrorCode.networkError, response.data.msg)
+        }
       } else {
         chunk.isCompleted = true
         this.completedBytes += chunk.length
@@ -326,8 +333,12 @@ export default class UploadTask extends BaseTask {
       console.log(error)
       if (this.buffer !== undefined) this.buffer = undefined
       if (_.get(error, 'message') === 'cancel' || axios.isCancel(error)) return
-      const code = error === FileHandleError.readError ? TaskErrorCode.readDataError : TaskErrorCode.serverError
-      this.handlerTaskError(code)
+      if (++chunk.errorCount <= this.retryCount) {
+        this.recursionFileChunk(fd, file)
+      } else {
+        const code = error === FileHandleError.readError ? TaskErrorCode.readDataError : TaskErrorCode.networkError
+        this.handlerTaskError(code)
+      }
     })
   }
   // 获取下一个待上传的分片

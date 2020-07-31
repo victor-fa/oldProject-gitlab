@@ -63,9 +63,11 @@ const reloginCodes = [8052]
 const formattingCodes = [4060]
 const reloginEncryptCodes = [8048, 8049]
 const whiteListCodes = [8031, 8032, 8025, 8072, 8071, 8063]
+const whiteListPaths = ['/v1/user/security/logout', '/v1/file/multipart/data']
 const handleExceptionSence = (response: AxiosResponse) => {
   if (response.status === 200) {
     const basicData = response.data as BasicResponse
+    const url = response.config.url === undefined ? '' : response.config.url
     if (refreshTokenCodes.indexOf(basicData.code) !== -1) {
       return handleTokenExpiredSence(response)
     } else if (reconnectCodes.indexOf(basicData.code) !== -1) {
@@ -78,6 +80,8 @@ const handleExceptionSence = (response: AxiosResponse) => {
       EventBus.$emit(EventType.showToast, '磁盘正在初始化')
     } else if (whiteListCodes.indexOf(basicData.code) !== -1) {
       // EventBus.$emit(EventType.showToast, basicData.msg)
+    } else if (whiteListPaths.indexOf(url) !== -1) {
+      // interceptor specific url show error toast
     } else if (basicData.code !== 200 && !_.isEmpty(basicData.msg)) {
       EventBus.$emit(EventType.showToast, basicData.msg) 
     }

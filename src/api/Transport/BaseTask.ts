@@ -112,9 +112,9 @@ interface FileInfo {
 interface FileChunk {
   position: number,
   length: number,
+  errorCount: number,
   isCompleted?: boolean,
-  isUploading?: boolean,
-  errorCount?: number
+  isUploading?: boolean
 }
 
 enum TaskStatus {
