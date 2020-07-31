@@ -118,12 +118,12 @@ interface FileChunk {
 }
 
 enum TaskStatus {
-  pending,
-  prepare,
-  progress,
-  suspend,
-  finished,
-  error
+  pending = 0,
+  prepare = 1,
+  progress = 2,
+  suspend = 3,
+  finished = 4,
+  error = 5
 }
 
 class TaskError {

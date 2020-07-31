@@ -30,14 +30,14 @@ export default class DownloadTask extends BaseTask {
   async start () {
     super.start()
     // 1. 转换需要下载的文件对象
-    if (this.resourceItem !== undefined) {
-      await this.fetchFileInfos(this.resourceItem)
-    }
+    if (this.resourceItem !== undefined) await this.fetchFileInfos(this.resourceItem)
     // 2. 计算总文件大小
     this.calculateDownloadSize()
-    // 3. 开始递归下载
+    // 3. 改变任务状态
+    this.status = TaskStatus.progress
+    // 4. 开始递归下载
     this.downloadFile()
-    // 4. 发送事件
+    // 5. 发送事件
     this.emit('taskBegin', this.taskId)
   }
   async cancel () {

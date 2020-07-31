@@ -261,8 +261,6 @@ export default class UploadTask extends BaseTask {
     this.recursionFileChunk(this.fileHandle, file)
     this.recursionFileChunk(this.fileHandle, file)
     this.recursionFileChunk(this.fileHandle, file)
-    this.recursionFileChunk(this.fileHandle, file)
-    this.recursionFileChunk(this.fileHandle, file)
   }
   // 结束文件上传
   protected endFileUpload (fd: number, file: FileInfo) {
