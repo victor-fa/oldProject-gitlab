@@ -105,6 +105,7 @@ export default Vue.extend({
 				code: this.code
 			}
       UserAPI.changePass(input).then(response => {
+        this.loading = false
 				if (response.data.code !== 200) return
 				this.account = '';
 				this.originalPass = '';
@@ -112,7 +113,6 @@ export default Vue.extend({
 				this.rePassword = '';
 				this.code = '';
         this.codeVisiable = false
-        this.loading = false
         this.$message.success(`${this.isFromLogin ? '重置' : '修改'}成功，请牢记密码`)
         this.$store.dispatch('User/updateAccount', { account: input.userName, password: input.password })
         setTimeout(() => {
@@ -133,6 +133,7 @@ export default Vue.extend({
 				newPwd: StringUtility.encryptPassword(this.password)
 			}
       UserAPI.updatePass(input).then(response => {
+        this.loading = false
 				if (response.data.code !== 200) {
           this.$message.error(response.data.msg)
           return
@@ -143,7 +144,6 @@ export default Vue.extend({
 				this.rePassword = '';
 				this.code = '';
         this.codeVisiable = false
-        this.loading = false
         this.$message.success(`${this.isFromLogin ? '重置' : '修改'}成功，请牢记密码`)
         this.$store.dispatch('User/updateAccount', { account: input.userName, password: input.newPwd })
         setTimeout(() => {

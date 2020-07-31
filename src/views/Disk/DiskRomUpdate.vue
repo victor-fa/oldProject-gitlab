@@ -34,7 +34,8 @@ export default Vue.extend({
     const _this = this as any
 		this.window = _this.$electron.remote.getCurrentWindow();
 		_this.$ipc.on('win-data', (event, data) => {
-			this.updateInfo = data;
+      this.updateInfo = data;
+      this.disable = false
 			console.log(JSON.parse(JSON.stringify(this.updateInfo)));
 		});
 	},

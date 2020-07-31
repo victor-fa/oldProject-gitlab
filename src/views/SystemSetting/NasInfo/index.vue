@@ -237,6 +237,7 @@ export default Vue.extend({
 				if (!info) { this.$message.info('当前版本已最新'); return; }
 				this.update.info = info as any
 				this.update.visiable = true
+				this.disable = false
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)

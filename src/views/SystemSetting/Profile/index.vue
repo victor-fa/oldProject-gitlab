@@ -163,7 +163,13 @@ export default Vue.extend({
 		handleNickname() {
 			const input = { nicName: this.user.nicName ? this.user.nicName : '' }
 			UserAPI.updateInfo(input).then(response => {
-				if (response.data.code !== 200) return
+				if (response.data.code !== 200) {	// 接口返回失败时，需要修改为原来的昵称
+					const userJson = localStorage.getItem(USER_MODEL)
+					if (userJson === null) return
+					const userObj = JSON.parse(userJson)
+					this.user.nicName = userObj.nicName
+					return
+				}
 				this.$store.dispatch('User/updateUser', response.data.data.userVO)
 				this.user = response.data.data.userVO
 				processCenter.renderSend(EventName.account);
@@ -190,19 +196,24 @@ export default Vue.extend({
 			if (!this.changePhoneData.code.length) { this.$message.warning('请输入短信验证码'); return; }
 			const input = { phoneNo: this.changePhoneData.phone, code: this.changePhoneData.code }
 			UserAPI.updateInfo(input).then(response => {
-				if (response.data.code !== 200) return
+				if (response.data.code !== 200) {	// 接口返回失败时，需要修改为原来的手机号
+					const userJson = localStorage.getItem(USER_MODEL)
+					if (userJson === null) return
+					const userObj = JSON.parse(userJson)
+					this.user.phoneNo = userObj.phoneNo
+					return
+				}
 				this.codePhoneVisiable = false;
 				this.$store.dispatch('User/updateUser', response.data.data.userVO)
-        this.$message.success('修改手机号成功')
-      }).catch(error => {
-        console.log(error)
-        this.$message.error('网络连接错误,请检测网络')
-      }).finally(() => {
+				this.$message.success('修改手机号成功')
 				this.changePhoneData = {
 					phone: '',
 					code: ''
 				}
-			})
+      }).catch(error => {
+        console.log(error)
+        this.$message.error('网络连接错误,请检测网络')
+      })
 		},
   }
 })
