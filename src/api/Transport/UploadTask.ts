@@ -1,22 +1,23 @@
 // 上传工具类，支持目录和文件上传、断点续传
-import _ from 'lodash'
 import fs from 'fs'
-import BaseTask, { FileInfo, TaskStatus, TaskErrorCode, TaskError } from './BaseTask'
+import _ from 'lodash'
+import path from 'path'
+import axios from 'axios'
+import crypto from 'crypto'
 import NasFileAPI from '../NasFileAPI'
 import { UploadParams } from '../NasFileModel'
-import FileHandle, { FileHandleError } from '@/utils/FileHandle'
-import axios, { AxiosResponse, CancelTokenSource } from 'axios'
-import { BasicResponse } from '../UserModel'
 import StringUtility from '../../utils/StringUtility'
-import path from 'path'
+import FileHandle, { FileHandleError } from '@/utils/FileHandle'
 import ResourceHandler from '@/views/MainView/ResourceHandler'
+import BaseTask, { FileInfo, TaskStatus, TaskErrorCode, TaskError, FileChunk } from './BaseTask'
 
 const CancelToken = axios.CancelToken
 
 export default class UploadTask extends BaseTask {
+  protected fileHandle = -1 // 标记当前正在操作的文件句柄
+  protected buffer?: Buffer // 上传缓存区 
   private directory: string // 上传文件的目录
-  private source? = CancelToken.source() // 下载取消请求标识
-  private fileHandle = -1 // 标记当前正在操作的文件句柄
+  protected source? = CancelToken.source() // 下载取消请求标识
 
   constructor(srcPath: string, destPath: string, uuid: string) {
     super(srcPath, destPath, uuid)
@@ -31,9 +32,11 @@ export default class UploadTask extends BaseTask {
     _.isEmpty(this.fileInfos) && await this.parseSourcePath(this.srcPath)
     // 2. 计算待上传文件的总大小
     this.calculatorUploadFileSize()
-    // 3. 开始递归上传文件
+    // 3. 改变任务状态
+    this.status = TaskStatus.progress
+    // 4. 开始递归上传文件
     this.uploadFile()
-    // 4. 发送事件
+    // 5. 发送事件
     this.emit('taskBegin', this.taskId)
   }
   async cancel () {
@@ -85,23 +88,31 @@ export default class UploadTask extends BaseTask {
     await FileHandle.statFile(path).then(stats => {
       return this.generateUploadFileInfos(stats)
     }).then(fileInfos => {
-      this.fileInfos = _.cloneDeep(fileInfos)
+      this.fileInfos = _.clone(fileInfos)
     }).catch(_ => {
       this.handlerTaskError(TaskErrorCode.readStatError)
     })
   }
   // 获取需要上传的文件对象
-  protected generateUploadFileInfos (stats: fs.Stats): Promise<FileInfo[]> {
-    return new Promise(resolve => {
+  private generateUploadFileInfos (stats: fs.Stats): Promise<FileInfo[]> {
+    return new Promise((resolve) => {
+      let files: FileInfo[] = []
       if (stats.isFile()) {
         const fileInfo = this.convertFileStats(this.srcPath, stats)
-        resolve([fileInfo])
+        files = [fileInfo]
       } else if (stats.isDirectory()) {
         const fileInfos = FileHandle.deepTraverseDirectory(this.srcPath).map(file => {
           return this.convertFileStats(file.absolutePath, file.stats)
         })
-        resolve(fileInfos)
+        files = fileInfos
       }
+      files.forEach(async item => {
+        await this.calculateFileMD5(item).then(md5 => {
+          item.md5 = md5
+        })
+        return item
+      })
+      resolve(files)
     })
   }
   // 转换stats 
@@ -109,6 +120,9 @@ export default class UploadTask extends BaseTask {
     const name = StringUtility.formatName(path)
     const relativePath = path.substring(this.directory.length + 1, path.length)
     const size = stats === undefined ? 0 : stats.size
+    const isDirectory = stats === undefined
+    const destDir = isDirectory ? `${this.srcPath}/${name}` : undefined
+    const chunks = this.splitFileChunks(size)
     return {
       name,
       relativePath,
@@ -116,7 +130,9 @@ export default class UploadTask extends BaseTask {
       destPath: `${this.destPath}/${relativePath}`,
       totalSize: size,
       completedSize: 0,
-      isDirectory: stats === undefined
+      isDirectory: stats === undefined,
+      destDir,
+      chunks
     }
   }
   // 计算待上传文件的总大小
@@ -128,6 +144,18 @@ export default class UploadTask extends BaseTask {
       this.completedBytes += item.completedSize
     })
   }
+  // 生成文件分片集合
+  protected splitFileChunks (totalSize: number) {
+    if (totalSize === 0) return undefined
+    const count = Math.ceil(totalSize / this.maxChunkSize)
+    const chunks: FileChunk[] = [] 
+    for (let index = 0; index < count; index++) {
+      const position = this.maxChunkSize * index
+      const length = index !== count - 1 ? this.maxChunkSize : totalSize - position
+      chunks.push({ position, length })
+    }
+    return chunks
+  }
   // 处理上传错误回调
   protected handlerTaskError (code: TaskErrorCode, desc?: string) {
     this.speed = ''
@@ -136,87 +164,127 @@ export default class UploadTask extends BaseTask {
     this.error = error
     this.emit('error', this.taskId, error)
     this.clearSpeedTimer()
+    if (this.fileHandle !== -1) FileHandle.closeFileHandle(this.fileHandle)
+    this.fileHandle = -1
   }
   // 递归读取上传多个文件
   protected uploadFile () {
-    // check status
-    if (this.status !== TaskStatus.progress) return
-    // check upload file
-    const fileInfo = this.getNextFileInfo()
-    if (fileInfo === null) {
+    const file = this.getNextFileInfo()
+    if (file === null) {
       this.status = TaskStatus.finished
       this.name = path.basename(this.srcPath)
       this.emit('taskFinished', this.taskId)
       this.clearSpeedTimer()
       return
     }
-    if (fileInfo.isDirectory === true) {
-      this.createFolder(fileInfo)
-    } else {
-      this.filterFilesInfo(fileInfo).then(isFilter => {
-        if (isFilter) {
-          fileInfo.filter = true
-          this.uploadFile()
-        } else {
-          this.startUpload(fileInfo)
-        }
-      })
-    }    
+    if (this.status !== TaskStatus.progress) return
+    this.filterFilesInfo(file).then(isFilter => {
+      if (isFilter) {
+        file.filter = true
+        this.uploadFile() // upload next file
+        return
+      }
+      file.isDirectory === true ? this.createFolder(file) : this.prepareFileUpload(file)
+    }).catch(error => {
+      file.isDirectory === true ? this.createFolder(file) : this.prepareFileUpload(file)
+    })
   }
   // 创建文件夹
-  protected createFolder (fileInfo: FileInfo) {
+  private createFolder (fileInfo: FileInfo) {
     if (this.fileInfos.length > 1) {
       this.name = fileInfo.relativePath
-      this.emit('fileBegin', this.taskId, fileInfo)
+      this.emit('fileBegin', this.taskId)
     }
     this.completedBytes += fileInfo.totalSize
-    NasFileAPI.newFolder(fileInfo.destPath, this.uuid).then(response => {
+    this.createFolderRequest(fileInfo).then(response => {
       console.log(response)
+      if (response.data.code !== 200) {
+        this.handlerTaskError(TaskErrorCode.serverError, response.data.msg)
+      } else {
+        fileInfo.completed = true
+        if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId)
+        this.uploadFile()
+      }
+    }).catch(error => {
+      console.log(error)
+      this.handlerTaskError(TaskErrorCode.networkError)
+    })
+  }
+  // 新建文件请求
+  protected createFolderRequest (file: FileInfo) {
+    return NasFileAPI.newFolder(file.destPath, this.uuid)
+  }
+  // 准备上传文件数据
+  private prepareFileUpload (file: FileInfo) {
+    if (this.fileInfos.length > 1)  {
+      this.name = file.relativePath
+      this.emit('fileBegin', this.taskId)
+    }
+    this.startFileUpload(file)
+  }
+  // 开始上传文件数据
+  protected startFileUpload (file: FileInfo) {
+    FileHandle.openReadFileHandle(file.srcPath).then(fd => { // 1. open file handle success
+      if (this.status !== TaskStatus.progress) return Promise.reject(new Error('cancel'))
+      this.fileHandle = fd
+      if (file.isCreated === true) return Promise.reject(new Error('isCreated'))
+      return NasFileAPI.uploadMultipartBegin(file.destPath, this.uuid, file.totalSize, file.destDir)
+    }).then(response => { // 2. upload begin request
+      if (this.status !== TaskStatus.progress) return
       if (response.data.code !== 200) {
         this.handlerTaskError(TaskErrorCode.serverError, response.data.msg)
         return
       }
-      fileInfo.completed = true
-      if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
-      this.uploadFile()
+      const newPath = _.get(response.data.data, 'path')
+      this.startFileUploadRequest(file, newPath)
+    }).catch(error => { // 3. handler error
+      console.log(error)
+      if (_.get(error, 'message') === 'isCreated') {
+        this.startFileUploadRequest(file)
+        return
+      }
+      if (_.get(error, 'message') === 'cancel' || axios.isCancel(error)) return
+      const code = error === FileHandleError.openError ? TaskErrorCode.openHandleError : TaskErrorCode.networkError
+      this.handlerTaskError(code)
+    })
+  }
+  private startFileUploadRequest (file: FileInfo, newPath?: string) {
+    if (newPath !== undefined) file.destPath = newPath
+    file.isCreated = true
+    if (file.chunks === undefined) {
+      this.endFileUpload(this.fileHandle, file)
+      return
+    }
+    this.resetFileChunks(file)
+    this.recursionFileChunk(this.fileHandle, file)
+    this.recursionFileChunk(this.fileHandle, file)
+    this.recursionFileChunk(this.fileHandle, file)
+  }
+  // 结束文件上传
+  protected endFileUpload (fd: number, file: FileInfo) {
+    if (this.buffer !== undefined) this.buffer = undefined
+    FileHandle.closeFileHandle(fd).then(() => {
+      this.fileHandle = -1
+      return NasFileAPI.uploadMultipartEnd(file.destPath, this.uuid, file.md5!)
+    }).then(response => {
+      if (response.data.code !== 200) {
+        this.handlerTaskError(TaskErrorCode.serverError, response.data.msg)
+      } else {
+        if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId)
+        this.uploadFile()
+      }
     }).catch(error => {
       console.log(error)
-      this.handlerTaskError(TaskErrorCode.serverError)
+      const code = error === FileHandleError.closeError ? TaskErrorCode.closeHandleError : TaskErrorCode.networkError
+      this.handlerTaskError(code)
     })
   }
-  // 开始上传文件数据
-  private startUpload (fileInfo: FileInfo) {
-    if (this.fileInfos.length > 1)  {
-      this.name = fileInfo.relativePath
-      this.emit('fileBegin', this.taskId, fileInfo)
-    }
-    this.calculateFileMD5(fileInfo.srcPath).then(_ => { // 1. calculate file md5
-      return FileHandle.openReadFileHandle(fileInfo.srcPath)
-    }).then(fd => { // 2. open file handle success
-      this.fileHandle = fd
-      return this.uploadSingleFile(fd, fileInfo)
-    }).then(fd => { // 3. upload file data success
-      return FileHandle.closeFileHandle(fd)
-    }).then(() => { // 4. close file handle success
-      this.fileHandle = -1
-      if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId, _.cloneDeep(fileInfo))
-      this.uploadFile()
-    }).catch(error => { // 5. handler error
-      if (this.fileHandle !== -1) FileHandle.closeFileHandle(this.fileHandle)
-      this.parseUploadError(error)
+  // 初始化文件分片集合
+  private resetFileChunks (file: FileInfo) {
+    file.chunks = file.chunks!.map(item => {
+      item.isUploading = false
+      return item
     })
-  }
-  // 解析上传错误
-  private parseUploadError (error: any) {
-    if (error instanceof TaskError) {
-      this.handlerTaskError(error.code, error.desc)
-    } else if (error === FileHandleError.openError) {
-      this.handlerTaskError(TaskErrorCode.openHandleError)
-    } else if (error === FileHandleError.closeError) {
-      this.handlerTaskError(TaskErrorCode.closeHandleError)
-    } else {
-      this.handlerTaskError(TaskErrorCode.unkown)
-    }
   }
   // 获取待上传的文件对象
   private getNextFileInfo () {
@@ -228,76 +296,101 @@ export default class UploadTask extends BaseTask {
     }
     return null
   }
-  // 上传单个文件
-  private uploadSingleFile (fd: number, file: FileInfo): Promise<number> {
-    return new Promise((resolve, reject) => {
-      this.uploadFileChunk(fd, file, (bytes, error) => {
-        if (!_.isEmpty(error) || bytes === undefined) {
-          reject(error)
+  // 递归读取上传文件块
+  private async recursionFileChunk (fd: number, file: FileInfo) {
+    const chunk = this.getNextChunk(file.chunks!)
+    if (chunk === undefined || this.status !== TaskStatus.progress) return
+    this.readFileData(fd, chunk).then(bytes => {
+      if (this.buffer === undefined) return Promise.reject(FileHandleError.readError)
+      if (this.status !== TaskStatus.progress) return Promise.reject(new Error('cancel'))
+      const buffer = this.buffer!.slice(0, bytes)
+      const params = this.generateUploadParams(file, chunk)
+      return NasFileAPI.uploadMultipartData(params, buffer, this.source)
+    }).then(response => {
+      if (this.status !== TaskStatus.progress) return
+      if (response.data.code !== 200) {
+        this.handlerTaskError(TaskErrorCode.serverError, response.data.msg)
+      } else {
+        chunk.isCompleted = true
+        this.completedBytes += chunk.length
+        file.completedSize += chunk.length
+        this.emit('progress', this.taskId)
+        if (file.completedSize < file.totalSize) {
+          this.recursionFileChunk(fd, file)
         } else {
-          this.completedBytes += bytes
-          this.emit('progress', this.taskId)
-          const isCompleted = file.completedSize >= file.totalSize
-          file.completed = isCompleted
-          isCompleted && resolve(fd)
+          file.completed = true
+          this.endFileUpload(fd, file)
+        }
+      }
+    }).catch(error => {
+      console.log(error)
+      if (this.buffer !== undefined) this.buffer = undefined
+      if (_.get(error, 'message') === 'cancel' || axios.isCancel(error)) return
+      const code = error === FileHandleError.readError ? TaskErrorCode.readDataError : TaskErrorCode.serverError
+      this.handlerTaskError(code)
+    })
+  }
+  // 获取下一个待上传的分片
+  private getNextChunk (chunks: FileChunk[]) {
+    for (let index = 0; index < chunks.length; index++) {
+      const chunk = chunks[index]
+      if (chunk.isUploading !== true && chunk.isCompleted !== true) {
+        chunk.isUploading = true
+        return chunk
+      }
+    }
+  }
+  // 生成上传参数
+  private generateUploadParams (fileInfo: FileInfo, chunk: FileChunk) {
+    const params: UploadParams = {
+      end: chunk.position + chunk.length - 1,
+      uuid: this.uuid,
+      path: fileInfo.destPath,
+      start: chunk.position,
+      size: chunk.length
+    }
+    if (fileInfo.isDirectory) params.dir = fileInfo.destDir
+    return params
+  }
+  // 读取文件分片数据
+  private readFileData (fd: number, chunk: FileChunk): Promise<number> {
+    if (this.buffer === undefined) this.buffer = Buffer.alloc(this.maxChunkSize, 0, 'binary')
+    return new Promise((resolve, reject) => {
+      fs.read(fd, this.buffer!, 0, chunk.length, chunk.position, (error, bytes) => {
+        if (error === null) {
+          resolve(bytes)
+        } else {
+          console.log(error)
+          reject(FileHandleError.readError)
         }
       })
     })
   }
-  // 递归读取上传文件块
-  private uploadFileChunk (fd: number, file: FileInfo, completionHandler: (bytes?: number, error?: TaskError) => void) {
-    let chunkLength = 0
-    FileHandle.readFile(fd, file.completedSize, this.maxChunkSize).then(buffer => {
-      chunkLength = buffer.length
-      return this.uploadChunckData(file, buffer, this.source)
-    }).then(response => {
-      if (this.status !== TaskStatus.progress) return
-      if (response.data.code === 4050 && this.fileInfos.length > 1) { // 目录上传需要过滤文件已存错误
-        file.completedSize = file.totalSize
-        completionHandler(file.completedSize)
-      } else if (response.data.code !== 200) {
-        const msg = response.data.code === 4050 ? `${file.name}已存在` : response.data.msg
-        const error = new TaskError(TaskErrorCode.serverError, msg)
-        completionHandler(undefined, error)
-      } else {
-        file.completedSize += chunkLength
-        completionHandler(chunkLength)
-        if (file.completedSize < file.totalSize) this.uploadFileChunk(fd, file, completionHandler)
-      }
-    }).catch(error => {
-      if (this.status !== TaskStatus.progress || axios.isCancel(error)) return
-      if (error === FileHandleError.readError) {
-        completionHandler(undefined, new TaskError(TaskErrorCode.readDataError))
-      } else {
-        completionHandler(undefined, new TaskError(TaskErrorCode.networkError))
-      }
-    })
-  }
-  // 生成上传参数
-  private generateUploadParams (fileInfo: FileInfo, chunkLength: number) {
-    const end = chunkLength === 0 ? chunkLength : fileInfo.completedSize + chunkLength - 1
-    const params: UploadParams = {
-      end,
-      uuid: this.uuid,
-      path: fileInfo.destPath,
-      start: fileInfo.completedSize,
-      size: fileInfo.totalSize 
-    }
-    if (fileInfo.isDirectory) params.dir = `${this.destPath}/${fileInfo.name}`
-    return params
-  }
   // protected methods
   // 计算文件的MD5值
-  protected calculateFileMD5 (path: string): Promise<string> {
-    return Promise.resolve('') // 普通上传不需要MD5值
+  private calculateFileMD5 (file: FileInfo): Promise<string> {
+    return new Promise(async (resolve, reject) => {
+      if (!_.isEmpty(file.md5)) {
+        resolve(file.md5!)
+        return
+      }
+      const stream = fs.createReadStream(file.srcPath)
+      const fsHash = crypto.createHash('md5')
+      stream.on('data', data => {
+        fsHash.update(data)
+      })
+      stream.once('end', () => {
+        const md5 = fsHash.digest('hex')
+        resolve(md5)
+      })
+      stream.once('error', error => {
+        console.log(error)
+        reject(new TaskError(TaskErrorCode.calMD5Error))
+      })
+    })
   }
   // 过滤（备份加密用）
   protected filterFilesInfo (fileInfo: FileInfo): Promise<Boolean> {
     return Promise.resolve(false)
-  }
-  /**上传文件数据 */
-  protected uploadChunckData (file: FileInfo, buffer: Buffer, cancel?: CancelTokenSource): Promise<AxiosResponse<BasicResponse>> {
-    const params = this.generateUploadParams(file, buffer.length)
-    return NasFileAPI.uploadData(params, buffer, cancel)
   }
 }

@@ -14,7 +14,7 @@ import EncryptDownloadTask from './EncryptDownloadTask'
 */
 export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   /**最大任务数 */
-  maxCount = 5
+  maxCount = 3
   /**数据库对象 */
   db?: IDBDatabase
   private queue: T[]
@@ -170,13 +170,6 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     if (task === undefined) return 0
     return task.taskId + 1
   }
-  private clearTable (db?: IDBDatabase) {
-    if (db === undefined) return
-    if (db.objectStoreNames.contains(this.tableName)) {
-      const objectStore = db.transaction(this.tableName, 'readwrite').objectStore(this.tableName)
-      objectStore.clear()
-    }
-  }
   // 将task转换成DB可以存储的对象
   private convertTask2Obj (task: T) {
     return {
@@ -227,14 +220,16 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   }
   // 检测队列并开始新的上传任务
   private checkUploadQueue () {
-    const uploadingQueue = this.getUploadingQueue()
+    const uploadingQueue = this.queue.filter(item => {
+      return item.status === TaskStatus.progress || item.status === TaskStatus.prepare
+    })
     if (uploadingQueue.length < this.maxCount) {
       for (let index = 0; index < this.queue.length; index++) {
         const task = this.queue[index]
         if (task.status === TaskStatus.pending) {
           task.start()
           this.observerTask(task)
-          return
+          break
         }
       }
     }
@@ -268,12 +263,6 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
       resolve()
     })
   }
-  // 获取正在上传中的任务队列
-  private getUploadingQueue () {
-    return this.queue.filter(item => {
-      return item.status === TaskStatus.progress
-    })
-  }
   // 移除task,并更新其它任务的标识符
   private removeTask (taskId: number) {
     return this.queue.filter(task => {
@@ -292,11 +281,11 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
     task.addListener('progress', (index: number) => {
       this.handleTaskProcess(index)
     })
-    task.addListener('fileBegin', (index: number, fileInfo: FileInfo) => {
-      this.handleFileBegin(index, fileInfo)
+    task.addListener('fileBegin', (index: number) => {
+      this.handleFileBegin(index)
     })
-    task.addListener('fileFinished', (index: number, fileInfo: FileInfo) => {
-      this.handleFileFinished(index, fileInfo)
+    task.addListener('fileFinished', (index: number) => {
+      this.handleFileFinished(index)
     })
     task.addListener('taskFinished', (index: number) => {
       this.handleTaskFinished(index)
@@ -314,16 +303,15 @@ export default class TaskQueue<T extends BaseTask> extends EventEmitter {
   // handle upload task callback
   protected handleTaskProcess (taskId: number) {
     this.emit('taskStatusChange', taskId)
-    if (this.count++ < 20) {
+    if (this.count++ < 5) {
       this.cacheTaskId(taskId)
       this.count = 0
     }
   }
-  protected handleFileBegin (taskId: number, fileInfo: FileInfo) {
+  protected handleFileBegin (taskId: number) {
     this.emit('taskStatusChange', taskId)
   }
-  protected handleFileFinished (taskId: number, fileInfo: FileInfo) {
-    console.log(fileInfo)
+  protected handleFileFinished (taskId: number) {
     this.cacheTaskId(taskId)
   }
   protected handleTaskFinished (taskId: number) {

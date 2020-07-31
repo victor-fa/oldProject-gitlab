@@ -31,7 +31,7 @@ import UploadTask from '../../api/Transport/UploadTask'
 import { resourceContextMenu, listContextMenu } from '../../components/OperateListAlter/operateList'
 import StringUtility from '../../utils/StringUtility'
 import processCenter, { EventName } from '../../utils/processCenter'
-import { TaskError, TaskStatus } from '../../api/Transport/BaseTask'
+import { TaskError, TaskStatus, TaskErrorCode } from '../../api/Transport/BaseTask'
 import { uploadQueue } from '../../api/Transport/TransportHelper'
 import RouterUtility from '../../utils/RouterUtility'
 import { toolbars } from './ResourceFuncList'
@@ -171,7 +171,9 @@ export default Vue.extend({
           this.delayTimer = null
         }, 1000)
       } else if (task.status === TaskStatus.error) {
-        this.$message.error(task.error!.desc)
+        if (task.error!.code !== TaskErrorCode.serverError) {
+          this.$message.error(task.error!.desc)
+        }
       }
     },
     handleNewFolderAction () {

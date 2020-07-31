@@ -5,8 +5,8 @@ import StringUtility from '@/utils/StringUtility'
 
 /** 传输任务事件
  * progress (taskId) 上传进度事件
- * fileBegin (taskId, fileInfo) 单个文件开始上传
- * fileFinished (taskId, fileInfo) 单个文件传输完成事件
+ * fileBegin (taskId) 单个文件开始上传
+ * fileFinished (taskId) 单个文件传输完成事件
  * taskBegin (taskId) 任务开始
  * taskSuspend (taskId) 任务挂起事件
  * taskResume (taskId) 任务继续事件
@@ -17,7 +17,7 @@ export default class BaseTask extends EventEmitter {
   readonly srcPath: string
   readonly destPath: string
   readonly uuid: string
-  readonly maxChunkSize = 1 * 1024 * 1024 // 单次读取的最大字节数
+  readonly maxChunkSize = 5 * 1024 * 1024 // 单次读取的最大字节数
   private speedTimer?: NodeJS.Timeout
   private previousSize = 0
   type = '' // 任务类型，用于区分不同任务
@@ -49,7 +49,7 @@ export default class BaseTask extends EventEmitter {
   }
   // public methods
   async start () {
-    this.status = TaskStatus.progress
+    this.status = TaskStatus.prepare
     this.previousSize = this.completedBytes
     this.beginSpeedTimer()
   }
@@ -64,6 +64,7 @@ export default class BaseTask extends EventEmitter {
   }
   resume () {
     this.status = TaskStatus.progress
+    this.previousSize = this.completedBytes
     this.beginSpeedTimer()
   }
   reload () {
@@ -99,14 +100,26 @@ interface FileInfo {
   relativePath: string,
   totalSize: number,
   completedSize: number,
+  destDir?: string,
   md5?: string,
   isDirectory: boolean,
   completed?: boolean,
-  filter?: boolean
+  filter?: boolean,
+  chunks?: FileChunk[],
+  isCreated?: boolean
+}
+
+interface FileChunk {
+  position: number,
+  length: number,
+  isCompleted?: boolean,
+  isUploading?: boolean,
+  errorCount?: number
 }
 
 enum TaskStatus {
   pending,
+  prepare,
   progress,
   suspend,
   finished,
@@ -138,6 +151,8 @@ class TaskError {
         return 'network error'
       case TaskErrorCode.pathError:
         return 'upload file directory is empty'
+       case TaskErrorCode.calMD5Error:
+         return 'calculate file md5 error'
       default:
         return 'unkown error'
     }
@@ -153,12 +168,14 @@ enum TaskErrorCode {
   writeDataError,
   networkError,
   serverError,
-  pathError
+  calMD5Error,
+  pathError,
 }
 
 export {
   FileInfo,
   TaskStatus,
   TaskError,
-  TaskErrorCode
+  TaskErrorCode,
+  FileChunk
 }

@@ -269,6 +269,23 @@ export default {
       cancelToken: source === undefined ? undefined : source.token
     })
   },
+  uploadMultipartBegin (path: string, uuid: string, size: number, dir?: string): ServerResponse {
+    let params: any = { path, uuid, size }
+    if (dir !== undefined) params = { path, uuid, size, dir }
+    return nasServer.post(fileModule + '/multipart/create', undefined, { params })
+  },
+  uploadMultipartData (params: UploadParams, data: Buffer, source?: CancelTokenSource): ServerResponse {
+    return nasServer.post(fileModule + '/multipart/data', data, {
+      params,
+      headers: { 'Content-Type': ' application/octet-stream' },
+      cancelToken: source === undefined ? undefined : source.token
+    })
+  },
+  uploadMultipartEnd (path: string, uuid: string, md5: string): ServerResponse {
+    return nasServer.post(fileModule + '/multipart/complete', undefined, {
+      params: { path, uuid, md5 }
+    })
+  },
   uploadBackup (params: UploadParams, data: Buffer, source?: CancelTokenSource): ServerResponse {
     return nasServer.post(fileModule + '/backup/upload', data, { 
       params,
@@ -279,7 +296,7 @@ export default {
   newFolderEncrypt (path: string, uuid?: string): ServerResponse {
     const crypto =  _.get(store.getters, 'NasServer/cryptoInfo') as CryptoInfo
     let params: any = { path }
-    if (uuid !== undefined) params = { path, uuid }
+    if (!_.isEmpty(uuid)) params = { path, uuid }
     return nasServer.post(cryptoModule + '/folder', params, { params: { crypto_token: crypto.crypto_token } })
   },
   uploadEncrypt (params: UploadParams, data: Buffer, source?: CancelTokenSource): ServerResponse {

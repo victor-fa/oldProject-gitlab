@@ -39,7 +39,7 @@ import ResourceHandler from '../MainView/ResourceHandler'
 import { commonFuncList, toolbars } from '../MainView/ResourceFuncList'
 import EncryptDownloadTask from '../../api/Transport/EncryptDownloadTask'
 import { downloadQueue, uploadQueue } from '../../api/Transport/TransportHelper'
-import { TaskStatus } from '../../api/Transport/BaseTask'
+import { TaskStatus, TaskErrorCode } from '../../api/Transport/BaseTask'
 import EncryptUploadTask from '../../api/Transport/EncryptUploadTask'
 import StringUtility from '../../utils/StringUtility'
 import { EventBus, EventType } from '../../utils/eventBus'
@@ -169,7 +169,7 @@ export default Vue.extend({
           this.handleRefreshAction()
           this.delayTimer = null
         }, 1000)
-      } else if (task.status === TaskStatus.error) {
+      } else if (task.status === TaskStatus.error && task.error!.code !== TaskErrorCode.serverError) {
         this.$message.error(task.error!.desc)
       }
     },

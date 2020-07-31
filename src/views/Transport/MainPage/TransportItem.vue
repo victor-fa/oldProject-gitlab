@@ -6,8 +6,22 @@
     <img class="task-icon" :src="model.icon">
     <div class="item-content">
       <div class="item-top">
-        <span class="item-name" :title="model.name">{{ model.name }}</span>
-        <span v-if="showError" class="item-error">传输失败</span>
+        <div class="item-top-tip">
+          <span
+            class="item-name"
+            :title="model.name"
+            :style="{ width: nameWidth + 'px' }"
+          >
+            {{ model.name }}
+          </span>
+          <span
+            v-if="showTip"
+            class="item-tip"
+            v-bind:class="{ 'item-error': showErrorStyle }"
+          >
+            {{ tipTitle }}
+          </span>
+        </div>
         <div class="item-buttons">
           <custom-button
             v-for="(item, index) in showItems"
@@ -80,7 +94,7 @@ export default Vue.extend({
       const result: boolean = model.category === TransportStatus.done
       return result
     },
-    showError: function () {
+    showErrorStyle: function () {
       const model = this.model as TransportModel
       const result: boolean = model.status === TaskStatus.error
       return result
@@ -88,6 +102,22 @@ export default Vue.extend({
     progressTitle: function () {
       const model = this.model as TransportModel
       return model.progressPercent.toFixed(2) + '%'
+    },
+    showTip: function () {
+      const model = this.model as TransportModel
+      const result: boolean = model.status === TaskStatus.error || model.status === TaskStatus.prepare
+      return result
+    },
+    tipTitle: function () {
+      const model = this.model as TransportModel
+      if (model.status === TaskStatus.error) return '传输失败'
+      if (model.status === TaskStatus.prepare) return '数据准备中...'
+      return ''
+    },
+    nameWidth: function () {
+      const showTip = this.showTip as boolean
+      const adjust = showTip ? 466 : 376
+      return document.body.offsetWidth - adjust
     }
   },
   methods: {
@@ -128,21 +158,26 @@ export default Vue.extend({
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
-      .item-name {
-        font-size: 14px;
-        color: #484848;
-        text-align: left;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        max-width: 300px;
-      }
-      .item-error {
-        margin-left: 12px;
-        font-size: 14px;
-        color: #ff183e;
+      .item-top-tip {
         flex: 1;
-        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        .item-name {
+          font-size: 14px;
+          color: #484848;
+          text-align: left;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .item-tip {
+          font-size: 14px;
+          color: #484848;
+          white-space: nowrap;
+        }
+        .item-error {
+          color: #ff183e;
+        }
       }
       .item-buttons {
         display: flex;

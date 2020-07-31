@@ -13,7 +13,7 @@ import _ from 'lodash'
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
 import { uploadQueue } from '../../../api/Transport/TransportHelper'
-import BaseTask, { TaskStatus, TaskError, FileInfo } from '../../../api/Transport/BaseTask'
+import BaseTask, { TaskStatus, TaskError, FileInfo, TaskErrorCode } from '../../../api/Transport/BaseTask'
 import UploadTask from '../../../api/Transport/UploadTask'
 import StringUtility from '../../../utils/StringUtility'
 import TransportHandler from '../TransportHandler'
@@ -90,17 +90,12 @@ export default Vue.extend({
       this.fetchUploadTasks()
     },
     reloadListItem<T extends BaseTask> (task: T) {
-      if (task.status === TaskStatus.progress) {
-        
-      } else {
-        
-      }
-      const index = TransportHandler.searchModel(this.showArray, task.taskId)
-      if (index === undefined) return
-      const newItem = TransportHandler.convertTask(task)
-      this.showArray.splice(index, 1, newItem)
-      if (task.status !== TaskStatus.progress) this.updateView()
-      if (task.error !== undefined && task.status === TaskStatus.error) {
+      this.dataArray = this.dataArray.map(item => {
+        if (item.id === task.taskId) return TransportHandler.convertTask(task)
+        return item
+      })
+      this.updateView()
+      if (task.error !== undefined && task.error.code !== TaskErrorCode.serverError) {
         this.$message.error(task.error.desc)
       }
     },

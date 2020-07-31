@@ -7,6 +7,7 @@ import { BasicResponse } from './UserModel'
 import ClientAPI from './ClientAPI'
 import router from '@/router'
 import processCenter, { EventName } from '@/utils/processCenter'
+import qs from 'qs'
 
 const nasServer = axios.create({
   timeout: 10000,
@@ -34,11 +35,12 @@ const setApiToken = (config: AxiosRequestConfig) => {
   }
   return config
 }
-
-nasServer.interceptors.request.use((config) => {
-  // Do something before request is sent
+nasServer.interceptors.request.use(config => {
+  config.paramsSerializer = params => {
+    return qs.stringify(params)
+  }
   return setApiToken(config)
-}, (error) => {
+}, error => {
   // Do something with request error
   return Promise.reject(error)
 })
@@ -61,11 +63,9 @@ const reloginCodes = [8052]
 const formattingCodes = [4060]
 const reloginEncryptCodes = [8048, 8049]
 const whiteListCodes = [8031, 8032, 8025, 8072, 8071, 8063]
-const whiteListPaths = ['/v1/file/backup/upload', '/v1/file/upload', '/v1/crypto/upload', '/v1/file/download', '/v1/crypto/download', '/v1/user/security/logout', '/v1/file/add', '/v1/crypto/folder']
 const handleExceptionSence = (response: AxiosResponse) => {
   if (response.status === 200) {
     const basicData = response.data as BasicResponse
-    const url = response.config.url === undefined ? '' : response.config.url
     if (refreshTokenCodes.indexOf(basicData.code) !== -1) {
       return handleTokenExpiredSence(response)
     } else if (reconnectCodes.indexOf(basicData.code) !== -1) {
@@ -78,8 +78,6 @@ const handleExceptionSence = (response: AxiosResponse) => {
       EventBus.$emit(EventType.showToast, '磁盘正在初始化')
     } else if (whiteListCodes.indexOf(basicData.code) !== -1) {
       // EventBus.$emit(EventType.showToast, basicData.msg)
-    } else if (whiteListPaths.indexOf(url) !== -1) {
-      // filter path
     } else if (basicData.code !== 200 && !_.isEmpty(basicData.msg)) {
       EventBus.$emit(EventType.showToast, basicData.msg) 
     }

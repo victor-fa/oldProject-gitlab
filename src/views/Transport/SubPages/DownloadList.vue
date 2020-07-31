@@ -13,7 +13,7 @@ import _ from 'lodash'
 import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
 import StringUtility from '../../../utils/StringUtility'
-import BaseTask, { TaskStatus, FileInfo, TaskError } from '../../../api/Transport/BaseTask'
+import BaseTask, { TaskStatus, FileInfo, TaskError, TaskErrorCode } from '../../../api/Transport/BaseTask'
 import DownloadTask from '../../../api/Transport/DownloadTask'
 import { downloadQueue } from '../../../api/Transport/TransportHelper'
 import { TransportModel, downloadCategorys, TransportStatus, TransportCategory } from '../MainPage/TransportModel'
@@ -90,12 +90,12 @@ export default Vue.extend({
       this.reloadTaskStatus(task)
     },
     reloadTaskStatus<T extends BaseTask> (task: T) {
-      const index = TransportHandler.searchModel(this.dataArray, task.taskId)
-      if (index === undefined) return
-      const newItem = TransportHandler.convertTask(task)
-      this.dataArray.splice(index, 1, newItem)
+      this.dataArray = this.dataArray.map(item => {
+        if (item.id === task.taskId) return TransportHandler.convertTask(task)
+        return item
+      })
       this.updateView()
-      if (task.error !== undefined && task.status === TaskStatus.error) {
+      if (task.error !== undefined && task.error.code !== TaskErrorCode.serverError) {
         this.$message.error(task.error.desc)
       }
     },

@@ -160,6 +160,7 @@ export default {
     const doingItems = _.cloneDeep(runningOperateItems)
     switch (status) {
       case TaskStatus.pending:
+      case TaskStatus.prepare:
         return doingItems.map((item, index) => {
           item.disable = index === 0
           return item

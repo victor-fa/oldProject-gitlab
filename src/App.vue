@@ -1,11 +1,11 @@
 <template>
-  <a-locale-provider :locale="zh_CN">
+  <a-config-provider :locale="zh_CN">
     <div id="app">
       <keep-alive>
         <router-view />
       </keep-alive>
     </div>
-  </a-locale-provider>
+  </a-config-provider>
 </template>
 
 <script lang="ts">
