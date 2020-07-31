@@ -82,7 +82,7 @@ export default class BaseTask extends EventEmitter {
       const speed = this.completedBytes - this.previousSize // 单位B/s
       this.speed = StringUtility.formatSpeed(speed)
       this.previousSize = this.completedBytes
-    }, 1500)
+    }, 1000)
   }
   // 清除定时器
   clearSpeedTimer () {
