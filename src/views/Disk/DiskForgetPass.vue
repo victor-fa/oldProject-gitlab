@@ -11,10 +11,10 @@
           <basic-form :icon="loginIcons.password" :maxLength=11 placeholder="请输入原密码" v-model="originalPass" isSecure="ture"/>
         </li>
         <li class="password-from">
-          <basic-form :icon="loginIcons.password" :maxLength=16 placeholder="请输入新密码" v-model="password" isSecure="ture"/>
+          <basic-form :icon="loginIcons.password" :maxLength=16 placeholder="请输入新密码" v-model="password" isSecure="ture" @blur="handlePasswordBlur" @change="passwordError = ''" :error="passwordError"/>
         </li>
         <li class="password-from">
-          <basic-form :icon="loginIcons.password" :maxLength=16 placeholder="重新输入新密码" v-model="rePassword" isSecure="ture"/>
+          <basic-form :icon="loginIcons.password" :maxLength=16 placeholder="重新输入新密码" v-model="rePassword" isSecure="ture" @blur="handleRePasswordBlur" @change="rePasswordError = ''" :error="rePasswordError"/>
         </li>
         <li class="password-from" v-if="codeVisiable">
           <basic-form :icon="loginIcons.password" :suffix="codeTips" :maxLength=6 placeholder="请输入短信验证码" v-model="code" v-on:pressEnter="resetAction"/>
@@ -57,6 +57,8 @@ export default Vue.extend({
       originalPass: '',
       password: '',
       rePassword: '',
+      passwordError: '',
+      rePasswordError: '',
       code: '',
       codeTips: '',
       codeCount: 60,
@@ -215,6 +217,16 @@ export default Vue.extend({
     closeAndClear () {
       const _this = this as any
       _this.$electron.remote.getCurrentWindow().close();
+    },
+    handlePasswordBlur () {
+      if (_.isEmpty(this.password)) return
+      const result = StringUtility.vaildatorPasswordRule(this.password)
+      if (!result) this.passwordError = '密码不符合规范(6-16位包含大小写字母数字)'
+    },
+    handleRePasswordBlur () {
+      if (_.isEmpty(this.rePassword)) return
+      const result = StringUtility.vaildatorPasswordRule(this.rePassword)
+      if (!result) this.rePasswordError = '密码不符合规范(6-16位包含大小写字母数字)'
     }
   }
 })

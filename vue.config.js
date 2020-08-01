@@ -28,7 +28,7 @@ module.exports = {
     electronBuilder: {
       builderOptions: {
         "appId": `com.ugreen.app.${packageInfo.name}`,
-        "productName": `${packageInfo.name}_v${packageInfo.version}_${currentDate}`, // 项目名，也是生成的安装文件名，即aDemo.exe
+        "productName": `${packageInfo.name}_v${packageInfo.version}_${outputDirData}_${currentDate}`, // 项目名，也是生成的安装文件名，即aDemo.exe
         "copyright": "Copyright © 2020", // 版权信息
         "directories": {
           "output": "./dist_electron"//输出文件路径
@@ -55,13 +55,13 @@ module.exports = {
         },
         "nsis": {
           "oneClick": false, // 是否一键安装
+          "deleteAppDataOnUninstall": true,  // 清空所有用户数据，仅一键安装有效
+          "shortcutName": "UGreen-Nas", // 图标名称
           "allowElevation": true, // 允许请求提升。 如果为false，则用户必须使用提升的权限重新启动安装程序。
           "allowToChangeInstallationDirectory": true, // 允许修改安装目录，仅非一键安装有效
           "createDesktopShortcut": true, // 创建桌面图标
           "createStartMenuShortcut": true, // 创建开始菜单图标
-          "shortcutName": "UGreen-Nas", // 图标名称
-          // "uninstallDisplayName": "UGreen_Nas",  // 控制面板中卸载程序的名称
-          "deleteAppDataOnUninstall": true  // 清空所有用户数据，仅一键安装有效
+          "uninstallDisplayName": "绿联云",  // 控制面板中卸载程序的名称
         }
       }
     }
