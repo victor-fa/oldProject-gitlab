@@ -44,8 +44,8 @@ export default {
 		win.webContents.on('did-finish-load', () => {
 			win.setTitle(options.title);
 			win.callback(options.data || '无数据');
-			// isDevelopment && win.webContents.openDevTools();
-			win.webContents.openDevTools();
+			// isDevelopment && win.webContents.openDevTools({mode: 'detach'});
+			win.webContents.openDevTools({mode: 'detach'});
 		});
 		return win;
 	},

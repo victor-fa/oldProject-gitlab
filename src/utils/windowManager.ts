@@ -58,11 +58,11 @@ export default {
       // Load the url of the dev server if in development mode
       const url = (process.env.WEBPACK_DEV_SERVER_URL as string) + '#/' + newOptions.path
       window.loadURL(url)
-      if (!process.env.IS_TEST) window.webContents.openDevTools()
+      if (!process.env.IS_TEST) window.webContents.openDevTools({mode: 'detach'})
     } else {
       // Load the index.html when not in development
       window.loadURL('app://./index.html#/' + newOptions.path)
-      window.webContents.openDevTools()
+      window.webContents.openDevTools({mode: 'detach'})
     }
     window.webContents.on('page-title-updated', () => {
       if (window !== null) {	// win环境

@@ -8,6 +8,7 @@ import store from '@/store'
 import UserAPI from './UserAPI'
 
 const nasCloudIP = 'http://cloud2.ugreengroup.com'
+// const nasCloudIP = 'http://cloud.ugreengroup.com'
 
 const nasCloud = axios.create({
   baseURL: nasCloudIP,

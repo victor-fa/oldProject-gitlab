@@ -136,7 +136,12 @@ export default Vue.extend({
 			const ugreen_no = this.deliver.ugreen_no
 			const deliver_code = this.deliver.code
       NasFileAPI.deliver(ugreen_no, deliver_code).then(response => {
-				if (response.data.code !== 200) return
+				if (response.data.code !== 200) {
+					if (response.data.code === 8025) { this.$message.success('您不是管理员！') }
+					if (response.data.code === 8047) { this.$message.success('验证码输入错误，请重试！') }
+					this.deliver.code = '' // 输入错误情况下，需要重置验证码
+					return
+				}
 				this.deliver.visiable = false
 				this.deliver = {
 					code: '',
