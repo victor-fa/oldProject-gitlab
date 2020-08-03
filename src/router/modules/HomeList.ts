@@ -21,45 +21,32 @@ const HomeRouters = [
     meta: {
       title: '全部文件',
       icon: require('../../assets/storage_icon.png'),
-      selectedIcon: require('../../assets/storage_icon_selected.png'),
-      isSelected: false
+      selectedIcon: require('../../assets/storage_icon_selected.png')
     }
   },
   {
     path: '/media/image',
     name: 'media-image',
     component: () => import('../../views/Media/index.vue'),
-    meta: { 
-      title: '图片',
-      isSelected: false
-     }
+    meta: { title: '图片' }
   },
   {
     path: '/media/video',
     name: 'media-video',
     component: () => import('../../views/Media/index.vue'),
-    meta: { 
-      title: '视频',
-      isSelected: false
-     }
+    meta: { title: '视频' }
   },
   {
     path: '/media/music',
     name: 'media-music',
     component: () => import('../../views/Media/index.vue'),
-    meta: { 
-      title: '音乐',
-      isSelected: false
-     }
+    meta: { title: '音乐' }
   },
   {
     path: '/media/document',
     name: 'media-document',
     component: () => import('../../views/Media/index.vue'),
-    meta: { 
-      title: '文档',
-      isSelected: false
-     }
+    meta: { title: '文档' }
   },
   {
     path: '/custom',
@@ -68,8 +55,7 @@ const HomeRouters = [
     meta: {
       title: '我的珍藏',
       icon: require('../../assets/custom_icon.png'),
-      selectedIcon: require('../../assets/custom_icon_selected.png'),
-      isSelected: false
+      selectedIcon: require('../../assets/custom_icon_selected.png')
     }
   },
   {
@@ -79,8 +65,7 @@ const HomeRouters = [
     meta: {
       title: '我的收藏',
       icon: require('../../assets/collect_icon.png'),
-      selectedIcon: require('../../assets/collect_icon_selected.png'),
-      isSelected: false
+      selectedIcon: require('../../assets/collect_icon_selected.png')
     }
   },
   {
@@ -90,8 +75,7 @@ const HomeRouters = [
     meta: {
       title: '我的备份',
       icon: require('../../assets/backup_icon.png'),
-      selectedIcon: require('../../assets/backup_icon_selected.png'),
-      isSelected: false
+      selectedIcon: require('../../assets/backup_icon_selected.png')
     },
     children: [
       ...BackupRouters
@@ -104,8 +88,7 @@ const HomeRouters = [
     meta: {
       title: '共享空间',
       icon: require('../../assets/share_icon.png'),
-      selectedIcon: require('../../assets/share_icon_selected.png'),
-      isSelected: false
+      selectedIcon: require('../../assets/share_icon_selected.png')
     }
   },
   {
@@ -115,8 +98,7 @@ const HomeRouters = [
     meta: {
       title: '加密空间',
       icon: require('../../assets/encrypt_icon.png'),
-      selectedIcon: require('../../assets/encrypt_icon_selected.png'),
-      isSelected: false
+      selectedIcon: require('../../assets/encrypt_icon_selected.png')
     },
     children: [
       ...encryptRouters
@@ -129,8 +111,7 @@ const HomeRouters = [
     meta: {
       title: '任务列表',
       icon: require('../../assets/transport_icon.png'),
-      selectedIcon: require('../../assets/transport_icon_selected.png'),
-      isSelected: false
+      selectedIcon: require('../../assets/transport_icon_selected.png')
     },
     children: [
       ...TransportRouters
@@ -143,8 +124,7 @@ const HomeRouters = [
     meta: {
       title: '回收站',
       icon: require('../../assets/recycle_icon.png'),
-      selectedIcon: require('../../assets/recycle_icon_selected.png'),
-      isSelected: false
+      selectedIcon: require('../../assets/recycle_icon_selected.png')
     }
   },
   {
@@ -191,7 +171,8 @@ interface FuncListItem {
     title: string,
     icon: any,
     selectedIcon: any,
-    isSelected: boolean,
+    isSelected?: boolean,
+    isHover?: boolean
   }
 }
 

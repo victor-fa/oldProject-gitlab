@@ -48,7 +48,7 @@
       class="vertical-item"
       v-bind:class="{
         'vertical-selected-item': isSelected,
-        'odd-vertical-vtem': isOddStyle,
+        'odd-vertical-item': isOddStyle,
         'disable-item': model.disable 
       }"
       @click.stop.exact="singleClick()"
@@ -152,8 +152,8 @@ export default Vue.extend({
       return this.arrangeWay === ArrangeWay.horizontal
     },
     isOddStyle: function () {
-      const myThis = this as any
-      return myThis.index % 2
+      const isOdd: boolean = this.index % 2 !== 0
+      return isOdd
     },
     showSize: function () {
       const model = this.model as ResourceItem
@@ -293,19 +293,20 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 .horizontal-item {
-  width: 80px;
-  height: 100px;
+  width: 108px;
+  height: 108px;
+  border-radius: 5px;
   overflow: hidden;
+  margin: 10px 0px;
+  border: 1px solid white;
   .icon-wrapper {
-    height: 75px;
+    height: 78px;
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 8px;
     img {
-      max-width: 40px;
-      max-height: 65px;
-      margin: auto;
+      max-width: 60px;
+      max-height: 68px;
     }
   }
   .name-wrapper {
@@ -328,6 +329,7 @@ export default Vue.extend({
       width: 100%;
       height: 20px;
       font-size: 12px;
+      margin: 0px 3px;
       color: #484848;
       text-align: center;
       padding-left: 4px;
@@ -336,22 +338,12 @@ export default Vue.extend({
   }
 }
 .horizontal-item:hover {
-  .icon-wrapper {
-    background-color: #DEF1EA80;
-  }
-  p {
-    background-color: #DEF1EA80;
-  }
+  background-color: #06B65010;
+  border: 1px solid #06B65030;
 }
 .horizontalSelectedItem, .horizontalSelectedItem:hover {
-  // border-radius: 8px;
-  // background-color: #def1ea;
-  .icon-wrapper {
-    background-color: #DEF1EA;
-  }
-  p {
-    background-color: #DEF1EA;
-  }
+  background-color: #06B65019;
+  border: 1px solid #06B65030;
 }
 .vertical-item {
   width: 100%;
@@ -370,7 +362,7 @@ export default Vue.extend({
     }
     input {
       flex: 1;
-      height: 22px;
+      height: 24px;
       font-size: 12px;
       color: #484848;
       max-width: 200px;
@@ -392,7 +384,7 @@ export default Vue.extend({
   background-color: #DEF1EA !important;
 }
 .odd-vertical-item {
-  background-color: #FCFBFE;
+  background-color: #F6F8FB;
 }
 .disable-item {
   cursor: not-allowed;

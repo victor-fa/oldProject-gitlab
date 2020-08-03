@@ -270,7 +270,6 @@ export default Vue.extend({
       .setting-icon {
         width: 20px;
         height: 20px;
-        margin-right: 4px;
       }
       .arrow-icon {
         width: 10px;

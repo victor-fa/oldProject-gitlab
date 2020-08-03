@@ -8,7 +8,11 @@
     @mouseup="mouseupAction"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
-    v-bind:class="{ 'highlight-style': isHighlight, 'disable-style': disable }"
+    v-bind:class="{
+      'highlight-style': isHighlight,
+      'disable-style': disable,
+      'hover-style': isHover
+    }"
   >
     <img :src="currentImage" :style="{ width: this.iconWidth }">
     <label class="button-title" v-if="isShowLabel">
@@ -88,6 +92,12 @@ export default Vue.extend({
     },
     disable: function (value: boolean) {
       value === true ? this.changeDisableStyle() : this.changeNormalStyle()
+    },
+    text: function (newValue: string) {
+      this.currentTitle = newValue
+    },
+    image: function (newValue: any) {
+      this.currentImage = newValue
     }
   },
   methods: {
@@ -162,6 +172,11 @@ export default Vue.extend({
   .button-title {
     color: #00000080;
     cursor: default !important;
+  }
+}
+.hover-style {
+  .button-title {
+    color: #007934;
   }
 }
 </style>

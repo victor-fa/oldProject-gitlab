@@ -43,7 +43,7 @@
 </template>
 
 <script lang="ts">
-import _ from 'lodash'
+import _, { min, max } from 'lodash'
 import Vue from 'vue'
 import infiniteScroll from 'vue-infinite-scroll'
 import { EventBus, EventType } from '@/utils/eventBus'
@@ -73,6 +73,7 @@ export default Vue.extend({
   },
   data () {
     return {
+      column: 1,
       dragState: false,
       scrollHeight: document.body.clientHeight - this.adjust
     }
@@ -91,9 +92,10 @@ export default Vue.extend({
       const grid = this.customGrid as object
       if (!_.isEmpty(grid)) return grid
       if (this.arrangeWay === ArrangeWay.horizontal) {
-        return { gutter: 16, xs: 2, sm: 4, md: 6, lg: 8, xl: 12, xxl: 24 }
+        const column = this.column as number
+        return { gutter: 20, column: column }
       }
-      return { gutter: 16, xs: 1, sm: 1, md: 1, lg: 1, xl: 1, xxl: 1 }
+      return { gutter: 0 }
     },
     isShowHeader: function () {
       if (this.arrangeWay === ArrangeWay.vertical) return true
@@ -103,6 +105,9 @@ export default Vue.extend({
   mounted () {
     window.addEventListener('resize', this.observerWindowResize)
     document.addEventListener('keydown', this.handleKeydownAction)
+    this.$nextTick(() => {
+      this.calculateListColumn()
+    })
   },
   destroyed () {
     window.removeEventListener('resize', this.observerWindowResize)
@@ -110,11 +115,30 @@ export default Vue.extend({
   },
   methods: {
     observerWindowResize () {
+      // calculate list view height
       let height = document.body.clientHeight - this.adjust
       if (this.arrangeWay === ArrangeWay.vertical) {
         height -= 28
       }
       this.scrollHeight = height
+      // calculate list item column
+      this.calculateListColumn()
+    },
+    calculateListColumn () {
+      const columns = [1, 2, 3, 4, 6, 8, 12, 24]
+      const padding = 40, itemWidth = 128
+      const column = (this.$el.clientWidth - padding) / itemWidth
+      for (let index = 0; index < columns.length; index++) {
+        const element = columns[index]
+        if (element === column) {
+          this.column = element
+          break
+        } else if (element > column) {
+          const safeIndex = max([index - 1, 0]) as number
+          this.column = columns[safeIndex]
+          break
+        }
+      }
     },
     handleKeydownAction (event: KeyboardEvent) {
       const code = event.code
@@ -222,7 +246,7 @@ export default Vue.extend({
   overflow-x: hidden;
 }
 .horizontalResourceList {
-  padding: 20px;
+  padding: 10px 20px;
   background-color: white;
 }
 .drag-style {

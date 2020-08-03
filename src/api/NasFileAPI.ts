@@ -7,6 +7,8 @@ import axios, { AxiosResponse, Canceler, CancelTokenSource } from 'axios/index'
 import { OrderType, UploadTimeSort } from './NasFileModel'
 import { nasServer } from './NasServer';
 import store from '@/store';
+import StringUtility from '@/utils/StringUtility';
+import ClientAPI from './ClientAPI';
 
 axios.defaults.withCredentials = true;
 
@@ -22,7 +24,6 @@ const settingModule = '/setting/v1/sys'
 const upgradeModule = '/v1/upgrade'
 const diskModule = '/v1/disk'
 const offlineModule = '/v1/dl'
-const hostname = require("os").hostname()
 
 type ServerResponse = Promise<AxiosResponse<BasicResponse>>
 const CancelToken = axios.CancelToken
@@ -396,15 +397,16 @@ export default {
       params: { crypto_token: crypto.crypto_token }
     })
   },
-  backupCheck (data): ServerResponse {
+  backupCheck (path: string, md5: string): ServerResponse {
+    const hostname = require("os").hostname()
+    const mac = StringUtility.replaceString(ClientAPI.getMac(), ":", '')
     return nasServer.post(fileModule + '/backup/check', null, {
       params: {
-        path: data.destPath,
-        md5: data.md5,
+        path: path,
+        md5: md5,
         alias: `${hostname}的${process.platform === 'win32' ? 'PC' : 'Mac'}`,
-        id: data.md5
-      },
-      headers: {'Accept': '*/*'}
+        id: hostname + mac
+      }
     })
   },
   newCustomFolder (info: CustomInfo): ServerResponse {
@@ -562,7 +564,7 @@ enum TaskMode {
   rename = 2,
   cover = 3
 }
-const maxSize = 360
+const maxSize = 100
 
 export {
   TaskMode,

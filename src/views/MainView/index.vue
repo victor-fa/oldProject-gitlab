@@ -6,7 +6,7 @@
           ref="mainHeaderView"
           :toolbars="showToolbars"
           :popoverList="popoverList"
-          :funcList="showFuncList"
+          :funcList="funcList"
           v-model="categoryType"
           v-on:callbackAction="handleHeaderViewAction"
         />
@@ -115,7 +115,7 @@ export default Vue.extend({
     },
     popoverList: { // header中排序弹窗列表数据
       default: () => {
-        return _.cloneDeep(sortList)
+        return sortList
       }
     },
     showToolbars: { // 工具栏菜单数据集合
@@ -138,12 +138,10 @@ export default Vue.extend({
   data () {
     return {
       sortList,
-      showFuncList: _.cloneDeep(this.funcList) as ResourceFuncItem[],
       categoryType: ResourceType.all, // 当前数据分类 
       showArray: this.dataSource as ResourceItem[], // 当前页展示的数据
       alterPosition: { left: '0px', top: '0px' }, // 右键菜单样式
       showAlter: false, // 控制右键菜单的显示与隐藏
-      arrangeWay: ArrangeWay.horizontal, // 列表排列方式
       showOperateList: [] as OperateGroup[], // 展示的右键菜单数据
       showSelectModal: false, // 控制路径选择弹窗的显示与隐藏
       showEncryptModal: false, // 控制输入加密密码弹窗的显示与隐藏
@@ -153,7 +151,7 @@ export default Vue.extend({
     }
   },
   computed: {
-    ...mapGetters('Resource', ['clipboard']),
+    ...mapGetters('Resource', ['clipboard', 'arrangeWay']),
     ...mapGetters('User', ['user']),
     ...mapGetters('NasServer', ['nasInfo', 'accessInfo']),
     alterStyle: function (): object {
@@ -176,13 +174,9 @@ export default Vue.extend({
   watch: {
     dataSource: function (newValue: Array<ResourceItem>) {
       this.showArray = ResourceHandler.classifyArray(newValue, this.categoryType)
-    },
-    funcList: function (newValue: ResourceFuncItem[]) {
-      this.showFuncList = newValue
     }
   },
   mounted () {
-    this.updateArrangeWay()
     this.observationWindowAction()
   },
   destroyed () {
@@ -196,23 +190,6 @@ export default Vue.extend({
     },
     updateShowArray (items: ResourceItem[]) {
       this.showArray = items
-    },
-    updateArrangeWay () {
-      let arrangeIndex = -1
-      for (let index = 0; index < this.showFuncList.length; index++) {
-        const element = this.showFuncList[index]
-        if (element.command === 'arrange') {
-          arrangeIndex = index
-          break
-        }
-      }
-      if (arrangeIndex === -1) return
-      const way = localStorage.getItem('arrangeWay')
-      if (way === null) return
-      this.arrangeWay = Number(way)
-      const item = this.showFuncList[arrangeIndex]
-      item.isSelected = this.arrangeWay === ArrangeWay.vertical
-      this.showFuncList.splice(arrangeIndex, 1, item)
     },
     observationWindowAction () {
       window.addEventListener('blur', this.handleWinBlurAction)
@@ -329,8 +306,7 @@ export default Vue.extend({
       }
     },
     handleArrangeChange (arrangeWay: ArrangeWay) {
-      this.arrangeWay = arrangeWay
-      localStorage.setItem('arrangeWay', arrangeWay.toString())
+      this.$store.dispatch('Resource/updateArrangeWay', arrangeWay)
     },
     handleInnerRefreshAction() {
       this.showAlter = false

@@ -11,6 +11,7 @@
                 :text="item.title"
                 :disableImage="item.disableIcon"
                 :disable="item.disable"
+                :hoverImage="item.selectedIcon"
                 :iconWidth="item.iconWidth"
                 @click.native="handleToolbarClick(index)"
               />
@@ -26,6 +27,7 @@
             :image="item.icon"
             :text="item.title"
             :disableImage="item.disableIcon"
+            :hoverImage="item.selectedIcon"
             :disable="item.disable"
             :iconWidth="item.iconWidth"
             @click.native="handleToolbarClick(index)"
@@ -50,6 +52,7 @@
     <div class="header-bottom-view" v-bind:class="{ 'bottom-view-separator': showToolbar }">
       <div class="bottom-left-view">
         <custom-button
+          v-if="false"
           :image="backIcon"
           :disableImage="disableBackIcon"
           :disable="disableBack"
@@ -62,7 +65,8 @@
           <a-breadcrumb-item
             v-for=" (item, index) in showPaths"
             :key="index"
-            :class="{ 'modal-breadcrumb-item': showHover(index) }"
+            class="modal-breadcrumb-item"
+            v-bind:class="{ 'modal-breadcrumb-hover': showHover(index) }"
             @click.native.stop="handleBreadcrumbClick(index)"
           >
             {{ item.path }}
@@ -81,7 +85,7 @@
           @change="handleChangeAction"
         />
         <div
-          v-for="(item, index) in funcList"
+          v-for="(item, index) in showFuncList"
           :key="index"
           class="right-item"
         >
@@ -101,9 +105,8 @@
               :image="item.icon"
               :ref="item.command"
               :title="item.title"
-              :disable="item.disable"
-              :disableImage="item.disableIcon"
               :iconWidth="item.iconWidth"
+              :hoverImage="item.selectedIcon"
               v-show="item.isHidden !== true"
               @click.native="handleItemClick(index)"
             />
@@ -114,11 +117,8 @@
             :key="item.command"
             :image="item.icon"
             :title="item.title"
-            :selectedImage="item.selectedIcon"
-            :isSelected="item.isSelected"
-            :disable="item.disable"
-            :disableImage="item.disableIcon"
             :iconWidth="item.iconWidth"
+            :hoverImage="item.selectedIcon"
             @click.native="handleItemClick(index)"
           />
         </div>
@@ -136,7 +136,7 @@ import CustomButton from '@/components/CustomButton/index.vue'
 import SortPopoverList from '@/components/SortPopoverList/index.vue'
 import { SortWay, SortKind, SortType, sortList, SortList } from '@/model/sortList'
 import { ArrangeWay, OrderType, ResourceType } from '@/api/NasFileModel'
-import { ResourceFuncItem, searchItem } from './ResourceFuncList'
+import { ResourceFuncItem, searchItem, sortDescItem, sortAscItem, arrangeItem, blockItem } from './ResourceFuncList'
 import { CacheRoute } from '@/store/modules/Router'
 import RouterUtility from '@/utils/RouterUtility'
 import FileModalHandler, { ShowPath } from '../SelectFilePath/FileModalHandler'
@@ -175,11 +175,13 @@ export default Vue.extend({
       keyword: '', // 搜索关键字
       backIcon: require('../../assets/back_icon.png'),
       disableBackIcon: require('../../assets/dis_back_icon.png'),
-      showPaths: [] as ShowPath[]
+      showPaths: [] as ShowPath[],
+      showFuncList: [] as ResourceFuncItem[]
     }
   },
   computed: {
     ...mapGetters('Router', ['showRoutes']),
+    ...mapGetters('Resource', ['arrangeWay']),
     key: function () {
       const path: string = this.$route.path
       return path
@@ -203,10 +205,14 @@ export default Vue.extend({
         if (index === undefined) return
         this.showPaths = FileModalHandler.replaceElement(newValue, 1, index, '...')
       })
+    },
+    funcList: function (newValue: ResourceFuncItem[]) {
+      this.updateShowFuncList(newValue)
     }
   },
   mounted () {
     this.showPaths = this.fetchShowPaths(this.showRoutes)
+    this.updateShowFuncList(this.funcList as ResourceFuncItem[])
   },
   methods: {
     // public methods
@@ -215,6 +221,14 @@ export default Vue.extend({
       this.hideSearchInput()
     },
     // private methods
+    updateShowFuncList (list: ResourceFuncItem[]) {
+      this.showFuncList = _.cloneDeep(list).map(item => {
+        if (item.command === 'arrange') {
+          return this.arrangeWay === ArrangeWay.horizontal ? _.cloneDeep(arrangeItem) : _.cloneDeep(blockItem)
+        }
+        return item
+      })
+    },
     fetchShowPaths (routers: CacheRoute[]): ShowPath[] {
       return routers.filter(item => {
         return item.hide !== true
@@ -270,8 +284,12 @@ export default Vue.extend({
       this.$emit('handleTabChange', item.type)
     },
     sortWayChange (sender: SortWay) {
-      // hide popover
-      this.visible = false
+      this.visible = false // hide popover
+      const sortItem = sender.type === SortType.descending ? _.cloneDeep(sortDescItem) : _.cloneDeep(sortAscItem)
+      this.showFuncList = this.showFuncList.map(item => {
+        if (item.command === 'sort') return sortItem
+        return item
+      })
       const orderType = this.convertSortWay(sender)
       this.$emit('callbackAction', 'sortWayChange', orderType)
     },
@@ -292,7 +310,7 @@ export default Vue.extend({
       return OrderType.byNameDesc
     },
     handleItemClick (index: number) {
-      const item = this.funcList[index] as ResourceFuncItem
+      const item = this.showFuncList[index]
       switch (item.command) {
         case 'search':
           this.searchAction()
@@ -329,9 +347,9 @@ export default Vue.extend({
     },
     setHiddenSearch (hide: boolean) {
       if (hide) {
-        this.funcList.splice(0, 1)
+        this.showFuncList.shift()
       } else {
-        this.funcList.splice(0, 0, _.cloneDeep(searchItem))
+        this.showFuncList.splice(0, 0, _.cloneDeep(searchItem))
       }
     },
     searchAction () {
@@ -371,11 +389,15 @@ export default Vue.extend({
       this.$emit('callbackAction', 'clearTrash')
     },
     arrangeAction (index: number) {
-      const item = this.funcList[index] as ResourceFuncItem
-      item.isSelected = !item.isSelected
-      this.funcList.splice(index, 1, item)
-      const arrangeWay = item.isSelected ? ArrangeWay.vertical : ArrangeWay.horizontal
-      this.$emit('callbackAction', 'arrangeChange', arrangeWay)
+      const way = this.arrangeWay === ArrangeWay.horizontal ? ArrangeWay.vertical : ArrangeWay.horizontal
+      this.showFuncList = this.showFuncList.map(item => {
+        if (item.command === 'arrange') {
+          return way === ArrangeWay.horizontal ? _.cloneDeep(arrangeItem) : _.cloneDeep(blockItem)
+        }
+        return item
+      })
+      console.log(this.showFuncList)
+      this.$emit('callbackAction', 'arrangeChange', way)
     }
   }
 })
@@ -421,7 +443,7 @@ export default Vue.extend({
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      padding: 0px 10px 0px 5px;
+      padding: 0px 10px 0px 19px;
       .back-icon-style {
         height: 22px;
         width: 30px;
@@ -439,7 +461,13 @@ export default Vue.extend({
         .separator-icon {
           width: 10px;
         }
-        .modal-breadcrumb-item:hover {
+        .modal-breadcrumb-item {
+          max-width: 150px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .modal-breadcrumb-hover:hover {
           color: #06b650;
         }
       }

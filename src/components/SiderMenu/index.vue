@@ -5,11 +5,13 @@
         v-for="(item, index) in silderItems"
         :key="index"
         class="menu-item"
-        v-bind:class="{ 'menu-item-selected': item.meta.isSelected }"
+        v-bind:class="{ 'menu-item-selected': item.meta.isSelected === true }"
         @click="onSelectAction(index)"
+        @mouseenter="handleMouseEnter(index)"
+        @mouseleave="handleMouseLeave(index)"
       >
         <div v-if="item.meta.icon !== undefined" class="silder-item">
-          <img :src="item.meta.isSelected ? item.meta.selectedIcon : item.meta.icon"/>
+          <img :src="showIcon(index)"/>
           <span class="silder-item-title">{{ item.meta.title }}</span>
           <a-badge v-show="item.name === 'transport'" :count="taskCount"/>
         </div>
@@ -51,6 +53,7 @@ export default Vue.extend({
   },
   data () {
     return {
+      showItems: [] as FuncListItem[],
       storageInfo: {} as any
     }
   },
@@ -61,6 +64,9 @@ export default Vue.extend({
   watch: {
     storages: function () {
       this.getStorageInfo()
+    },
+    silderItems: function (newValue: FuncListItem[]) {
+      this.showItems = _.cloneDeep(newValue)
     }
   },
   mounted () {
@@ -75,8 +81,8 @@ export default Vue.extend({
       this.storageInfo = { precent, info }
     },
     onSelectAction (index: number) {
-      const item = this.silderItems[index] as FuncListItem
-      if (item.meta!.isSelected) {
+      const item = this.showItems[index]
+      if (item.meta!.isSelected === true) {
         this.$emit('popTop', index)
         return
       }
@@ -84,6 +90,26 @@ export default Vue.extend({
     },
     showTypeItem (item: FuncListItem) {
       return item.meta!.icon !== undefined
+    },
+    showIcon (index: number) {
+      const model = this.showItems[index]
+      if (model.meta === undefined) return
+      if (_.isEmpty(model.meta.icon) || _.isEmpty(model.meta.selectedIcon)) return
+      if (model.meta.isSelected === true) return model.meta.selectedIcon
+      if (model.meta.isHover === true) return model.meta.selectedIcon
+      return model.meta.icon
+    },
+    handleMouseEnter (aIndex: number) {
+      this.showItems = this.showItems.map((item, index) => {
+        item.meta!.isHover = index === aIndex
+        return item
+      })
+    },
+    handleMouseLeave (index: number) {
+      this.showItems = this.showItems.map((item, index) => {
+        item.meta!.isHover = false
+        return item
+      })
     }
   }
 })
@@ -105,9 +131,10 @@ export default Vue.extend({
       display: flex;
       align-items: center;
       height: 32px;
+      margin-left: 5px;
       img {
         width: 20px;
-        margin:0px 18px 0px 32px;
+        margin:0px 18px 0px 27px;
       }
       .silder-item-title {
         display: inline-block;
@@ -136,8 +163,10 @@ export default Vue.extend({
     }
   }
   .menu-item-selected, .menu-item-selected:hover {
+    border-left: 5px solid #007934;
     background-color: #06B65019;
     .silder-item {
+      margin-left: 0px;
       .silder-item-title {
         color: #007934;
       }

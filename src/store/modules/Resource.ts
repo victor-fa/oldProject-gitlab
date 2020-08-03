@@ -1,5 +1,5 @@
 import { ActionContext } from 'vuex'
-import { StorageInfo, ResourceItem, EncryptInfo } from '@/api/NasFileModel'
+import { StorageInfo, ResourceItem, EncryptInfo, ArrangeWay } from '@/api/NasFileModel'
 
 interface ClipboardModel {
   isClip: boolean, // true 剪切，false 拷贝
@@ -15,7 +15,8 @@ interface ResourceState {
   showItemCount: number,
   clipboard: ClipboardModel,
   taskCount: number, // 传输中的任务数
-  encryptInfos: EncryptInfo[]
+  encryptInfos: EncryptInfo[],
+  arrangeWay?: ArrangeWay
 }
 
 export default {
@@ -25,7 +26,8 @@ export default {
     showItemCount: 0,
     clipboard: [], // TODO: 目前没有对剪切板进行缓存
     taskCount: 0,
-    encryptInfos: []
+    encryptInfos: [],
+    arrangeWay: undefined
   },
   getters: {
     storages: (state: ResourceState) => {
@@ -42,6 +44,13 @@ export default {
     },
     encryptInfos: (state: ResourceState) => {
       return state.encryptInfos
+    },
+    arrangeWay: (state: ResourceState) => {
+      if (state.arrangeWay !== undefined) return state.arrangeWay
+      const way = localStorage.getItem('arrangeWay')
+      const arrangeWay: ArrangeWay = way === null ? ArrangeWay.horizontal : Number(way)
+      state.arrangeWay = arrangeWay
+      return arrangeWay
     }
   },
   mutations: {
@@ -66,6 +75,10 @@ export default {
     },
     UPDATE_ENCRYPT_INFOS (state: ResourceState, infos: EncryptInfo[]) {
       state.encryptInfos = infos
+    },
+    UPDATE_ARRANGE_WAY (state: ResourceState, way: ArrangeWay) {
+      state.arrangeWay = way
+      localStorage.setItem('arrangeWay', way.toString())
     }
   },
   actions: {
@@ -89,6 +102,9 @@ export default {
     },
     updateEncryptInfos (context: ActionContext<ResourceState, ResourceState>, infos: EncryptInfo[]) {
       context.commit('UPDATE_ENCRYPT_INFOS', infos)
+    },
+    updateArrangeWay (context: ActionContext<ResourceState, ResourceState>, way: ArrangeWay) {
+      context.commit('UPDATE_ARRANGE_WAY', way)
     }
   }
 }
