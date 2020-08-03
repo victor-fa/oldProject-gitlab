@@ -51,7 +51,16 @@ module.exports = {
                 "ia32"//32位
               ]
             }
-          ]
+          ],
+          "verifyUpdateCodeSignature": false,
+          "signingHashAlgorithms": [
+            "sha256",
+            "sha1"
+          ],
+          "signDlls": true,
+          "rfc3161TimeStampServer": "http://time.certum.pl/", // 若该网站被发现不可用，参考：https://www.cnblogs.com/mmykdbc/p/12221833.html
+          "certificateFile": "mycert.pfx",
+          "certificatePassword": "ugreen123"
         },
         "nsis": {
           "oneClick": false, // 是否一键安装

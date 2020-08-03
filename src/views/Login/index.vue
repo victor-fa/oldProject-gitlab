@@ -249,7 +249,7 @@ export default Vue.extend({
       }
     }
     .login-button {
-      padding: 40px 12px 0px 25px;
+      padding: 40px 12px 0px 12px;
       .ant-btn {
         height: 40px;
         color: white;
