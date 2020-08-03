@@ -86,13 +86,19 @@ export default class UploadTask extends BaseTask {
   // pricvate methods
   // 解析文件源路径
   private async parseSourcePath (path: string) {
-    await FileHandle.statFile(path).then(stats => {
-      return this.generateUploadFileInfos(stats)
-    }).then(fileInfos => {
-      this.fileInfos = _.clone(fileInfos)
-    }).catch(_ => {
-      this.handlerTaskError(TaskErrorCode.readStatError)
-    })
+    try {
+      const stats = await FileHandle.statFile(path)
+      const files = await this.generateUploadFileInfos(stats)
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index]
+        if (file.isDirectory) continue
+        const md5 = await this.calculateFileMD5(file)
+        file.md5 = md5
+      }
+      this.fileInfos = files
+    } catch (error) {
+      this.handlerTaskError(TaskErrorCode.parsePathError)
+    }
   }
   // 获取需要上传的文件对象
   private generateUploadFileInfos (stats: fs.Stats): Promise<FileInfo[]> {
@@ -107,13 +113,29 @@ export default class UploadTask extends BaseTask {
         })
         files = fileInfos
       }
-      files.forEach(async item => {
-        await this.calculateFileMD5(item).then(md5 => {
-          item.md5 = md5
-        })
-        return item
-      })
       resolve(files)
+    })
+  }
+  // 计算文件的MD5值
+  private calculateFileMD5 (file: FileInfo): Promise<string> {
+    return new Promise(async (resolve, reject) => {
+      if (!_.isEmpty(file.md5)) {
+        resolve(file.md5!)
+        return
+      }
+      const stream = fs.createReadStream(file.srcPath)
+      const fsHash = crypto.createHash('md5')
+      stream.on('data', data => {
+        fsHash.update(data)
+      })
+      stream.once('end', () => {
+        const md5 = fsHash.digest('hex')
+        resolve(md5)
+      })
+      stream.once('error', error => {
+        console.log(error)
+        reject(new TaskError(TaskErrorCode.calMD5Error))
+      })
     })
   }
   // 转换stats 
@@ -378,28 +400,6 @@ export default class UploadTask extends BaseTask {
     })
   }
   // protected methods
-  // 计算文件的MD5值
-  private calculateFileMD5 (file: FileInfo): Promise<string> {
-    return new Promise(async (resolve, reject) => {
-      if (!_.isEmpty(file.md5)) {
-        resolve(file.md5!)
-        return
-      }
-      const stream = fs.createReadStream(file.srcPath)
-      const fsHash = crypto.createHash('md5')
-      stream.on('data', data => {
-        fsHash.update(data)
-      })
-      stream.once('end', () => {
-        const md5 = fsHash.digest('hex')
-        resolve(md5)
-      })
-      stream.once('error', error => {
-        console.log(error)
-        reject(new TaskError(TaskErrorCode.calMD5Error))
-      })
-    })
-  }
   // 过滤（备份加密用）
   protected filterFilesInfo (fileInfo: FileInfo): Promise<Boolean> {
     return Promise.resolve(false)

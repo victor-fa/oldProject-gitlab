@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import NasFileAPI from '../NasFileAPI';
 import { UploadParams } from '../NasFileModel';
 import { FileInfo } from './BaseTask';
@@ -31,9 +32,14 @@ export default class BackupUploadTask extends EncryptUploadTask {
     }
   }
   /** 过滤（备份加密用） */
-  filterFilesInfo(fileInfo: FileInfo): Promise<Boolean> {
+  filterFilesInfo(file: FileInfo): Promise<Boolean> {
     return new Promise((resolve, reject) => {
-      NasFileAPI.backupCheck(fileInfo).then(response => {
+      if (file.isDirectory || file.md5 === undefined) {
+        resolve(true)
+        return
+      }
+      NasFileAPI.backupCheck(file.destPath, file.md5).then(response => {
+        console.log(response)
         if (response.data.code !== 200) {
           resolve(false)
         } else if (response.data.data.identical === 1) {
@@ -41,7 +47,7 @@ export default class BackupUploadTask extends EncryptUploadTask {
         } else {
           resolve(false)
         }
-      }).then(error => {
+      }).catch(error => {
         console.log(error)
         reject(error)
       })

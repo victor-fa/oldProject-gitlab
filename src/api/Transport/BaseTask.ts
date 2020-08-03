@@ -139,8 +139,8 @@ class TaskError {
         return 'open file handle error'
       case TaskErrorCode.closeHandleError:
         return 'close file handle error'
-      case TaskErrorCode.readStatError:
-        return 'read file stat error'
+      case TaskErrorCode.parsePathError:
+        return 'parse file path error'
       case TaskErrorCode.readDataError:
         return 'read file data error'
       case TaskErrorCode.writeDataError:
@@ -163,7 +163,7 @@ enum TaskErrorCode {
   unkown,
   openHandleError,
   closeHandleError,
-  readStatError,
+  parsePathError,
   readDataError,
   writeDataError,
   networkError,
