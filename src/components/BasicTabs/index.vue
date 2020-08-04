@@ -54,7 +54,7 @@ export {
 
 <style lang="less" scoped>
 .basic-tabs {
-  height: 36px;
+  height: 34px;
   padding-left: 18px;
   list-style: none;
   display: flex;

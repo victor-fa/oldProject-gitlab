@@ -57,6 +57,14 @@
         <label class="nick-name" :title="nickName">{{ nickName }}</label>
       </div>
     </div>
+    <basic-model
+      :title="basicModel.title"
+      :content="basicModel.content"
+      :loading="basicModel.loading"
+      :type="basicModel.type"
+      v-if="basicModel.visiable"
+      v-on:dismiss="basicModel.visiable = false"
+      v-on:confirm="handleBasicConfirm"/>
   </div>
 </template>
 
@@ -72,11 +80,14 @@ import UserAPI from '@/api/UserAPI'
 import ClientAPI from '@/api/ClientAPI'
 import TransportHelper from '@/api/Transport/TransportHelper'
 import { nasCloudIP } from '@/api/CloudServer'
+import BasicModel from '../BasicModel/index.vue'
+import { EventBus, EventType } from '@/utils/eventBus'
 
 export default Vue.extend({
   name: 'basic-header',
   components: {
-    WindowMenu
+    WindowMenu,
+    BasicModel
   },
   data () {
     let items: Array<any> = []
@@ -85,7 +96,14 @@ export default Vue.extend({
       restore: false, // 恢复设置弹窗指示器位置
       showItems: items,
       showChildren: false,
-      settingList
+      settingList,
+      basicModel: {
+        visiable: false,
+        title: '',
+        content: '',
+        type: '',
+        loading: false
+      }
     }
   },
   watch: {
@@ -180,7 +198,31 @@ export default Vue.extend({
       }
     },
     switchUser () {
-      this.showTipDialog().then(() => {
+      this.basicModel = {
+        visiable: true,
+        title: '确认退出登录？',
+        content: '该操作将中断所有正在进行中的任务！',
+        type: 'switchUser',
+        loading: false
+      }
+    },
+    switchDevice () {
+      this.basicModel = {
+        visiable: true,
+        title: '确认退出登录？',
+        content: '该操作将中断所有正在进行中的任务！',
+        type: 'switchDevice',
+        loading: false
+      }
+    },
+    handleBasicConfirm (flag) {
+      this.basicModel.loading = true
+      if (flag === 'switchDevice') {  // 切换设备
+        this.$store.dispatch('NasServer/clearCacheNas')
+        TransportHelper.suspendAllTask()
+        processCenter.renderSend(EventName.bindList)
+        this.basicModel.loading = false
+      } else if (flag === 'switchUser') { // 切换用户
         UserAPI.logout().then(response => {
           console.log(response)
           if (response.data.code !== 200) return
@@ -189,33 +231,13 @@ export default Vue.extend({
           this.$store.dispatch('NasServer/clearCacheNas')
           TransportHelper.suspendAllTask()
           processCenter.renderSend(EventName.login)
+          this.basicModel.loading = false
         }).catch(error => {
           console.log(error)
           this.$message.error('网络连接错误,请检测网络')
         })
-      })
+      } 
     },
-    switchDevice () {
-      this.showTipDialog().then(() => {
-        this.$store.dispatch('NasServer/clearCacheNas')
-        TransportHelper.suspendAllTask()
-        processCenter.renderSend(EventName.bindList)
-      })
-    },
-    showTipDialog () {
-      return new Promise((resolve, reject) => {
-        const { dialog } = require('electron').remote
-        dialog.showMessageBox({
-					title: '绿联云',
-          message: '确认退出登录？\n该操作将中断所有正在进行中的任务！',
-          buttons: ['确定', '取消'],
-          defaultId: 0,
-          cancelId: 1
-        }).then(result => {
-          result.response === 0 ? resolve() : reject(new Error('cancel'))
-        })
-      })
-    }
   }
 })
 </script>

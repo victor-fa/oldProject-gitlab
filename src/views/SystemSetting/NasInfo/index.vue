@@ -72,6 +72,16 @@
 			<p>发布时间：{{update.info.pubtime | filterTime}}</p>
 			<p>描述：{{update.info.desc === 'null' ? '无' : update.info.desc}}</p>
 		</a-modal>
+    <basic-model
+      :title="basicModel.title"
+      :content="basicModel.content"
+      :loading="basicModel.loading"
+      :type="basicModel.type"
+			:leftButton="basicModel.leftButton"
+			:rightButton="basicModel.rightButton"
+      v-if="basicModel.visiable"
+      v-on:dismiss="basicModel.visiable = false"
+      v-on:confirm="handleBasicConfirm"/>
 	</div>
 </template>
 
@@ -88,9 +98,13 @@ import StringUtility from '@/utils/StringUtility'
 import processCenter, { EventName } from '@/utils/processCenter'
 import { DeviceRole } from '@/api/UserModel'
 import TransportHelper from '../../../api/Transport/TransportHelper'
+import BasicModel from '@/components/BasicModel/index.vue'
 
 export default Vue.extend({
   name: 'nas-info',
+  components: {
+    BasicModel
+  },
 	computed: {
 		...mapGetters('NasServer', ['nasInfo', 'accessInfo']),
 	},
@@ -126,6 +140,15 @@ export default Vue.extend({
 			model: '',	// 设备型号
 			sys_version: '',	// 系统版本
 			edit_device_name: false,
+      basicModel: {
+        visiable: false,
+        title: '',
+        content: '',
+				type: '',
+				leftButton: '',
+				rightButton: '',
+        loading: false
+      }
 		};
   },
 	watch: {
@@ -152,8 +175,8 @@ export default Vue.extend({
 		},
 		handleDangerousOperation (flag) {
 			let message = ''
-			let leftBut = ''
-			let rightBut = ''
+			let leftBut = '取消'
+			let rightBut = '确定'
 			const { dialog } = require('electron').remote
 			if (flag === 'shutdown') {
 				if (!this.isUserAdmin) { this.$message.error('非管理员无法操作'); return; }
@@ -179,29 +202,31 @@ export default Vue.extend({
 					message = `您是否确定删除该设备？`
 				}
 			}
-			dialog.showMessageBox({
-				type: 'info',
-				title: '绿联云',
-				message,
-				buttons: [leftBut ? leftBut : '确定', rightBut ? rightBut : '取消'],
-				cancelId: 2	// 右上角关闭
-			}).then(result => {
-				if (result.response === 0) {
-					if (flag === 'shutdown') {
-						this.handleShutdown()
-					} else if (flag === 'reboot') {
-						this.handleReboot()
-					} else if (flag === 'factory') {
-						this.handleFactory()
-					} else if (flag === 'delete') {
-						this.isUserAdmin ? this.handleAdminDelete(1) : this.handleCommonDelete()
-					}
-				} else if (result.response === 1) {
-					if (flag === 'delete') {
-						this.isUserAdmin ? this.handleAdminDelete(0) : null
-					}
+      this.basicModel = {
+        visiable: true,
+        title: '绿联云',
+        content: message,
+				type: flag,
+				leftButton: leftBut,
+				rightButton: rightBut,
+        loading: false
+      }
+		},
+    handleBasicConfirm (flag, ...args) {
+			this.basicModel.loading = true
+			if (flag === 'shutdown') {  // 关机
+				this.handleShutdown()
+			} else if (flag === 'reboot') {	// 重启
+				this.handleReboot()
+			} else if (flag === 'factory') {	// 恢复出厂
+				this.handleFactory()
+			} else if (flag === 'delete') {	// 删除
+				if (args[0] === '解绑并保留数据') {
+					this.isUserAdmin ? this.handleAdminDelete(0) : null
+				} else {
+					this.isUserAdmin ? this.handleAdminDelete(1) : this.handleCommonDelete()
 				}
-			}).catch(error => console.log(error))
+			}
 		},
 		handleShutdown () {
 			NasFileAPI.shutdown().then(response => {
@@ -210,6 +235,9 @@ export default Vue.extend({
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
+			}).finally(() => {
+				this.basicModel.visiable = false
+				this.basicModel.loading = false
 			})
 		},
 		handleReboot () {
@@ -219,6 +247,9 @@ export default Vue.extend({
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
+			}).finally(() => {
+				this.basicModel.visiable = false
+				this.basicModel.loading = false
 			})
 		},
 		handleFactory () {
@@ -228,6 +259,9 @@ export default Vue.extend({
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
+			}).finally(() => {
+				this.basicModel.visiable = false
+				this.basicModel.loading = false
 			})
 		},
 		fetchUpdateInfo () {
@@ -241,6 +275,9 @@ export default Vue.extend({
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
+			}).finally(() => {
+				this.basicModel.visiable = false
+				this.basicModel.loading = false
 			})
 		},
 		handleUpdate () {
@@ -252,6 +289,9 @@ export default Vue.extend({
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
+			}).finally(() => {
+				this.basicModel.visiable = false
+				this.basicModel.loading = false
 			})
 		},
 		handleCommonDelete () {
@@ -261,6 +301,9 @@ export default Vue.extend({
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
+			}).finally(() => {
+				this.basicModel.visiable = false
+				this.basicModel.loading = false
 			})
 		},
 		handleAdminDelete (choice: number) {	// 不删除:0 删除:1
@@ -270,6 +313,9 @@ export default Vue.extend({
 			}).catch(error => {
 				this.$message.error('网络连接错误，请检测网络')
 				console.log(error)
+			}).finally(() => {
+				this.basicModel.visiable = false
+				this.basicModel.loading = false
 			})
 		},
 		switchDevice () {

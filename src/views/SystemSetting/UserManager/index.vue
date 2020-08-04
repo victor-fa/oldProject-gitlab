@@ -26,6 +26,16 @@
 				<a-input placeholder="请输入短信验证码" v-model="deliver.code" style="flex: 1;" :max-length="6"/>
 			</div>
 		</a-modal>
+    <basic-model
+      :title="basicModel.title"
+      :content="basicModel.content"
+      :loading="basicModel.loading"
+      :type="basicModel.type"
+      :data="basicModel.data"
+			:rightButton="basicModel.rightButton"
+      v-if="basicModel.visiable"
+      v-on:dismiss="basicModel.visiable = false"
+      v-on:confirm="handleBasicConfirm"/>
 	</div>
 </template>
 
@@ -40,9 +50,13 @@ import { NasInfo, NasAccessInfo } from '@/api/ClientModel'
 import StringUtility from '@/utils/StringUtility'
 import { loginIcons } from '@/views/Login/iconList'
 import { mapGetters } from 'vuex'
+import BasicModel from '@/components/BasicModel/index.vue'
 
 export default Vue.extend({
   name: 'user-manager',
+  components: {
+    BasicModel
+  },
 	data() {
 		return {
 			nasUsers: [] as any,
@@ -52,7 +66,16 @@ export default Vue.extend({
 				visiable: false,
 				ugreen_no: ''
 			},
-			isUserAdmin: false
+			isUserAdmin: false,
+      basicModel: {
+        visiable: false,
+        title: '',
+        content: '',
+				type: '',
+				data: {},
+				rightButton: '',
+        loading: false
+      }
 		};
 	},
   computed: {
@@ -89,10 +112,43 @@ export default Vue.extend({
       })
 		},
 		enableUser (item) {
-			const status = item.status === 0 ? 1 : 0
-			const ugreen_no = item.ugreen_no
-      this.showDeleteDialog('您确定禁用该用户吗？', '禁用该用户后，该用户将无法登录设备', '禁用').then(result => {
-        if (result === 1) return
+      this.basicModel = {
+        visiable: true,
+        title: '您确定禁用该用户吗？',
+        content: '禁用该用户后，该用户将无法登录设备',
+				type: 'enableUser',
+				data: item,
+				rightButton: '禁用',
+        loading: false
+      }
+		},
+		deleteCommonUser (item) {
+      this.basicModel = {
+        visiable: true,
+        title: '您确定删除该用户吗？',
+        content: '删除用户后，会清除该用户上传的所有数据。',
+				type: 'deleteCommonUser',
+				data: item,
+				rightButton: '删除',
+        loading: false
+			}
+		},
+		showDeliverModal (item) {
+      this.basicModel = {
+        visiable: true,
+        title: '确认转让您的管理员身份？',
+        content: '每台设备只有一个管理员！身份转让后，您将失去该设备的管理员权限。',
+				type: 'showDeliverModal',
+				data: item,
+				rightButton: '确定',
+        loading: false
+			}
+		},
+		handleBasicConfirm (flag, ...args) {
+      this.basicModel.loading = true
+			if (flag === 'enableUser') {	// 禁用普通用户
+				const status = args[0].status === 0 ? 1 : 0
+				const ugreen_no = args[0].ugreen_no
 				NasFileAPI.enableUser(ugreen_no, status).then(response => {
 					if (response.data.code !== 200) return
 					this.fetchBindUserList()
@@ -100,13 +156,12 @@ export default Vue.extend({
 				}).catch(error => {
 					this.$message.error('网络连接错误，请检测网络')
 					console.log(error)
+				}).finally(() => {
+					this.basicModel.visiable = false
+					this.basicModel.loading = false
 				})
-      })
-		},
-		deleteCommonUser (item) {
-			const ugreen_no = item.ugreen_no
-      this.showDeleteDialog('您确定删除该用户吗？', '删除用户后，会清除该用户上传的所有数据。', '删除').then(result => {
-        if (result === 1) return
+			} else if (flag === 'deleteCommonUser') {	// 删除普通用户
+				const ugreen_no = args[0].ugreen_no
 				NasFileAPI.deleteCommonUser(ugreen_no).then(response => {
 					if (response.data.code !== 200) return
 					this.fetchBindUserList()
@@ -114,14 +169,13 @@ export default Vue.extend({
 				}).catch(error => {
 					this.$message.error('网络连接错误，请检测网络')
 					console.log(error)
+				}).finally(() => {
+					this.basicModel.visiable = false
+					this.basicModel.loading = false
 				})
-      })
-		},
-		showDeliverModal (item) {
-			this.deliver.ugreen_no = item.ugreen_no
-			const curNas = this.nasInfo as NasInfo
-      this.showDeleteDialog('确认转让您的管理员身份？', '每台设备只有一个管理员！\n身份转让后，您将失去该设备的管理员权限。', '确定').then(result => {
-        if (result === 1) return
+			} else if (flag === 'showDeliverModal') {	// 提升为管理员
+				this.deliver.ugreen_no = args[0].ugreen_no
+				const curNas = this.nasInfo as NasInfo
 				UserAPI.smsShortCode(this.user.phoneNo, 6, curNas.sn, curNas.mac).then(response => {
 					if (response.data.code !== 200) return
 					this.deliver.visiable = true
@@ -129,8 +183,11 @@ export default Vue.extend({
 				}).catch(error => {
 					console.log(error)
 					this.$message.error('网络连接错误,请检测网络')
+				}).finally(() => {
+					this.basicModel.visiable = false
+					this.basicModel.loading = false
 				})
-			})
+			}
 		},
 		handleDeliver (item) {
 			const ugreen_no = this.deliver.ugreen_no
@@ -182,16 +239,6 @@ export default Vue.extend({
 				!this.isUserAdmin ? menu.append(new MenuItem({label: '非管理员无法操作'})) : null;
 			}
       menu.popup(remote.getCurrentWindow())
-    },
-    showDeleteDialog (title: string, message: string, command: string): Promise<number> {
-      return new Promise((resolve, reject) => {
-        const { dialog } = require('electron').remote
-        dialog.showMessageBox({
-          type: 'info', title, message, buttons: [command, '取消'], cancelId: 1
-        }).then(result => {
-          resolve(result.response)
-        }).catch(error => { reject(error) })
-      })
     },
   }
 })

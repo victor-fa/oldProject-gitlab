@@ -44,7 +44,7 @@ import NasFileAPI from '../../../api/NasFileAPI'
 import StringUtility from '../../../utils/StringUtility'
 
 export default Vue.extend({
-  name: 'modeify-password',
+  name: 'modify-password',
   directives: {
     focus: {
       inserted: function (el) {

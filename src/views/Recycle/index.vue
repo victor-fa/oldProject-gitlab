@@ -1,19 +1,31 @@
 <template>
-  <main-view
-    :busy="busy"
-    :count="totalSize"
-    :loading="loading"
-    :adjust="123"
-    :showToolbars="[]"
-    :dataSource="dataArray"
-    :funcList="showFuncList"
-    :contextItemMenu="itemMenu"
-    :contextListMenu="listMenu"
-    v-on:headerCallbackActions="handleHeaderActions"
-    v-on:listCallbackActions="handleListActions"
-    v-on:itemCallbackActions="handleItemActions"
-    v-on:contextMenuCallbackActions="handleContextMenuActions"
-  />
+  <div>
+    <main-view
+      :busy="busy"
+      :count="totalSize"
+      :loading="loading"
+      :adjust="123"
+      :showToolbars="[]"
+      :dataSource="dataArray"
+      :funcList="showFuncList"
+      :contextItemMenu="itemMenu"
+      :contextListMenu="listMenu"
+      v-on:headerCallbackActions="handleHeaderActions"
+      v-on:listCallbackActions="handleListActions"
+      v-on:itemCallbackActions="handleItemActions"
+      v-on:contextMenuCallbackActions="handleContextMenuActions"
+    />
+    <basic-model
+      :title="basicModel.title"
+      :content="basicModel.content"
+      :loading="basicModel.loading"
+      :type="basicModel.type"
+      :rightButton="basicModel.rightButton"
+      :data="basicModel.data"
+      v-if="basicModel.visiable"
+      v-on:dismiss="basicModel.visiable = false"
+      v-on:confirm="handleBasicConfirm"/>
+  </div>
 </template>
 
 <script lang="ts">
@@ -28,11 +40,13 @@ import { recycleContextMenu, recycleListContextMenu } from '@/components/Operate
 import RouterUtility from '@/utils/RouterUtility'
 import { BasicResponse } from '../../api/UserModel'
 import { recycleFuncList } from '../MainView/ResourceFuncList'
+import BasicModel from '@/components/BasicModel/index.vue'
 
 export default Vue.extend({
   name: 'recycle',
   components: {
-    MainView
+    MainView,
+    BasicModel
   },
   mixins: [MainViewMixin],
   data () {
@@ -45,7 +59,16 @@ export default Vue.extend({
       dataArray: [] as ResourceItem[],
       itemMenu: recycleContextMenu,
       listMenu: recycleListContextMenu,
-      showFuncList: _.cloneDeep(recycleFuncList)
+      showFuncList: _.cloneDeep(recycleFuncList),
+      basicModel: {
+        visiable: false,
+        title: '',
+        content: '',
+        type: '',
+        rightButton: '',
+        data: {},
+        loading: false
+      }
     }
   },
   mounted () {
@@ -75,22 +98,6 @@ export default Vue.extend({
       })
       this.dataArray = this.page === 1 ? list : this.dataArray.concat(list)
     },
-    showDeleteDialog (message: string): Promise<number> {
-      return new Promise((resolve, reject) => {
-        const { dialog } = require('electron').remote
-        dialog.showMessageBox({
-					title: '绿联云',
-          type: 'info',
-          message,
-          buttons: ['删除', '取消'],
-          cancelId: 1
-        }).then(result => {
-          resolve(result.response)
-        }).catch(error => {
-          reject(error)
-        })
-      })
-    },
     handleDeletRequest (items: ResourceItem[]) {
       this.loading = true
       NasFileAPI.addDeleteTask(items).then(response => {
@@ -102,6 +109,9 @@ export default Vue.extend({
         console.log(error)
         this.$message.error('删除失败')
         this.loading = false
+      }).finally(() => {
+        this.basicModel.visiable = false
+        this.basicModel.loading = false
       })
     },
     handleClearRequest () {
@@ -116,6 +126,9 @@ export default Vue.extend({
         console.log(error)
         this.$message.error('清空失败')
         this.loading = false
+      }).finally(() => {
+        this.basicModel.visiable = false
+        this.basicModel.loading = false
       })
     },
     // 覆盖混入中的方法
@@ -145,19 +158,36 @@ export default Vue.extend({
     handleDeletAction () {
       const items = ResourceHandler.getSelectItems(this.dataArray)
       if (_.isEmpty(items)) return
-      const message = items.length > 1 ? `您确定要永久删除所选的${items.length}个项目吗？` : `您确定要永久删除”${items[0].name}“吗？`
-      this.showDeleteDialog(message).then(result => {
-        if (result === 1) return
-        this.handleDeletRequest(items)
-      })
+      const message = items.length > 1 ? `您确定要永久删除所选的${items.length}个项目吗？` : `您确定要永久删除“${items[0].name}”吗？`
+      this.basicModel = {
+        visiable: true,
+        title: '回收站',
+        content: message,
+        type: 'delete',
+        rightButton: '删除',
+        data: items,
+        loading: false
+      }
     },
     handleClearTrashAction () {
       if (_.isEmpty(this.dataArray)) return
-      const message = '您确定要清空回收站吗？'
-      this.showDeleteDialog(message).then(result => {
-        if (result === 1) return
+      this.basicModel = {
+        visiable: true,
+        title: '回收站',
+        content: '您确定要清空回收站吗？',
+        type: 'clearTrash',
+        rightButton: '清空',
+        data: {},
+        loading: false
+      }
+    },
+    handleBasicConfirm (flag, ...args) {
+      this.basicModel.loading = true
+      if (flag === 'delete') {  // 删除
+        this.handleDeletRequest(args[0])
+      } else if (flag === 'clearTrash') {  // 清空回收站
         this.handleClearRequest()
-      })
+      }
     },
     handleOpenFolderAction (item: ResourceItem) {
       // recycle not allow open directory

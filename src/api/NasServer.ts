@@ -136,31 +136,11 @@ const handleReconnectSence = (data: BasicResponse) => {
 const handleReLoginSence = () => {
   const isLoginWindow = hasLoginWindow()
   if (isLoginWindow && router.currentRoute.name === 'login') return
-  showKickedDialog().then(() => {
-    if (isLoginWindow) {
-      router.replace('login')
-    } else {
-      processCenter.renderSend(EventName.login)
-    }
-  })
+  EventBus.$emit(EventType.showDialog)
 }
 const handleReloginEnceypt = (code: number) => {
   const msg = code === 8048 ? '加密token无效' : '加密token过期'
   EventBus.$emit(EventType.reloginEncrypt, msg)
-}
-const showKickedDialog = () => {
-  return new Promise((resolve) => {
-    const { dialog } = require('electron').remote
-    dialog.showMessageBox({
-      title: '绿联云',
-      message: '您的帐号在另一设备登录，已被迫下线。\n如非您本人操作，那么您的密码有可能已泄露，建议您修改密码',
-      buttons: ['确定'],
-      defaultId: 0,
-      cancelId: 0
-    }).then(() => {
-      resolve()
-    })
-  })
 }
 
 const handleErrorResponse = (error: AxiosError) => {
@@ -172,5 +152,6 @@ const handleErrorResponse = (error: AxiosError) => {
 }
 
 export {
-  nasServer
+  nasServer,
+  hasLoginWindow
 }

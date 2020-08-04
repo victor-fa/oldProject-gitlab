@@ -42,6 +42,13 @@
         <a-button @click="codeLoginBtnClick">扫码登录</a-button>
       </li>
     </ul>
+    <basic-model
+      :title="basicModel.title"
+      :content="basicModel.content"
+      :loading="basicModel.loading"
+      v-if="basicModel.visiable"
+      v-on:dismiss="basicModel.visiable = false"
+      v-on:confirm="handleBasicConfirm"/>
   </div>
 </template>
 
@@ -58,11 +65,13 @@ import processCenter, { EventName, MainEventName } from '@/utils/processCenter'
 import { message } from 'ant-design-vue'
 import { ACCESS_TOKEN, REMEMBER_PWD } from '@/common/constants'
 import StringUtility from '@/utils/StringUtility'
+import BasicModel from '@/components/BasicModel/index.vue'
 
 export default Vue.extend({
   name: 'login',
   components: {
-    BasicForm
+    BasicForm,
+    BasicModel
   },
   data () {
     return {
@@ -75,7 +84,13 @@ export default Vue.extend({
         visiable: false
       },
       loading: false,
-      showDropItems: [] as Account[]
+      showDropItems: [] as Account[],
+      basicModel: {
+        visiable: false,
+        title: '',
+        content: '',
+        loading: false
+      }
     }
   },
   watch: {
@@ -135,19 +150,17 @@ export default Vue.extend({
       })
     },
     showOfflineDialog () {
-      const { dialog } = require('electron').remote
-      dialog.showMessageBox({
+      this.basicModel = {
+        visiable: true,
         title: '绿联云',
-        message: '连接不上云帐号\n是否用本地帐号登录？',
-        buttons: ['确定', '取消'],
-        defaultId: 0,
-        cancelId: 1
-      }).then(result => {
-        if (result.response !== 0) return
-        this.$router.push({
-          name: 'scan-nas',
-          query: { type: 'offlineLogin' }
-        })
+        content: '连接不上云帐号，是否用本地帐号登录？',
+        loading: false
+      }
+    },
+    handleBasicConfirm () {
+      this.$router.push({
+        name: 'scan-nas',
+        query: { type: 'offlineLogin' }
       })
     },
     checkInputFrom () {
