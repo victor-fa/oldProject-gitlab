@@ -20,6 +20,21 @@ export default class EncryptUploadTask extends UploadTask {
   createFolderRequest (file: FileInfo) {
     return NasFileAPI.newFolderEncrypt(file.destPath, this.uuid)
   }
+  emptyFileUpload (file: FileInfo) {
+    this.uploadChunkRequest(file).then(response => {
+      if (this.status !== TaskStatus.progress) return
+      if (response.data.code !== 200) {
+        this.handlerTaskError(TaskErrorCode.serverError, response.data.msg)
+      } else {
+        if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId)
+        file.completed = true
+        this.uploadFile()
+      }
+    }).catch(error => {
+      console.log(error)
+      this.handlerTaskError(TaskErrorCode.innerError, 'encrypt upload empty file error')
+    })
+  }
   startFileUpload (file: FileInfo) {
     if (this.status !== TaskStatus.progress) return
     FileHandle.openReadFileHandle(file.srcPath).then(fd => { // 1. open file handle success
@@ -75,8 +90,9 @@ export default class EncryptUploadTask extends UploadTask {
       this.handlerTaskError(code)
     })
   }
-  protected uploadChunkRequest (file: FileInfo, buffer: Buffer) {
-    const params = this.encryptUploadParams(file, buffer.length)
+  protected uploadChunkRequest (file: FileInfo, buffer?: Buffer) {
+    const length = buffer === undefined ? 0 : buffer.length
+    const params = this.encryptUploadParams(file, length)
     return NasFileAPI.uploadEncrypt(params, buffer, this.source)
   }
   private readFileChunkData (fd: number, position: number, length: number): Promise<number> {

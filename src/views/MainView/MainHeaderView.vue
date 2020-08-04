@@ -395,7 +395,6 @@ export default Vue.extend({
         }
         return item
       })
-      console.log(this.showFuncList)
       this.$emit('callbackAction', 'arrangeChange', way)
     }
   }

@@ -75,7 +75,7 @@ export default Vue.extend({
     return {
       column: 1,
       dragState: false,
-      scrollHeight: document.body.clientHeight - this.adjust
+      scrollHeight: 0
     }
   },
   watch: {
@@ -106,6 +106,7 @@ export default Vue.extend({
     window.addEventListener('resize', this.observerWindowResize)
     document.addEventListener('keydown', this.handleKeydownAction)
     this.$nextTick(() => {
+      this.calculateListHeight()
       this.calculateListColumn()
     })
   },
@@ -116,13 +117,16 @@ export default Vue.extend({
   methods: {
     observerWindowResize () {
       // calculate list view height
+      this.calculateListHeight()
+      // calculate list item column
+      this.calculateListColumn()
+    },
+    calculateListHeight () {
       let height = document.body.clientHeight - this.adjust
       if (this.arrangeWay === ArrangeWay.vertical) {
         height -= 28
       }
       this.scrollHeight = height
-      // calculate list item column
-      this.calculateListColumn()
     },
     calculateListColumn () {
       const columns = [1, 2, 3, 4, 6, 8, 12, 24]

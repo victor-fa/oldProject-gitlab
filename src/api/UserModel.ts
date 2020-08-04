@@ -74,6 +74,7 @@ interface DeviceInfo {
   mac: string,
   name: string,
   model: string,
+  modelName: string,
   firmware: string,
   hareware: string,
   status: DeviceStatus,

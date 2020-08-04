@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import fs from 'fs'
 import NasFileAPI from '../NasFileAPI';
 import { UploadParams } from '../NasFileModel';
 import { FileInfo } from './BaseTask';
@@ -12,8 +13,21 @@ export default class BackupUploadTask extends EncryptUploadTask {
     super(srcPath, destPath, uuid)
     this.type = 'backupUpload'
   }
-  uploadChunkRequest (file: FileInfo, buffer: Buffer) {
-    const params = this.backupUploadParams(file, buffer.length)
+  generateUploadFileInfos (stats: fs.Stats): Promise<FileInfo[]> {
+    return new Promise((resolve, reject) => {
+      super.generateUploadFileInfos(stats).then(files => {
+        resolve(files.filter(item => {
+          return !item.isDirectory
+        }))
+      }).catch(error => {
+        console.log(error)
+        reject(error)
+      })
+    })
+  }
+  uploadChunkRequest (file: FileInfo, buffer?: Buffer) {
+    const length = buffer === undefined ? 0 : buffer.length
+    const params = this.backupUploadParams(file, length)
     return NasFileAPI.uploadBackup(params, buffer, this.source)
   }
   /** 参数整理 */

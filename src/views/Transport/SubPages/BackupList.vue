@@ -15,7 +15,7 @@ import Vue from 'vue'
 import MainPage from '../MainPage/index.vue'
 import StringUtility from '@/utils/StringUtility'
 import BackupUploadTask from '@/api/Transport/BackupUploadTask'
-import { TaskStatus, TaskError, FileInfo } from '@/api/Transport/BaseTask'
+import BaseTask, { TaskStatus, TaskError, FileInfo, TaskErrorCode } from '@/api/Transport/BaseTask'
 import ClientAPI from '@/api/ClientAPI'
 import { backupUploadQueue } from '../../../api/Transport/TransportHelper'
 import { TransportModel, backupCategorys, TransportStatus } from '../MainPage/TransportModel'
@@ -80,12 +80,16 @@ export default Vue.extend({
     },
     handleTaskStatusChange (taskId: number) {
       const task = backupUploadQueue.searchTask(taskId)
-      const index = TransportHandler.searchModel(this.dataArray, taskId)
-      if (task === undefined || index === undefined) return
-      const newItem = TransportHandler.convertTask(task)
-      this.dataArray.splice(index, 1, newItem)
+      if (task === undefined) return
+      this.reloadListItem(task)
+    },
+    reloadListItem<T extends BaseTask> (task: T) {
+      this.dataArray = this.dataArray.map(item => {
+        if (item.id === task.taskId) return TransportHandler.convertTask(task)
+        return item
+      })
       this.updateView()
-      if (task.error !== undefined && task.status === TaskStatus.error) {
+      if (task.error !== undefined && task.error.code !== TaskErrorCode.serverError) {
         this.$message.error(task.error.desc)
       }
     },
@@ -113,7 +117,6 @@ export default Vue.extend({
           break;
         case 'clearAll':
           backupUploadQueue.deleteDoneTasks()
-          setTimeout(() => this.fetchUploadTasks(), 1000);
           break;
         case 'addTask':
           this.showOpenDialog()
@@ -168,14 +171,14 @@ export default Vue.extend({
           path = StringUtility.convertR2L(path)
           const task = new BackupUploadTask(path, '', '')
           backupUploadQueue.addTask(task)
-          backupUploadQueue.once('taskFinished', () => {
-            setTimeout(() => {
-              this.fetchUploadTasks()
-            }, 1000);
-          })
-          backupUploadQueue.once('error', (taskId: number, error: TaskError) => {
-            this.$message.error(error.desc)
-          })
+          // backupUploadQueue.once('taskFinished', () => {
+          //   setTimeout(() => {
+          //     this.fetchUploadTasks()
+          //   }, 1000);
+          // })
+          // backupUploadQueue.once('error', (taskId: number, error: TaskError) => {
+          //   this.$message.error(error.desc)
+          // })
         })
       })
     },

@@ -88,20 +88,14 @@ export default class UploadTask extends BaseTask {
   private async parseSourcePath (path: string) {
     try {
       const stats = await FileHandle.statFile(path)
-      const files = await this.generateUploadFileInfos(stats)
-      for (let index = 0; index < files.length; index++) {
-        const file = files[index]
-        if (file.isDirectory) continue
-        const md5 = await this.calculateFileMD5(file)
-        file.md5 = md5
-      }
-      this.fileInfos = files
+      this.fileInfos = await this.generateUploadFileInfos(stats)
     } catch (error) {
+      console.log(error)
       this.handlerTaskError(TaskErrorCode.parsePathError)
     }
   }
   // 获取需要上传的文件对象
-  private generateUploadFileInfos (stats: fs.Stats): Promise<FileInfo[]> {
+  protected generateUploadFileInfos (stats: fs.Stats): Promise<FileInfo[]> {
     return new Promise((resolve) => {
       let files: FileInfo[] = []
       if (stats.isFile()) {
@@ -114,28 +108,6 @@ export default class UploadTask extends BaseTask {
         files = fileInfos
       }
       resolve(files)
-    })
-  }
-  // 计算文件的MD5值
-  private calculateFileMD5 (file: FileInfo): Promise<string> {
-    return new Promise(async (resolve, reject) => {
-      if (!_.isEmpty(file.md5)) {
-        resolve(file.md5!)
-        return
-      }
-      const stream = fs.createReadStream(file.srcPath)
-      const fsHash = crypto.createHash('md5')
-      stream.on('data', data => {
-        fsHash.update(data)
-      })
-      stream.once('end', () => {
-        const md5 = fsHash.digest('hex')
-        resolve(md5)
-      })
-      stream.once('error', error => {
-        console.log(error)
-        reject(new TaskError(TaskErrorCode.calMD5Error))
-      })
     })
   }
   // 转换stats 
@@ -202,16 +174,7 @@ export default class UploadTask extends BaseTask {
       return
     }
     if (this.status !== TaskStatus.progress) return
-    this.filterFilesInfo(file).then(isFilter => {
-      if (isFilter) {
-        file.filter = true
-        this.uploadFile() // upload next file
-        return
-      }
-      file.isDirectory === true ? this.createFolder(file) : this.prepareFileUpload(file)
-    }).catch(error => {
-      file.isDirectory === true ? this.createFolder(file) : this.prepareFileUpload(file)
-    })
+    file.isDirectory ? this.createFolder(file) : this.prepareFileUpload(file)
   }
   // 创建文件夹
   private createFolder (fileInfo: FileInfo) {
@@ -240,24 +203,55 @@ export default class UploadTask extends BaseTask {
   }
   // 准备上传文件数据
   private prepareFileUpload (file: FileInfo) {
-    if (this.fileInfos.length > 1)  {
-      this.name = file.relativePath
-      this.emit('fileBegin', this.taskId)
-    }
-    if (file.totalSize === 0) {
-      this.emptyFileUpload(file)
-    } else {
-      this.startFileUpload(file)
-    }
+    this.calculateFileMD5(file).then(md5 => {
+      file.md5 = md5
+      return this.filterFilesInfo(file)
+    }).then(isFilter => {
+      if (isFilter) {
+        file.filter = true
+        this.uploadFile()
+        return
+      }
+      if (this.fileInfos.length > 1)  {
+        this.name = file.relativePath
+        this.emit('fileBegin', this.taskId)
+      }
+      file.totalSize === 0 ? this.emptyFileUpload(file) : this.startFileUpload(file)
+    }).catch(error => {
+      console.log(error)
+      this.handlerTaskError(TaskErrorCode.innerError, 'calculate file md5 error')
+    })
+  }
+  // 计算文件的MD5值
+  private calculateFileMD5 (file: FileInfo): Promise<string> {
+    return new Promise(async (resolve, reject) => {
+      if (!_.isEmpty(file.md5)) {
+        resolve(file.md5!)
+        return
+      }
+      const stream = fs.createReadStream(file.srcPath)
+      const fsHash = crypto.createHash('md5')
+      stream.on('data', data => {
+        fsHash.update(data)
+      })
+      stream.once('end', () => {
+        const md5 = fsHash.digest('hex')
+        resolve(md5)
+      })
+      stream.once('error', error => {
+        console.log(error)
+        reject(new TaskError(TaskErrorCode.calMD5Error))
+      })
+    })
   }
   // 空文件上传
-  private emptyFileUpload (file: FileInfo) {
-    NasFileAPI.uploadMultipartBegin(file.destPath, this.uuid, file.totalSize, file.destDir).then(response => {
+  protected emptyFileUpload (file: FileInfo) {
+    NasFileAPI.uploadMultipartBegin(file.destPath, this.uuid, file.totalSize, file.destDir).then(response => { // 1. create remote file
       if (this.status !== TaskStatus.progress) return Promise.reject(new Error('cancel'))
       if (response.data.code !== 200) return Promise.reject(new TaskError(TaskErrorCode.serverError, response.data.msg))
       const newPath = _.get(response.data.data, 'path')
       return NasFileAPI.uploadMultipartEnd(newPath, this.uuid, file.md5!)
-    }).then(response => {
+    }).then(response => { // 2. end remote file
       if (this.status !== TaskStatus.progress) return
       if (response.data.code !== 200) {
         this.handlerTaskError(TaskErrorCode.serverError, response.data.msg)
@@ -266,7 +260,7 @@ export default class UploadTask extends BaseTask {
         file.completed = true
         this.uploadFile()
       }
-    }).catch(error => {
+    }).catch(error => { // 3. handle error
       console.log(error)
       if (error instanceof TaskError) {
         this.handlerTaskError(error.code, error.desc)

@@ -287,7 +287,7 @@ export default {
       params: { path, uuid, md5 }
     })
   },
-  uploadBackup (params: UploadParams, data: Buffer, source?: CancelTokenSource): ServerResponse {
+  uploadBackup (params: UploadParams, data?: Buffer, source?: CancelTokenSource): ServerResponse {
     return nasServer.post(fileModule + '/backup/upload', data, { 
       params,
       headers: { 'Content-Type': ' application/octet-stream' },
@@ -300,7 +300,7 @@ export default {
     if (!_.isEmpty(uuid)) params = { path, uuid }
     return nasServer.post(cryptoModule + '/folder', params, { params: { crypto_token: crypto.crypto_token } })
   },
-  uploadEncrypt (params: UploadParams, data: Buffer, source?: CancelTokenSource): ServerResponse {
+  uploadEncrypt (params: UploadParams, data?: Buffer, source?: CancelTokenSource): ServerResponse {
     return nasServer.post(cryptoModule + '/upload', data, { 
       params,
       headers: { 'Content-Type': ' application/octet-stream' },

@@ -69,9 +69,13 @@ export default Vue.extend({
       })
     },
     parseResponse (data: BasicResponse) {
-      const list = _.get(data.data, 'userDevices') as DeviceInfo[]
-      this.deviceList = list.sort((a, b) => {
+      let list = _.get(data.data, 'userDevices') as DeviceInfo[]
+      list = list.sort((a, b) => {
         return a.status > b.status ? -1 : 1
+      })
+      this.deviceList = list.map(item => {
+        item.model = item.modelName
+        return item
       })
       // cache device list
       this.$store.dispatch('User/updateNasDevices', this.deviceList)
