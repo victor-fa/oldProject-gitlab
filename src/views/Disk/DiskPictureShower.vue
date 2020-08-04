@@ -19,9 +19,11 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import WindowsHeader from '@/components/Disk/WindowHeader.vue'
 import NasFileAPI from '@/api/NasFileAPI'
 import StringUtility from '@/utils/StringUtility'
+import { CryptoInfo } from '@/api/ClientModel'
 export default {
 	name: 'DiskPictureShower',
 	components: { WindowsHeader },
@@ -67,9 +69,18 @@ export default {
 			deep: true
 		}
 	},
+  computed: {
+		...mapGetters('NasServer', ['cryptoInfo']),
+	},
 	created() {
 		this.$ipc.on('win-data', (event, data) => {
 			const filterData = data.filter(item => { return item.type === 3 && item.path.toLowerCase().indexOf('.heic') === -1 })
+			if (filterData[0].path.indexOf('.safe') > -1) {
+				filterData.map(item => {
+					item.encrypt = this.cryptoInfo.crypto_token
+					return item
+				})
+			}
 			//接收打开图片文件的数据
 			this.$nextTick(() => {
 				console.log(JSON.parse(JSON.stringify(filterData)));
@@ -121,10 +132,10 @@ export default {
 			this.NowShow = item;
 			this.NowShow.count = index;
 			if (item.encrypt) {
-				this.NowShow.name = item.data.name
+				this.NowShow.name = item.name
 				this.NowShow.URL = NasFileAPI.encryptDownload({
-					uuid: item.data.uuid,
-					path: item.data.path,
+					uuid: item.uuid,
+					path: item.path,
 					crypto_token: item.encrypt
 				});
 			} else {

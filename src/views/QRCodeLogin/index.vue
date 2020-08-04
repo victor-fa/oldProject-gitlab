@@ -255,7 +255,6 @@ export default Vue.extend({
     height: 232px;
     width: 232px;
     overflow: hidden;
-    border: 1px solid #323232;
     img {
       width: 280px;
       position: relative;

@@ -229,7 +229,7 @@ export default Vue.extend({
           data: item,
           encrypt: this.cryptoInfo.crypto_token
         }]
-        myThis.$ipc.send('file-control', OpenType, data);
+        myThis.$ipc.send('file-control', OpenType, (OpenType === 3 ? this.dataArray : data));
       } else if (OpenType === 4) {
         let data:any = []
         data.push({
