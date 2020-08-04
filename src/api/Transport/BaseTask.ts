@@ -151,8 +151,10 @@ class TaskError {
         return 'network error'
       case TaskErrorCode.pathError:
         return 'upload file directory is empty'
-       case TaskErrorCode.calMD5Error:
-         return 'calculate file md5 error'
+      case TaskErrorCode.calMD5Error:
+        return 'calculate file md5 error'
+      case TaskErrorCode.innerError:
+        return 'inner error'
       default:
         return 'unkown error'
     }
@@ -170,6 +172,7 @@ enum TaskErrorCode {
   serverError,
   calMD5Error,
   pathError,
+  innerError
 }
 
 export {

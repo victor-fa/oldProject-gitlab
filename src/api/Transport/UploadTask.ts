@@ -244,7 +244,36 @@ export default class UploadTask extends BaseTask {
       this.name = file.relativePath
       this.emit('fileBegin', this.taskId)
     }
-    this.startFileUpload(file)
+    if (file.totalSize === 0) {
+      this.emptyFileUpload(file)
+    } else {
+      this.startFileUpload(file)
+    }
+  }
+  // 空文件上传
+  private emptyFileUpload (file: FileInfo) {
+    NasFileAPI.uploadMultipartBegin(file.destPath, this.uuid, file.totalSize, file.destDir).then(response => {
+      if (this.status !== TaskStatus.progress) return Promise.reject(new Error('cancel'))
+      if (response.data.code !== 200) return Promise.reject(new TaskError(TaskErrorCode.serverError, response.data.msg))
+      const newPath = _.get(response.data.data, 'path')
+      return NasFileAPI.uploadMultipartEnd(newPath, this.uuid, file.md5!)
+    }).then(response => {
+      if (this.status !== TaskStatus.progress) return
+      if (response.data.code !== 200) {
+        this.handlerTaskError(TaskErrorCode.serverError, response.data.msg)
+      } else {
+        if (this.fileInfos.length > 1) this.emit('fileFinished', this.taskId)
+        file.completed = true
+        this.uploadFile()
+      }
+    }).catch(error => {
+      console.log(error)
+      if (error instanceof TaskError) {
+        this.handlerTaskError(error.code, error.desc)
+      } else {
+        this.handlerTaskError(TaskErrorCode.innerError, 'upload empty file error')
+      }
+    })
   }
   // 开始上传文件数据
   protected startFileUpload (file: FileInfo) {

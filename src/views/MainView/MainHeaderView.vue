@@ -65,8 +65,7 @@
           <a-breadcrumb-item
             v-for=" (item, index) in showPaths"
             :key="index"
-            class="modal-breadcrumb-item"
-            v-bind:class="{ 'modal-breadcrumb-hover': showHover(index) }"
+            :class="{ 'modal-breadcrumb-item': showHover(index) }"
             @click.native.stop="handleBreadcrumbClick(index)"
           >
             {{ item.path }}
@@ -461,13 +460,7 @@ export default Vue.extend({
         .separator-icon {
           width: 10px;
         }
-        .modal-breadcrumb-item {
-          max-width: 150px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .modal-breadcrumb-hover:hover {
+        .modal-breadcrumb-item:hover {
           color: #06b650;
         }
       }
