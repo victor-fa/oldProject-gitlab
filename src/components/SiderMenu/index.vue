@@ -173,6 +173,7 @@ export default Vue.extend({
     }
     .silder-type-item {
       color: #007934;
+      margin-left: -5px;
     }
   }
   .silder-storage {

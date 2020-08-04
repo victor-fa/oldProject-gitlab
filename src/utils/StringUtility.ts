@@ -52,9 +52,13 @@ export default {
   },
   // 格式化文件修改时间
   formatShowMtime (value: number) {
-    if (String(value).length < 11) value = value * 1000 // 区分秒、毫秒
-    const date = new Date(value)
-    const year = date.getFullYear().toString()
+    let date = new Date(value)
+    let year = date.getFullYear().toString()
+    if (Number(year) > 3000 || Number(year) === 1970) { // 秒转为毫秒
+      value = value * 1000
+      date = new Date(value)
+      year = date.getFullYear().toString()
+    }
     const month = date.getMonth() < 10 ? `0${date.getMonth()}` : date.getMonth().toString()
     const day = date.getDay() < 10 ? `0${date.getDay()}` : date.getDay.toString()
     const hour = date.getHours() < 10 ? `0${date.getHours()}` : date.getHours()
