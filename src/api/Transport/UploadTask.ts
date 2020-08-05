@@ -162,6 +162,7 @@ export default class UploadTask extends BaseTask {
     this.clearSpeedTimer()
     if (this.fileHandle !== -1) FileHandle.closeFileHandle(this.fileHandle)
     this.fileHandle = -1
+    this.buffer = undefined
   }
   // 递归读取上传多个文件
   protected uploadFile () {
@@ -171,6 +172,7 @@ export default class UploadTask extends BaseTask {
       this.name = path.basename(this.srcPath)
       this.emit('taskFinished', this.taskId)
       this.clearSpeedTimer()
+      this.buffer = undefined
       return
     }
     if (this.status !== TaskStatus.progress) return
@@ -309,7 +311,6 @@ export default class UploadTask extends BaseTask {
   }
   // 结束文件上传
   protected endFileUpload (fd: number, file: FileInfo) {
-    if (this.buffer !== undefined) this.buffer = undefined
     FileHandle.closeFileHandle(fd).then(() => {
       this.fileHandle = -1
       return NasFileAPI.uploadMultipartEnd(file.destPath, this.uuid, file.md5!)
@@ -358,6 +359,8 @@ export default class UploadTask extends BaseTask {
       if (this.status !== TaskStatus.progress) return
       if (response.data.code !== 200) {
         if (++chunk.errorCount <= this.retryCount) {
+          console.log(response)
+          console.log(`retry count: ${this.retryCount}`)
           this.recursionFileChunk(fd, file)
         } else {
           this.handlerTaskError(TaskErrorCode.networkError, response.data.msg)
@@ -376,9 +379,10 @@ export default class UploadTask extends BaseTask {
       }
     }).catch(error => {
       console.log(error)
-      if (this.buffer !== undefined) this.buffer = undefined
+      this.buffer = undefined
       if (_.get(error, 'message') === 'cancel' || axios.isCancel(error)) return
       if (++chunk.errorCount <= this.retryCount) {
+        console.log(`retry count: ${this.retryCount}`)
         this.recursionFileChunk(fd, file)
       } else {
         const code = error === FileHandleError.readError ? TaskErrorCode.readDataError : TaskErrorCode.networkError

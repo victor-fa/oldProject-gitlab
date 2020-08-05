@@ -450,7 +450,7 @@ export default {
     return nasServer.post(myselfModule + '/get_myself_folder', { path, uuid })
   },
   fetchRecycleList (page: number, size: number = maxSize): ServerResponse {
-    return nasServer.post(recycleModule + '/list', { page, size })
+    return nasServer.post(recycleModule + '/list', undefined, { params: { page, size } })
   },
   recoveryFile (items: ResourceItem[]): ServerResponse {
     const params = items.map(item => {
