@@ -94,6 +94,13 @@ export default {
       isAdmin: device.role
     })
   },
+  fetchUserInfo (): CloudResponse {
+    const accessToken = getAccessToken()
+    if (accessToken === null) return Promise.reject(customError('not find access_token'))
+    return nasCloud.post(userModule + '/detail', {}, {
+      headers: { 'Authorization': accessToken }
+    })
+  },
   cancelFetchBindDevices () {
     if (cancel !== null) cancel()
   },

@@ -16,7 +16,7 @@
 				</div>
 				<div style="margin-left: 20px">
 					<p class="cd-setting-info nick">
-						昵称：{{!edit_nick ? user.nicName : ''}}
+						昵称：{{!edit_nick ? user.nicName ? user.nicName : user.ugreenNo : ''}}
 						<a-input type="text" v-show="edit_nick"
 							v-model="user.nicName" placeholder="请输入昵称" clearable
 							class="nick-name" :max-length="20" ref="input_nick"
@@ -70,6 +70,7 @@ export default Vue.extend({
   name: 'profil',
 	computed: {
 		...mapGetters('User', ['user']),
+    ...mapGetters('NasServer', ['nasInfo']),
     ...mapGetters('Setting', ['autoPowerOn', 'closeInfo', 'autoLogin']),
 	},
 	data() {
@@ -95,7 +96,10 @@ export default Vue.extend({
   },
 	watch: {
     edit_nick: function (newValue) {
-			this.$nextTick(() => (this.$refs.input_nick as any).focus())
+			this.$nextTick(() => {
+				(this.$refs.input_nick as any).focus()
+				this.user.nicName ? null : this.user.nicName = this.user.ugreenNo
+			})
     },
     edit_phone: function (newValue) {
 			this.$nextTick(() => (this.$refs.input_phone as any).focus())
@@ -111,8 +115,23 @@ export default Vue.extend({
 		this.loginSetting.autoPowerOn = _.isEmpty(this.autoPowerOn) ? false : this.autoPowerOn.flag
 		this.loginSetting.closeChoice = _.isEmpty(this.closeInfo) ? 'tray' : this.closeInfo.trayOrExit
 		this.loginSetting.autoLogin = _.isEmpty(this.autoLogin) ? true : this.autoLogin.flag
+		this.fetchUserInfo()	// 获取最新用户信息详情
 	},
   methods: {
+		fetchUserInfo () {
+      UserAPI.fetchUserInfo().then(response => {
+				if (response.data.code !== 200) return
+				const userRes = response.data.data
+				// 若发现客户端修改了数据，则主界面的数据也要更新
+				if (JSON.stringify(userRes) !== JSON.stringify(this.user)) {
+					processCenter.renderSend(EventName.account);
+				}
+        this.$store.dispatch('User/updateUser', userRes)
+      }).catch(error => {
+        console.log(error)
+				this.$message.error('网络连接错误,请检测网络')
+      })
+		},
 		changePhoto () {
 			const _event = event as any
 			this.UploadSrc = false;

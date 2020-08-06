@@ -132,7 +132,7 @@ export default Vue.extend({
     },
     nickName: function () {
       const user = this.user as User
-      const name: string = _.isEmpty(user.nicName) ? user.userName : user.nicName
+      const name: string | number = _.isEmpty(user.nicName) ? user.ugreenNo : user.nicName
       return name
     },
     imageUrl: function () {

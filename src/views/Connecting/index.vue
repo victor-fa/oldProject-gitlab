@@ -16,6 +16,7 @@ import { EventBus } from '@/utils/eventBus'
 import ClientAPI from '@/api/ClientAPI'
 import { NasInfo, NasAccessInfo } from '@/api/ClientModel'
 import NasFileAPI from '@/api/NasFileAPI'
+import UserAPI from '@/api/UserAPI'
 
 export default Vue.extend({
   name: 'connecting',
@@ -101,11 +102,24 @@ export default Vue.extend({
         // caceh nas info and token
         this.$store.dispatch('NasServer/updateNasAccess', accessInfo)
         this.$store.dispatch('NasServer/updateNasInfo', nasInfo)
+        return this.fetchLastestUser()
+      }).then(response => { // fetch lastest user info
         processCenter.renderSend(EventName.home)
       }).catch(error => {
         console.log(error)
         this.loading = false
         this.pushFailedPage()
+      })
+    },
+    fetchLastestUser () { // 获取最新数据
+      return new Promise((resolve, reject) => {
+        UserAPI.fetchUserInfo().then(response => {
+          if (response.data.code !== 200) return
+          this.$store.dispatch('User/updateUser', response.data.data)
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
       })
     },
     pushFailedPage () {

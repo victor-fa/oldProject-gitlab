@@ -79,6 +79,7 @@
       :type="basicModel.type"
 			:leftButton="basicModel.leftButton"
 			:rightButton="basicModel.rightButton"
+			:broadButton="basicModel.broadButton"
       v-if="basicModel.visiable"
       v-on:dismiss="basicModel.visiable = false"
       v-on:confirm="handleBasicConfirm"/>

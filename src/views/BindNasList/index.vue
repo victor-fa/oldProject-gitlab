@@ -122,12 +122,25 @@ export default Vue.extend({
         const accessInfo = response.data.data as NasAccessInfo
         accessInfo.key = device.publicKey
         this.$store.dispatch('NasServer/updateNasAccess', accessInfo)
+        return this.fetchLastestUser()
+      }).then(response => { // 3. fetch lastest user info
         processCenter.renderSend(EventName.home)
-      }).catch(error => { // 3. catch error
+      }).catch(error => { // 4. catch error
         console.log(error)
         this.loading = false
         this.$message.error('连接失败')
         this.getBindDevices()
+      })
+    },
+    fetchLastestUser () { // 获取最新数据
+      return new Promise((resolve, reject) => {
+        UserAPI.fetchUserInfo().then(response => {
+          if (response.data.code !== 200) return
+          this.$store.dispatch('User/updateUser', response.data.data)
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
       })
     },
     complementNasInfo (device: DeviceInfo, nas: NasInfo) {

@@ -5,7 +5,9 @@
       <ul class="content-wrapper">
         <li class="tip">{{ isFromLogin ? '重置' : '修改' }}密码</li>
         <li class="account-form" v-if="isFromLogin">
-          <basic-form :icon="loginIcons.account" :maxLength=11 placeholder="请输入手机号" v-model="account"/>
+          <basic-form :icon="loginIcons.account" :maxLength=11 placeholder="请输入手机号" v-model="account" :error="phoneError"
+            @blur="handleAccountBlur"
+            @change="phoneError = ''"/>
         </li>
         <li class="account-form" v-if="!isFromLogin">
           <basic-form :icon="loginIcons.password" :maxLength=11 placeholder="请输入原密码" v-model="originalPass" isSecure="ture"/>
@@ -57,6 +59,7 @@ export default Vue.extend({
       originalPass: '',
       password: '',
       rePassword: '',
+      phoneError: '',
       passwordError: '',
       rePasswordError: '',
       code: '',
@@ -64,6 +67,7 @@ export default Vue.extend({
       codeCount: 60,
       timer: null as NodeJS.Timer | null,
       loading: false,
+      isUpdatedPass: false, // 是否已经点了重置
       codeVisiable: false,
       submitText: '',
 			header: {
@@ -76,7 +80,7 @@ export default Vue.extend({
 					return true;
 				}
       },
-      isFromLogin: true
+      isFromLogin: true,
     }
   },
 	watch: {
@@ -117,9 +121,7 @@ export default Vue.extend({
         this.codeVisiable = false
         this.$message.success(`${this.isFromLogin ? '重置' : '修改'}成功，请牢记密码`)
         this.$store.dispatch('User/updateAccount', { account: input.userName, password: input.password })
-        setTimeout(() => {
-          this.closeAndClear()
-        }, 1000);
+        setTimeout(() => { this.closeAndClear() }, 1000);
       }).catch(error => {
         this.loading = false
         console.log(error)
@@ -128,6 +130,7 @@ export default Vue.extend({
     },
     updateAction () {
       if (!this.checkInputFrom()) return
+      this.isUpdatedPass = true;  // 已点重置密码
       this.loading = true
 			const input = {
         userName: this.user.phoneNo,
@@ -137,8 +140,9 @@ export default Vue.extend({
       UserAPI.updatePass(input).then(response => {
         this.loading = false
 				if (response.data.code !== 200) {
-          this.$message.error(response.data.msg)
-          return
+          this.isUpdatedPass = false;
+          this.$message.error(response.data.msg);
+          return;
         }
 				this.account = '';
 				this.originalPass = '';
@@ -148,11 +152,10 @@ export default Vue.extend({
         this.codeVisiable = false
         this.$message.success(`${this.isFromLogin ? '重置' : '修改'}成功，请牢记密码`)
         this.$store.dispatch('User/updateAccount', { account: input.userName, password: input.newPwd })
-        setTimeout(() => {
-          this.closeAndClear()
-        }, 1000);
+        setTimeout(() => { this.closeAndClear() }, 1000);
       }).catch(error => {
         this.loading = false
+        this.isUpdatedPass = false;
         console.log(error)
         this.$message.error('网络连接错误,请检测网络')
       })
@@ -163,24 +166,13 @@ export default Vue.extend({
           this.$message.warning('请输入帐号', 1.5)
           return false
         } else {
-          if (this.originalPass.length === 0) {
-            this.$message.warning('请输入原密码', 1.5)
-            return false
-          }
+          if (this.originalPass.length === 0) { this.$message.warning('请输入原密码', 1.5); return false; }
         }
       }
-      if (this.password.length === 0) {
-        this.$message.warning('请输入密码', 1.5)
-        return false
-      }
-      if (this.rePassword.length === 0) {
-        this.$message.warning('请重新输入密码', 1.5)
-        return false
-      }
-      if (this.password !== this.rePassword) {
-				this.$message.warning('密码不一致，请检查');
-				return;
-      }
+      if (this.phoneError !== '') { this.$message.warning('手机号格式错误', 1.5); return false; }
+      if (this.password.length === 0) { this.$message.warning('请输入密码', 1.5); return false; }
+      if (this.rePassword.length === 0) { this.$message.warning('请重新输入密码', 1.5); return false; }
+      if (this.password !== this.rePassword) { this.$message.warning('密码不一致，请检查'); return; }
       if (this.isFromLogin && (this.code === '' || this.submitText === '发送验证码')) {  // 两种情况下都要发送验证码
 				UserAPI.smsCode(this.account, 2).then(response => {
 					this.loading = false;
@@ -205,7 +197,7 @@ export default Vue.extend({
       this.timer = setInterval(() => {
         this.codeCount--
         this.codeTips = this.codeCount === 0 ? '' : `${this.codeCount}s`  // 倒计时到0s时不展示
-        this.submitText = this.codeCount === 0 ? '发送验证码' : (this.isFromLogin ? '重置' : '修改')  // 倒计时到0s时用于发送验证码
+        this.submitText = this.codeCount === 0 && this.isUpdatedPass ? '发送验证码' : (this.isFromLogin ? '重置' : '修改')  // 倒计时到0s时用于发送验证码
       }, 1000)
     },
     cacheUserInfo (response: LoginResponse) {
@@ -227,7 +219,14 @@ export default Vue.extend({
       if (_.isEmpty(this.rePassword)) return
       const result = StringUtility.vaildatorPasswordRule(this.rePassword)
       if (!result) this.rePasswordError = '密码不符合规范(6-16位包含大小写字母数字)'
-    }
+    },
+    handleAccountBlur () {
+      if (_.isEmpty(this.account)) return
+      const result = StringUtility.vaildatorPhone(this.account)
+      if (!result) {
+        this.phoneError = '手机号格式错误'
+      }
+    },
   }
 })
 </script>

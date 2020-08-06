@@ -1,5 +1,5 @@
 <template>
-	<div class="cd-image-container" @mousewheel="MouseZoom" tabindex="-1" @keydown.left="Prev" @keydown.right="Next">
+	<div class="cd-image-container" @mousewheel="MouseZoom" tabindex="-1">
 		<WindowsHeader :data="header" />
 		<p class="ImageShowTips">
 			<span class="cd-image-zoom" :style="{ opacity: ZoomWin }">{{ ZoomPercent }}</span
@@ -96,7 +96,22 @@ export default {
 			});
 		});
 	},
+  mounted () {
+    document.addEventListener('keydown', this.handleKeydownAction)
+  },
+  destroyed () {
+    document.removeEventListener('keydown', this.handleKeydownAction)
+  },
 	methods: {
+    handleKeydownAction (event) {
+			const code = event.code
+      if (code === 'ArrowLeft') {
+				this.Prev()
+      }
+      if (code === 'ArrowRight') {
+				this.Next()
+      }
+    },
 		onload() {
 			this.loaded = true;
 			this.ZoomSize = 1;

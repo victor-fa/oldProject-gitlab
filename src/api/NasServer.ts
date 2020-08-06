@@ -139,7 +139,7 @@ const handleReLoginSence = () => {
   EventBus.$emit(EventType.showDialog)
 }
 const handleReloginEnceypt = (code: number) => {
-  const msg = code === 8048 ? '加密token无效' : '加密token过期'
+  const msg = code === 8048 ? '加密token无效，请重新登录加密空间' : '加密token过期，请重新登录加密空间'
   EventBus.$emit(EventType.reloginEncrypt, msg)
 }
 
