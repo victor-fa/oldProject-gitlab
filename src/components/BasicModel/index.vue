@@ -8,11 +8,20 @@
           'hide-basic-modal': hideAnimate
         }"
       >
-        <span class="modal-title">{{title}}</span>
-        <p>{{content}}</p>
+        <div class="modal-top">
+          <span class="modal-title">{{title}}</span>
+          <custom-button
+            title="关闭"
+            :image="menuIcons.close"
+            iconWidth="20px"
+            class="close-item"
+            @click.native="handleCancelAction(1)"
+          />
+        </div>
+        <p v-html="content"></p>
         <div class="modal-bottom">
-          <a-button @click="handleCancelAction">{{leftButton}}</a-button>
-          <a-button @click="handleConfirmAction">{{rightButton}}</a-button>
+          <a-button :style="{ 'width': broadButton ? '115px' : '74px' }" @click="handleCancelAction(2)">{{leftButton}}</a-button>
+          <a-button :style="{ 'width': broadButton ? '115px' : '74px' }" @click="handleConfirmAction">{{rightButton}}</a-button>
         </div>
       </div>
     </a-spin>
@@ -22,9 +31,14 @@
 <script lang="ts">
 import _ from 'lodash'
 import Vue from 'vue'
+import CustomButton from '@/components/CustomButton/index.vue'
+import { menuIcons } from '@/components/WindowMenu/MenuIcons'
 
 export default Vue.extend({
   name: 'basic-model',
+  components: {
+    CustomButton,
+  },
   props: {
     title: String,
     content: String,
@@ -37,18 +51,26 @@ export default Vue.extend({
     rightButton: {
       default: '确定'
     },
+    broadButton: {
+      default: false
+    },
   },
   data () {
     return {
-      hideAnimate: false
+      hideAnimate: false,
+      menuIcons,
     }
   },
   methods: {
     handleConfirmAction () {
       this.$emit('confirm', this.type, this.data)
     },
-    handleCancelAction () {
-      if (this.leftButton !== '取消') {
+    handleCancelAction (flag) {
+      if (flag === 1) { // 点击右上角，必须走关闭窗口
+        this.hideModal()
+        return
+      }
+      if (this.leftButton !== '取消') { // 特殊情况下的非关闭窗口功能
         this.$emit('confirm', this.type, this.leftButton)
         return
       }
@@ -79,21 +101,31 @@ export default Vue.extend({
   z-index: 999;
   .basic-content {
     margin-left: 85px;
-    width: 282px;
-    border-radius: 12px;
-    border: 1px solid #CFD3E5;
+    width: 400px;
     background-color: white;
     box-shadow: 0px 4px 12px rgba(0,0,0,0.25);
     display: flex;
     flex-direction: column;
-    align-items: center;
     overflow: hidden;
-    span {
-      margin-top: 20px;
-      font-size: 17px;
-      color: black;
-      font-weight: bold;
-      line-height: 17px;
+    .modal-top {
+      display: flex;
+      background-color: #EDEFF4;
+      height: 28px;
+      width: 100%;
+      padding: 7px;
+      justify-content: space-between;
+      .modal-title {
+        font-size: 13px;
+        color: black;
+        line-height: 13px;
+        text-align: left;
+      }
+      .close-item {
+        height: 20px;
+        width: 20px;
+        margin-top: -3px;
+        -webkit-app-region: no-drag;
+      }
     }
     p {
       margin: 22px 21px 0px 23px;
@@ -105,17 +137,17 @@ export default Vue.extend({
     .modal-bottom {
       margin-top: 22px;
       width: 100%;
-      border-top: 1px solid #CFD3E5;
       line-height: 40px;
+      text-align: right;
+      padding-right: 10px;
       .ant-btn {
-        width: 50%;
-        height: 44px;
-        border: none;
-        font-size: 17px;
+        margin-left: 10px;
+        height: 24px;
+        width: 74px;
+        font-size: 12px;
       }
       .ant-btn:last-child {
         color: #2CD18A;
-        border-left: 1px solid #CFD3E5;
       }
     }
   }

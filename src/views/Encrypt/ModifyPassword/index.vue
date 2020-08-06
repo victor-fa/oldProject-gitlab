@@ -8,7 +8,16 @@
           'hide-modify-modal': hideAnimate
         }"
       >
-        <span class="modal-title">修改密码</span>
+        <div class="modal-top">
+          <span class="modal-title">修改密码</span>
+          <custom-button
+            title="关闭"
+            :image="menuIcons.close"
+            iconWidth="20px"
+            class="close-item"
+            @click.native="handleCancelAction(1)"
+          />
+        </div>
         <a-input
           v-focus 
           type="password" 
@@ -42,9 +51,14 @@ import _ from 'lodash'
 import Vue from 'vue'
 import NasFileAPI from '../../../api/NasFileAPI'
 import StringUtility from '../../../utils/StringUtility'
+import CustomButton from '@/components/CustomButton/index.vue'
+import { menuIcons } from '@/components/WindowMenu/MenuIcons'
 
 export default Vue.extend({
   name: 'modify-password',
+  components: {
+    CustomButton,
+  },
   directives: {
     focus: {
       inserted: function (el) {
@@ -61,7 +75,8 @@ export default Vue.extend({
       newPwd: '',
       confirmPwd: '',
       loading: false,
-      hideAnimate: false
+      hideAnimate: false,
+      menuIcons,
     }
   },
   methods: {
@@ -124,44 +139,56 @@ export default Vue.extend({
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 999;
   .modify-content {
     margin-left: 85px;
-    width: 280px;
-    border-radius: 8px;
-    border: 1px solid #CFD3E5;
+    width: 400px;
     background-color: white;
     box-shadow: 0px 4px 12px rgba(0,0,0,0.25);
     display: flex;
     flex-direction: column;
-    align-items: center;
     overflow: hidden;
-    span {
-      margin-top: 25px;
-      font-size: 17px;
-      color: black;
-      font-weight: bold;
-      line-height: 30px;
+    .modal-top {
+      display: flex;
+      background-color: #EDEFF4;
+      height: 28px;
+      width: 100%;
+      padding: 7px;
+      justify-content: space-between;
+      .modal-title {
+        font-size: 13px;
+        color: black;
+        line-height: 13px;
+        text-align: left;
+      }
+      .close-item {
+        height: 20px;
+        width: 20px;
+        margin-top: -3px;
+        -webkit-app-region: no-drag;
+      }
     }
     .ant-input {
-      margin-top: 15px;
-      width: 240px;
+      margin: 15px 15px 0 15px;
+      width: 364px;
       height: 36px;
       border: none;
       border-bottom: 1px solid #CFD3E5;
     }
     .modify-bottom {
-      margin-top: 25px;
+      margin-top: 22px;
       width: 100%;
-      border-top: 1px solid #CFD3E5;
+      line-height: 40px;
+      text-align: right;
+      padding-right: 10px;
       .ant-btn {
-        width: 50%;
-        height: 44px;
-        border: none;
-        font-size: 17px;
+        margin-left: 10px;
+        height: 24px;
+        width: 74px;
+        font-size: 12px;
       }
       .ant-btn:last-child {
         color: #2CD18A;
-        border-left: 1px solid #CFD3E5;
       }
     }
   }

@@ -7,7 +7,7 @@
   "winAppVersion": 1000000001,
   "macAppId": "com.ugreenNas.mac",
   "macAppVersion": 1000000001,
-  "description": "electron+vue nas server client",
+  "description": "绿联云",
   "license": "MIT",
   "scripts": {
     "serve": "vue-cli-service serve",

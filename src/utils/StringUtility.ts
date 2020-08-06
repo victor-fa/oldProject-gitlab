@@ -59,8 +59,8 @@ export default {
       date = new Date(value)
       year = date.getFullYear().toString()
     }
-    const month = date.getMonth() < 10 ? `0${date.getMonth()}` : date.getMonth().toString()
-    const day = date.getDay() < 10 ? `0${date.getDay()}` : date.getDay.toString()
+    const month = date.getMonth()+1 < 10 ? `0${date.getMonth()+1}` : (date.getMonth()+1).toString()
+    const day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate().toString()
     const hour = date.getHours() < 10 ? `0${date.getHours()}` : date.getHours()
     const minute = date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes()
     const second = date.getSeconds() < 10 ? `0${date.getSeconds()}` : date.getSeconds()

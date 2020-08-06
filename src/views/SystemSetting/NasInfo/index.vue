@@ -147,6 +147,7 @@ export default Vue.extend({
 				type: '',
 				leftButton: '',
 				rightButton: '',
+				broadButton: false,
         loading: false
       }
 		};
@@ -177,6 +178,7 @@ export default Vue.extend({
 			let message = ''
 			let leftBut = '取消'
 			let rightBut = '确定'
+			let broadButton = false
 			const { dialog } = require('electron').remote
 			if (flag === 'shutdown') {
 				if (!this.isUserAdmin) { this.$message.error('非管理员无法操作'); return; }
@@ -197,6 +199,7 @@ export default Vue.extend({
 				if (this.isUserAdmin) {
 					leftBut = '解绑并保留数据'
 					rightBut = '解绑并删除数据'
+					broadButton = true
 					message = `该操作将会清除所有用户信息，用户数据可保留或删除。\n解绑过程需设备连接互联网，是否继续？`
 				} else {
 					message = `您是否确定删除该设备？`
@@ -209,6 +212,7 @@ export default Vue.extend({
 				type: flag,
 				leftButton: leftBut,
 				rightButton: rightBut,
+				broadButton,
         loading: false
       }
 		},
